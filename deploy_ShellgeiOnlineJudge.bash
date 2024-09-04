@@ -1,5 +1,5 @@
-root_path = "/usr/share/nginx/"
-root_path_html = "/usr/share/nginx/html/"
+root_path="/usr/share/nginx/"
+root_path_html="/usr/share/nginx/html/"
 
 # delete data
 sudo rm -rf "$root_path_html"problem_jp
