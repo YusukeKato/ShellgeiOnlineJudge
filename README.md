@@ -9,19 +9,25 @@ SHELLGEI ONLINE JUDGE: https://shellgei-online-judge.com/
 - server: https://github.com/YusukeKato/ShellgeiOnlineJudgeServer
 - problem data: https://github.com/YusukeKato/ShellgeiOnlineJudgeData
 
-# update packages
+# deploy
+```sh
+cd ShellgeiOnlineJudge
+bash deploy_ShellgeiOnlineJudge.bash
 ```
+
+# update packages
+```sh
 sudo dnf update
 sudo dnf upgrade
 ```
 
 # update ShellgeiBot-Image
-```
+```sh
 docker pull theoldmoon0602/shellgeibot
 ```
 
 # update HTTPS
-```
+```sh
 sudo certbot certonly --standalone
 sudo systemctl reload nginx
 ```
