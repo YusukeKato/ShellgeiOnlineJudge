@@ -16,6 +16,7 @@ sudo rm "$root_path_html"style.css
 sudo rm "$root_path_html"BlackTreeIcon.jpg
 sudo rm "$root_path_html"favicon.jpg
 sudo rm "$root_path_html"white.jpg
+sudo rm "$root_path_html"black.jpg
 
 # delete server
 sudo rm "$root_path_html"connection.php
@@ -41,6 +42,7 @@ sudo cp ShellgeiOnlineJudgeWeb/css/style.css "$root_path_html"
 sudo cp ShellgeiOnlineJudgeWeb/images/BlackTreeIcon.jpg "$root_path_html"
 sudo cp ShellgeiOnlineJudgeWeb/images/favicon.jpg "$root_path_html"
 sudo cp ShellgeiOnlineJudgeWeb/images/white.jpg "$root_path_html"
+sudo cp ShellgeiOnlineJudgeWeb/images/black.jpg "$root_path_html"
 
 # copy server
 sudo rm -rf ShellgeiOnlineJudgeServer
