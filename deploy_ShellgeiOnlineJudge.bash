@@ -48,4 +48,4 @@ git clone https://github.com/YusukeKato/ShellgeiOnlineJudgeServer.git
 sudo cp ShellgeiOnlineJudgeServer/connection.php "$root_path_html"
 sudo cp ShellgeiOnlineJudgeServer/run_shellgei.py "$root_path"
 sudo cp ShellgeiOnlineJudgeServer/z.bash "$root_path"
-sudo chmod 777 /usr/share/nginx/z.bash
+sudo chmod 777 "$root_path"z.bash
