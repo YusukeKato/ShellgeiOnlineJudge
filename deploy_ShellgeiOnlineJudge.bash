@@ -50,4 +50,12 @@ git clone https://github.com/YusukeKato/ShellgeiOnlineJudgeServer.git
 sudo cp ShellgeiOnlineJudgeServer/connection.php "$root_path_html"
 sudo cp ShellgeiOnlineJudgeServer/run_shellgei.py "$root_path"
 sudo cp ShellgeiOnlineJudgeServer/z.bash "$root_path"
+
+# chmod
+sudo chmod 644 "root_path_html"connection.php
+sudo chmod 644 "root_path_html"problem_jp
+sudo chmod 644 "root_path_html"problem_en
+sudo chmod 644 "root_path_html"problem_images
+sudo chmod 644 "root_path_html"input
+sudo chmod 644 "root_path_html"output
 sudo chmod 777 "$root_path"z.bash
