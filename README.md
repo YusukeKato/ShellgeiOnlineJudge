@@ -3,6 +3,9 @@
 
 SHELLGEI ONLINE JUDGE: https://shellgei-online-judge.com/
 
+# Your problem idea is welcome!
+https://github.com/YusukeKato/ShellgeiOnlineJudge/discussions/categories/problem-ideas
+
 # Discussions
 https://github.com/YusukeKato/ShellgeiOnlineJudge/discussions
 
