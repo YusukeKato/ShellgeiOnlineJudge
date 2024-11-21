@@ -6,6 +6,7 @@
 - [Directory structure](#directory-structure)
 - [Setup](#setup)
 - [Test](#test)
+- [License](#license)
 
 ## Directory structure
 - [client](client/README.md): html + js + css ( + nginx)
@@ -109,3 +110,7 @@ python3 test.py
 # local test
 python3 test.py true
 ```
+
+## License
+- data: Creative Commons BY-NC-ND 4.0
+- client, server, scripts: Apache License 2.0
