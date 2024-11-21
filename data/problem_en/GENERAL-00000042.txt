@@ -1,0 +1,2 @@
+Complete the magic square.
+Reference: https://ja.wikipedia.org/wiki/%E9%AD%94%E6%96%B9%E9%99%A3

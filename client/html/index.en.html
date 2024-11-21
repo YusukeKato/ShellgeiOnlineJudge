@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-L5F9JQGNP7"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag("js", new Date());
+gtag("config", "G-L5F9JQGNP7");
+</script>
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE" />
+<meta property="og:image" content="https://yusukekato.jp/images/summary.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@yusukekato_main" />
+<meta name="twitter:title" content="シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE" />
+<meta name="twitter:image" content="https://yusukekato.jp/images/summary_large_image.png" />
+<meta property="og:url" content="https://shellgei-online-judge.com" />
+<meta property="og:title" content="シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE" />
+<meta property="og:description" content="シェル芸オンラインジャッジはシェル芸用の問題と自動ジャッジシステムを提供するウェブサービスです。Shell-gei Online Judge is a website that provides problems and an automated judgment system." />
+<meta name="twitter:description" content="シェル芸オンラインジャッジはシェル芸用の問題と自動ジャッジシステムを提供するウェブサービスです。Shell-gei Online Judge is a website that provides problems and an automated judgment system." />
+<meta charset="utf-8">
+<meta name="description" content="シェル芸オンラインジャッジはシェル芸用の問題と自動ジャッジシステムを提供するウェブサービスです。Shell-gei Online Judge is a website that provides problems and an automated judgment system.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
+<title>シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE</title>
+<link rel="icon" href="https://shellgei-online-judge.com/favicon.jpg?version=1082">
+<link rel="stylesheet" href="https://shellgei-online-judge.com/style.css?version=1082">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<h1 class="heading-028" data-label="SHELLGEI ONLINE JUDGE">Shell one-liner playground</h1>
+<div class="alldiv">
+
+<ul class="nav-list">
+<li class="nav-list-item">
+<a href="https://shellgei-online-judge.com/index.html" class="bButton">JAPANESE</a>
+</li>
+<li class="nav-list-item">
+<a href="https://shellgei-online-judge.com/index.en.html" class="bButton">ENGLISH</a>
+</li>
+<li class="nav-list-item">
+<a href="https://yusukekato.jp" class="bButton">AUTHOR</a>
+</li>
+</ul>
+
+<h2>INFORMATION</h2>
+<h3>LAST UPDATED</h3>
+<ul>
+<li>- 2024/11/04</li>
+</ul>
+
+<h3>NEWS</h3>
+<ul>
+<li>- 2024/09/06: Added Image Problems</li>
+<li>- 2024/05/03: 1st Anniversary of SHELLGEI ONLINE JUDGE</li>
+<li>- 2024/04/24: Added Exercise Problems</li>
+<li>- 2023/05/03: Start of SHELLGEI ONLINE JUDGE</li>
+</ul>
+<div class="slide">
+<img src="https://yusukekato.jp/images/news/news_20230503.jpg">
+<img src="https://yusukekato.jp/images/news/news_20240503.jpg">
+</div>
+
+<h3>ABOUT</h3>
+<details>
+<summary>ABOUT THIS WEBSITE</summary>
+<h3>About</h3>
+<ul>
+<li>This website is a shell-gei unofficial.</li>
+<li>Solving problems with shell-gei.</li>
+<li>Automatic correct/incorrect judgment.</li>
+</ul>
+<h3>Shellgei Online Judge Repositories</h3>
+<ul>
+<li><a href="https://github.com/YusukeKato/ShellgeiOnlineJudge">GitHub - ShellgeiOnlineJudge</a></li>
+<li><a href="https://github.com/YusukeKato/ShellgeiOnlineJudgeWeb">GitHub - ShellgeiOnlineJudgeWeb</a></li>
+<li><a href="https://github.com/YusukeKato/ShellgeiOnlineJudgeServer">GitHub - ShellgeiOnlineJudgeServer</a></li>
+<li><a href="https://github.com/YusukeKato/ShellgeiOnlineJudgeData">GitHub - ShellgeiOnlineJudgeData</a></li>
+</ul>
+<h3>Thanks</h3>
+<ul>
+<li>Thanks to the following references.</li>
+<li><a href="https://github.com/theoremoon/ShellgeiBot-Image">theoremoon/ShellgeiBot-Image</a></li>
+<li><a href="https://github.com/ryuichiueda/ShellGeiData">ryuichiueda/ShellGeiData</a></li>
+<li><a href="https://github.com/jiro4989/websh">jiro4989/websh</a></li>
+<li><a href="https://judge.u-aizu.ac.jp/onlinejudge/">AIZU ONLINE JUDGE</a></li>
+<li><a href="https://atcoder.jp/">AtCoder</a></li>
+<li><a href="https://twitter.com/minyoruminyon">シェル芸bot</a></li>
+<li><a href="https://www.deepl.com/translator">DeepL</a></li>
+</ul>
+<h3>How to play</h3>
+<ol>
+<li>Select problem</li>
+<li>Write shell-gei</li>
+<li>Run shell-gei</li>
+<li>Check correct/incorrect</li>
+</ol>
+</details>
+
+<details>
+<summary>ABOUT SHELL-GEI</summary>
+<h3>About shell-gei</h3>
+<ul>
+<li><a href="https://b.ueda.tech/?page=01434">Click here</a></li>
+<li>Shell-gei is a shell one-liner in the CLI.</li>
+</ul>
+<h3>Examples of shell-gei</h3>
+<p>Example 1: Output random String</p>
+<div class="codeClass"><pre><code class="mono-font2">head -c 65536 /dev/urandom | tr -dc a-zA-Z0-9 | cut -c -16</code></pre></div>
+<p>Example 2: Delete all .jpg files</p>
+<div class="codeClass"><pre><code class="mono-font2">find . | grep .jpg$ | xargs -I@ rm @</code></pre></div>
+<h3>Extra</h3>
+<p>Extra 1: Python</p>
+<div class="codeClass"><pre><code class="mono-font2">python3 -c "import math;print(math.pi)"</code></pre></div>
+<p>Extra 2: C++</p>
+<div class="codeClass"><pre><code class="mono-font2">cat&lt;&lt;EOF&gt;a.cpp
+#include &lt;bits/stdc++.h&gt;
+int main() {
+  printf("C++ Test
+");
+}
+EOF
+g++ a.cpp
+./a.out</code></pre></div>
+</details>
+
+<details>
+<summary>ABOUT RUN OF SHELL-GEI</summary>
+<h3>Environment</h3>
+<ul>
+<li>cat /etc/os-release: Ubuntu 24.04 LTS</li>
+<li>echo $SHELL: /bin/bash</li>
+<li>bash --version: 5.2.21(1)-release</li>
+<li>python3 -V: Python 3.12.3</li>
+<li>g++ --version: 13.2.0</li>
+</ul>
+<h3>Attention</h3>
+<ul>
+<li>Input can be get with "cat input.txt".</li>
+<li>Dangerous shell-gei are prohibited.</li>
+<li>Extra white space or line breaks will affect correct/incorrect judgment.</li>
+<li>The output format must follow the expected output.</li>
+</ul>
+<h3>Limitations</h3>
+<ul>
+<li>Run time : 5.0s</li>
+<li>Number of characters (in/out) : 1000</li>
+</ul>
+</details>
+
+<details>
+<summary>EXERCISE ANSWER</summary>
+
+<details>
+<summary>echo</summary>
+<p>echo 1</p>
+<div class="codeClass"><pre><code class="mono-font2">echo "SHELLGEI ONLINE JUDGE"</code></pre></div>
+<p>echo 2</p>
+<div class="codeClass"><pre><code class="mono-font2">echo -e "SHELLGEI
+ONLINE
+JUDGE"</code></pre></div>
+<p>echo 3</p>
+<div class="codeClass"><pre><code class="mono-font2">echo $SHELL</code></pre></div>
+</details>
+
+<details>
+<summary>cat</summary>
+<p>cat 1</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt</code></pre></div>
+<p>cat 2</p>
+<div class="codeClass"><pre><code class="mono-font2">cat -n input.txt</code></pre></div>
+<p>cat 3</p>
+<div class="codeClass"><pre><code class="mono-font2">cat -e input.txt</code></pre></div>
+<p>cat 4</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt  /ShellGeiData/vol.65/input</code></pre></div>
+</details>
+
+<details>
+<summary>sed</summary>
+<p>sed 1</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed "s/XXX/SHELLGEI/"</code></pre></div>
+<p>sed 2</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed "s/XXX/SHELLGEI/;s/YYY/ONLINE/"</code></pre></div>
+<p>sed 3</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed "s/[0-9]//g"</code></pre></div>
+<p>sed 4</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed "/[0-9]/d"</code></pre></div>
+<p>sed 5</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed -n "/[0-9]/p"</code></pre></div>
+<p>sed 6</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed "s/\([a-z]*[0-9]\)/\1.jpg/"</code></pre></div>
+</details>
+
+<details>
+<summary>find</summary>
+<p>find 1</p>
+<div class="codeClass"><pre><code class="mono-font2">find "/ShellGeiData/sd201701"</code></pre></div>
+<p>find 2</p>
+<div class="codeClass"><pre><code class="mono-font2">find "/ShellGeiData/sd201701" -type f</code></pre></div>
+<p>find 3</p>
+<div class="codeClass"><pre><code class="mono-font2">find "/ShellGeiData/sd201701" -type f -name "dangerous*"</code></pre></div>
+</details>
+
+<details>
+<summary>grep</summary>
+<p>grep 1</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | grep ".jpg"</code></pre></div>
+<p>grep 2</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | grep -e ".jpg" -e ".png"</code></pre></div>
+<p>grep 3</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | grep -v ".txt"</code></pre></div>
+<p>grep 4</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | grep ".jpg$"</code></pre></div>
+</details>
+
+<details>
+<summary>awk</summary>
+<p>awk 1</p>
+<div class="codeClass"><pre><code class="mono-font2">echo | awk "{print "SHELLGEI ONLINE JUDGE"}"</code></pre></div>
+<p>awk 2</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk "{print $2}"</code></pre></div>
+<p>awk 3</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk "{print $1,$3,$2}"</code></pre></div>
+<p>awk 4</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk "BEGIN{cnt=0}{cnt+=1}END{print cnt}"</code></pre></div>
+<p>awk 5</p>
+<div class="codeClass"><pre><code class="mono-font2">echo | awk "{for(i=1;i&lt=10;i++){print i}}"</code></pre></div>
+<p>awk 6</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk "{if($0%2==0){print "EVEN"}else{print "ODD"}}"</code></pre></div>
+</details>
+
+<details>
+<summary>sort</summary>
+<p>sort 1</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sort</code></pre></div>
+<p>sort 2</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sort -r</code></pre></div>
+<p>sort 3</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sort -u</code></pre></div>
+</details>
+
+<details>
+<summary>wc</summary>
+<p>wc 1</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | wc -l</code></pre></div>
+<p>wc 2</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | wc -w</code></pre></div>
+<p>wc 3</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | wc -m</code></pre></div>
+</details>
+
+<details>
+<summary>uniq</summary>
+<p>uniq 1</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sort | uniq</code></pre></div>
+<p>uniq 2</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sort | uniq -c</code></pre></div>
+</details>
+</details>
+
+<details>
+<summary>UPDATE HISTORY</summary>
+<ul>
+<li>Update history of SHELLGEI ONLINE JUDGE.</li>
+</ul>
+<details>
+<summary>2024</summary>
+<ul>
+<li>11/04: テスト追加、HTTPS更新、問題数表示</li>
+<li>11/02: 正誤判定の処理をサーバ側へ移動（完了）</li>
+<li>10/28: 正誤判定の処理をサーバ側へ移動</li>
+<li>10/22: 問題選択にバグがあったので修正</li>
+<li>10/20: コマンドを入力するボタンを設置</li>
+<li>10/16: Ctrl+Enterでシェル芸を実行できる機能追加</li>
+<li>10/14: ジャッジ修正（正誤判定で必ず正解になる問題の解決）</li>
+<li>10/01: メンテナンス、HTTPS更新</li>
+<li>09/07: テキスト修正</li>
+<li>09/06: 画像生成問題追加</li>
+<li>09/04: メンテナンス一旦完了、システム全体を見直し</li>
+<li>09/03: ブラウザ側のアプリを整理</li>
+<li>09/01: JavaScript側でもボタンの連打防止</li>
+<li>08/31: 全体を整理, 連続実行の予防</li>
+<li>08/27: 問題集データを整理</li>
+<li>08/26: 問題集データのリンクを追加</li>
+<li>08/25: 日本語と英語を分ける、SSL証明書更新、問題追加</li>
+<li>08/11: 微修正</li>
+<li>08/07: SSL証明書更新</li>
+<li>07/18: SSL証明書更新</li>
+<li>06/14: 練習問題wc,uniqを追加、SSL証明書更新</li>
+<li>05/27: 練習問題sortを追加</li>
+<li>05/25: 練習問題sortを追加</li>
+<li>05/23: 練習問題awkを追加</li>
+<li>05/17: 練習問題awkを追加</li>
+<li>05/15: 誤字脱字を修正、練習問題awkを追加</li>
+<li>05/13: 練習問題awkを追加、等幅フォント指定</li>
+<li>05/12: 練習問題grepを追加</li>
+<li>05/11: 練習問題findを追加</li>
+<li>05/06: 練習問題sedを追加</li>
+<li>05/05: デザイン微修正、SSL証明書更新、練習問題catを追加</li>
+<li>05/04: お知らせのレイアウトを更新、シェル芸IDを追加</li>
+<li>05/03: 一周年、お知らせを追加</li>
+<li>05/02: 問題タイトル修正、問41と問42を追加</li>
+<li>05/01: デザイン修正</li>
+<li>04/30: 拡大表示不可、その他微修正</li>
+<li>04/29: システム修正、レイアウト修正</li>
+<li>04/28: 説明文を微修正</li>
+<li>04/27: レイアウト調整</li>
+<li>04/26: フォント指定</li>
+<li>04/25: 練習問題echo、実行環境、シェル芸の例を追加</li>
+<li>04/24: 練習問題の項目を追加</li>
+<li>04/23: レイアウト修正</li>
+<li>04/22: レイアウト修正</li>
+<li>04/21: 問39、問40を追加、デザイン修正</li>
+<li>04/20: システムを修正、英語対応（？）</li>
+<li>04/17: サーバ側の処理を修正、タイムアウト機能修正</li>
+<li>04/13: 更新履歴作成、画像のリンク修正</li>
+<li>03/05: SSL証明書更新</li>
+</ul>
+</details>
+<details>
+<summary>2023</summary>
+<ul>
+<li>11/10: 問題追加</li>
+<li>10/01: 問題追加</li>
+<li>09/02: 問題追加</li>
+<li>08/06: 問題追加</li>
+<li>07/01: 問題追加</li>
+<li>06/03: 問題追加</li>
+<li>05/20: 問題追加</li>
+<li>05/13: 問題追加、レイアウト修正</li>
+<li>05/07: 問題追加、HTMLタグに対応</li>
+<li>05/03: サービス開始</li>
+</ul>
+</details>
+</details>
+
+<details>
+<summary>CONTACT</summary>
+<h3>X / Twitter</h3>
+<ul>
+<li><a href="https://twitter.com/yusukekato_main">@yusukekato_main</a></li>
+<li>hashtag: #ShellgeiOnlineJudge</li>
+</ul>
+<h3>Shellgei Online Judge Discussions</h3>
+<ul>
+<li><a href="https://github.com/YusukeKato/ShellgeiOnlineJudge/discussions">GitHub - Discussions</a></li>
+</ul>
+<h3>Others</h3>
+<ul>
+<li>GitHub : <a href="https://github.com/YusukeKato">YusukeKato</a></li>
+<li>Blog : <a href="https://yusukekato.jp/">yusukekato.jp</a></li>
+</ul>
+<h3>Contact</h3>
+<iframe src="https://docs.google.com/forms/d/e/1FAIpQLSe8XIueiVyEXZBlVzwTYzqF241MLRkYK17PCtKy8Y94Fs7z1A/viewform?embedded=true" width="640" height="585" frameborder="0" marginheight="0" marginwidth="0">loading...</iframe>
+</details>
+
+<details>
+<summary>OTHERS</summary>
+<h3>Attention</h3>
+<ul>
+<li>This website Use Google Analytics and Google Search Console.</li>
+<li>I am not responsible for any damage or loss caused by the use of this website.</li>
+<li>Log such as executed commands is recorded.</li>
+</ul>
+<h3>Example answer</h3>
+<ul>
+<li>Thanks for solving problems.</li>
+<li><a href="https://gist.github.com/eggplants/71c0459f38028938a15d35b19bab47b5">eggplants/ans.csv</a></li>
+<li><a href="https://shellgei.wiki/?cat=5">シェル芸非公式WIKI</a></li>
+</ul>
+<h3>Recommendation</h3>
+<ul>
+<li>List of recommendations.</li>
+<li><a href="https://b.ueda.tech/?page=00684">シェル芸勉強会問題一覧</a></li>
+<li><a href="https://atcoder.jp/">AtCoder（競技プログラミング）</a></li>
+</ul>
+</details>
+
+<h2>Select Problem</h2>
+<h3 id="generalProblem">General</h3>
+<div class="centerClass">
+<label class="selectbox">
+<select class="selectClass" id="selectForm1">
+<option value="GENERAL-00000001">1 : Test: Output</option>
+<option value="GENERAL-00000002">2 : Test: Input</option>
+<option value="GENERAL-00000003">3 : Test: Newline</option>
+<option value="GENERAL-00000004">4 : Add</option>
+<option value="GENERAL-00000005">5 : Fibonacci</option>
+<option value="GENERAL-00000006">6 : PI 10</option>
+<option value="GENERAL-00000007">7 : PI 100</option>
+<option value="GENERAL-00000008">8 : Crane &amp; Turtle</option>
+<option value="GENERAL-00000009">9 : Diary in Pieces</option>
+<option value="GENERAL-00000010">10 : Blank Diary</option>
+<option value="GENERAL-00000011">11 : Matrix Rotation</option>
+<option value="GENERAL-00000012">12 : Bit Inversion</option>
+<option value="GENERAL-00000013">13 : Check Alphabet</option>
+<option value="GENERAL-00000014">14 : Grouping</option>
+<option value="GENERAL-00000015">15 : Judge Prime Number</option>
+<option value="GENERAL-00000016">16 : Test: HTML Tag</option>
+<option value="GENERAL-00000017">17 : Sort 1</option>
+<option value="GENERAL-00000018">18 : Binary Search</option>
+<option value="GENERAL-00000019">19 : String Iteration</option>
+<option value="GENERAL-00000020">20 : Prime Factorization</option>
+<option value="GENERAL-00000021">21 : Palindrome</option>
+<option value="GENERAL-00000022">22 : 2^1024</option>
+<option value="GENERAL-00000023">23 : Score Calculation</option>
+<option value="GENERAL-00000024">24 : Knapsack Problem</option>
+<option value="GENERAL-00000025">25 : Combine String</option>
+<option value="GENERAL-00000026">26 : Shortest Path Search</option>
+<option value="GENERAL-00000027">27 : Timetable</option>
+<option value="GENERAL-00000028">28 : Pattern 1</option>
+<option value="GENERAL-00000029">29 : Pattern 2</option>
+<option value="GENERAL-00000030">30 : Caesar Cipher</option>
+<option value="GENERAL-00000031">31 : GCD</option>
+<option value="GENERAL-00000032">32 : LCM</option>
+<option value="GENERAL-00000033">33 : Charactor Count 1</option>
+<option value="GENERAL-00000034">34 : x^5</option>
+<option value="GENERAL-00000035">35 : Copy String</option>
+<option value="GENERAL-00000036">36 : Output Number</option>
+<option value="GENERAL-00000037">37 : Extracting Number</option>
+<option value="GENERAL-00000038">38 : Divisible?</option>
+<option value="GENERAL-00000039">39 : Delete Duplicates</option>
+<option value="GENERAL-00000040">40 : Charactor Count 2</option>
+<option value="GENERAL-00000041">41 : Magic Square 3x3</option>
+<option value="GENERAL-00000042">42 : Magic Square 5x5</option>
+<option value="GENERAL-00000043">43 : Copy String 2</option>
+<option value="GENERAL-00000044">44 : Search String</option>
+<option value="GENERAL-00000045">45 : Pattern 3</option>
+<option value="GENERAL-00000046">46 : Create Identity Matrix</option>
+</select>
+</label>
+<p></p>
+</div>
+<div class="centerClass">
+<input type="button" value="GO" class="buttonClass" id="selectButton1">
+</div>
+
+<h3 id="exerciseProblem">Exercise</h3>
+<div class="centerClass">
+<label class="selectbox">
+<select class="selectClass" id="selectForm2">
+<option value="EXERCISE-00000001">1-1 : echo 1</option>
+<option value="EXERCISE-00000002">1-2 : echo 2</option>
+<option value="EXERCISE-00000003">1-3 : echo 3</option>
+<option value="EXERCISE-00000011">2-1 : cat 1</option>
+<option value="EXERCISE-00000012">2-2 : cat 2</option>
+<option value="EXERCISE-00000013">2-3 : cat 3</option>
+<option value="EXERCISE-00000014">2-4 : cat 4</option>
+<option value="EXERCISE-00000021">3-1 : sed 1</option>
+<option value="EXERCISE-00000022">3-2 : sed 2</option>
+<option value="EXERCISE-00000023">3-3 : sed 3</option>
+<option value="EXERCISE-00000024">3-4 : sed 4</option>
+<option value="EXERCISE-00000025">3-5 : sed 5</option>
+<option value="EXERCISE-00000026">3-6 : sed 6</option>
+<option value="EXERCISE-00000041">4-1 : find 1</option>
+<option value="EXERCISE-00000042">4-2 : find 2</option>
+<option value="EXERCISE-00000043">4-3 : find 3</option>
+<option value="EXERCISE-00000061">5-1 : grep 1</option>
+<option value="EXERCISE-00000062">5-2 : grep 2</option>
+<option value="EXERCISE-00000063">5-3 : grep 3</option>
+<option value="EXERCISE-00000064">5-4 : grep 4</option>
+<option value="EXERCISE-00000081">6-1 : awk 1</option>
+<option value="EXERCISE-00000082">6-2 : awk 2</option>
+<option value="EXERCISE-00000083">6-3 : awk 3</option>
+<option value="EXERCISE-00000084">6-4 : awk 4</option>
+<option value="EXERCISE-00000085">6-5 : awk 5</option>
+<option value="EXERCISE-00000086">6-6 : awk 6</option>
+<option value="EXERCISE-00000101">7-1 : sort 1</option>
+<option value="EXERCISE-00000102">7-2 : sort 2</option>
+<option value="EXERCISE-00000103">7-3 : sort 3</option>
+<option value="EXERCISE-00000121">8-1 : wc 1</option>
+<option value="EXERCISE-00000122">8-2 : wc 2</option>
+<option value="EXERCISE-00000123">8-3 : wc 3</option>
+<option value="EXERCISE-00000141">9-1 : uniq 1</option>
+<option value="EXERCISE-00000142">9-2 : uniq 2</option>
+</select>
+</label>
+<p></p>
+</div>
+<div class="centerClass">
+<input type="button" value="GO" class="buttonClass" id="selectButton2">
+</div>
+
+<h3 id="imageProblem">Image</h3>
+<div class="centerClass">
+<label class="selectbox">
+<select class="selectClass" id="selectForm3">
+<option value="IMAGE-00000001">1: Image Test</option>
+<option value="IMAGE-00000002">2: Draw Line</option>
+<option value="IMAGE-00000003">3: Draw Circle</option>
+<option value="IMAGE-00000004">4: Draw Checkered Pattern</option>
+<option value="IMAGE-00000005">5: Draw Square</option>
+</select>
+</label>
+<p></p>
+</div>
+<div class="centerClass">
+<input type="button" value="GO" class="buttonClass" id="selectButton3">
+</div>
+
+<h3>Selected Problem ID</h3>
+<div class="textClass">
+<pre><code id="selectedText" class="mono-font">NULL</code></pre>
+</div>
+<h2>Problem</h2>
+<h3>Problem Statement</h3>
+<div class="textClass">
+<pre><code id="problemText" class="mono-font">NULL</code></pre>
+</div>
+<h3>Input</h3>
+<div class="textClass">
+<pre><code id="inputText" class="mono-font">NULL</code></pre>
+</div>
+<h3>Expected Output</h3>
+<div class="textClass">
+<pre><code id="outputText" class="mono-font">NULL</code></pre>
+</div>
+<h3>Expected Output Image</h3>
+<div class="img" id="outputImage">
+</div>
+
+<h2>Run</h2>
+<details>
+<summary>Attention</summary>
+<h3>Attention</h3>
+<ul>
+<li>Get Input : "cat input.txt"</li>
+<li>Output Image as "media/output.jpg"</li>
+<li>Output must match the expected output text and image.</li>
+<li>Dangerous shell-gei are prohibited.</li>
+<li>Extra white space or line breaks will affect correct/incorrect judgment.</li>
+</ul>
+<h3>Limitations</h3>
+<ul>
+<li>Run time : 5.0s</li>
+<li>Number of characters (in/out) : 1000</li>
+</ul>
+</details>
+<div id="click-commands">
+<button class="command-button" id="command-awk">awk</button>
+<button class="command-button" id="command-cat">cat</button>
+<button class="command-button" id="command-concat">concat</button>
+<button class="command-button" id="command-convert">convert</button>
+<button class="command-button" id="command-cowsay">cowsay</button>
+<button class="command-button" id="command-cut-c">cut -c</button>
+<button class="command-button" id="command-cut-df">cut -d -f</button>
+<button class="command-button" id="command-echo">echo</button>
+<button class="command-button" id="command-ffmpeg">ffmpeg</button>
+<button class="command-button" id="command-find">find</button>
+<button class="command-button" id="command-grep">grep</button>
+<button class="command-button" id="command-ls">ls</button>
+<button class="command-button" id="command-ps">ps</button>
+<button class="command-button" id="command-sed">sed</button>
+<button class="command-button" id="command-seq">seq</button>
+<button class="command-button" id="command-sort">sort</button>
+<button class="command-button" id="command-tail-c">tail -c</button>
+<button class="command-button" id="command-tail-n">tail -n</button>
+<button class="command-button" id="command-textimg">textimg</button>
+<button class="command-button" id="command-uniq">uniq</button>
+<button class="command-button" id="command-unkosay">unko.say</button>
+<button class="command-button" id="command-wc">wc</button>
+<button class="command-button" id="command-pipe"> |(pipe) </button>
+<button class="command-button" id="command-single-quote"> '(single) </button>
+<button class="command-button" id="command-double-quote"> "(double) </button>
+<button class="command-button" id="command-back-quote"> `(back) </button>
+<button class="command-button" id="command-txt-path">input.txt</button>
+<button class="command-button" id="command-img-path">/media/output.jpg</button>
+</div>
+<div class="centerClass">
+<textarea name="cmdline" cols="50" rows="12" id="cmdline" placeholder="Write your shell-gei here"></textarea>
+</div>
+<div class="centerClass">
+<input type="button" value="RUN (Ctrl+Enter)" class="buttonClass" id="submitButton">
+</div>
+
+<h2>Result</h2>
+<h3>Judgment</h3>
+<div class="textClass">
+<pre><code id="resultText" class="mono-font">NULL</code></pre>
+</div>
+<h3>Output Result</h3>
+<div class="textClass">
+<pre><code id="userOutputText" class="mono-font">NULL</code></pre>
+</div>
+<h3>Output Image</h3>
+<div class="img" id="resultImage">
+</div>
+<h3>Executed Shell-gei</h3>
+<div class="textClass">
+<pre><code id="shellgeiText" class="mono-font">NULL</code></pre>
+</div>
+
+<hr class="BlackLine">
+<p></p>
+<div class="img">
+<img src="https://shellgei-online-judge.com/BlackTreeIcon.jpg">
+</div>
+<script>
+var is_jp = false;
+</script>
+<script src="https://shellgei-online-judge.com/index.js?version=1082"></script>
+</div> <!-- alldiv -->
+<h1 class="heading-028-2" data-label="">GitHub - <a href="https://github.com/YusukeKato/ShellgeiOnlineJudge/discussions" class="white-link">SHELLGEI ONLINE JUDGE Discussions</a><br>&copy; 2023 YusukeKato All rights reserved.</h1>
+</body>
+</html>

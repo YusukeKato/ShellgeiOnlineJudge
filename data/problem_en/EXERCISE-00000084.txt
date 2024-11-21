@@ -1,0 +1,2 @@
+Exercise: awk
+Count the number of lines in the input file "input.txt".

@@ -1,0 +1,1 @@
+Sort the diary in chronological order.

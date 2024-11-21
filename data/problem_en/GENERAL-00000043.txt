@@ -1,0 +1,1 @@
+Add '.png' and '.jpg' to the end of each line of the input string, and output them separated by a space.

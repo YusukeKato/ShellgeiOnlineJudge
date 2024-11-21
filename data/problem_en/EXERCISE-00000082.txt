@@ -1,0 +1,2 @@
+Exercise: awk
+Output only the second column of the input file "input.txt".

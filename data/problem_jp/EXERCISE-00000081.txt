@@ -1,0 +1,2 @@
+練習：awk
+awkコマンドで文字列"SHELLGEI ONLINE JUDGE"を出力してください。

@@ -1,0 +1,2 @@
+Output the input string as is.
+ex: cat input.txt

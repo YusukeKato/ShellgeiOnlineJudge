@@ -1,0 +1,2 @@
+Exercise: wc
+Output the number of lines in the input file "input.txt".

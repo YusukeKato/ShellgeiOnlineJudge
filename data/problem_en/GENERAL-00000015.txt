@@ -1,0 +1,1 @@
+Output "YES" if the number is prime, "NO" if the number is not prime.

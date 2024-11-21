@@ -1,0 +1,2 @@
+A, B and C are worth 1 point, D and E are worth 2 points, and F is worth 3 points.
+In each line, output the total number of points.

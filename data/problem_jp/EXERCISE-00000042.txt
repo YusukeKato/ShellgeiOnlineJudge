@@ -1,0 +1,3 @@
+練習：find
+findコマンドで"/ShellGeiData/sd201701" の中にあるファイルのみの一覧を出力してください。
+使用データ : https://github.com/ryuichiueda/ShellGeiData/tree/master/sd201701

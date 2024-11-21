@@ -1,0 +1,1 @@
+The number of inputs N is output N times.

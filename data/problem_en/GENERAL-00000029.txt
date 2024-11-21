@@ -1,0 +1,1 @@
+Output the same pattern as the expected output.

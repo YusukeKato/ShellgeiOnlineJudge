@@ -1,0 +1,2 @@
+Draw a 50[px] horizontal line down the middle of the red 200x200[px] image.
+Output image as media/output.jpg.
