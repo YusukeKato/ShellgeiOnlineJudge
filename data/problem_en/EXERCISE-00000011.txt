@@ -1,0 +1,2 @@
+Exercise: cat
+Output the input file "input.txt" as is.

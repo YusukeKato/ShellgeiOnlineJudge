@@ -1,0 +1,9 @@
+Input:
+- first column: the sum of cranes and turtles 
+- second column: the sum of the number of legs
+
+Output:
+- first column: the number of cranes
+- second column: the number of turtles
+
+Where cranes have two legs and turtles have four legs.

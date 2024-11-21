@@ -1,0 +1,1 @@
+Output "YES" if the string in each line is a palindrome, or "NO" if it is not a palindrome.

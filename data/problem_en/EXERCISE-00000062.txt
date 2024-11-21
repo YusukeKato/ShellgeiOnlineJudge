@@ -1,0 +1,2 @@
+Exercise: grep
+Output only lines with the extension ".jpg" or ".png" from the input file "input.txt".

@@ -1,0 +1,1 @@
+Extract only the numbers from the input.

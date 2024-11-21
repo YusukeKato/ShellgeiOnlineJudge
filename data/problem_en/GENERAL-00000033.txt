@@ -1,0 +1,1 @@
+Count the number of characters in each line.

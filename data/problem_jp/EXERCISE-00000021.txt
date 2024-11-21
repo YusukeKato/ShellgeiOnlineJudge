@@ -1,0 +1,2 @@
+練習：sed
+sedコマンドで入力ファイル"input.txt"の"XXX"を"SHELLGEI"に置換してください。

@@ -1,0 +1,1 @@
+Given a train schedule, output the earliest arrival time for a train leaving station A at exactly 8:00 and arriving at station D.

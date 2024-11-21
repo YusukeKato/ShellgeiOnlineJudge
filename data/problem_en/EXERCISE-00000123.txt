@@ -1,0 +1,2 @@
+Exercise: wc
+Output the number of characters in the input file "input.txt"(Including line breaks).

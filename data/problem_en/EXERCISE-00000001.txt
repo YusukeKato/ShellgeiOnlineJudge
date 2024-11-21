@@ -1,0 +1,2 @@
+Exercise: echo
+Output the string "SHELLGEI ONLINE JUDGE".

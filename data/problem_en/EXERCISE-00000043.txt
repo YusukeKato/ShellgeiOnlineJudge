@@ -1,0 +1,3 @@
+Exercise: find
+Output a list of files named “dangerous” in "/ShellGeiData/sd201701".
+data: https://github.com/ryuichiueda/ShellGeiData/tree/master/sd201701

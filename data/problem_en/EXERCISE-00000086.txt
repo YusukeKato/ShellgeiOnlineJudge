@@ -1,0 +1,2 @@
+Exercise: awk
+Determine whether each line of the input file "input.txt" is even or odd.

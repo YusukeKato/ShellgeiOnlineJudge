@@ -1,0 +1,1 @@
+Output the number of characters for a, b, and c.

@@ -1,0 +1,1 @@
+Judge if the value in the first column is divisible by the value in the second column.

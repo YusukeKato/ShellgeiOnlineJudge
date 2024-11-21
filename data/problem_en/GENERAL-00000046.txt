@@ -1,0 +1,1 @@
+Output an N x N identity matrix, when given an input N.

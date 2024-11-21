@@ -1,0 +1,2 @@
+Exercise: uniq, sort
+Output the number of pieces in each line of the input file "input.txt".
