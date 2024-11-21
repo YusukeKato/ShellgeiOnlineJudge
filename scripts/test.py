@@ -6,7 +6,7 @@ import sys
 
 args = sys.argv
 main_url = 'https://shellgei-online-judge.com/connection.php';
-if len(args) > 0 and args[1] == "true":
+if len(args) > 1 and args[1] == "true":
   main_url = 'http://localhost/connection.php';
 
 def test_func(shellgei, problemNum, is_correct):

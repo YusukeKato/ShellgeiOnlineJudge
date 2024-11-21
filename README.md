@@ -1,18 +1,24 @@
 # SHELLGEI ONLINE JUDGE
-- Shell one-liner playground
-- https://shellgei-online-judge.com/
+Shell one-liner playground: https://shellgei-online-judge.com/
 
-## TOC
-- [Directory structure](#directory-structure)
-- [Setup](#setup)
-- [Test](#test)
-- [License](#license)
-
-## Directory structure
 - [client](client/README.md): html + js + css ( + nginx)
 - [server](server/README.md): php + python ( + docker)
 - [data](data/README.md): problem text files
 - scripts: deploy & test
+
+## Table of Contents
+- [Reference](#reference)
+- [Setup](#setup)
+- [Test](#test)
+- [License](#license)
+- [Appendix](#appendix)
+
+## Reference
+- [上田ブログ/シェル芸のトップページ](https://b.ueda.tech/?page=01434)
+- [theoremoon/ShellgeiBot-Image](https://github.com/theoremoon/ShellgeiBot-Image)
+- [ryuichiueda/ShellGeiData](https://github.com/ryuichiueda/ShellGeiData)
+- [jiro4989/websh](https://github.com/jiro4989/websh)
+- [シェル芸bot](https://x.com/minyoruminyon)
 
 ## Setup
 - Ubuntu 22.04 LTS
@@ -114,3 +120,33 @@ python3 test.py true
 ## License
 - data: Creative Commons BY-NC-ND 4.0
 - client, server, scripts: Apache License 2.0
+
+## Appendix
+
+### Update image file
+```sh
+docker pull theoldmoon0602/shellgeibot
+```
+
+### Output log
+```sh
+cat <root_path>/shellgei_log.txt | tail -n 20
+```
+
+### Update Amazon Linux
+```sh
+sudo dnf update
+sudo dnf upgrade
+```
+
+### Update Let's Encrypt
+```sh
+sudo certbot certonly --standalone
+sudo systemctl reload nginx
+```
+
+### How to ssh
+```sh
+# sudo chmod 400 example.pem
+ssh -i "example.pem" username@example.com
+```
