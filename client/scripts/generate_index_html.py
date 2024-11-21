@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 update_date = "2024/11/21"
-version_str = "?version=1083"
+version_str = "?version=1084"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
@@ -76,13 +76,16 @@ def write_index_html(lang):
   # リストボタン生成
   lines.append('<ul class="nav-list">\n')
   lines.append('<li class="nav-list-item">\n')
-  lines.append('<a href="'+main_url+'/index.html" class="bButton">JAPANESE</a>\n')
+  lines.append('<a href="'+main_url+'/index.html" class="bButton">JP</a>\n')
   lines.append('</li>\n')
   lines.append('<li class="nav-list-item">\n')
-  lines.append('<a href="'+main_url+'/index.en.html" class="bButton">ENGLISH</a>\n')
+  lines.append('<a href="'+main_url+'/index.en.html" class="bButton">EN</a>\n')
   lines.append('</li>\n')
   lines.append('<li class="nav-list-item">\n')
-  lines.append('<a href="'+blog_url+'" class="bButton">AUTHOR</a>\n')
+  lines.append('<a href="https://github.com/YusukeKato/ShellgeiOnlineJudge" class="bButton">GitHub</a>\n')
+  lines.append('</li>\n')
+  lines.append('<li class="nav-list-item">\n')
+  lines.append('<a href="'+blog_url+'" class="bButton">Blog</a>\n')
   lines.append('</li>\n')
   lines.append('</ul>\n')
   lines.append('\n')
@@ -125,11 +128,6 @@ def write_index_html(lang):
   lines.append('</div>\n')
   lines.append('\n')
 
-  # Discussions
-  lines.append('<h3>Discussions</h3>\n')
-  lines.append('<a href="https://github.com/YusukeKato/ShellgeiOnlineJudge/discussions">GitHub - Discussions</a>\n')
-  lines.append('\n')
-
   # information
   # about SHELLGEI ONLINE JUDGE
   if lang == "jp":
@@ -145,6 +143,7 @@ def write_index_html(lang):
     lines.append('<h3>Shellgei Online Judge Repository</h3>\n')
     lines.append('<ul>\n')
     lines.append('<li><a href="https://github.com/YusukeKato/ShellgeiOnlineJudge">GitHub - ShellgeiOnlineJudge</a></li>\n')
+    lines.append('<li><a href="https://github.com/YusukeKato/ShellgeiOnlineJudge/discussions">GitHub - SHELLGEI ONLINE JUDGE Discussions</a></li>\n')
     lines.append('</ul>\n')
     lines.append('<h3>感謝</h3>\n')
     lines.append('<ul>\n')
@@ -179,6 +178,7 @@ def write_index_html(lang):
     lines.append('<h3>Shellgei Online Judge Repository</h3>\n')
     lines.append('<ul>\n')
     lines.append('<li><a href="https://github.com/YusukeKato/ShellgeiOnlineJudge">GitHub - ShellgeiOnlineJudge</a></li>\n')
+    lines.append('<li><a href="https://github.com/YusukeKato/ShellgeiOnlineJudge/discussions">GitHub - SHELLGEI ONLINE JUDGE Discussions</a></li>\n')
     lines.append('</ul>\n')
     lines.append('<h3>Thanks</h3>\n')
     lines.append('<ul>\n')
@@ -354,7 +354,7 @@ def write_index_html(lang):
   lines.append('<p>sed 5</p>\n')
   lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed -n "/[0-9]/p"</code></pre></div>\n')
   lines.append('<p>sed 6</p>\n')
-  lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed "s/\([a-z]*[0-9]\)/\\1.jpg/"</code></pre></div>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed "s/\\([a-z]*[0-9]\\)/\\1.jpg/"</code></pre></div>\n')
   lines.append('</details>\n')
   lines.append('\n')
 
