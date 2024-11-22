@@ -12,8 +12,8 @@ Shell one-liner playground: https://shellgei-online-judge.com/
 - [Deploy](#deploy)
 - [Test](#test)
 - [Maintenance](#maintenance)
-- [License](#license)
 - [Appendix](#appendix)
+- [License](#license)
 
 ## Reference
 - [上田ブログ/シェル芸のトップページ](https://b.ueda.tech/?page=01434)
@@ -71,7 +71,7 @@ sudo systemctl restart nginx
 execute the following command:
 ```sh
 # install docker
-sudo apt update && sudo apt upgrade -y
+sudo apt update && sudo apt -y upgrade
 sudo apt install ca-certificates curl gnupg lsb-release
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -148,14 +148,14 @@ sudo certbot certonly --standalone
 sudo systemctl reload nginx
 ```
 
-## License
-- [License file](./LICENSE)
-- data: Creative Commons BY-NC-ND 4.0
-- client, server, scripts: Apache License 2.0
-
 ## Appendix
 ### How to use SSH
 ```sh
 # sudo chmod 400 example.pem
 ssh -i "example.pem" username@example.com
 ```
+
+## License
+- [License file](./LICENSE)
+- data: Creative Commons BY-NC-ND 4.0
+- client, server, scripts: Apache License 2.0
