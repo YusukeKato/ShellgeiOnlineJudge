@@ -9,7 +9,9 @@ Shell one-liner playground: https://shellgei-online-judge.com/
 ## Table of Contents
 - [Reference](#reference)
 - [Setup](#setup)
+- [Deploy](#deploy)
 - [Test](#test)
+- [Maintenance](#maintenance)
 - [License](#license)
 - [Appendix](#appendix)
 
@@ -94,7 +96,7 @@ Add the following line to the end.
 www-data ALL=(ALL) NOPASSWD: /usr/bin/docker
 ```
 
-### Deploy ShellgeiOnlineJudge
+## Deploy
 - server root path: `/usr/share/nginx/html/`
 - local root path: `/var/www/html`
 
@@ -117,20 +119,21 @@ python3 test.py
 python3 test.py true
 ```
 
-## License
-- data: Creative Commons BY-NC-ND 4.0
-- client, server, scripts: Apache License 2.0
-
-## Appendix
+## Maintenance
+### Output log
+```sh
+cat <root_path>/shellgei_log.txt | tail -n 20
+```
 
 ### Update image file
 ```sh
 docker pull theoldmoon0602/shellgeibot
 ```
 
-### Output log
+### Update Ubuntu
 ```sh
-cat <root_path>/shellgei_log.txt | tail -n 20
+sudo apt update
+sudo apt upgrade
 ```
 
 ### Update Amazon Linux
@@ -145,7 +148,13 @@ sudo certbot certonly --standalone
 sudo systemctl reload nginx
 ```
 
-### How to ssh
+## License
+- [License file](./LICENSE)
+- data: Creative Commons BY-NC-ND 4.0
+- client, server, scripts: Apache License 2.0
+
+## Appendix
+### How to use SSH
 ```sh
 # sudo chmod 400 example.pem
 ssh -i "example.pem" username@example.com
