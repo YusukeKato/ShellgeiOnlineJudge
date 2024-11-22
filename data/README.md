@@ -14,7 +14,7 @@ A single problem consists of the following three files.
 
 1. Problem files
 2. Input file
-3. Expected file
+3. Expected output file
 
 # Scripts
 Count the number of problems.
