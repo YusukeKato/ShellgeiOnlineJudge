@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 update_date = "2024/11/23"
-version_str = "?version=1086"
+version_str = "?version=1087"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
@@ -363,6 +363,7 @@ def write_index_html(lang):
     lines.append('<li>GitHub : <a href="https://github.com/YusukeKato">YusukeKato</a></li>\n')
     lines.append('<li>Blog : <a href="https://yusukekato.jp/">yusukekato.jp</a></li>\n')
     lines.append('</ul>\n')
+    lines.append('</details>\n')
     lines.append('\n')
   if lang == "en":
     lines.append('<details>\n')
@@ -382,6 +383,7 @@ def write_index_html(lang):
     lines.append('<li>GitHub : <a href="https://github.com/YusukeKato">YusukeKato</a></li>\n')
     lines.append('<li>Blog : <a href="https://yusukekato.jp/">yusukekato.jp</a></li>\n')
     lines.append('</ul>\n')
+    lines.append('</details>\n')
     lines.append('\n')
 
   # others
@@ -559,7 +561,8 @@ def write_index_html(lang):
   lines.append('<p>uniq 2</p>\n')
   lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sort | uniq -c</code></pre></div>\n')
   lines.append('</details>\n')
-  lines.append('</details>\n')
+
+  lines.append('</details>\n') # answer
   lines.append('\n')
 
   # select general problem
