@@ -8,6 +8,30 @@ if [[ $is_local == "true" ]]; then
   root_path_html="/var/www/html/"
 fi
 
+# delete data
+sudo rm -rf "$root_path_html"problem_jp
+sudo rm -rf "$root_path_html"problem_en
+sudo rm -rf "$root_path_html"problem_images
+sudo rm -rf "$root_path_html"input
+sudo rm -rf "$root_path_html"output
+sudo rm -rf "$root_path_html"scripts
+
+# delete web app
+sudo rm "$root_path_html"index.html
+sudo rm "$root_path_html"index.en.html
+sudo rm "$root_path_html"index.js
+sudo rm "$root_path_html"style.css
+sudo rm "$root_path_html"BlackTreeIcon.jpg
+sudo rm "$root_path_html"favicon.jpg
+sudo rm "$root_path_html"white.jpg
+sudo rm "$root_path_html"black.jpg
+
+# delete server
+sudo rm "$root_path_html"connection.php
+sudo rm "$root_path"run_shellgei.py
+sudo rm "$root_path"judge.py
+sudo rm "$root_path"z.bash
+
 # copy data
 sudo cp -r ../data/problem_jp "$root_path_html"
 sudo cp -r ../data/problem_en "$root_path_html"
