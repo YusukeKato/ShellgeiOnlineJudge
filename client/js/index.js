@@ -1,5 +1,5 @@
 // パラメータ
-var version = 1063;
+var version = 1064;
 const limit_length = parseInt(1000);
 var mainUrl = 'https://shellgei-online-judge.com/';
 var is_enable_button = true;
@@ -315,14 +315,8 @@ function input_awk() {
 function input_cat() {
     input_command("cat ");
 }
-function input_concat() {
-    input_command("concat ");
-}
 function input_convert() {
     input_command("convert ");
-}
-function input_cowsay() {
-    input_command("cowsay ");
 }
 function input_cut_c() {
     input_command("cut -c ");
@@ -420,12 +414,8 @@ commandButton_awk.addEventListener('click', input_awk);
 // c
 var commandButton_cat = document.getElementById('command-cat');
 commandButton_cat.addEventListener('click', input_cat);
-var commandButton_concat = document.getElementById('command-concat');
-commandButton_concat.addEventListener('click', input_concat);
 var commandButton_convert = document.getElementById('command-convert');
 commandButton_convert.addEventListener('click', input_convert);
-var commandButton_cowsay = document.getElementById('command-cowsay');
-commandButton_cowsay.addEventListener('click', input_cowsay);
 var commandButton_cut_c = document.getElementById('command-cut-c');
 commandButton_cut_c.addEventListener('click', input_cut_c);
 var commandButton_cut_df = document.getElementById('command-cut-df');
