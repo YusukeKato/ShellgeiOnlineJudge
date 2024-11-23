@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-update_date = "2024/11/23"
-version_str = "?version=1091"
+update_date = "2024/11/24"
+version_str = "?version=1092"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
@@ -272,6 +272,7 @@ def write_index_html(lang):
   lines.append('<details>\n')
   lines.append('<summary>2024</summary>\n')
   lines.append('<ul>\n')
+  lines.append('<li>- 11/24: concatとcowsayを削除</li>\n')
   lines.append('<li>- 11/23: ドキュメントのメンテナンス</li>\n')
   lines.append('<li>- 11/22: ドキュメントのメンテナンス</li>\n')
   lines.append('<li>- 11/21: リポジトリを一つにまとめる、ローカル環境でテスト可能に</li>\n')
