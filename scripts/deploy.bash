@@ -1,9 +1,10 @@
 root_path="/usr/share/nginx/"
 root_path_html="/usr/share/nginx/html/"
 
-is_local=$1
+is_var=$1
+is_local=$2
 
-if [[ $is_local == "true" ]]; then
+if [[ $is_var == "var" ]]; then
   root_path="/var/www/"
   root_path_html="/var/www/html/"
 fi
@@ -89,6 +90,6 @@ fi
 sudo chmod 777 "$root_path"z.bash
 
 # local
-if [[ $is_local == "true" ]]; then
+if [[ $is_local == "local" ]]; then
   find "$root_path_html" | grep -e "index.js" -e "index*.html" | xargs -I@ sudo sed -i "s/https:\/\/shellgei-online-judge.com/http:\/\/localhost/g" @
 fi

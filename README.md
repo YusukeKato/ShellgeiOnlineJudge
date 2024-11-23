@@ -23,48 +23,43 @@ Shell one-liner playground: https://shellgei-online-judge.com/
 - [シェル芸bot](https://x.com/minyoruminyon)
 
 ## Setup
+- Ubuntu 24.04 LTS
 - Ubuntu 22.04 LTS
+- Amazon Linux 2023
 
 ### Install nginx
 execute the following command:
 ```sh
 # install nginx
-sudo apt update
+sudo apt update && sudo apt -y upgrade
 sudo apt -y install nginx
-nginx -v # nginx/1.18.0 (ubuntu)
 
 # install php
-sudo apt update
-sudo apt -y install php
-php -v # PHP 8.1.2-1ubuntu2.19
+# sudo apt -y install php
 
 # install php-fpm
-sudo apt -y install php-fpm # php8.1-fpm
+sudo apt -y install php-fpm
 ```
 
 ### Config nginx
 execute the following command:
 ```sh
 # edit config
+sudo vim /etc/nginx/conf.d/default.conf
+# or
 sudo vim /etc/nginx/sites-available/default
 ```
 
 Update as follows:
-```
+```sh
+# php8.1-fpm
 location ~ \.php$ {
   fastcgi_pass unix:/run/php/php8.1-fpm.sock;
   fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+  # WSL2(Ubuntu 24.04 LTS): fastcgi_param SCRIPT_FILENAME <root_path>$fastcgi_script_name;
+  # ex: fastcgi_param SCRIPT_FILENAME /var/www/html/$fastcgi_script_name;
   include fastcgi_params;
 }
-```
-
-### Start Nginx
-execute the following command:
-```sh
-sudo systemctl restart nginx
-# sudo systemctl status nginx
-# sudo systemctl start nginx
-# sudo systemctl stop nginx
 ```
 
 ### Install Docker
@@ -79,8 +74,19 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
 sudo apt update
 sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
+# setup
+sudo gpasswd -a $USER docker
+sudo systemctl restart docker
+
 # download image file
 docker pull theoldmoon0602/shellgeibot
+```
+
+### Execution user
+Change the execution user from nginx to www-data in WSL.
+```sh
+sudo vim /etc/php/8.3/fpm/pool.d/www.conf
+sudo vim /etc/nginx/nginx.conf
 ```
 
 ### Permissions to execute Docker
@@ -96,17 +102,31 @@ Add the following line to the end.
 www-data ALL=(ALL) NOPASSWD: /usr/bin/docker
 ```
 
+### Start Nginx
+execute the following command:
+```sh
+sudo systemctl restart nginx
+# sudo systemctl status nginx
+# sudo systemctl start nginx
+# sudo systemctl stop nginx
+```
+
 ## Deploy
-- server root path: `/usr/share/nginx/html/`
-- local root path: `/var/www/html`
+- `usr`: `/usr/share/nginx/html/`
+- `var`: `/var/www/html`
 
 execute the following command:
 ```sh
 cd scripts
-# server
-./deploy.bash
-# local test
-./deploy.bash true
+# `usr`
+./deploy.bash usr server
+# `var`
+./deploy.bash var server
+
+# local
+./deploy.bash usr local
+# or
+./deploy.bash var local
 ```
 
 ## Test
@@ -114,9 +134,9 @@ execute the following command:
 ```sh
 cd scripts
 # server
-python3 test.py
+python3 test.py server
 # local test
-python3 test.py true
+python3 test.py local
 ```
 
 ## Maintenance
