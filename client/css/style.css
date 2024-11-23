@@ -487,6 +487,19 @@ select {
 .command-button:hover {
   background-color: #DDD;
 }
+.command-button-red {
+  padding: 10px 10px;
+  background-color: #FFF;
+  color: #F00;
+  border: 1px solid;
+  cursor: pointer;
+  font-size: 1.0rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+.command-button-red:hover {
+  background-color: #DDD;
+}
 
 /*
  * その他
