@@ -380,9 +380,6 @@ function input_textimg() {
 function input_uniq() {
     input_command("uniq ");
 }
-function input_unkosay() {
-    input_command("unko.say ");
-}
 // w
 function input_wc() {
     input_command("wc ");
@@ -463,8 +460,6 @@ commandButton_textimg.addEventListener('click', input_textimg);
 // u
 var commandButton_uniq = document.getElementById('command-uniq');
 commandButton_uniq.addEventListener('click', input_uniq);
-var commandButton_unkosay = document.getElementById('command-unkosay');
-commandButton_unkosay.addEventListener('click', input_unkosay);
 // w
 var commandButton_wc = document.getElementById('command-wc');
 commandButton_wc.addEventListener('click', input_wc);
