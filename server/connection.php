@@ -78,7 +78,7 @@ $cmd_tmp_image = str_replace(PHP_EOL, "", $cmd_tmp_image);
 shell_exec("$cmd_tmp_image");
 
 // シェル芸を実行して結果を取得
-$cmd2 = "timeout 5 python3 ../run_shellgei.py $cid 2>&1";
+$cmd2 = "timeout 10 python3 ../run_shellgei.py $cid 2>&1";
 $cmd2 = str_replace(PHP_EOL, "", $cmd2);
 $out = shell_exec("$cmd2");
 if(is_null($out)) $out = "NULL";

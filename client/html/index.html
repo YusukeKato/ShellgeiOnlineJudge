@@ -346,6 +346,25 @@ JUDGE"</code></pre></div>
 </details>
 </details>
 
+<details>
+<summary>IMAGEの回答例</summary>
+
+<details>
+<summary>1 - 10</summary>
+<p>1</p>
+<div class="codeClass"><pre><code class="mono-font2">convert -size 200x200 xc:#FF0000 media/output.jpg</code></pre></div>
+<p>2</p>
+<div class="codeClass"><pre><code class="mono-font2">convert -size 200x200 xc:#FF0000 jpg:- | convert - -stroke "#000000" -strokewidth 50 -draw "line 0,100 200,100" media/output.jpg</code></pre></div>
+<p>3</p>
+<div class="codeClass"><pre><code class="mono-font2">convert -size 200x200 xc:#FF0000 jpg:- | convert - -draw "circle 100,100 100,150" media/output.jpg</code></pre></div>
+<p>4</p>
+<div class="codeClass"><pre><code class="mono-font2">convert -size 200x200 xc:#FF0000 jpg:- | convert - -draw "rectangle 0,0 100,100" - | convert - -draw "rectangle 100,100, 200, 200" media/output.jpg</code></pre></div>
+<p>5</p>
+<p>!!not one-liner!!5</p>
+<div class="codeClass"><pre><code class="mono-font2">convert -size 200x200 xc:#FF0000 media/output.jpg; for i in {0..9};do for j in {0..9};do convert media/output.jpg -draw "rectangle $((i*20+5)),$((j*20+5)) $((i*20+15)),$((j*20+15))" media/output.jpg; done; done</code></pre></div>
+</details>
+</details>
+
 <h2>問題選択</h2>
 <h3 id="generalProblem">通常問題</h3>
 <div class="centerClass">
