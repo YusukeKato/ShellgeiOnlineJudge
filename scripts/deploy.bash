@@ -9,29 +9,41 @@ if [[ $is_var == "var" ]]; then
   root_path_html="/var/www/html/"
 fi
 
-# delete data
-sudo rm -rf "$root_path_html"problem_jp
-sudo rm -rf "$root_path_html"problem_en
-sudo rm -rf "$root_path_html"problem_images
-sudo rm -rf "$root_path_html"input
-sudo rm -rf "$root_path_html"output
-sudo rm -rf "$root_path_html"scripts
+# update files
+cd ../client/scripts
+python3 generate_index_html.py
+cd ../../data/scripts
+bash count_problem_num.bash
+cd ../../scripts
 
-# delete web app
-sudo rm "$root_path_html"index.html
-sudo rm "$root_path_html"index.en.html
-sudo rm "$root_path_html"index.js
-sudo rm "$root_path_html"style.css
-sudo rm "$root_path_html"BlackTreeIcon.jpg
-sudo rm "$root_path_html"favicon.jpg
-sudo rm "$root_path_html"white.jpg
-sudo rm "$root_path_html"black.jpg
-
-# delete server
-sudo rm "$root_path_html"connection.php
-sudo rm "$root_path"run_shellgei.py
-sudo rm "$root_path"judge.py
-sudo rm "$root_path"z.bash
+# delete files
+find_target_str=$(find "$root_path")
+target_str="connection.php"
+if [[ $find_target_str == *"$target_str"* ]]; then
+  # delete data
+  sudo rm -rf "$root_path_html"problem_jp
+  sudo rm -rf "$root_path_html"problem_en
+  sudo rm -rf "$root_path_html"problem_images
+  sudo rm -rf "$root_path_html"input
+  sudo rm -rf "$root_path_html"output
+  sudo rm -rf "$root_path_html"scripts
+  
+  # delete web app
+  sudo rm "$root_path_html"index.html
+  sudo rm "$root_path_html"index.en.html
+  sudo rm "$root_path_html"index.js
+  sudo rm "$root_path_html"style.css
+  sudo rm "$root_path_html"BlackTreeIcon.jpg
+  sudo rm "$root_path_html"favicon.jpg
+  sudo rm "$root_path_html"white.jpg
+  sudo rm "$root_path_html"black.jpg
+  
+  # delete server
+  sudo rm "$root_path_html"connection.php
+  sudo rm "$root_path"run_shellgei.py
+  sudo rm "$root_path"judge.py
+  sudo rm "$root_path"z.bash
+fi
 
 # copy data
 sudo cp -r ../data/problem_jp "$root_path_html"
@@ -58,7 +70,6 @@ sudo cp ../server/judge.py "$root_path"
 sudo cp ../server/z.bash "$root_path"
 
 # create files
-find_target_str=$(find "$root_path")
 target_str="shellgei_time.txt"
 if [[ $find_target_str != *"$target_str"* ]]; then
   sudo touch "$root_path""$target_str"
@@ -93,3 +104,5 @@ sudo chmod 777 "$root_path"z.bash
 if [[ $is_local == "local" ]]; then
   find "$root_path_html" | grep -e "index.js" -e "index*.html" | xargs -I@ sudo sed -i "s/https:\/\/shellgei-online-judge.com/http:\/\/localhost/g" @
 fi
+
+echo "deploy: success!!"
