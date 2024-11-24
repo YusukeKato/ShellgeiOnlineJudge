@@ -72,13 +72,23 @@ gtag("config", "G-L5F9JQGNP7");
 
 <h3>ABOUT</h3>
 <details>
-<summary>ABOUT THIS WEBSITE</summary>
+<summary>ABOUT THIS WEBSITE & SHELL-GEI</summary>
 <h3>About</h3>
 <ul>
 <li>- This website is a shell-gei unofficial.</li>
 <li>- Solving problems with shell-gei.</li>
 <li>- Automatic correct/incorrect judgment.</li>
 </ul>
+<h3>About shell-gei</h3>
+<ul>
+<li>- <a href="https://b.ueda.tech/?page=01434">Click here</a></li>
+<li>- Shell-gei is a shell one-liner in the CLI.</li>
+</ul>
+<h3>Examples of shell-gei</h3>
+<p>Example 1: Output random String</p>
+<div class="codeClass"><pre><code class="mono-font2">head -c 65536 /dev/urandom | tr -dc a-zA-Z0-9 | cut -c -16</code></pre></div>
+<p>Example 2: Delete all .jpg files</p>
+<div class="codeClass"><pre><code class="mono-font2">find . | grep .jpg$ | xargs -I@ rm @</code></pre></div>
 <h3>Shellgei Online Judge Repository</h3>
 <ul>
 <li>- <a href="https://github.com/YusukeKato/ShellgeiOnlineJudge">GitHub - ShellgeiOnlineJudge</a></li>
@@ -102,33 +112,6 @@ gtag("config", "G-L5F9JQGNP7");
 <li>Run shell-gei</li>
 <li>Check correct/incorrect</li>
 </ol>
-</details>
-
-<details>
-<summary>ABOUT SHELL-GEI</summary>
-<h3>About shell-gei</h3>
-<ul>
-<li>- <a href="https://b.ueda.tech/?page=01434">Click here</a></li>
-<li>- Shell-gei is a shell one-liner in the CLI.</li>
-</ul>
-<h3>Examples of shell-gei</h3>
-<p>Example 1: Output random String</p>
-<div class="codeClass"><pre><code class="mono-font2">head -c 65536 /dev/urandom | tr -dc a-zA-Z0-9 | cut -c -16</code></pre></div>
-<p>Example 2: Delete all .jpg files</p>
-<div class="codeClass"><pre><code class="mono-font2">find . | grep .jpg$ | xargs -I@ rm @</code></pre></div>
-<h3>Extra</h3>
-<p>Extra 1: Python</p>
-<div class="codeClass"><pre><code class="mono-font2">python3 -c "import math;print(math.pi)"</code></pre></div>
-<p>Extra 2: C++</p>
-<div class="codeClass"><pre><code class="mono-font2">cat&lt;&lt;EOF&gt;a.cpp
-#include &lt;bits/stdc++.h&gt;
-int main() {
-  printf("C++ Test
-");
-}
-EOF
-g++ a.cpp
-./a.out</code></pre></div>
 </details>
 
 <details>

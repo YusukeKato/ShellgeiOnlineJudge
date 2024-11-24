@@ -72,13 +72,23 @@ gtag("config", "G-L5F9JQGNP7");
 
 <h3>情報</h3>
 <details>
-<summary>このサイトについて</summary>
-<h3>説明</h3>
+<summary>このサイトとシェル芸について</summary>
+<h3>シェル芸オンラインジャッジとは</h3>
 <ul>
 <li>- このサイトはシェル芸非公式です。</li>
 <li>- シェル芸で問題を解いて遊べます。</li>
 <li>- 出力結果の正誤判定も自動で行われます。</li>
 </ul>
+<h3>シェル芸とは</h3>
+<ul>
+<li>- <a href="https://b.ueda.tech/?page=01434">シェル芸のトップページ</a>に情報があります。</li>
+<li>- シェル芸とはCLI環境におけるシェルのワンライナーで様々なタスクをこなすことを指します。</li>
+</ul>
+<h3>シェル芸の例</h3>
+<p>Example 1: Output random String</p>
+<div class="codeClass"><pre><code class="mono-font2">head -c 65536 /dev/urandom | tr -dc a-zA-Z0-9 | cut -c -16</code></pre></div>
+<p>Example 2: Delete all .jpg files</p>
+<div class="codeClass"><pre><code class="mono-font2">find . | grep .jpg$ | xargs -I@ rm @</code></pre></div>
 <h3>Shellgei Online Judge Repository</h3>
 <ul>
 <li>- <a href="https://github.com/YusukeKato/ShellgeiOnlineJudge">GitHub - ShellgeiOnlineJudge</a></li>
@@ -102,33 +112,6 @@ gtag("config", "G-L5F9JQGNP7");
 <li>シェル芸を実行</li>
 <li>正誤判定の結果を確認</li>
 </ol>
-</details>
-
-<details>
-<summary>シェル芸について</summary>
-<h3>シェル芸とは</h3>
-<ul>
-<li>- <a href="https://b.ueda.tech/?page=01434">シェル芸のトップページ</a>に情報があります。</li>
-<li>- シェル芸とはCLI環境におけるシェルのワンライナーで様々なタスクをこなすことを指します。</li>
-</ul>
-<h3>シェル芸の例</h3>
-<p>Example 1: Output random String</p>
-<div class="codeClass"><pre><code class="mono-font2">head -c 65536 /dev/urandom | tr -dc a-zA-Z0-9 | cut -c -16</code></pre></div>
-<p>Example 2: Delete all .jpg files</p>
-<div class="codeClass"><pre><code class="mono-font2">find . | grep .jpg$ | xargs -I@ rm @</code></pre></div>
-<h3>Extra</h3>
-<p>Extra 1: Python</p>
-<div class="codeClass"><pre><code class="mono-font2">python3 -c "import math;print(math.pi)"</code></pre></div>
-<p>Extra 2: C++</p>
-<div class="codeClass"><pre><code class="mono-font2">cat&lt;&lt;EOF&gt;a.cpp
-#include &lt;bits/stdc++.h&gt;
-int main() {
-  printf("C++ Test
-");
-}
-EOF
-g++ a.cpp
-./a.out</code></pre></div>
 </details>
 
 <details>
@@ -254,7 +237,7 @@ g++ a.cpp
 
 <h3>回答例</h3>
 <details>
-<summary>練習問題の回答例</summary>
+<summary>EXERCISEの回答例</summary>
 
 <details>
 <summary>echo</summary>
