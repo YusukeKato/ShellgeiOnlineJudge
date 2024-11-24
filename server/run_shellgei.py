@@ -6,7 +6,7 @@ import time
 
 async def main(cid):
   try:
-    result = await asyncio.wait_for(shellgei(cid), timeout=5)
+    result = await asyncio.wait_for(shellgei(cid), timeout=10)
     print(result)
   except asyncio.TimeoutError:
     print("!!time out!!")

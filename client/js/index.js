@@ -1,5 +1,5 @@
 // パラメータ
-var version = 1064;
+var version = 1065;
 const limit_length = parseInt(1000);
 var mainUrl = 'https://shellgei-online-judge.com/';
 var is_enable_button = true;
@@ -230,7 +230,7 @@ async function submitClick() {
         st.innerHTML = "Error: No input";
     } else {
         // タイムアウトを設定して実行
-        timerId = setInterval('timeout()', 5000);
+        timerId = setInterval('timeout()', 10000);
         const txt = await postSend(cmdline.value + ' | head -n1000');
         clearInterval(timerId);
 

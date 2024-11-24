@@ -404,15 +404,15 @@ def write_index_html(lang):
     lines.append('<h3>回答例</h3>\n')
   elif lang == "en":
     lines.append('<h3>Answer</h3>\n')
-  lines.append('<details>\n')
 
   # exercise answer
+  lines.append('<details>\n')
   if lang == "jp":
     lines.append('<summary>EXERCISEの回答例</summary>\n')
   if lang == "en":
     lines.append('<summary>EXERCISE ANSWER</summary>\n')
   lines.append('\n')
-
+  # echo
   lines.append('<details>\n')
   lines.append('<summary>echo</summary>\n')
   lines.append('<p>echo 1</p>\n')
@@ -423,7 +423,7 @@ def write_index_html(lang):
   lines.append('<div class="codeClass"><pre><code class="mono-font2">echo $SHELL</code></pre></div>\n')
   lines.append('</details>\n')
   lines.append('\n')
-
+  # cat
   lines.append('<details>\n')
   lines.append('<summary>cat</summary>\n')
   lines.append('<p>cat 1</p>\n')
@@ -436,7 +436,7 @@ def write_index_html(lang):
   lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt  /ShellGeiData/vol.65/input</code></pre></div>\n')
   lines.append('</details>\n')
   lines.append('\n')
-
+  # sed
   lines.append('<details>\n')
   lines.append('<summary>sed</summary>\n')
   lines.append('<p>sed 1</p>\n')
@@ -453,7 +453,7 @@ def write_index_html(lang):
   lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed "s/\\([a-z]*[0-9]\\)/\\1.jpg/"</code></pre></div>\n')
   lines.append('</details>\n')
   lines.append('\n')
-
+  # find
   lines.append('<details>\n')
   lines.append('<summary>find</summary>\n')
   lines.append('<p>find 1</p>\n')
@@ -464,7 +464,7 @@ def write_index_html(lang):
   lines.append('<div class="codeClass"><pre><code class="mono-font2">find "/ShellGeiData/sd201701" -type f -name "dangerous*"</code></pre></div>\n')
   lines.append('</details>\n')
   lines.append('\n')
-
+  # grep
   lines.append('<details>\n')
   lines.append('<summary>grep</summary>\n')
   lines.append('<p>grep 1</p>\n')
@@ -477,7 +477,7 @@ def write_index_html(lang):
   lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | grep ".jpg$"</code></pre></div>\n')
   lines.append('</details>\n')
   lines.append('\n')
-
+  # awk
   lines.append('<details>\n')
   lines.append('<summary>awk</summary>\n')
   lines.append('<p>awk 1</p>\n')
@@ -496,7 +496,7 @@ def write_index_html(lang):
   lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk "{'+awk_6+'}"</code></pre></div>\n')
   lines.append('</details>\n')
   lines.append('\n')
-
+  # sort
   lines.append('<details>\n')
   lines.append('<summary>sort</summary>\n')
   lines.append('<p>sort 1</p>\n')
@@ -507,7 +507,7 @@ def write_index_html(lang):
   lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sort -u</code></pre></div>\n')
   lines.append('</details>\n')
   lines.append('\n')
-
+  # wc
   lines.append('<details>\n')
   lines.append('<summary>wc</summary>\n')
   lines.append('<p>wc 1</p>\n')
@@ -518,7 +518,7 @@ def write_index_html(lang):
   lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | wc -m</code></pre></div>\n')
   lines.append('</details>\n')
   lines.append('\n')
-
+  # uniq
   lines.append('<details>\n')
   lines.append('<summary>uniq</summary>\n')
   lines.append('<p>uniq 1</p>\n')
@@ -526,8 +526,32 @@ def write_index_html(lang):
   lines.append('<p>uniq 2</p>\n')
   lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sort | uniq -c</code></pre></div>\n')
   lines.append('</details>\n')
+  lines.append('</details>\n') # exercise answer
+  lines.append('\n')
 
-  lines.append('</details>\n') # answer
+  # image answer
+  lines.append('<details>\n')
+  if lang == "jp":
+    lines.append('<summary>IMAGEの回答例</summary>\n')
+  if lang == "en":
+    lines.append('<summary>IMAGE ANSWER</summary>\n')
+  lines.append('\n')
+  # 1 - 10
+  lines.append('<details>\n')
+  lines.append('<summary>1 - 10</summary>\n')
+  lines.append('<p>1</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">convert -size 200x200 xc:#FF0000 media/output.jpg</code></pre></div>\n')
+  lines.append('<p>2</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">convert -size 200x200 xc:#FF0000 jpg:- | convert - -stroke "#000000" -strokewidth 50 -draw "line 0,100 200,100" media/output.jpg</code></pre></div>\n')
+  lines.append('<p>3</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">convert -size 200x200 xc:#FF0000 jpg:- | convert - -draw "circle 100,100 100,150" media/output.jpg</code></pre></div>\n')
+  lines.append('<p>4</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">convert -size 200x200 xc:#FF0000 jpg:- | convert - -draw "rectangle 0,0 100,100" - | convert - -draw "rectangle 100,100, 200, 200" media/output.jpg</code></pre></div>\n')
+  lines.append('<p>5</p>\n')
+  lines.append('<p>!! not one-liner !!</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">convert -size 200x200 xc:#FF0000 media/output.jpg; for i in {0..9};do for j in {0..9};do convert media/output.jpg -draw "rectangle $((i*20+5)),$((j*20+5)) $((i*20+15)),$((j*20+15))" media/output.jpg; done; done</code></pre></div>\n')
+  lines.append('</details>\n')
+  lines.append('</details>\n') # image answer
   lines.append('\n')
 
   # select general problem
