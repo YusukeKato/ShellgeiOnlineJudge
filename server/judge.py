@@ -14,6 +14,10 @@ while re.match(r'.*NEWLINE$', output) != None:
   output = re.sub(r'NEWLINE$', '', output)
 while re.match(r'.*NEWLINE$', answer) != None:
   answer = re.sub(r'NEWLINE$', '', answer)
+while re.match(r'.*\r$', output) != None:
+  output = re.sub(r'\r$', '', output)
+while re.match(r'.*\r$', answer) != None:
+  answer = re.sub(r'\r$', '', answer)
 output_image = output_image[28:]
 answer_image = answer_image[28:]
 

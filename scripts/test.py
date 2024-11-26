@@ -36,12 +36,35 @@ def test_func(shellgei, problemNum, is_correct):
     else:
       assert judge != "1"
 
+# correct
+# G1
 test_func("echo test", "GENERAL-00000001", True)
+# G2
 test_func("cat input.txt", "GENERAL-00000002", True)
+# G3
 test_func("seq 10", "GENERAL-00000003", True)
+# G7
+test_func("echo \"scale=101; 4*a(1)\" | bc -l | tr -d '\\n' | tr -d '\\\\' | cut -c 1-102", "GENERAL-00000007", True)
+# G8
+test_func("cat input.txt | awk '{for(i=0;i<10;i++){for(j=0;j<10;j++){if(i+j==$1&&i*2+j*4==$2){print i, j}}}}'", "GENERAL-00000008", True)
+# G9
+test_func("cat input.txt | xargs | sed -E 's;([0-9]*/[0-9]*/[0-9]*);\\n\\1;g' | sort -r -k 1,1 | awk '{for(i=1;i<=NF;i++){print $i};printf(\"\\n\")}'", "GENERAL-00000009", True)
+# I1
 test_func("convert -size 200x200 xc:#FF0000 media/output.jpg", "IMAGE-00000001", True)
+# incorrect
+# G1
 test_func("echo tes", "GENERAL-00000001", False)
+# G2
 test_func("echo input.txt", "GENERAL-00000002", False)
+# G3
 test_func("seq 11", "GENERAL-00000003", False)
+# G7
+test_func("echo \"scale=101; 4*a(1)\" | bc -l | tr -d '\\n' | tr -d '\\\\' | cut -c 1-103", "GENERAL-00000007", False)
+# G8
+test_func("cat input.txt | awk '{for(i=0;i<10;i++){for(j=0;j<10;j++){if(i+j==$1&&i*2+j*4==$2){print i, j}}}}' | tr -d '\\n'", "GENERAL-00000008", False)
+# G9
+test_func("cat input.txt | xargs | sed -E 's;([0-9]*/[0-9]*/[0-9]*);\\n\\1;g' | sort -r -k 1,1 | awk '{for(i=1;i<=NF;i++){print $i};printf(\"\\n\")}' | tr -d '\\n'", "GENERAL-00000009", False)
+# I1
 test_func("convert -size 200x200 xc:#FFFF00 media/output.jpg", "IMAGE-00000001", False)
+
 print("Successfully!!")
