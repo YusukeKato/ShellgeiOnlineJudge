@@ -405,12 +405,40 @@ def write_index_html(lang):
   elif lang == "en":
     lines.append('<h3>Answer</h3>\n')
 
+  # general answer
+  lines.append('<details>\n')
+  lines.append('<summary>GENERAL</summary>\n')
+  lines.append('\n')
+  # 1 - 10
+  lines.append('<details>\n')
+  lines.append('<summary>1 - 10</summary>\n')
+  lines.append('<p>1</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">echo test</code></pre></div>\n')
+  lines.append('<p>2</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt</code></pre></div>\n')
+  lines.append('<p>3</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">seq 10</code></pre></div>\n')
+  lines.append('<p>4</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk \'{a=0;for(i=1;i<=NF;i++){a+=$i};print a}\'</code></pre></div>\n')
+  lines.append('<p>5</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">seq 9 | awk \'BEGIN{a=0;b=1;print a;print b}{c=a+b;print c;a=b;b=c}\'</code></pre></div>\n')
+  lines.append('<p>6</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">echo "scale=11; 4*a(1)" | bc -l | cut -c 1-12</code></pre></div>\n')
+  lines.append('<p>7</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">echo "scale=101; 4*a(1)" | bc -l | tr -d \'\\n\' | tr -d \'\\\\\' | cut -c 1-102</code></pre></div>\n')
+  lines.append('<p>8</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk \'{for(i=0;i<10;i++){for(j=0;j<10;j++){if(i+j==$1&&i*2+j*4==$2){print i, j}}}}\'</code></pre></div>\n')
+  lines.append('<p>9</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | xargs | sed -E \'s;([0-9]*/[0-9]*/[0-9]*);\\n\\1;g\' | sort -r -k 1,1 | awk \'{for(i=1;i<=NF;i++){print $i};printf("\\n")}\'</code></pre></div>\n')
+  lines.append('<p>10</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed -e \'2 s/は　に/は川に/\' | sed \'s/ん　が/ん魚が/;s/は　に/は新幹線に/;s/、　が/、富士山が/\'</code></pre></div>\n')
+  lines.append('</details>\n')
+  lines.append('</details>\n') # general answer
+  lines.append('\n')
+
   # exercise answer
   lines.append('<details>\n')
-  if lang == "jp":
-    lines.append('<summary>EXERCISEの回答例</summary>\n')
-  if lang == "en":
-    lines.append('<summary>EXERCISE ANSWER</summary>\n')
+  lines.append('<summary>EXERCISE</summary>\n')
   lines.append('\n')
   # echo
   lines.append('<details>\n')
@@ -481,8 +509,7 @@ def write_index_html(lang):
   lines.append('<details>\n')
   lines.append('<summary>awk</summary>\n')
   lines.append('<p>awk 1</p>\n')
-  awk_1 = 'print "SHELLGEI ONLINE JUDGE"'
-  lines.append('<div class="codeClass"><pre><code class="mono-font2">echo | awk "{'+awk_1+'}"</code></pre></div>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">echo | awk "{print "SHELLGEI ONLINE JUDGE"}"</code></pre></div>\n')
   lines.append('<p>awk 2</p>\n')
   lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk "{print $2}"</code></pre></div>\n')
   lines.append('<p>awk 3</p>\n')
@@ -490,10 +517,9 @@ def write_index_html(lang):
   lines.append('<p>awk 4</p>\n')
   lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk "BEGIN{cnt=0}{cnt+=1}END{print cnt}"</code></pre></div>\n')
   lines.append('<p>awk 5</p>\n')
-  lines.append('<div class="codeClass"><pre><code class="mono-font2">echo | awk "{for(i=1;i&lt=10;i++){print i}}"</code></pre></div>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">echo | awk "{for(i=1;i<=10;i++){print i}}"</code></pre></div>\n')
   lines.append('<p>awk 6</p>\n')
-  awk_6 = 'if($0%2==0){print "EVEN"}else{print "ODD"}'
-  lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk "{'+awk_6+'}"</code></pre></div>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk "{if($0%2==0){print "EVEN"}else{print "ODD"}}"</code></pre></div>\n')
   lines.append('</details>\n')
   lines.append('\n')
   # sort
@@ -531,10 +557,7 @@ def write_index_html(lang):
 
   # image answer
   lines.append('<details>\n')
-  if lang == "jp":
-    lines.append('<summary>IMAGEの回答例</summary>\n')
-  if lang == "en":
-    lines.append('<summary>IMAGE ANSWER</summary>\n')
+  lines.append('<summary>IMAGE</summary>\n')
   lines.append('\n')
   # 1 - 10
   lines.append('<details>\n')
