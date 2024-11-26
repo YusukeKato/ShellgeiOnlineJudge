@@ -262,6 +262,29 @@ gtag("config", "G-L5F9JQGNP7");
 <p>10</p>
 <div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed -e '2 s/は　に/は川に/' | sed 's/ん　が/ん魚が/;s/は　に/は新幹線に/;s/、　が/、富士山が/'</code></pre></div>
 </details>
+<details>
+<summary>11 - 20</summary>
+<p>11</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | rs -T | awk '{print $3,$2,$1}'</code></pre></div>
+<p>12</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | tr 01 10</code></pre></div>
+<p>13</p>
+<div class="codeClass"><pre><code class="mono-font2">echo {a..z} | tr $(cat input.txt) '                         ' | awk '{print $1}'</code></pre></div>
+<p>14</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sort -s -k 2,2 | awk 'BEGIN{a=1;printf("%d",a)}{if($2==a){printf(" %s",$1)}else{a+=1;printf("\n%d %s",a,$1)}}'</code></pre></div>
+<p>15</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | factor | awk '{if(NF==2){print "YES"}else{print "NO"}}'</code></pre></div>
+<p>16</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt</code></pre></div>
+<p>17</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk 'BEGIN{a=0}{b[a]=$1;a+=1}END{for(i=0;i&lt;length(b);i++){for(j=i+1;j&lt;length(b);j++){if(b[i]>b[j]){c=b[i];b[i]=b[j];b[j]=c}}};for(k=0;k&lt;length(b);k++){print b[k]}}'</code></pre></div>
+<p>18</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk 'BEGIN{a=1;b=100}{if($2=="&gt;"){if(a&lt;$3){a=$3}}else{if(b&gt;$3){b=$3}}}END{for(i=1;i&lt;=100;i++){if(i&gt;a&&i&lt;b){print i}}}'</code></pre></div>
+<p>19</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk '{print substr($0,1,length($0)/3)}'</code></pre></div>
+<p>20</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk '{z=$0;a=0;for(i=2;i&lt;=z;i++){if(z%i==0){z/=i;a=1;printf("%d ",i);i=1}};printf("\n")}' | awk '{if(NF==1){print "素数"}else{for(i=1;i<=NF;i++){printf("%d ",$i)}printf("\n")}}' | sed 's/ $//g'</code></pre></div>
+</details>
 </details>
 
 <details>

@@ -89,9 +89,14 @@ if($out=="\r") $out = "NULL";
 $limit = 1000;
 if(strlen($out) > $limit) $out = substr($out, 0, $limit);
 
-// 出力も記録
+// 判定するために出力を変換
 $tmp_out = str_replace(" ", "SPACE", $out);
+// $tmp_out = str_replace("\r", "RRR", $tmp_out);
 $tmp_out = str_replace("\n", "NEWLINE", $tmp_out);
+$tmp_out = str_replace("<", "LT", $tmp_out);
+$tmp_out = str_replace(">", "GT", $tmp_out);
+
+// 出力も記録
 file_put_contents($filename_log, "output : ".$tmp_out."\n", FILE_APPEND);
 
 // 画像を取得（Base64で変換）
@@ -110,13 +115,15 @@ shell_exec("$cmd3");
 // 正誤判定
 $answer_file_path =  "./output/$num.txt";
 $answer_file = file_get_contents($answer_file_path);
+$tmp_answer = str_replace(" ", "SPACE", $answer_file);
+$tmp_answer = str_replace("\r", "", $tmp_answer);
+$tmp_answer = str_replace("\n", "NEWLINE", $tmp_answer);
+$tmp_answer = str_replace("<", "LT", $tmp_answer);
+$tmp_answer = str_replace(">", "GT", $tmp_answer);
 $cmd_answer_image = "base64 -w 0 ./problem_images/$num.jpg";
 $cmd_answer_image = str_replace(PHP_EOL, "", $cmd_answer_image);
 $answer_image_base64 = shell_exec("$cmd_answer_image");
-$tmp_answer = str_replace(" ", "SPACE", $answer_file);
-$tmp_answer = str_replace("\n", "NEWLINE", $tmp_answer);
 $cmd_judge_result = "python3 ../judge.py $tmp_out $output_image_base64 $tmp_answer $answer_image_base64 2>&1";
-//$cmd_judge_result = "python3 ../judge.py $out $output_image_base64 $answer_file $answer_image_base64 2>&1";
 $cmd_judge_result = str_replace(PHP_EOL, "", $cmd_judge_result);
 $judge_result = shell_exec("$cmd_judge_result");
 
