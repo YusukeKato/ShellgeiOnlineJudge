@@ -481,6 +481,18 @@ def write_index_html(lang):
   lines.append('<p>30</p>\n')
   lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed -E \'s/(.)/\\1\\n/g\' | awk \'{if($1==\"A\"){print \"S\"}else if($1==\"B\"){print \"T\"}else if($1==\"C\"){print \"U\"}else if($1==\"D\"){print \"V\"}else if($1==\"E\"){print \"W\"}else if($1==\"F\"){print \"X\"}else if($1==\"G\"){print \"Y\"}else if($1==\"H\"){print \"Z\"}else if($1==\"I\"){print \"A\"}else if($1==\"J\"){print \"B\"}else if($1==\"K\"){print \"C\"}else if($1==\"L\"){print \"D\"}else if($1==\"M\"){print \"E\"}else if($1==\"N\"){print \"F\"}else if($1==\"O\"){print \"G\"}else if($1==\"P\"){print \"H\"}else if($1==\"Q\"){print \"I\"}else if($1==\"R\"){print \"J\"}else if($1==\"S\"){print \"K\"}else if($1==\"T\"){print \"L\"}else if($1==\"U\"){print \"M\"}else if($1==\"V\"){print \"N\"}else if($1==\"W\"){print \"O\"}else if($1==\"X\"){print \"P\"}else if($1==\"Y\"){print \"Q\"}else if($1==\"Z\"){print \"R\"}}\' | xargs | sed \'s/ //g\'</code></pre></div>\n')
   lines.append('</details>\n')
+  # 31 - 40
+  lines.append('<details>\n')
+  lines.append('<summary>31 - 40</summary>\n')
+  lines.append('<p>31</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | xargs | awk \'{a=0;for(i=1;i&lt;=1024;i++){if($1%i==0&&$2%i==0&&$3%i==0){a=i}};print a}\'</code></pre></div>\n')
+  lines.append('<p>32</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | xargs | awk \'{a=$1;for(i=100;i&gt;=1;i--){for(j=100;j&gt;=1;j--){for(k=100;k&gt;=1;k--){if($1*i==$2*j&&$2*j==$3*k){a=$1*i}}}};print a}\'</code></pre></div>\n')
+  lines.append('<p>33</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk \'{print substr($1,1,1), length($1)}\'</code></pre></div>\n')
+  lines.append('<p>34</p>\n')
+  lines.append('<div class="codeClass"><pre><code class="mono-font2">cat input.txt | factor | xargs -n1 | awk \'NR&gt;1\' | xargs | awk \'{for(i=1;i&lt;=NF/5;i++){print $i}}\' | awk \'BEGIN{a=1}{a=a*$1}END{print a}\'</code></pre></div>\n')
+  lines.append('</details>\n')
   lines.append('</details>\n') # general answer
   lines.append('\n')
 
