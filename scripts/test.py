@@ -51,8 +51,11 @@ test_func("cat input.txt | awk '{for(i=0;i<10;i++){for(j=0;j<10;j++){if(i+j==$1&
 test_func("cat input.txt | xargs | sed -E 's;([0-9]*/[0-9]*/[0-9]*);\\n\\1;g' | sort -r -k 1,1 | awk '{for(i=1;i<=NF;i++){print $i};printf(\"\\n\")}'", "GENERAL-00000009", True)
 # G16
 test_func("cat input.txt", "GENERAL-00000016", True)
+# G42
+test_func("cat input.txt | awk \'NR==1{a=$1+$2+$3+$4+$5}NR==3{x=a-$1-$2-$4-$5;print $1,$2,x,$4,$5}NR!=3{print $0}\' | sed \'3 s/\\( [0-9] \\)/ \\1/g;3 s/\\( [0-9]$\\)/ \\1/g\'", "GENERAL-00000042", True)
 # I1
 test_func("convert -size 200x200 xc:#FF0000 media/output.jpg", "IMAGE-00000001", True)
+
 # incorrect
 # G1
 test_func("echo tes", "GENERAL-00000001", False)
@@ -68,6 +71,8 @@ test_func("cat input.txt | awk '{for(i=0;i<10;i++){for(j=0;j<10;j++){if(i+j==$1&
 test_func("cat input.txt | xargs | sed -E 's;([0-9]*/[0-9]*/[0-9]*);\\n\\1;g' | sort -r -k 1,1 | awk '{for(i=1;i<=NF;i++){print $i};printf(\"\\n\")}' | tr -d '\\n'", "GENERAL-00000009", False)
 # G16
 test_func("cat input.txt | tr -d '\\n'", "GENERAL-00000016", False)
+# G42
+test_func("cat input.txt | awk \'NR==1{a=$1+$2+$3+$4+$5}NR==3{x=a-$1-$2-$4-$5;print $1,$2,x,$4,$5}NR!=3{print $0}\' | sed \'3 s/\\( [0-9] \\)/ \\1/g\'", "GENERAL-00000042", False)
 # I1
 test_func("convert -size 200x200 xc:#FFFF00 media/output.jpg", "IMAGE-00000001", False)
 
