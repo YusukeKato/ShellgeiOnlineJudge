@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-update_date = "2024/11/27"
-version_str = "?version=1094"
+update_date = "2024/11/28"
+version_str = "?version=1095"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
@@ -109,6 +109,7 @@ def write_index_html(lang):
   if lang == "jp":
     lines.append('<h3>お知らせ</h3>\n')
     lines.append('<ul>\n')
+    lines.append('<li>- 2024/11/28: 回答例を追加</li>\n')
     lines.append('<li>- 2024/09/06: 画像問題を追加</li>\n')
     lines.append('<li>- 2024/05/03: シェル芸オンラインジャッジ一周年</li>\n')
     lines.append('<li>- 2024/04/24: 練習問題を追加</li>\n')
@@ -117,6 +118,7 @@ def write_index_html(lang):
   elif lang == "en":
     lines.append('<h3>NEWS</h3>\n')
     lines.append('<ul>\n')
+    lines.append('<li>- 2024/11/28: Added Example Answer</li>\n')
     lines.append('<li>- 2024/09/06: Added Image Problems</li>\n')
     lines.append('<li>- 2024/05/03: 1st Anniversary of SHELLGEI ONLINE JUDGE</li>\n')
     lines.append('<li>- 2024/04/24: Added Exercise Problems</li>\n')
@@ -236,6 +238,7 @@ def write_index_html(lang):
   lines.append('<details>\n')
   lines.append('<summary>2024</summary>\n')
   lines.append('<ul>\n')
+  lines.append('<li>- 11/28: news追加</li>\n')
   lines.append('<li>- 11/27: GENERALの回答例を追加、正誤判定を修正</li>\n')
   lines.append('<li>- 11/24: concatとcowsayを削除</li>\n')
   lines.append('<li>- 11/23: ドキュメントのメンテナンス</li>\n')
