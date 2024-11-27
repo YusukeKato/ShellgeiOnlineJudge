@@ -81,15 +81,23 @@ shell_exec("$cmd_tmp_image");
 $cmd2 = "timeout 10 python3 ../run_shellgei.py $cid 2>&1";
 $cmd2 = str_replace(PHP_EOL, "", $cmd2);
 $out = shell_exec("$cmd2");
+$out = str_replace("\r", "", $out);
 if(is_null($out)) $out = "NULL";
 if(strlen($out) == 0) $out = "NULL";
 if($out=="\n") $out = "NULL";
 if($out=="\r") $out = "NULL";
-$limit = 1000000;
+$limit = 1000;
 if(strlen($out) > $limit) $out = substr($out, 0, $limit);
 
+// 判定するために出力を変換
+$tmp_out = str_replace(" ", "SPACE", $out);
+// $tmp_out = str_replace("\r", "RRR", $tmp_out);
+$tmp_out = str_replace("\n", "NEWLINE", $tmp_out);
+$tmp_out = str_replace("<", "LT", $tmp_out);
+$tmp_out = str_replace(">", "GT", $tmp_out);
+
 // 出力も記録
-file_put_contents($filename_log, "output : ".str_replace(array("\r\n", "\r", "\n"), ' ', $out)."\n", FILE_APPEND);
+file_put_contents($filename_log, "output : ".$tmp_out."\n", FILE_APPEND);
 
 // 画像を取得（Base64で変換）
 $cmd_image = "sudo docker exec $cid /bin/bash -c 'base64 -w 0 media/output.jpg'";
@@ -107,10 +115,15 @@ shell_exec("$cmd3");
 // 正誤判定
 $answer_file_path =  "./output/$num.txt";
 $answer_file = file_get_contents($answer_file_path);
+$tmp_answer = str_replace(" ", "SPACE", $answer_file);
+$tmp_answer = str_replace("\r", "", $tmp_answer);
+$tmp_answer = str_replace("\n", "NEWLINE", $tmp_answer);
+$tmp_answer = str_replace("<", "LT", $tmp_answer);
+$tmp_answer = str_replace(">", "GT", $tmp_answer);
 $cmd_answer_image = "base64 -w 0 ./problem_images/$num.jpg";
 $cmd_answer_image = str_replace(PHP_EOL, "", $cmd_answer_image);
 $answer_image_base64 = shell_exec("$cmd_answer_image");
-$cmd_judge_result = "python3 ../judge.py $out $output_image_base64 $answer_file $answer_image_base64 2>&1";
+$cmd_judge_result = "python3 ../judge.py $tmp_out $output_image_base64 $tmp_answer $answer_image_base64 2>&1";
 $cmd_judge_result = str_replace(PHP_EOL, "", $cmd_judge_result);
 $judge_result = shell_exec("$cmd_judge_result");
 
