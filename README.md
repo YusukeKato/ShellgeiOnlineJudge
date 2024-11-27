@@ -30,8 +30,10 @@ Shell one-liner playground: https://shellgei-online-judge.com/
 ### Install nginx
 execute the following command:
 ```sh
-# install nginx
 sudo apt update && sudo apt -y upgrade
+# sudo dnf update && sudo dnf upgrade
+
+# install nginx
 sudo apt -y install nginx
 
 # install php
