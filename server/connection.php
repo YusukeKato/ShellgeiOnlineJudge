@@ -100,7 +100,15 @@ $tmp_out = str_replace(">", "GT", $tmp_out);
 file_put_contents($filename_log, "output : ".$tmp_out."\n", FILE_APPEND);
 
 // 画像を取得（Base64で変換）
-$cmd_image = "sudo docker exec $cid /bin/bash -c 'base64 -w 0 media/output.jpg'";
+$cmd_find_image = "sudo docker exec $cid /bin/bash -c 'find media'";
+$cmd_find_image = str_replace(PHP_EOL, "", $cmd_find_image);
+$output_find_image = shell_exec("$cmd_find_image");
+$cmd_image = "";
+if (strpos($output_find_image,'output.gif') !== false) {
+  $cmd_image = "sudo docker exec $cid /bin/bash -c 'base64 -w 0 media/output.gif'";
+} else {
+  $cmd_image = "sudo docker exec $cid /bin/bash -c 'base64 -w 0 media/output.jpg'";
+}
 $cmd_image = str_replace(PHP_EOL, "", $cmd_image);
 $output_image_base64 = shell_exec("$cmd_image");
 
