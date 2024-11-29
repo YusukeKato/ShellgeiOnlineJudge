@@ -1,5 +1,5 @@
 // パラメータ
-var version = 1065;
+var version = 1066;
 const limit_length = parseInt(1000);
 var mainUrl = 'https://shellgei-online-judge.com/';
 var is_enable_button = true;
@@ -397,6 +397,9 @@ function input_txt_path() {
 function input_img_path() {
     input_command("/media/output.jpg ");
 }
+function input_gif_path() {
+    input_command("/media/output.gif ");
+}
 // main function
 function input_command(cmd_str) {
     var cmdline = document.getElementById('cmdline');
@@ -470,5 +473,7 @@ var commandButton_txt_path = document.getElementById('command-txt-path');
 commandButton_txt_path.addEventListener('click', input_txt_path);
 var commandButton_img_path = document.getElementById('command-img-path');
 commandButton_img_path.addEventListener('click', input_img_path);
+var commandButton_gif_path = document.getElementById('command-gif-path');
+commandButton_gif_path.addEventListener('click', input_gif_path);
 var commandButton_delete_cmd = document.getElementById('delete-command');
 commandButton_delete_cmd.addEventListener('click', delete_command);
