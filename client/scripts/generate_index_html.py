@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-update_date = "2024/11/28"
-version_str = "?version=1095"
+update_date = "2024/11/29"
+version_str = "?version=1096"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
@@ -238,6 +238,7 @@ def write_index_html(lang):
   lines.append('<details>\n')
   lines.append('<summary>2024</summary>\n')
   lines.append('<ul>\n')
+  lines.append('<li>- 11/29: GIF画像に対応</li>\n')
   lines.append('<li>- 11/28: news追加</li>\n')
   lines.append('<li>- 11/27: GENERALの回答例を追加、正誤判定を修正</li>\n')
   lines.append('<li>- 11/24: concatとcowsayを削除</li>\n')
