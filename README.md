@@ -54,7 +54,7 @@ sudo vim /etc/nginx/sites-available/default
 
 Update as follows:
 ```sh
-# php8.1-fpm
+# example: php8.1-fpm
 location ~ \.php$ {
   fastcgi_pass unix:/run/php/php8.1-fpm.sock;
   fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
