@@ -1,0 +1,1 @@
+cat input.txt | awk 'BEGIN{a=0}{b[a]=$1;a+=1}END{for(i=0;i<length(b);i++){for(j=i+1;j<length(b);j++){if(b[i]>b[j]){c=b[i];b[i]=b[j];b[j]=c}}};for(k=0;k<length(b);k++){print b[k]}}'

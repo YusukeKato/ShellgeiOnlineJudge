@@ -1,0 +1,1 @@
+cat input.txt | awk '{z=$0;a=0;for(i=2;i<=z;i++){if(z%i==0){z/=i;a=1;printf("%d ",i);i=1}};printf("\n")}' | awk '{if(NF==1){print "素数"}else{for(i=1;i<=NF;i++){printf("%d ",$i)}printf("\n")}}' | sed 's/ $//g'

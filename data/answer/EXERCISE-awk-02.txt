@@ -1,0 +1,1 @@
+cat input.txt | awk '{print $2}'

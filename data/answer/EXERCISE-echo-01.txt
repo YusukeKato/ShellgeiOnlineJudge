@@ -1,0 +1,1 @@
+echo "SHELLGEI ONLINE JUDGE"

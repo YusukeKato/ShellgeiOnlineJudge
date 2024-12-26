@@ -1,0 +1,1 @@
+cat input.txt | rs -T | awk '{print $3,$2,$1}'

@@ -1,0 +1,1 @@
+cat input.txt | sort -s -k 2,2 | awk 'BEGIN{a=1;printf("%d",a)}{if($2==a){printf(" %s",$1)}else{a+=1;printf("\n%d %s",a,$1)}}'

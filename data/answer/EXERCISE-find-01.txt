@@ -1,0 +1,1 @@
+find "/ShellGeiData/sd201701/" | sort

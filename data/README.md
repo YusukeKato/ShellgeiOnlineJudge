@@ -9,12 +9,14 @@ Each problem is assigned an ID.
 - problem_images/\*.jpg: image files
 - input/\*.txt: Input files
 - output/\*.txt: Expected output files
+- answer/\*.txt: answer files
 
-A single problem consists of the following three files.
+A single problem consists of the following four files.
 
 1. Problem files
 2. Input file
 3. Expected output file
+4. answer file
 
 # Scripts
 Count the number of problems.

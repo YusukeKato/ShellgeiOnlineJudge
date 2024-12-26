@@ -1,0 +1,1 @@
+cat input.txt | sed "s/XXX/SHELLGEI/"
