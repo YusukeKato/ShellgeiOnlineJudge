@@ -5,8 +5,11 @@ is_var=$1
 is_local=$2
 
 if [[ $is_var == "var" ]]; then
+  echo "setup: /var/www/html"
   root_path="/var/www/"
   root_path_html="/var/www/html/"
+else
+  echo "setup: /usr/share/nginx/html/"
 fi
 
 # update files
@@ -77,6 +80,13 @@ if [[ $find_target_str != *"$target_str"* ]]; then
   sudo chmod 766 "$root_path""$target_str"
   echo "create ""$root_path""$target_str"
 fi
+target_str="shellgei_time_ms.txt"
+if [[ $find_target_str != *"$target_str"* ]]; then
+  sudo touch "$root_path""$target_str"
+  echo "0.0" | sudo tee "$root_path""$target_str" >/dev/null 
+  sudo chmod 766 "$root_path""$target_str"
+  echo "create ""$root_path""$target_str"
+fi
 target_str="shellgei_id.txt"
 if [[ $find_target_str != *"$target_str"* ]]; then
   sudo touch "$root_path""$target_str"
@@ -102,7 +112,10 @@ sudo chmod 777 "$root_path"z.bash
 
 # local
 if [[ $is_local == "local" ]]; then
+  echo "setup: local"
   find "$root_path_html" | grep -e "index.js" -e "index*.html" | xargs -I@ sudo sed -i "s/https:\/\/shellgei-online-judge.com/http:\/\/localhost/g" @
+else
+  echo "setup: server"
 fi
 
 echo "deploy: success!!"

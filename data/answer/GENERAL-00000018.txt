@@ -1,0 +1,1 @@
+cat input.txt | awk 'BEGIN{a=1;b=100}{if($2==">"){if(a<$3){a=$3}}else{if(b>$3){b=$3}}}END{for(i=1;i<=100;i++){if(i>a&&i<b){print i}}}'

@@ -1,4 +1,4 @@
-/ShellGeiData/sd201701
+/ShellGeiData/sd201701/
 /ShellGeiData/sd201701/address_list
 /ShellGeiData/sd201701/address_list/syain.list
 /ShellGeiData/sd201701/address_list/yakuin.list

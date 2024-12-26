@@ -1,0 +1,1 @@
+cat input.txt  /ShellGeiData/vol.65/input

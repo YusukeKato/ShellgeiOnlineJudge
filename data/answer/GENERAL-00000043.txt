@@ -1,0 +1,1 @@
+cat input.txt | awk '{print $1".png",$1".jpg"}'

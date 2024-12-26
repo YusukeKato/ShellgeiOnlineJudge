@@ -1,0 +1,1 @@
+convert -size 200x200 xc:#FF0000 media/output.jpg; for i in {0..9};do for j in {0..9};do convert media/output.jpg -draw "rectangle $((i*20+5)),$((j*20+5)) $((i*20+15)),$((j*20+15))" media/output.jpg; done; done

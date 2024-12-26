@@ -1,0 +1,1 @@
+echo {a..z} | tr $(cat input.txt) '                         ' | awk '{print $1}'

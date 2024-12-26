@@ -23,7 +23,7 @@ Shell one-liner playground: https://shellgei-online-judge.com/
 - [シェル芸bot](https://x.com/minyoruminyon)
 
 ## Setup
-- Ubuntu 24.04 LTS
+- Ubuntu 24.04 LTS (+WSL2)
 - Ubuntu 22.04 LTS
 - Amazon Linux 2023
 
@@ -87,6 +87,7 @@ docker pull theoldmoon0602/shellgeibot
 ### Execution user
 Change the execution user from nginx to www-data in WSL.
 ```sh
+# example: 8.3
 sudo vim /etc/php/8.3/fpm/pool.d/www.conf
 sudo vim /etc/nginx/nginx.conf
 ```
@@ -144,7 +145,7 @@ python3 test.py local
 ## Maintenance
 ### Output log
 ```sh
-cat <root_path>/shellgei_log.txt | tail -n 20
+cat root_path/shellgei_log.txt | tail -n 20
 ```
 
 ### Update image file

@@ -1,0 +1,1 @@
+cat input.txt | sed 's/[^0-9]/ /g' | awk '{for(i=1;i<=NF;i++){print $i}}'

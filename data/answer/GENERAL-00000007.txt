@@ -1,0 +1,1 @@
+echo "scale=101; 4*a(1)" | bc -l | tr -d '\n' | tr -d '\\' | cut -c 1-102

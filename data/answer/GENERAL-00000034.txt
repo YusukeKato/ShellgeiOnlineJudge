@@ -1,0 +1,1 @@
+cat input.txt | factor | xargs -n1 | awk 'NR>1' | xargs | awk '{for(i=1;i<=NF/5;i++){print $i}}' | awk 'BEGIN{a=1}{a=a*$1}END{print a}'

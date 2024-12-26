@@ -1,0 +1,1 @@
+convert -size 200x200 xc:#FF0000 jpg:- | convert - -draw "rectangle 0,0 100,100" - | convert - -draw "rectangle 100,100, 200, 200" media/output.jpg
