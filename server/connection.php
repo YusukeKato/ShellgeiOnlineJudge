@@ -8,6 +8,20 @@ $num = $_POST['problemNum'];
 // file_put_contents("../debug.txt", $username, FILE_APPEND);
 
 // 時間管理
+$filename_time_ms = '../shellgei_time_ms.txt';
+$shellgei_oldtime_ms = file_get_contents($filename_time_ms);
+$shellgei_newtime_ms = microtime(true);;
+$time_ms_diff = (int)((int)$shellgei_newtime_ms - (int)$shellgei_oldtime_ms);
+if($time_ms_diff < 0.1) {
+  $res['shellgei'] = "The server is busy(0.1s).";
+  $res['shellgei_id'] = "-1";
+  $res['shellgei_date'] = $shellgei_newtime;
+  $res['shellgei_image'] = "";
+  echo json_encode($res);
+  exit();
+}
+file_put_contents($filename_time_ms, $shellgei_newtime_ms, LOCK_EX);
+
 $filename_time = '../shellgei_time.txt';
 $shellgei_oldtime = file_get_contents($filename_time);
 date_default_timezone_set('Asia/Tokyo');
@@ -15,14 +29,14 @@ $shellgei_newtime = date('Y-m-d H:i:s');
 $time_old = new DateTime($shellgei_oldtime);
 $time_new = new DateTime($shellgei_newtime);
 $time_diff = $time_old->diff($time_new);
-if($time_diff->s < 2) {
-  $res['shellgei'] = "The server is busy.";
-  $res['shellgei_id'] = "-1";
-  $res['shellgei_date'] = $shellgei_newtime;
-  $res['shellgei_image'] = "";
-  echo json_encode($res);
-  exit();
-}
+// if($time_diff->s < 2) {
+//   $res['shellgei'] = "The server is busy(1.0s).";
+//   $res['shellgei_id'] = "-1";
+//   $res['shellgei_date'] = $shellgei_newtime;
+//   $res['shellgei_image'] = "";
+//   echo json_encode($res);
+//   exit();
+// }
 file_put_contents($filename_time, $shellgei_newtime, LOCK_EX);
 
 // \rを全て置換
@@ -91,8 +105,9 @@ if(strlen($out) > $limit) $out = substr($out, 0, $limit);
 
 // 判定するために出力を変換
 $tmp_out = str_replace(" ", "SPACE", $out);
-// $tmp_out = str_replace("\r", "RRR", $tmp_out);
+$tmp_out = str_replace("\r", "", $tmp_out);
 $tmp_out = str_replace("\n", "NEWLINE", $tmp_out);
+$tmp_out = str_replace("\t", "TAB", $tmp_out);
 $tmp_out = str_replace("<", "LT", $tmp_out);
 $tmp_out = str_replace(">", "GT", $tmp_out);
 
@@ -126,6 +141,7 @@ $answer_file = file_get_contents($answer_file_path);
 $tmp_answer = str_replace(" ", "SPACE", $answer_file);
 $tmp_answer = str_replace("\r", "", $tmp_answer);
 $tmp_answer = str_replace("\n", "NEWLINE", $tmp_answer);
+$tmp_answer = str_replace("\t", "TAB", $tmp_answer);
 $tmp_answer = str_replace("<", "LT", $tmp_answer);
 $tmp_answer = str_replace(">", "GT", $tmp_answer);
 $cmd_answer_image = "base64 -w 0 ./problem_images/$num.jpg";
