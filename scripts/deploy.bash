@@ -113,7 +113,7 @@ sudo chmod 777 "$root_path"z.bash
 # local
 if [[ $is_local == "local" ]]; then
   echo "setup: local"
-  find "$root_path_html" | grep -e "index.js" -e "index*.html" | xargs -I@ sudo sed -i "s/https:\/\/shellgei-online-judge.com/http:\/\/localhost/g" @
+  find "$root_path_html" | grep -e "index.js" -e "index.html" -e "index.en.html" | xargs -I@ sudo sed -i "s/https:\/\/shellgei-online-judge.com/http:\/\/localhost/g" @
 else
   echo "setup: server"
 fi

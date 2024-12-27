@@ -8,6 +8,9 @@ args = sys.argv
 main_url = 'https://shellgei-online-judge.com/connection.php';
 if len(args) > 1 and args[1] == "local":
   main_url = 'http://localhost/connection.php';
+  print("start test: local")
+else:
+  print("start test: server")
 
 def test_func(shellgei, problemNum, is_correct):
     time.sleep(0.5)
@@ -85,4 +88,7 @@ test_func("cat input.txt | awk \'NR==1{a=$1+$2+$3+$4+$5}NR==3{x=a-$1-$2-$4-$5;pr
 # I1
 test_func("convert -size 200x200 xc:#FFFF00 media/output.jpg", "IMAGE-00000001", False)
 
-print("Successfully!!")
+if len(args) > 1 and args[1] == "local":
+  print("Successfully!! (local)")
+else:
+  print("Successfully!! (server)")
