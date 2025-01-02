@@ -13,7 +13,7 @@ else:
   print("start test: server")
 
 def test_func(shellgei, problemNum, is_correct):
-    time.sleep(0.5)
+    time.sleep(1)
     data = {  
       "shellgei": shellgei,
       "problemNum": problemNum

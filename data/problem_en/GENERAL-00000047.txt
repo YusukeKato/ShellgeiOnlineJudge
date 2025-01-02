@@ -1,0 +1,1 @@
+Output the IP addresses in the input, separated by new lines.

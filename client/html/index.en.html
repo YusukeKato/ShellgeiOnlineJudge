@@ -26,8 +26,8 @@ gtag("config", "G-L5F9JQGNP7");
 
 
 <title>シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE</title>
-<link rel="icon" href="https://shellgei-online-judge.com/favicon.jpg?version=1104">
-<link rel="stylesheet" href="https://shellgei-online-judge.com/style.css?version=1104">
+<link rel="icon" href="https://shellgei-online-judge.com/favicon.jpg?version=1105">
+<link rel="stylesheet" href="https://shellgei-online-judge.com/style.css?version=1105">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
@@ -56,7 +56,7 @@ gtag("config", "G-L5F9JQGNP7");
 <h3>LAST UPDATED</h3>
 <ul>
 <li>- date: 2025/01/02</li>
-<li>- version: 1.1.0</li>
+<li>- version: 1.1.1</li>
 </ul>
 
 <h3>NEWS</h3>
@@ -130,7 +130,7 @@ gtag("config", "G-L5F9JQGNP7");
 <details>
 <summary>2025</summary>
 <ul>
-<li>- 01/02: サーバメンテナンス</li>
+<li>- 01/02: サーバメンテナンス、問題追加</li>
 </ul>
 </details>
 <details>
@@ -366,6 +366,8 @@ gtag("config", "G-L5F9JQGNP7");
 <div class="codeClass"><pre><code class="mono-font2">echo | awk '{for(i=0;i&lt;6;i++){for(j=0;j&lt;6;j++){if(i&gt;=3&&j&lt;3){printf("3")}else if(i&lt;3&&j&lt;3){printf("2")}else if(i&lt;3&&j&gt;=3){printf("1")}else if(i&gt;=3&&j&gt;=3){printf("4")}};printf("\n")}}'</code></pre></div>
 <p>46</p>
 <div class="codeClass"><pre><code class="mono-font2">cat input.txt | awk '{for(i=0;i&lt;$1;i++){for(j=0;j&lt;$1;j++){if(i==j){printf("1")}else{printf("0")}}printf("\n")}}'</code></pre></div>
+<p>47</p>
+<div class="codeClass"><pre><code class="mono-font2">cat input.txt | sed "s/ /\n/g" | grep -E "[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+"</code></pre></div>
 </details>
 </details>
 
@@ -540,6 +542,7 @@ JUDGE"</code></pre></div>
 <option value="GENERAL-00000044">44 : Search String</option>
 <option value="GENERAL-00000045">45 : Pattern 3</option>
 <option value="GENERAL-00000046">46 : Create Identity Matrix</option>
+<option value="GENERAL-00000047">47 : IP address extraction</option>
 </select>
 </label>
 <p></p>
@@ -718,7 +721,7 @@ JUDGE"</code></pre></div>
 <script>
 var is_jp = false;
 </script>
-<script src="https://shellgei-online-judge.com/index.js?version=1104"></script>
+<script src="https://shellgei-online-judge.com/index.js?version=1105"></script>
 </div> <!-- alldiv -->
 <h1 class="heading-028-2" data-label="">GitHub - <a href="https://github.com/YusukeKato/ShellgeiOnlineJudge/discussions" class="white-link">SHELLGEI ONLINE JUDGE Discussions</a><br>&copy; 2023 YusukeKato All rights reserved.</h1>
 </body>
