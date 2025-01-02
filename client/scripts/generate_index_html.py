@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-update_date = "2024/12/27"
+update_date = "2025/01/02"
 current_version = "1.1.0"
-version_str = "?version=1103"
+version_str = "?version=1104"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
@@ -249,6 +249,12 @@ def write_index_html(lang):
   if lang == "en":
     lines.append('<li>Update history of SHELLGEI ONLINE JUDGE.</li>\n')
   lines.append('</ul>\n')
+  lines.append('<details>\n')
+  lines.append('<summary>2025</summary>\n')
+  lines.append('<ul>\n')
+  lines.append('<li>- 01/02: サーバメンテナンス</li>\n')
+  lines.append('</ul>\n')
+  lines.append('</details>\n')
   lines.append('<details>\n')
   lines.append('<summary>2024</summary>\n')
   lines.append('<ul>\n')
