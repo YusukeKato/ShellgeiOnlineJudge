@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-update_date = "2025/01/02"
-current_version = "1.1.1"
-version_str = "?version=1106"
+update_date = "2025/01/04"
+current_version = "1.1.2"
+version_str = "?version=1108"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
@@ -252,6 +252,7 @@ def write_index_html(lang):
   lines.append('<details>\n')
   lines.append('<summary>2025</summary>\n')
   lines.append('<ul>\n')
+  lines.append('<li>- 01/04: GENERAL-48追加</li>\n')
   lines.append('<li>- 01/02: サーバメンテナンス、問題追加</li>\n')
   lines.append('</ul>\n')
   lines.append('</details>\n')
@@ -553,6 +554,7 @@ def write_index_html(lang):
     lines.append('<option value="GENERAL-00000045">45 : 模様の描画3</option>\n')
     lines.append('<option value="GENERAL-00000046">46 : 単位行列の生成</option>\n')
     lines.append('<option value="GENERAL-00000047">47 : IPアドレスの抽出</option>\n')
+    lines.append('<option value="GENERAL-00000048">48 : 文字列の圧縮</option>\n')
     lines.append('</select>\n')
     lines.append('</label>\n')
     lines.append('<p></p>\n')
@@ -614,6 +616,7 @@ def write_index_html(lang):
     lines.append('<option value="GENERAL-00000045">45 : Pattern 3</option>\n')
     lines.append('<option value="GENERAL-00000046">46 : Create Identity Matrix</option>\n')
     lines.append('<option value="GENERAL-00000047">47 : IP address extraction</option>\n')
+    lines.append('<option value="GENERAL-00000048">48 : String compression</option>\n')
     lines.append('</select>\n')
     lines.append('</label>\n')
     lines.append('<p></p>\n')

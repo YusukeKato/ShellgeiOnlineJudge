@@ -10,9 +10,10 @@ $num = $_POST['problemNum'];
 // 時間管理
 $filename_time_ms = '../shellgei_time_ms.txt';
 $shellgei_oldtime_ms = file_get_contents($filename_time_ms);
-$shellgei_newtime_ms = microtime(true);;
-$time_ms_diff = (int)((int)$shellgei_newtime_ms - (int)$shellgei_oldtime_ms);
-if($time_ms_diff < 0.1) {
+$shellgei_newtime_ms = microtime(true);
+$time_ms_diff = (float)((float)$shellgei_newtime_ms - (float)$shellgei_oldtime_ms);
+// file_put_contents("../debug_time_ms_diff.txt", $time_ms_diff, LOCK_EX);
+if($time_ms_diff < (float)0.1) {
   $res['shellgei'] = "The server is busy(0.1s).";
   $res['shellgei_id'] = "-1";
   $res['shellgei_date'] = $shellgei_newtime;
@@ -158,3 +159,7 @@ $res['shellgei_date'] = $datetime;
 $res['shellgei_image'] = $output_image_base64;
 $res['shellgei_judge'] = $judge_result;
 echo json_encode($res);
+
+// 時刻を記録
+// $shellgei_newtime_ms = microtime(true);
+// file_put_contents($filename_time_ms, $shellgei_newtime_ms, LOCK_EX);
