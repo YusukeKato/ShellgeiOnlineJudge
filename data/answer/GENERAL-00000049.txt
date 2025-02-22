@@ -1,0 +1,1 @@
+cat input.txt | awk '{a="";b=0;for(i=1;i<length($0);i++){ for(j=1;i-j>=1&&i+j<length($0);j++){if(substr($0,i+j,1)==substr($0,i-j,1)&&b<j){b=j;a=substr($0,i-j,j*2+1)}else{break}} };print a}'
