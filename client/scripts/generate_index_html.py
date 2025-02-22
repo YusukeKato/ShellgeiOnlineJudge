@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 update_date = "2025/02/22"
-current_version = "1.2.0"
-version_str = "?version=1121"
+current_version = "1.2.1"
+version_str = "?version=1122"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
@@ -98,7 +98,7 @@ def write_index_html(lang):
 
   # last updated
   if lang == "jp":
-    lines.append('<h3>最終更新日</h3>\n')
+    lines.append('<h3>最終更新</h3>\n')
   elif lang == "en":
     lines.append('<h3>LAST UPDATED</h3>\n')
   lines.append('<ul>\n')
@@ -809,11 +809,11 @@ def write_index_html(lang):
     lines.append('</ul>\n')
     lines.append('<h3>実行環境</h3>\n')
     lines.append('<ul>\n')
-    lines.append('<li>cat /etc/os-release: Ubuntu 24.04 LTS</li>\n')
-    lines.append('<li>echo $SHELL: /bin/bash</li>\n')
-    lines.append('<li>bash --version: 5.2.21(1)-release</li>\n')
-    lines.append('<li>python3 -V: Python 3.12.3</li>\n')
-    lines.append('<li>g++ --version: 13.2.0</li>\n')
+    lines.append('<li>cat /etc/os-release</li>\n')
+    lines.append('<li>echo $SHELL</li>\n')
+    lines.append('<li>bash --version</li>\n')
+    lines.append('<li>python3 -V</li>\n')
+    lines.append('<li>g++ --version</li>\n')
     lines.append('</ul>\n')
     lines.append('</details>\n')
   if lang == "en":
@@ -835,11 +835,11 @@ def write_index_html(lang):
     lines.append('</ul>\n')
     lines.append('<h3>Environment</h3>\n')
     lines.append('<ul>\n')
-    lines.append('<li>cat /etc/os-release: Ubuntu 24.04 LTS</li>\n')
-    lines.append('<li>echo $SHELL: /bin/bash</li>\n')
-    lines.append('<li>bash --version: 5.2.21(1)-release</li>\n')
-    lines.append('<li>python3 -V: Python 3.12.3</li>\n')
-    lines.append('<li>g++ --version: 13.2.0</li>\n')
+    lines.append('<li>cat /etc/os-release</li>\n')
+    lines.append('<li>echo $SHELL</li>\n')
+    lines.append('<li>bash --version</li>\n')
+    lines.append('<li>python3 -V</li>\n')
+    lines.append('<li>g++ --version</li>\n')
     lines.append('</ul>\n')
     lines.append('</details>\n')
   # command button
@@ -892,7 +892,7 @@ def write_index_html(lang):
     lines.append('<textarea name="cmdline" cols="50" rows="12" id="cmdline" placeholder="ここにシェル芸を記述"></textarea>\n')
     lines.append('</div>\n')
     lines.append('<div class="centerClass">\n')
-    lines.append('<input type="button" value="実行（Ctrl+Enter）" class="buttonClass" id="submitButton">\n')
+    lines.append('<input type="button" value="実行（Ctrl+Enter）" class="buttonClass_r" id="submitButton">\n')
     lines.append('</div>\n')
     lines.append('\n')
   if lang == "en":
@@ -900,11 +900,11 @@ def write_index_html(lang):
     lines.append('<textarea name="cmdline" cols="50" rows="12" id="cmdline" placeholder="Write your shell-gei here"></textarea>\n')
     lines.append('</div>\n')
     lines.append('<div class="centerClass">\n')
-    lines.append('<input type="button" value="RUN (Ctrl+Enter)" class="buttonClass" id="submitButton">\n')
+    lines.append('<input type="button" value="RUN (Ctrl+Enter)" class="buttonClass_r" id="submitButton">\n')
     lines.append('</div>\n')
     lines.append('\n')
 
-  # resutl
+  # result
   if lang == "jp":
     lines.append('<h2>結果</h2>\n')
     lines.append('<h3>正誤判定</h3>\n')
