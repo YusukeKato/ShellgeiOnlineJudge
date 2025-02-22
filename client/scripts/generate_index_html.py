@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-update_date = "2025/02/16"
-current_version = "1.1.2"
-version_str = "?version=1109"
+update_date = "2025/02/22"
+current_version = "1.2.0"
+version_str = "?version=1121"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
@@ -252,6 +252,7 @@ def write_index_html(lang):
   lines.append('<details>\n')
   lines.append('<summary>2025</summary>\n')
   lines.append('<ul>\n')
+  lines.append('<li>- 02/22: 問題選択ボタンを追加</li>\n')
   lines.append('<li>- 02/16: サーバメンテナンス</li>\n')
   lines.append('<li>- 01/04: GENERAL-48追加</li>\n')
   lines.append('<li>- 01/02: サーバメンテナンス、問題追加</li>\n')
@@ -508,7 +509,7 @@ def write_index_html(lang):
     lines.append('<div class="centerClass">\n')
     lines.append('<label class="selectbox">\n')
     lines.append('<select class="selectClass" id="selectForm1">\n')
-    lines.append('<option value="GENERAL-00000001">1 : 出力テスト</option>\n')
+    lines.append('<option value="GENERAL-00000001" selected>1 : 出力テスト</option>\n')
     lines.append('<option value="GENERAL-00000002">2 : 入力テスト</option>\n')
     lines.append('<option value="GENERAL-00000003">3 : 改行テスト</option>\n')
     lines.append('<option value="GENERAL-00000004">4 : 足し算</option>\n')
@@ -559,10 +560,16 @@ def write_index_html(lang):
     lines.append('</select>\n')
     lines.append('</label>\n')
     lines.append('<p></p>\n')
-    lines.append('</div>\n')
+    lines.append('</div>\n') # div centerClass
     lines.append('<div class="centerClass">\n')
-    lines.append('<input type="button" value="決定" class="buttonClass" id="selectButton1">\n')
-    lines.append('</div>\n')
+    lines.append('<table>\n')
+    lines.append('<tr>\n')
+    lines.append('<td><input type="button" value="<" class="buttonClass_s" id="selectPre1"></td>\n')
+    lines.append('<td><input type="button" value="決定" class="buttonClass" id="selectButton1"></td>\n')
+    lines.append('<td><input type="button" value=">" class="buttonClass_s" id="selectNext1"></td>\n')
+    lines.append('</tr>\n')
+    lines.append('</table>\n')
+    lines.append('</div>\n') # div centerClass
     lines.append('\n')
   if lang == "en":
     lines.append('<h2>Select Problem</h2>\n')
@@ -570,7 +577,7 @@ def write_index_html(lang):
     lines.append('<div class="centerClass">\n')
     lines.append('<label class="selectbox">\n')
     lines.append('<select class="selectClass" id="selectForm1">\n')
-    lines.append('<option value="GENERAL-00000001">1 : Test: Output</option>\n')
+    lines.append('<option value="GENERAL-00000001" selected>1 : Test: Output</option>\n')
     lines.append('<option value="GENERAL-00000002">2 : Test: Input</option>\n')
     lines.append('<option value="GENERAL-00000003">3 : Test: Newline</option>\n')
     lines.append('<option value="GENERAL-00000004">4 : Add</option>\n')
@@ -623,7 +630,13 @@ def write_index_html(lang):
     lines.append('<p></p>\n')
     lines.append('</div>\n')
     lines.append('<div class="centerClass">\n')
-    lines.append('<input type="button" value="GO" class="buttonClass" id="selectButton1">\n')
+    lines.append('<table>\n')
+    lines.append('<tr>\n')
+    lines.append('<td><input type="button" value="<" class="buttonClass_s" id="selectPre1"></td>\n')
+    lines.append('<td><input type="button" value="GO" class="buttonClass" id="selectButton1"></td>\n')
+    lines.append('<td><input type="button" value=">" class="buttonClass_s" id="selectNext1"></td>\n')
+    lines.append('</tr>\n')
+    lines.append('</table>\n')
     lines.append('</div>\n')
     lines.append('\n')
 
@@ -635,7 +648,7 @@ def write_index_html(lang):
   lines.append('<div class="centerClass">\n')
   lines.append('<label class="selectbox">\n')
   lines.append('<select class="selectClass" id="selectForm2">\n')
-  lines.append('<option value="EXERCISE-echo-01">1-1 : echo 1</option>\n')
+  lines.append('<option value="EXERCISE-echo-01" selected>1-1 : echo 1</option>\n')
   lines.append('<option value="EXERCISE-echo-02">1-2 : echo 2</option>\n')
   lines.append('<option value="EXERCISE-echo-03">1-3 : echo 3</option>\n')
   lines.append('<option value="EXERCISE-cat-01">2-1 : cat 1</option>\n')
@@ -674,10 +687,16 @@ def write_index_html(lang):
   lines.append('<p></p>\n')
   lines.append('</div>\n')
   lines.append('<div class="centerClass">\n')
+  lines.append('<table>\n')
+  lines.append('<tr>\n')
+  lines.append('<td><input type="button" value="<" class="buttonClass_s" id="selectPre2"></td>\n')
   if lang == "jp":
-    lines.append('<input type="button" value="決定" class="buttonClass" id="selectButton2">\n')
+    lines.append('<td><input type="button" value="決定" class="buttonClass" id="selectButton2"></td>\n')
   if lang == "en":
-    lines.append('<input type="button" value="GO" class="buttonClass" id="selectButton2">\n')
+    lines.append('<td><input type="button" value="GO" class="buttonClass" id="selectButton2"></td>\n')
+  lines.append('<td><input type="button" value=">" class="buttonClass_s" id="selectNext2"></td>\n')
+  lines.append('</tr>\n')
+  lines.append('</table>\n')
   lines.append('</div>\n')
   lines.append('\n')
 
@@ -690,7 +709,7 @@ def write_index_html(lang):
   lines.append('<label class="selectbox">\n')
   lines.append('<select class="selectClass" id="selectForm3">\n')
   if lang == "jp":
-    lines.append('<option value="IMAGE-00000001">1: 画像テスト</option>\n')
+    lines.append('<option value="IMAGE-00000001" selected>1: 画像テスト</option>\n')
     lines.append('<option value="IMAGE-00000002">2: 横線</option>\n')
     lines.append('<option value="IMAGE-00000003">3: 円</option>\n')
     lines.append('<option value="IMAGE-00000004">4: 市松模様</option>\n')
@@ -706,10 +725,18 @@ def write_index_html(lang):
   lines.append('<p></p>\n')
   lines.append('</div>\n')
   lines.append('<div class="centerClass">\n')
+  lines.append('<div class="tableClass">\n')
+  lines.append('<table>')
+  lines.append('<tr>')
+  lines.append('<td><input type="button" value="<" class="buttonClass_s" id="selectPre3"></td>\n')
   if lang == "jp":
-    lines.append('<input type="button" value="決定" class="buttonClass" id="selectButton3">\n')
+    lines.append('<td><input type="button" value="決定" class="buttonClass" id="selectButton3"></td>\n')
   if lang == "en":
-    lines.append('<input type="button" value="GO" class="buttonClass" id="selectButton3">\n')
+    lines.append('<td><input type="button" value="GO" class="buttonClass" id="selectButton3"></td>\n')
+  lines.append('<td><input type="button" value=">" class="buttonClass_s" id="selectNext3"></td>\n')
+  lines.append('</tr>')
+  lines.append('</table>')
+  lines.append('</div>\n')
   lines.append('</div>\n')
   lines.append('\n')
 

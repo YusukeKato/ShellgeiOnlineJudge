@@ -136,6 +136,10 @@ code {
   word-wrap: break-word;
   word-break: break-all;
 }
+table{
+  width: 40%;
+  margin: auto;
+}
 
 /*
  * 見出し
@@ -283,7 +287,24 @@ li {
   background: #EEE;
 }
 .buttonClass {
-  width: 20%;
+  width: 80%;
+  font-size: 1.0rem;
+  cursor: pointer;
+  display: block;
+  text-align: center;
+  vertical-align: middle;
+  text-decoration: none;
+  margin: 1.0rem auto;
+  padding: 0.8rem;
+  font-weight: bold;
+  border: 1px solid #333;
+  border-radius: 0.2rem;
+  transition: 0.2s;
+  color: #FFF;
+  background-color: #333;
+}
+.buttonClass_s {
+  width: 60%;
   font-size: 1.0rem;
   cursor: pointer;
   display: block;
@@ -595,6 +616,10 @@ select {
     padding-bottom: 1.5em;
     padding-left: 5%;
   }
+  table{
+    width: 50%;
+    margin: auto;
+  }
 
   /*
    * 見出し
@@ -623,11 +648,21 @@ select {
    */
   .buttonClass {
     font-size: 0.9em;
-    width: 40%;
+    width: 80%;
     height: 3.0em;
     cursor: pointer;
     text-align: center;
     vertical-align: middle;
+    margin: auto;
+  }
+  .buttonClass_s {
+    font-size: 0.9em;
+    width: 60%;
+    height: 3.0em;
+    cursor: pointer;
+    text-align: center;
+    vertical-align: middle;
+    margin: auto;
   }
   .bButton {
     text-align: center;

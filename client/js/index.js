@@ -1,5 +1,5 @@
 // パラメータ
-var version = 1068;
+var version = 1072;
 const limit_length = parseInt(1000);
 var mainUrl = 'https://shellgei-online-judge.com/';
 var is_enable_button = true;
@@ -99,6 +99,62 @@ function getProblemNum() {
 window.addEventListener("load", function() {
     getProblemNum();
 });
+
+// 問題選択を一つ前と後ろに進めるボタン
+function selectPreFunc(selectForm) {
+    for(var i = 0; i < selectForm.options.length; i++) {
+        if(i-1 >= 0 && selectForm.options[i].selected == true) {
+            selectForm.options[i].selected = false;
+            selectForm.options[i-1].selected = true;
+            return;
+        }
+    }
+}
+function selectNextFunc(selectForm) {
+    for(var i = 0; i < selectForm.options.length; i++) {
+        if(i+1 < selectForm.options.length && selectForm.options[i].selected == true) {
+            selectForm.options[i].selected = false;
+            selectForm.options[i+1].selected = true;
+            return;
+        }
+    }
+}
+function selectPre1() {
+    var selectForm1 = document.getElementById('selectForm1');
+    selectPreFunc(selectForm1);
+}
+function selectNext1() {
+    var selectForm1 = document.getElementById('selectForm1');
+    selectNextFunc(selectForm1);
+}
+function selectPre2() {
+    var selectForm2 = document.getElementById('selectForm2');
+    selectPreFunc(selectForm2);
+}
+function selectNext2() {
+    var selectForm2 = document.getElementById('selectForm2');
+    selectNextFunc(selectForm2);
+}
+function selectPre3() {
+    var selectForm3 = document.getElementById('selectForm3');
+    selectPreFunc(selectForm3);
+}
+function selectNext3() {
+    var selectForm3 = document.getElementById('selectForm3');
+    selectNextFunc(selectForm3);
+}
+var selectPreButton1 = document.getElementById('selectPre1');
+selectPreButton1.addEventListener('click', selectPre1);
+var selectNextButton1 = document.getElementById('selectNext1');
+selectNextButton1.addEventListener('click', selectNext1);
+var selectPreButton2 = document.getElementById('selectPre2');
+selectPreButton2.addEventListener('click', selectPre2);
+var selectNextButton2 = document.getElementById('selectNext2');
+selectNextButton2.addEventListener('click', selectNext2);
+var selectPreButton3 = document.getElementById('selectPre3');
+selectPreButton3.addEventListener('click', selectPre3);
+var selectNextButton3 = document.getElementById('selectNext3');
+selectNextButton3.addEventListener('click', selectNext3);
 
 // 問題選択処理用関数
 function selectClickFunc(problemNum_arg) {
