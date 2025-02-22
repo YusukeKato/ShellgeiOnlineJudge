@@ -11,6 +11,7 @@ Shell one-liner playground: https://shellgei-online-judge.com/
 - [Setup](#setup)
 - [Deploy](#deploy)
 - [Test](#test)
+- [Add Problem](#add-a-problem)
 - [Maintenance](#maintenance)
 - [Appendix](#appendix)
 - [License](#license)
@@ -140,6 +141,24 @@ cd scripts
 python3 test.py server
 # local test
 python3 test.py local
+```
+
+## Add a problem
+### Add problem files
+- data/
+  - problem_jp/*.txt
+  - problem_en/*.txt
+  - input/*.txt
+  - output/*.txt
+  - answer/*.txt
+  - problem_images/*.jpg
+
+### Edit HTML
+- client/scripts/generate_index_html.py
+
+```py
+# ex: GENERAL-48
+lines.append('<option value="GENERAL-00000048">48 : Find longest palindromes</option>\n')
 ```
 
 ## Maintenance
