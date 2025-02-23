@@ -1,1 +1,1 @@
-find and output the longest palindrome from the string.
+Find and output the longest palindrome from the string.
