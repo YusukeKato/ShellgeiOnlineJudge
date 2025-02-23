@@ -634,7 +634,7 @@ select {
     padding-left: 5%;
   }
   table{
-    width: 50%;
+    width: 70%;
     margin: auto;
   }
 
@@ -674,7 +674,7 @@ select {
   }
   .buttonClass_s {
     font-size: 0.9em;
-    width: 60%;
+    width: 80%;
     height: 3.0em;
     cursor: pointer;
     text-align: center;
