@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 update_date = "2025/02/23"
-current_version = "1.2.8"
-version_str = "?version=1129"
+current_version = "1.2.9"
+version_str = "?version=1130"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
@@ -912,6 +912,11 @@ def write_index_html(lang):
   lines.append('<button class="command-button" id="command-sharp"> # </button>\n')
   lines.append('<button class="command-button" id="command-colon"> : </button>\n')
   lines.append('<button class="command-button" id="command-semicolon"> ; </button>\n')
+  lines.append('<button class="command-button" id="command-and"> & </button>\n')
+  lines.append('<button class="command-button" id="command-hat"> ^ </button>\n')
+  lines.append('<button class="command-button" id="command-tilde"> ~ </button>\n')
+  lines.append('<button class="command-button" id="command-per"> % </button>\n')
+
   lines.append('<button class="command-button" id="command-txt-path">input.txt</button>\n')
   lines.append('<button class="command-button" id="command-img-path">/media/output.jpg</button>\n')
   lines.append('<button class="command-button" id="command-gif-path">/media/output.gif</button>\n')

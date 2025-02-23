@@ -516,6 +516,19 @@ function input_colon() {
 function input_semicolon() {
     input_command(";");
 }
+function input_and() {
+    input_command("&");
+}
+function input_hat() {
+    input_command("^");
+}
+function input_tilde() {
+    input_command("~");
+}
+function input_per() {
+    input_command("%");
+}
+
 function input_txt_path() {
     input_command("input.txt ");
 }
@@ -644,6 +657,15 @@ var commandButton_colon = document.getElementById('command-colon');
 commandButton_colon.addEventListener('click', input_colon);
 var commandButton_semicolon = document.getElementById('command-semicolon');
 commandButton_semicolon.addEventListener('click', input_semicolon);
+var commandButton_and = document.getElementById('command-and');
+commandButton_and.addEventListener('click', input_and);
+var commandButton_hat = document.getElementById('command-hat');
+commandButton_hat.addEventListener('click', input_hat);
+var commandButton_tilde = document.getElementById('command-tilde');
+commandButton_tilde.addEventListener('click', input_tilde);
+var commandButton_per = document.getElementById('command-per');
+commandButton_per.addEventListener('click', input_per);
+
 var commandButton_txt_path = document.getElementById('command-txt-path');
 commandButton_txt_path.addEventListener('click', input_txt_path);
 var commandButton_img_path = document.getElementById('command-img-path');
