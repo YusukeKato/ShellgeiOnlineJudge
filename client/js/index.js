@@ -527,7 +527,11 @@ function input_command(cmd_str) {
     var cmdline = document.getElementById('cmdline');
     cmdline.value = cmdline.value + cmd_str;
 }
-function delete_command() {
+function delete_command_one() {
+    var cmdline = document.getElementById('cmdline');
+    cmdline.value = cmdline.value.slice(0, cmdline.value.length - 1);
+}
+function delete_command_all() {
     var cmdline = document.getElementById('cmdline');
     cmdline.value = "";
 }
@@ -641,5 +645,8 @@ var commandButton_img_path = document.getElementById('command-img-path');
 commandButton_img_path.addEventListener('click', input_img_path);
 var commandButton_gif_path = document.getElementById('command-gif-path');
 commandButton_gif_path.addEventListener('click', input_gif_path);
-var commandButton_delete_cmd = document.getElementById('delete-command');
-commandButton_delete_cmd.addEventListener('click', delete_command);
+
+var commandButton_delete_one_cmd = document.getElementById('delete-command-one');
+commandButton_delete_one_cmd.addEventListener('click', delete_command_one);
+var commandButton_delete_all_cmd = document.getElementById('delete-command-all');
+commandButton_delete_all_cmd.addEventListener('click', delete_command_all);

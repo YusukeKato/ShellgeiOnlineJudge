@@ -252,7 +252,7 @@ def write_index_html(lang):
   lines.append('<details>\n')
   lines.append('<summary>2025</summary>\n')
   lines.append('<ul>\n')
-  lines.append('<li>- 02/23: コマンド入力ボタンを追加</li>\n')
+  lines.append('<li>- 02/23: コマンド入力ボタンを追加、ボタンのサイズ調整</li>\n')
   lines.append('<li>- 02/22: 問題選択ボタンを追加、通常問題49を追加</li>\n')
   lines.append('<li>- 02/16: サーバメンテナンス</li>\n')
   lines.append('<li>- 01/04: GENERAL-48追加</li>\n')
@@ -909,10 +909,13 @@ def write_index_html(lang):
   lines.append('<button class="command-button" id="command-txt-path">input.txt</button>\n')
   lines.append('<button class="command-button" id="command-img-path">/media/output.jpg</button>\n')
   lines.append('<button class="command-button" id="command-gif-path">/media/output.gif</button>\n')
-  # delete
-  lines.append('<button class="command-button-red" id="delete-command">delete</button>\n')
-
   lines.append('</div>\n')
+  # delete
+  lines.append('<div id="click-commands">\n')
+  lines.append('<button class="command-button-red" id="delete-command-one">delete one</button>\n')
+  lines.append('<button class="command-button-red" id="delete-command-all">delete all</button>\n')
+  lines.append('</div>\n')
+
   if lang == "jp":
     lines.append('<div class="centerClass">\n')
     lines.append('<textarea name="cmdline" cols="50" rows="12" id="cmdline" placeholder="ここにシェル芸を記述"></textarea>\n')
