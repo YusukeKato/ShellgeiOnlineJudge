@@ -374,11 +374,8 @@ function input_cat() {
 function input_convert() {
     input_command("convert ");
 }
-function input_cut_c() {
-    input_command("cut -c ");
-}
-function input_cut_df() {
-    input_command("cut -d ',' -f 2 ");
+function input_cut() {
+    input_command("cut ");
 }
 // e
 function input_echo() {
@@ -417,11 +414,8 @@ function input_sort() {
     input_command("sort ");
 }
 // t
-function input_tail_c() {
-    input_command("tail -c ");
-}
-function input_tail_n() {
-    input_command("tail -n ");
+function input_tail() {
+    input_command("tail ");
 }
 function input_textimg() {
     input_command("textimg ");
@@ -436,7 +430,25 @@ function input_wc() {
 }
 // other
 function input_pipe() {
-    input_command(" | ");
+    input_command("|");
+}
+function input_hyphen() {
+    input_command("-");
+}
+function input_plus() {
+    input_command("+");
+}
+function input_equal() {
+    input_command("=");
+}
+function input_under() {
+    input_command("_");
+}
+function input_exclamation() {
+    input_command("!");
+}
+function input_question() {
+    input_command("?");
 }
 function input_single_quote() {
     input_command("'");
@@ -446,6 +458,60 @@ function input_double_quote() {
 }
 function input_back_quote() {
     input_command("`");
+}
+function input_parentheses_left() {
+    input_command("(");
+}
+function input_parentheses_right() {
+    input_command(")");
+}
+function input_square_left() {
+    input_command("[");
+}
+function input_square_right() {
+    input_command("]");
+}
+function input_curly_left() {
+    input_command("{");
+}
+function input_curly_right() {
+    input_command("}");
+}
+function input_slash() {
+    input_command("/");
+}
+function input_back_slash() {
+    input_command("\\");
+}
+function input_greater_then() {
+    input_command(">");
+}
+function input_less_then() {
+    input_command("<");
+}
+function input_asterisk() {
+    input_command("*");
+}
+function input_dollar() {
+    input_command("$");
+}
+function input_at() {
+    input_command("@");
+}
+function input_dot() {
+    input_command(".");
+}
+function input_comma() {
+    input_command(",");
+}
+function input_sharp() {
+    input_command("#");
+}
+function input_colon() {
+    input_command(":");
+}
+function input_semicolon() {
+    input_command(";");
 }
 function input_txt_path() {
     input_command("input.txt ");
@@ -475,10 +541,8 @@ var commandButton_cat = document.getElementById('command-cat');
 commandButton_cat.addEventListener('click', input_cat);
 var commandButton_convert = document.getElementById('command-convert');
 commandButton_convert.addEventListener('click', input_convert);
-var commandButton_cut_c = document.getElementById('command-cut-c');
-commandButton_cut_c.addEventListener('click', input_cut_c);
-var commandButton_cut_df = document.getElementById('command-cut-df');
-commandButton_cut_df.addEventListener('click', input_cut_df);
+var commandButton_cut = document.getElementById('command-cut');
+commandButton_cut.addEventListener('click', input_cut);
 // e
 var commandButton_echo = document.getElementById('command-echo');
 commandButton_echo.addEventListener('click', input_echo);
@@ -504,10 +568,8 @@ commandButton_seq.addEventListener('click', input_seq);
 var commandButton_sort = document.getElementById('command-sort');
 commandButton_sort.addEventListener('click', input_sort);
 // t
-var commandButton_tail_c = document.getElementById('command-tail-c');
-commandButton_tail_c.addEventListener('click', input_tail_c);
-var commandButton_tail_n = document.getElementById('command-tail-n');
-commandButton_tail_n.addEventListener('click', input_tail_n);
+var commandButton_tail = document.getElementById('command-tail');
+commandButton_tail.addEventListener('click', input_tail);
 var commandButton_textimg = document.getElementById('command-textimg');
 commandButton_textimg.addEventListener('click', input_textimg);
 // u
@@ -519,12 +581,60 @@ commandButton_wc.addEventListener('click', input_wc);
 // other
 var commandButton_pipe = document.getElementById('command-pipe');
 commandButton_pipe.addEventListener('click', input_pipe);
+var commandButton_hyphen = document.getElementById('command-hyphen');
+commandButton_hyphen.addEventListener('click', input_hyphen);
+var commandButton_plus = document.getElementById('command-plus');
+commandButton_plus.addEventListener('click', input_plus);
+var commandButton_equal = document.getElementById('command-equal');
+commandButton_equal.addEventListener('click', input_equal);
+var commandButton_under = document.getElementById('command-under');
+commandButton_under.addEventListener('click', input_under);
+var commandButton_exclamation = document.getElementById('command-exclamation');
+commandButton_exclamation.addEventListener('click', input_exclamation);
+var commandButton_question = document.getElementById('command-question');
+commandButton_question.addEventListener('click', input_question);
 var commandButton_single_quote = document.getElementById('command-single-quote');
 commandButton_single_quote.addEventListener('click', input_single_quote);
 var commandButton_double_quote = document.getElementById('command-double-quote');
 commandButton_double_quote.addEventListener('click', input_double_quote);
 var commandButton_back_quote = document.getElementById('command-back-quote');
 commandButton_back_quote.addEventListener('click', input_back_quote);
+var commandButton_parentheses_left = document.getElementById('command-parentheses-left');
+commandButton_parentheses_left.addEventListener('click', input_parentheses_left);
+var commandButton_parentheses_right = document.getElementById('command-parentheses-right');
+commandButton_parentheses_right.addEventListener('click', input_parentheses_right);
+var commandButton_square_left = document.getElementById('command-square-left');
+commandButton_square_left.addEventListener('click', input_square_left);
+var commandButton_square_right = document.getElementById('command-square-right');
+commandButton_square_right.addEventListener('click', input_square_right);
+var commandButton_curly_left = document.getElementById('command-curly-left');
+commandButton_curly_left.addEventListener('click', input_curly_left);
+var commandButton_curly_right = document.getElementById('command-curly-right');
+commandButton_curly_right.addEventListener('click', input_curly_right);
+var commandButton_slash = document.getElementById('command-slash');
+commandButton_slash.addEventListener('click', input_slash);
+var commandButton_back_slash = document.getElementById('command-back-slash');
+commandButton_back_slash.addEventListener('click', input_back_slash);
+var commandButton_greater_then = document.getElementById('command-greater-then');
+commandButton_greater_then.addEventListener('click', input_greater_then);
+var commandButton_less_then = document.getElementById('command-less-then');
+commandButton_less_then.addEventListener('click', input_less_then);
+var commandButton_asterisk = document.getElementById('command-asterisk');
+commandButton_asterisk.addEventListener('click', input_asterisk);
+var commandButton_dollar = document.getElementById('command-dollar');
+commandButton_dollar.addEventListener('click', input_dollar);
+var commandButton_at = document.getElementById('command-at');
+commandButton_at.addEventListener('click', input_at);
+var commandButton_dot = document.getElementById('command-dot');
+commandButton_dot.addEventListener('click', input_dot);
+var commandButton_comma = document.getElementById('command-comma');
+commandButton_comma.addEventListener('click', input_comma);
+var commandButton_sharp = document.getElementById('command-sharp');
+commandButton_sharp.addEventListener('click', input_sharp);
+var commandButton_colon = document.getElementById('command-colon');
+commandButton_colon.addEventListener('click', input_colon);
+var commandButton_semicolon = document.getElementById('command-semicolon');
+commandButton_semicolon.addEventListener('click', input_semicolon);
 var commandButton_txt_path = document.getElementById('command-txt-path');
 commandButton_txt_path.addEventListener('click', input_txt_path);
 var commandButton_img_path = document.getElementById('command-img-path');
