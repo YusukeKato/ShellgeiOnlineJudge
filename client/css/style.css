@@ -378,7 +378,7 @@ details {
   margin-bottom: 0.2rem;
   margin-right: auto;
   margin-left: auto;
-  background-color: #F9F9F9;
+  background-color: #F0F0F0;
 }
 summary {
   font-weight: normal;
@@ -393,14 +393,14 @@ details[open] {
   margin-bottom:0.2rem 
   margin-right: auto;
   margin-left: auto;
-  background-color: #F9F9F9;
+  background-color: #F0F0F0;
 }
 details[open] summary {
   border-bottom: 1px solid #aaa;
   margin-bottom: 0.5em;
   margin-right: auto;
   margin-left: auto;
-  background-color: #F9F9F9;
+  background-color: #F0F0F0;
 }
 
 /*
@@ -688,7 +688,7 @@ select {
     cursor: pointer;
     text-align: center;
     vertical-align: middle;
-    margin: auto;
+    margin: 1.0em auto;
   }
   .bButton {
     text-align: center;
@@ -793,12 +793,12 @@ select {
     gap: 3px;
   }
   .command-button {
-    padding: 6px 6px;
+    padding: 6px 1.0em;
     background-color: #FFF;
     color: #000;
     border: none;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 1.2rem;
     font-weight: bold;
     flex-shrink: 0;
   }

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 update_date = "2025/02/23"
-current_version = "1.2.6"
-version_str = "?version=1126"
+current_version = "1.2.7"
+version_str = "?version=1127"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
@@ -845,7 +845,10 @@ def write_index_html(lang):
     lines.append('<li>g++ --version</li>\n')
     lines.append('</ul>\n')
     lines.append('</details>\n')
+
   # command button
+  lines.append('<details>\n')
+  lines.append('<summary>Input buttons</summary>\n')
   # abcdefghijklmnopqrstuvwxyz
   lines.append('<div id="click-commands">\n')
   # a
@@ -878,38 +881,40 @@ def write_index_html(lang):
   lines.append('<button class="command-button" id="command-wc">wc</button>\n')
 
   # other
-  lines.append('<button class="command-button" id="command-pipe"> | (pipe) </button>\n')
-  lines.append('<button class="command-button" id="command-hyphen"> - (hyphen) </button>\n')
-  lines.append('<button class="command-button" id="command-plus"> + (plus) </button>\n')
-  lines.append('<button class="command-button" id="command-equal"> = (equal) </button>\n')
-  lines.append('<button class="command-button" id="command-under"> _ (under) </button>\n')
-  lines.append('<button class="command-button" id="command-exclamation"> ! (exclamation) </button>\n')
-  lines.append('<button class="command-button" id="command-question"> ? (question) </button>\n')
-  lines.append('<button class="command-button" id="command-single-quote"> \' (single) </button>\n')
-  lines.append('<button class="command-button" id="command-double-quote"> " (double) </button>\n')
-  lines.append('<button class="command-button" id="command-back-quote"> ` (back) </button>\n')
-  lines.append('<button class="command-button" id="command-parentheses-left"> ( (left) </button>\n')
-  lines.append('<button class="command-button" id="command-parentheses-right"> ) (right) </button>\n')
-  lines.append('<button class="command-button" id="command-square-left"> [ (left) </button>\n')
-  lines.append('<button class="command-button" id="command-square-right"> ] (right) </button>\n')
-  lines.append('<button class="command-button" id="command-curly-left"> { (left) </button>\n')
-  lines.append('<button class="command-button" id="command-curly-right"> } (right) </button>\n')
-  lines.append('<button class="command-button" id="command-slash"> / (slash) </button>\n')
-  lines.append('<button class="command-button" id="command-back-slash"> \\ (back) </button>\n')
-  lines.append('<button class="command-button" id="command-greater-then"> &gt; (greater) </button>\n')
-  lines.append('<button class="command-button" id="command-less-then"> &lt; (less) </button>\n')
-  lines.append('<button class="command-button" id="command-asterisk"> * (asterisk) </button>\n')
-  lines.append('<button class="command-button" id="command-dollar"> $ (dollar) </button>\n')
-  lines.append('<button class="command-button" id="command-at"> @ (at) </button>\n')
-  lines.append('<button class="command-button" id="command-dot"> . (dot) </button>\n')
-  lines.append('<button class="command-button" id="command-comma"> , (comma) </button>\n')
-  lines.append('<button class="command-button" id="command-sharp"> # (sharp) </button>\n')
-  lines.append('<button class="command-button" id="command-colon"> : (colon) </button>\n')
-  lines.append('<button class="command-button" id="command-semicolon"> ; (semi) </button>\n')
+  lines.append('<button class="command-button" id="command-space">SPACE</button>\n')
+  lines.append('<button class="command-button" id="command-pipe"> | </button>\n')
+  lines.append('<button class="command-button" id="command-hyphen"> - </button>\n')
+  lines.append('<button class="command-button" id="command-plus"> + </button>\n')
+  lines.append('<button class="command-button" id="command-equal"> = </button>\n')
+  lines.append('<button class="command-button" id="command-under"> _ </button>\n')
+  lines.append('<button class="command-button" id="command-exclamation"> ! </button>\n')
+  lines.append('<button class="command-button" id="command-question"> ? </button>\n')
+  lines.append('<button class="command-button" id="command-single-quote"> \' </button>\n')
+  lines.append('<button class="command-button" id="command-double-quote"> " </button>\n')
+  lines.append('<button class="command-button" id="command-back-quote"> ` </button>\n')
+  lines.append('<button class="command-button" id="command-parentheses-left"> ( </button>\n')
+  lines.append('<button class="command-button" id="command-parentheses-right"> ) </button>\n')
+  lines.append('<button class="command-button" id="command-square-left"> [ </button>\n')
+  lines.append('<button class="command-button" id="command-square-right"> ] </button>\n')
+  lines.append('<button class="command-button" id="command-curly-left"> { </button>\n')
+  lines.append('<button class="command-button" id="command-curly-right"> } </button>\n')
+  lines.append('<button class="command-button" id="command-slash"> / </button>\n')
+  lines.append('<button class="command-button" id="command-back-slash"> \\ </button>\n')
+  lines.append('<button class="command-button" id="command-greater-then"> &gt; </button>\n')
+  lines.append('<button class="command-button" id="command-less-then"> &lt; </button>\n')
+  lines.append('<button class="command-button" id="command-asterisk"> * </button>\n')
+  lines.append('<button class="command-button" id="command-dollar"> $ </button>\n')
+  lines.append('<button class="command-button" id="command-at"> @ </button>\n')
+  lines.append('<button class="command-button" id="command-dot"> . </button>\n')
+  lines.append('<button class="command-button" id="command-comma"> , </button>\n')
+  lines.append('<button class="command-button" id="command-sharp"> # </button>\n')
+  lines.append('<button class="command-button" id="command-colon"> : </button>\n')
+  lines.append('<button class="command-button" id="command-semicolon"> ; </button>\n')
   lines.append('<button class="command-button" id="command-txt-path">input.txt</button>\n')
   lines.append('<button class="command-button" id="command-img-path">/media/output.jpg</button>\n')
   lines.append('<button class="command-button" id="command-gif-path">/media/output.gif</button>\n')
   lines.append('</div>\n')
+  lines.append('</details>\n')
   # delete
   lines.append('<div id="click-commands">\n')
   lines.append('<button class="command-button-red" id="delete-command-one">delete one</button>\n')
