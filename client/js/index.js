@@ -1,5 +1,5 @@
 // パラメータ
-var version = 1076;
+var version = 1077;
 const limit_length = parseInt(1000);
 var mainUrl = 'https://shellgei-online-judge.com/';
 var is_enable_button = true;
@@ -122,26 +122,32 @@ function selectNextFunc(selectForm) {
 function selectPre1() {
     var selectForm1 = document.getElementById('selectForm1');
     selectPreFunc(selectForm1);
+    selectClick1();
 }
 function selectNext1() {
     var selectForm1 = document.getElementById('selectForm1');
     selectNextFunc(selectForm1);
+    selectClick1();
 }
 function selectPre2() {
     var selectForm2 = document.getElementById('selectForm2');
     selectPreFunc(selectForm2);
+    selectClick2();
 }
 function selectNext2() {
     var selectForm2 = document.getElementById('selectForm2');
     selectNextFunc(selectForm2);
+    selectClick2();
 }
 function selectPre3() {
     var selectForm3 = document.getElementById('selectForm3');
     selectPreFunc(selectForm3);
+    selectClick3();
 }
 function selectNext3() {
     var selectForm3 = document.getElementById('selectForm3');
     selectNextFunc(selectForm3);
+    selectClick3();
 }
 var selectPreButton1 = document.getElementById('selectPre1');
 selectPreButton1.addEventListener('click', selectPre1);
