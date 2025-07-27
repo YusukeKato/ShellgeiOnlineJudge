@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-update_date = "2025/06/21"
+update_date = "2025/07/27"
 current_version = "1.2.10"
-version_str = "?version=1133"
+version_str = "?version=1134"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
@@ -111,34 +111,37 @@ def write_index_html(lang):
   if lang == "jp":
     lines.append('<h3>お知らせ</h3>\n')
     lines.append('<ul>\n')
+    lines.append('<li>- 2025/05/03: シェル芸オンラインジャッジ二周年</li>\n')
     lines.append('<li>- 2024/12/27: 安定版バージョン1.1.0リリース</li>\n')
     lines.append('<li>- 2024/11/28: 回答例を追加</li>\n')
     lines.append('<li>- 2024/09/06: 画像問題を追加</li>\n')
     lines.append('<li>- 2024/05/03: シェル芸オンラインジャッジ一周年</li>\n')
-    lines.append('<li>- 2024/04/24: 練習問題を追加</li>\n')
     lines.append('</ul>\n')
   elif lang == "en":
     lines.append('<h3>NEWS</h3>\n')
     lines.append('<ul>\n')
+    lines.append('<li>- 2025/05/03: 2nd Anniversary of SHELLGEI ONLINE JUDGE</li>\n')
     lines.append('<li>- 2024/12/27: Release stable version 1.1.0</li>\n')
     lines.append('<li>- 2024/11/28: Added Example Answer</li>\n')
     lines.append('<li>- 2024/09/06: Added Image Problems</li>\n')
     lines.append('<li>- 2024/05/03: 1st Anniversary of SHELLGEI ONLINE JUDGE</li>\n')
-    lines.append('<li>- 2024/04/24: Added Exercise Problems</li>\n')
     lines.append('</ul>\n')
   lines.append('<div class="slide">\n')
-  lines.append('<img src="'+blog_url+'/images/news/news_20230503.jpg">\n')
+  lines.append('<img src="'+blog_url+'/images/news/news_20250503.jpg">\n')
   lines.append('<img src="'+blog_url+'/images/news/news_20240503.jpg">\n')
+  lines.append('<img src="'+blog_url+'/images/news/news_20230503.jpg">\n')
   lines.append('</div>\n')
   lines.append('<details>\n')
   if lang == "jp":
     lines.append('<summary>過去のお知らせ</summary>\n')
     lines.append('<ul>\n')
+    lines.append('<li>- 2024/04/24: 練習問題を追加</li>\n')
     lines.append('<li>- 2023/05/03: シェル芸オンラインジャッジ開始</li>\n')
     lines.append('</ul>\n')
   if lang == "en":
     lines.append('<summary>PREVIOUS NEWS</summary>\n')
     lines.append('<ul>\n')
+    lines.append('<li>- 2024/04/24: Added Exercise Problems</li>\n')
     lines.append('<li>- 2023/05/03: Start of SHELLGEI ONLINE JUDGE</li>\n')
     lines.append('</ul>\n')
   lines.append('</details>\n')
@@ -252,7 +255,8 @@ def write_index_html(lang):
   lines.append('<details>\n')
   lines.append('<summary>2025</summary>\n')
   lines.append('<ul>\n')
-  lines.append('<li>- 60/21: サーバ更新、Dockerイメージの更新</li>\n')
+  lines.append('<li>- 07/27: サーバ更新、Dockerイメージの更新</li>\n')
+  lines.append('<li>- 06/21: サーバ更新、Dockerイメージの更新</li>\n')
   lines.append('<li>- 05/18: サーバ更新、Dockerイメージの更新</li>\n')
   lines.append('<li>- 04/05: サーバ更新、Dockerイメージの更新</li>\n')
   lines.append('<li>- 03/08: サーバメンテナンス、問題選択ボタンをアップデート</li>\n')
