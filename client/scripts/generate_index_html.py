@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 update_date = "2025/07/27"
 current_version = "1.2.10"
-version_str = "?version=1134"
+version_str = "?version=1135"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
