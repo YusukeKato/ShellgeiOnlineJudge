@@ -30,12 +30,21 @@ if [[ $find_target_str == *"$target_str"* ]]; then
   sudo rm -rf "$root_path_html"input
   sudo rm -rf "$root_path_html"output
   sudo rm -rf "$root_path_html"scripts
+  sudo rm -rf "$root_path_html"soj-react-pkg
+  sudo rm -rf "$root_path_html"soj-svelte-pkg
   
   # delete web app
-  sudo rm "$root_path_html"index.html
-  sudo rm "$root_path_html"index.en.html
-  sudo rm "$root_path_html"index.js
-  sudo rm "$root_path_html"style.css
+  # sudo rm "$root_path_html"index.html
+  # sudo rm "$root_path_html"index.en.html
+  # sudo rm "$root_path_html"index.js
+  # sudo rm "$root_path_html"style.css
+
+  # sudo rm  "$root_path_html"index.html
+  # sudo rm  "$root_path_html"build
+  # sudo rm  "$root_path_html"global.css
+  # sudo rm  "$root_path_html"scripts
+  # sudo rm  "$root_path_html"src
+
   sudo rm "$root_path_html"BlackTreeIcon.jpg
   sudo rm "$root_path_html"favicon.jpg
   sudo rm "$root_path_html"white.jpg
@@ -57,10 +66,18 @@ sudo cp -r ../data/output "$root_path_html"
 sudo cp -r ../data/scripts "$root_path_html"
 
 # copy client
-sudo cp ../client/html/index.html "$root_path_html"
-sudo cp ../client/html/index.en.html "$root_path_html"
-sudo cp ../client/js/index.js "$root_path_html"
-sudo cp ../client/css/style.css "$root_path_html"
+# sudo cp ../client/html/index.html "$root_path_html"
+# sudo cp ../client/html/index.en.html "$root_path_html"
+# sudo cp ../client/js/index.js "$root_path_html"
+# sudo cp ../client/css/style.css "$root_path_html"
+
+# sudo cp ../client/svelte-soj-client/public/index.html "$root_path_html"
+# sudo cp -r ../client/svelte-soj-client/public/build "$root_path_html"
+# sudo cp ../client/svelte-soj-client/public/global.css "$root_path_html"
+# sudo cp -r ../client/svelte-soj-client/scripts "$root_path_html"
+# sudo cp -r ../client/svelte-soj-client/src "$root_path_html"
+sudo cp -r ../client/soj-react-pkg "$root_path_html"soj-react-pkg
+
 sudo cp ../client/images/BlackTreeIcon.jpg "$root_path_html"
 sudo cp ../client/images/favicon.jpg "$root_path_html"
 sudo cp ../client/images/white.jpg "$root_path_html"
