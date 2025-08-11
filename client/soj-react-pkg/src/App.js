@@ -1,8 +1,8 @@
 import black_tree_icon from './BlackTreeIcon.jpg';
 import './App.css';
-import AboutPage from './test.jsx';
 
-function App() {
+const App = () => {
+  const blog_url = "https://yusukekato.jp"
   return (
     <div className="App">
       <header className="App-header">
@@ -10,7 +10,6 @@ function App() {
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
-        <AboutPage />
         <a
           className="App-link"
           href="https://reactjs.org"
