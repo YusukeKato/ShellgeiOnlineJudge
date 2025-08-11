@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-update_date = "2025/07/27"
+update_date = "2025/08/09"
 current_version = "1.2.10"
-version_str = "?version=1135"
+version_str = "?version=1136"
 
 site_title = "シェル芸オンラインジャッジ / SHELLGEI ONLINE JUDGE"
 summary_url = "https://yusukekato.jp/images/summary.jpg"
@@ -255,6 +255,7 @@ def write_index_html(lang):
   lines.append('<details>\n')
   lines.append('<summary>2025</summary>\n')
   lines.append('<ul>\n')
+  lines.append('<li>- 08/09: サーバ更新</li>\n')
   lines.append('<li>- 07/27: サーバ更新、Dockerイメージの更新</li>\n')
   lines.append('<li>- 06/21: サーバ更新、Dockerイメージの更新</li>\n')
   lines.append('<li>- 05/18: サーバ更新、Dockerイメージの更新</li>\n')
