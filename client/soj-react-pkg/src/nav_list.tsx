@@ -1,6 +1,11 @@
 import React from "react";
 import "./nav_list.css";
-import "./interface/soj_info";
+
+interface SojInfo {
+  x_url: string;
+  github_url: string;
+  blog_url: string;
+}
 
 const SojNavList: React.FC<SojInfo> = ({ x_url, github_url, blog_url }) => {
   return (
