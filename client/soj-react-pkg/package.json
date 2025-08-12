@@ -1,6 +1,5 @@
 {
   "name": "soj-react-pkg",
-  "type": "module",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -15,7 +14,8 @@
     "eslint": "^9.33.0",
     "prettier": "^3.6.2",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-prettier": "^5.5.4"
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-config-react-app": "^7.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
