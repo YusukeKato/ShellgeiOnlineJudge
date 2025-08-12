@@ -4,7 +4,7 @@ import App from "./App.tsx";
 
 test("renders header", () => {
   render(<App />);
-  const linkElement = screen.getByText(/シェル・ワンライナーの遊び場/i);
+  const linkElement = screen.getByText(/SHELLGEI ONLINE JUDGE/i);
   expect(linkElement).toBeInTheDocument();
 });
 

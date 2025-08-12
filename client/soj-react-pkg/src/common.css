@@ -1,3 +1,13 @@
 .soj-centering {
+  width: 100%;
   text-align: center;
+}
+
+.soj-main {
+  width: 60%;
+  margin: 0 auto;
+}
+
+li {
+  color: #666;
 }

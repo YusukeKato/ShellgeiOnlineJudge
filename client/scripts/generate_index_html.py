@@ -127,9 +127,9 @@ def write_index_html(lang):
     lines.append('<li>- 2024/05/03: 1st Anniversary of SHELLGEI ONLINE JUDGE</li>\n')
     lines.append('</ul>\n')
   lines.append('<div class="slide">\n')
-  lines.append('<img src="'+blog_url+'/images/news/news_20250503.jpg">\n')
-  lines.append('<img src="'+blog_url+'/images/news/news_20240503.jpg">\n')
-  lines.append('<img src="'+blog_url+'/images/news/news_20230503.jpg">\n')
+  lines.append('<img src="'+blog_url+'/images/news/news_20250503.jpg" alt="slide-img-01">\n')
+  lines.append('<img src="'+blog_url+'/images/news/news_20240503.jpg" alt="slide-img-02">\n')
+  lines.append('<img src="'+blog_url+'/images/news/news_20230503.jpg" alt="slide-img-03">\n')
   lines.append('</div>\n')
   lines.append('<details>\n')
   if lang == "jp":

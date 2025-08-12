@@ -1,0 +1,37 @@
+import React from "react";
+import "./news.css";
+import "./summary.css";
+import "./common.css";
+
+interface SojUrlsInterface {
+  blog_url: string;
+}
+
+const SojNews: React.FC<SojUrlsInterface> = ({ blog_url }) => {
+  return (
+    <div className="soj-main">
+      <h3>お知らせ</h3>
+      <ul>
+        <li>2025/05/03: シェル芸オンラインジャッジ二周年</li>
+        <li>2024/12/27: 安定版バージョン1.1.0リリース</li>
+        <li>2024/11/28: 回答例を追加</li>
+        <li>2024/09/06: 画像問題を追加</li>
+        <li>2024/05/03: シェル芸オンラインジャッジ一周年</li>
+      </ul>
+      <div className="slide">
+        <img src={`${blog_url}/images/news/news_20250503.jpg`} alt="slide-img-01" />
+        <img src={`${blog_url}/images/news/news_20240503.jpg`} alt="slide-img-02" />
+        <img src={`${blog_url}/images/news/news_20230503.jpg`} alt="slide-img-03" />
+      </div>
+      <details>
+        <summary>過去のお知らせ</summary>
+        <ul>
+          <li>2024/04/24: 練習問題を追加</li>
+          <li>2023/05/03: シェル芸オンラインジャッジ開始</li>
+        </ul>
+      </details>
+    </div>
+  );
+};
+
+export default SojNews;

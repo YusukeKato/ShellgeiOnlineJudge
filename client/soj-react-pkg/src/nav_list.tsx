@@ -1,13 +1,13 @@
 import React from "react";
 import "./nav_list.css";
 
-interface SojInfo {
+interface SojUrlsInterface {
   x_url: string;
   github_url: string;
   blog_url: string;
 }
 
-const SojNavList: React.FC<SojInfo> = ({ x_url, github_url, blog_url }) => {
+const SojNavList: React.FC<SojUrlsInterface> = ({ x_url, github_url, blog_url }) => {
   return (
     <ul className="nav-list">
       <li className="nav-list-item">
