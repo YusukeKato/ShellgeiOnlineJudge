@@ -4,6 +4,7 @@ import SojFooter from "./footer";
 import SojNavList from "./nav_list";
 import SojInfo from "./info";
 import SojAbout from "./about";
+import SojHistory from "./history";
 import SojLogo from "./logo";
 import "./App.css";
 import "./common.css";
@@ -24,6 +25,7 @@ const App: React.FC = () => {
       <SojInfo update_date={update_date} current_version={current_version} />
       <SojNews blog_url={blog_url} />
       <SojAbout />
+      <SojHistory />
       <SojLogo />
       <footer>
         <SojFooter />
