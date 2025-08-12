@@ -10,3 +10,9 @@ h3 {
   background: transparent;
   border-left: solid 0.4rem #666;
 }
+
+h4 {
+  color: #333;
+  font-weight: bold;
+  font-size: 1.2rem;
+}

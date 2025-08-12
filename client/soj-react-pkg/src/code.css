@@ -1,0 +1,32 @@
+pre {
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-weight: normal;
+  width: 94%;
+  margin-top: 0.8rem;
+  margin-bottom: 0.8rem;
+  margin-left: auto;
+  margin-right: auto;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.code-block {
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-weight: normal;
+  border: 1px solid #666;
+  border-radius: 0px;
+  color: #666;
+  background-color: #fff;
+  font-size: 0.9rem;
+}
+
+.code-font {
+  font-family:
+    monospace, "Noto Sans JP", "Meiryo", "Hiragino Maru Gothic ProN W4", "Hiragino Mincho ProN",
+    "Verdana", "Times New Roman", "YuMincho", "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho",
+    serif, sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+}
