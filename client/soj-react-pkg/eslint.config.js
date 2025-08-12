@@ -2,7 +2,6 @@ import globals from "globals";
 import pluginJs from "@eslint/js";
 import pluginReact from "eslint-plugin-react";
 import pluginPrettier from "eslint-plugin-prettier";
-import eslintConfigReactApp from "eslint-config-react-app";
 
 export default [
     {
@@ -22,8 +21,6 @@ export default [
         },
     },
     pluginJs.configs.recommended,
-    pluginReact.configs.recommended,
-    eslintConfigReactApp,
 	{
 		files: ["**/*.js", "**/*.cjs", "**/*.mjs", "**/*.jsx"],
         plugins: {
