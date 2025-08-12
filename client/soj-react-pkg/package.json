@@ -12,7 +12,9 @@
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.0",
     "eslint": "^9.33.0",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-prettier": "^5.5.4"
   },
   "scripts": {
     "start": "react-scripts start",
