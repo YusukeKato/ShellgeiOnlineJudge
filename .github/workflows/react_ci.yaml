@@ -2,11 +2,9 @@ name: React CI
 
 on:
   push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
+  schedule:
+    - cron: "45 10 * * 2" # At 10:45 AM (UTC) every Tuesday.
 
 jobs:
   build_and_test:
