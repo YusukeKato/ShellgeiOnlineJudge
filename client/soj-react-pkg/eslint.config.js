@@ -1,10 +1,9 @@
-import defineConfig from "eslint/config";
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import pluginReact from "eslint-plugin-react";
 import pluginPrettier from "eslint-plugin-prettier";
 
-export default defineConfig([
+export default [
     {
         languageOptions: {
           globals: {
@@ -37,4 +36,4 @@ export default defineConfig([
 			"prettier/prettier": "error",
 		},
 	},
-]);
+];
