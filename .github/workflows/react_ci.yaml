@@ -21,19 +21,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
+          cache: 'yarn'
+          cache-dependency-path: ./client/soj-react-pkg/yarn.lock
 
       - name: React install dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
+        working-directory: ./client/soj-react-pkg
 
       - name: React lint
-        run: npm run lint
+        run: yarn lint
+        working-directory: ./client/soj-react-pkg
 
       - name: React format
-        run: npm run format:check
+        run: yarn format:check
+        working-directory: ./client/soj-react-pkg
 
       - name: React Build
-        run: npm run build
+        run: yarn build
 
       - name: React Run tests
-        run: npm test
+        run: yarn test
