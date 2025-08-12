@@ -1,0 +1,39 @@
+name: React CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build_and_test:
+    name: React Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: React Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: React install dependencies
+        run: npm ci
+
+      - name: React lint
+        run: npm run lint
+
+      - name: React format
+        run: npm run format:check
+
+      - name: React Build
+        run: npm run build
+
+      - name: React Run tests
+        run: npm test
