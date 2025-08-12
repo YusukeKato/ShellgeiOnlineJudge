@@ -38,6 +38,8 @@ jobs:
 
       - name: React Build
         run: yarn build
+        working-directory: ./client/soj-react-pkg
 
       - name: React Run tests
         run: yarn test
+        working-directory: ./client/soj-react-pkg
