@@ -1,8 +1,8 @@
-import black_tree_icon from './BlackTreeIcon.jpg';
-import './App.css';
+import React from "react";
+import black_tree_icon from "./BlackTreeIcon.jpg";
+import "./App.css";
 
 const App = () => {
-  const blog_url = "https://yusukekato.jp"
   return (
     <div className="App">
       <header className="App-header">
@@ -21,6 +21,6 @@ const App = () => {
       </header>
     </div>
   );
-}
+};
 
 export default App;

@@ -9,6 +9,7 @@ export default [
           globals: {
             ...globals.browser,
             ...globals.node,
+            ...globals.jest,
           },
           parserOptions: {
             ecmaVersion: "latest",
@@ -26,6 +27,11 @@ export default [
           react: pluginReact,
           prettier: pluginPrettier,
         },
+        settings: {
+          react: {
+            version: "detect",
+          },
+        },  
 		rules: {
 			"prefer-const": "warn",
 			"no-constant-binary-expression": "error",
