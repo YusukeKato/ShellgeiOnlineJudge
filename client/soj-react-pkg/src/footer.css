@@ -1,0 +1,26 @@
+.soj-footer {
+  font-weight: normal;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-align: left;
+  color: #fff;
+  background: #333;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+  padding-left: 30%;
+  margin: 0;
+}
+
+.soj-footer::before {
+  display: block;
+  font-weight: bold;
+  font-size: 2rem;
+  line-height: 1.5;
+  letter-spacing: 0.02rem;
+  content: attr(data-label);
+  background: #333;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+  padding-left: 30%;
+  margin: 0;
+}

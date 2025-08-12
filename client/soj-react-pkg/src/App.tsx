@@ -1,24 +1,21 @@
 import React from "react";
-import black_tree_icon from "./BlackTreeIcon.jpg";
+import SojHeader from "./header";
+import SojFooter from "./footer";
+import SojLogo from "./logo";
 import "./App.css";
 
 const App: React.FC = () => {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={black_tree_icon} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+      <header>
+        <SojHeader />
       </header>
+      <div className="soj-main">
+        <SojLogo />
+      </div>
+      <footer>
+        <SojFooter />
+      </footer>
     </div>
   );
 };
