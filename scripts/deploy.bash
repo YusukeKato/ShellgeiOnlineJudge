@@ -31,7 +31,6 @@ if [[ $find_target_str == *"$target_str"* ]]; then
   sudo rm -rf "$root_path_html"output
   sudo rm -rf "$root_path_html"scripts
   sudo rm -rf "$root_path_html"soj-react-pkg
-  sudo rm -rf "$root_path_html"soj-svelte-pkg
   
   # delete web app
   # sudo rm "$root_path_html"index.html
