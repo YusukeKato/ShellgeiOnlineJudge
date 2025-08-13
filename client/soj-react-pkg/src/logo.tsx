@@ -1,7 +1,7 @@
 import React from "react";
 import "./image.css";
 import "./common.css";
-import black_tree_icon from "./BlackTreeIcon.jpg";
+import black_tree_icon from "./images/BlackTreeIcon.jpg";
 
 const SojLogo: React.FC = () => {
   return (
