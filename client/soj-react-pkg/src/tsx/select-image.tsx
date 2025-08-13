@@ -42,27 +42,13 @@ const SojSelectImage: React.FC<SojValuesInterface> = ({
             <option value="IMAGE-00000005">5: 四角</option>
           </select>
         </label>
-        <table>
-          <tbody>
-            <tr>
-              <td>
-                <input type="button" value="<" className="one-step-button" id="select-pre-image" />
-              </td>
-              <td>
-                <input
-                  type="button"
-                  value="決定 / SELECT"
-                  className="main-button"
-                  id="select-button-image"
-                  onClick={SelectClick}
-                />
-              </td>
-              <td>
-                <input type="button" value=">" className="one-step-button" id="select-next-image" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <input
+          type="button"
+          value="決定 / SELECT"
+          className="select-button"
+          id="select-button-image"
+          onClick={SelectClick}
+        />
       </div>
     </div>
   );

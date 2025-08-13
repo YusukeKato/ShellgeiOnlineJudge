@@ -94,37 +94,13 @@ const SojSelectStandard: React.FC<SojValuesInterface> = ({
             <option value="GENERAL-00000050">50 : 四則演算 / Four Arithmetic Operations</option>
           </select>
         </label>
-        <table>
-          <tbody>
-            <tr>
-              <td>
-                <input
-                  type="button"
-                  value="<"
-                  className="one-step-button"
-                  id="select-pre-standard"
-                />
-              </td>
-              <td>
-                <input
-                  type="button"
-                  value="決定 / SELECT"
-                  className="main-button"
-                  id="select-button-standard"
-                  onClick={SelectClick}
-                />
-              </td>
-              <td>
-                <input
-                  type="button"
-                  value=">"
-                  className="one-step-button"
-                  id="select-next-standard"
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <input
+          type="button"
+          value="決定 / SELECT"
+          className="select-button"
+          id="select-button-standard"
+          onClick={SelectClick}
+        />
       </div>
     </div>
   );

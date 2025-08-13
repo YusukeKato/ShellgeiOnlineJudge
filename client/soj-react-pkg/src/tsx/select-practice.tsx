@@ -71,37 +71,13 @@ const SojSelectPractice: React.FC<SojValuesInterface> = ({
             <option value="EXERCISE-wc-03">wc 3</option>
           </select>
         </label>
-        <table>
-          <tbody>
-            <tr>
-              <td>
-                <input
-                  type="button"
-                  value="<"
-                  className="one-step-button"
-                  id="select-pre-practice"
-                />
-              </td>
-              <td>
-                <input
-                  type="button"
-                  value="決定 / SELECT"
-                  className="main-button"
-                  id="select-button-practice"
-                  onClick={SelectClick}
-                />
-              </td>
-              <td>
-                <input
-                  type="button"
-                  value=">"
-                  className="one-step-button"
-                  id="select-next-practice"
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <input
+          type="button"
+          value="決定 / SELECT"
+          className="select-button"
+          id="select-button-practice"
+          onClick={SelectClick}
+        />
       </div>
     </div>
   );
