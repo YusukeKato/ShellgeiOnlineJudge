@@ -9,6 +9,7 @@ import SojHistory from "./history";
 import SojContact from "./contact";
 import SojOthers from "./others";
 import SojSelectStandard from "./select-standard";
+import SojSelectPractice from "./select-practice";
 import SojLogo from "./logo";
 import "../css/App.css";
 import "../css/common.css";
@@ -24,9 +25,7 @@ const App: React.FC = () => {
   const current_version: string = "2.0.0";
   return (
     <div className="App">
-      <header>
-        <SojHeader />
-      </header>
+      <SojHeader />
       <SojNavList x_url={x_url} github_url={github_url} blog_url={blog_url} />
       <SojInfo update_date={update_date} current_version={current_version} />
       <SojNews blog_url={blog_url} />
@@ -41,10 +40,9 @@ const App: React.FC = () => {
       />
       <SojOthers />
       <SojSelectStandard />
+      <SojSelectPractice />
       <SojLogo />
-      <footer>
-        <SojFooter />
-      </footer>
+      <SojFooter />
     </div>
   );
 };

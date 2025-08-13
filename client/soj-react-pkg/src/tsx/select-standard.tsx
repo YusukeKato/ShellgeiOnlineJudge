@@ -71,8 +71,6 @@ const SojSelectStandard: React.FC = () => {
             <option value="STANDARD-00000050">50 : 四則演算 / Four Arithmetic Operations</option>
           </select>
         </label>
-      </div>
-      <div className="soj-centering">
         <table>
           <tbody>
             <tr>
