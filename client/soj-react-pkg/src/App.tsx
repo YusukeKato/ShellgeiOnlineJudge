@@ -6,6 +6,7 @@ import SojInfo from "./info";
 import SojAbout from "./about";
 import SojHistory from "./history";
 import SojContact from "./contact";
+import SojOthers from "./others";
 import SojLogo from "./logo";
 import "./App.css";
 import "./common.css";
@@ -37,6 +38,7 @@ const App: React.FC = () => {
         blog_url={blog_url}
         mixi2_url={mixi2_url}
       />
+      <SojOthers />
       <SojLogo />
       <footer>
         <SojFooter />
