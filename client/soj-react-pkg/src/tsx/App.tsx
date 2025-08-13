@@ -14,6 +14,7 @@ import SojSelectImage from "./select-image";
 import SojSelected from "./selected";
 import SojProblem from "./problem";
 import SojRun from "./run";
+import SojResult from "./result";
 import SojLogo from "./logo";
 import "../css/App.css";
 import "../css/common.css";
@@ -103,6 +104,7 @@ const App: React.FC = () => {
         problemOutput={problemOutput}
       />
       <SojRun inputShellgei={inputShellgei} handleInputShellgeiChange={handleInputShellgeiChange} />
+      <SojResult />
       <SojLogo />
       <SojFooter />
     </div>

@@ -48,7 +48,7 @@ const SojRun: React.FC<SojValuesInterface> = ({ inputShellgei, handleInputShellg
           cols={50}
           rows={12}
           id="cmdline"
-          placeholder="ここにシェル芸を入力... / Input shell-gei..."
+          placeholder="ここにシェル芸を入力... / Input your shell-gei here..."
         ></textarea>
         <input type="button" value="実行 / RUN" className="run-button" id="submit-button" />
       </div>
