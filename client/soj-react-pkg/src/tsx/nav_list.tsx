@@ -1,5 +1,5 @@
 import React from "react";
-import "./nav_list.css";
+import "../css/nav_list.css";
 
 interface SojUrlsInterface {
   x_url: string;

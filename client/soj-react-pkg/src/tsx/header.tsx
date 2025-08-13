@@ -1,5 +1,5 @@
 import React from "react";
-import "./header.css";
+import "../css/header.css";
 
 const SojHeader: React.FC = () => {
   return (

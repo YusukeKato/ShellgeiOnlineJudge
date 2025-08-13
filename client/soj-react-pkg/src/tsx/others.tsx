@@ -1,7 +1,7 @@
 import React from "react";
-import "./summary.css";
-import "./headline.css";
-import "./common.css";
+import "../css/summary.css";
+import "../css/headline.css";
+import "../css/common.css";
 
 const SojOthers: React.FC = () => {
   return (

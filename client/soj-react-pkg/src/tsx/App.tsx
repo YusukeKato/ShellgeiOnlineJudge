@@ -3,14 +3,14 @@ import SojHeader from "./header";
 import SojFooter from "./footer";
 import SojNavList from "./nav_list";
 import SojInfo from "./info";
+import SojNews from "./news";
 import SojAbout from "./about";
 import SojHistory from "./history";
 import SojContact from "./contact";
 import SojOthers from "./others";
 import SojLogo from "./logo";
-import "./App.css";
-import "./common.css";
-import SojNews from "./news";
+import "../css/App.css";
+import "../css/common.css";
 
 const App: React.FC = () => {
   const x_url: string = "https://x.com/yusukekato_main";

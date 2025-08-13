@@ -1,7 +1,7 @@
 import React from "react";
-import "./news.css";
-import "./summary.css";
-import "./common.css";
+import "../css/news.css";
+import "../css/summary.css";
+import "../css/common.css";
 
 interface SojUrlsInterface {
   blog_url: string;

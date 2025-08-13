@@ -1,6 +1,6 @@
 import React from "react";
-import "./summary.css";
-import "./common.css";
+import "../css/summary.css";
+import "../css/common.css";
 
 const SojHistory: React.FC = () => {
   return (

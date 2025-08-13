@@ -1,6 +1,6 @@
 import React from "react";
-import "./headline.css";
-import "./common.css";
+import "../css/headline.css";
+import "../css/common.css";
 
 interface SojInfoInterface {
   update_date: string;

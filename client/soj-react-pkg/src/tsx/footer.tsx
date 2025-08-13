@@ -1,6 +1,6 @@
 import React from "react";
-import "./footer.css";
-import "./link.css";
+import "../css/footer.css";
+import "../css/link.css";
 
 const SojFooter: React.FC = () => {
   return (
