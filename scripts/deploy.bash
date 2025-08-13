@@ -13,11 +13,11 @@ else
 fi
 
 # update files
-cd ../client/scripts
-python3 generate_index_html.py
-cd ../../data/scripts
-bash count_problem_num.bash
-cd ../../scripts
+# cd ../client/scripts
+# python3 generate_index_html.py
+# cd ../../data/scripts
+# bash count_problem_num.bash
+# cd ../../scripts
 
 # delete files
 find_target_str=$(find "$root_path")
@@ -75,7 +75,7 @@ sudo cp -r ../data/scripts "$root_path_html"
 # sudo cp ../client/svelte-soj-client/public/global.css "$root_path_html"
 # sudo cp -r ../client/svelte-soj-client/scripts "$root_path_html"
 # sudo cp -r ../client/svelte-soj-client/src "$root_path_html"
-sudo cp -r ../client/soj-react-pkg "$root_path_html"soj-react-pkg
+sudo cp -r ../client/soj-react-pkg/build/* "$root_path_html"
 
 sudo cp ../client/images/BlackTreeIcon.jpg "$root_path_html"
 sudo cp ../client/images/favicon.jpg "$root_path_html"
@@ -127,11 +127,11 @@ fi
 sudo chmod 777 "$root_path"z.bash
 
 # local
-if [[ $is_local == "local" ]]; then
-  echo "setup: local"
-  find "$root_path_html" | grep -e "index.js" -e "index.html" -e "index.en.html" | xargs -I@ sudo sed -i "s/https:\/\/shellgei-online-judge.com/http:\/\/localhost/g" @
-else
-  echo "setup: server"
-fi
+# if [[ $is_local == "local" ]]; then
+#   echo "setup: local"
+#   find "$root_path_html" | grep -e "index.js" -e "index.html" -e "index.en.html" | xargs -I@ sudo sed -i "s/https:\/\/shellgei-online-judge.com/http:\/\/localhost/g" @
+# else
+#   echo "setup: server"
+# fi
 
 echo "deploy: success!!"

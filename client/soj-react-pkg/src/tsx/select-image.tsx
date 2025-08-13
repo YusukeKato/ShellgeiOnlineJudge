@@ -1,4 +1,5 @@
 import React from "react";
+import { updateProblem } from "../scripts/select_button";
 import "../css/summary.css";
 import "../css/headline.css";
 import "../css/select.css";
@@ -6,18 +7,27 @@ import "../css/button.css";
 import "../css/common.css";
 
 interface SojValuesInterface {
+  soj_url: string;
   selectedValue: string;
   handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   setSelectedProblem: (value: string) => void;
+  setProblemStatement: (value: string) => void;
+  setProblemInput: (value: string) => void;
+  setProblemOutput: (value: string) => void;
 }
 
 const SojSelectImage: React.FC<SojValuesInterface> = ({
+  soj_url,
   selectedValue,
   handleSelectChange,
   setSelectedProblem,
+  setProblemStatement,
+  setProblemInput,
+  setProblemOutput,
 }) => {
   const SelectClick = () => {
     setSelectedProblem(selectedValue);
+    updateProblem(soj_url, selectedValue, setProblemStatement, setProblemInput, setProblemOutput);
   };
   return (
     <div className="soj-main">

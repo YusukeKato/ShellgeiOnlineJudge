@@ -1,4 +1,5 @@
 import React from "react";
+import { updateProblem } from "../scripts/select_button";
 import "../css/summary.css";
 import "../css/headline.css";
 import "../css/select.css";
@@ -6,18 +7,27 @@ import "../css/button.css";
 import "../css/common.css";
 
 interface SojValuesInterface {
+  soj_url: string;
   selectedValue: string;
   handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   setSelectedProblem: (value: string) => void;
+  setProblemStatement: (value: string) => void;
+  setProblemInput: (value: string) => void;
+  setProblemOutput: (value: string) => void;
 }
 
 const SojSelectPractice: React.FC<SojValuesInterface> = ({
+  soj_url,
   selectedValue,
   handleSelectChange,
   setSelectedProblem,
+  setProblemStatement,
+  setProblemInput,
+  setProblemOutput,
 }) => {
   const SelectClick = () => {
     setSelectedProblem(selectedValue);
+    updateProblem(soj_url, selectedValue, setProblemStatement, setProblemInput, setProblemOutput);
   };
   return (
     <div className="soj-main">
@@ -25,40 +35,40 @@ const SojSelectPractice: React.FC<SojValuesInterface> = ({
       <div className="soj-centering">
         <label className="selectbox">
           <select value={selectedValue} id="select-form-practice" onChange={handleSelectChange}>
-            <option value="PRACTICE-awk-01">awk 1</option>
-            <option value="PRACTICE-awk-02">awk 2</option>
-            <option value="PRACTICE-awk-03">awk 3</option>
-            <option value="PRACTICE-awk-04">awk 4</option>
-            <option value="PRACTICE-awk-05">awk 5</option>
-            <option value="PRACTICE-awk-06">awk 6</option>
-            <option value="PRACTICE-cat-01">cat 1</option>
-            <option value="PRACTICE-cat-02">cat 2</option>
-            <option value="PRACTICE-cat-03">cat 3</option>
-            <option value="PRACTICE-cat-04">cat 4</option>
-            <option value="PRACTICE-echo-01">echo 1</option>
-            <option value="PRACTICE-echo-02">echo 2</option>
-            <option value="PRACTICE-echo-03">echo 3</option>
-            <option value="PRACTICE-find-01">find 1</option>
-            <option value="PRACTICE-find-02">find 2</option>
-            <option value="PRACTICE-find-03">find 3</option>
-            <option value="PRACTICE-grep-01">grep 1</option>
-            <option value="PRACTICE-grep-02">grep 2</option>
-            <option value="PRACTICE-grep-03">grep 3</option>
-            <option value="PRACTICE-grep-04">grep 4</option>
-            <option value="PRACTICE-sed-01">sed 1</option>
-            <option value="PRACTICE-sed-02">sed 2</option>
-            <option value="PRACTICE-sed-03">sed 3</option>
-            <option value="PRACTICE-sed-04">sed 4</option>
-            <option value="PRACTICE-sed-05">sed 5</option>
-            <option value="PRACTICE-sed-06">sed 6</option>
-            <option value="PRACTICE-sort-01">sort 1</option>
-            <option value="PRACTICE-sort-02">sort 2</option>
-            <option value="PRACTICE-sort-03">sort 3</option>
-            <option value="PRACTICE-uniq-01">uniq 1</option>
-            <option value="PRACTICE-uniq-02">uniq 2</option>
-            <option value="PRACTICE-wc-01">wc 1</option>
-            <option value="PRACTICE-wc-02">wc 2</option>
-            <option value="PRACTICE-wc-03">wc 3</option>
+            <option value="EXERCISE-awk-01">awk 1</option>
+            <option value="EXERCISE-awk-02">awk 2</option>
+            <option value="EXERCISE-awk-03">awk 3</option>
+            <option value="EXERCISE-awk-04">awk 4</option>
+            <option value="EXERCISE-awk-05">awk 5</option>
+            <option value="EXERCISE-awk-06">awk 6</option>
+            <option value="EXERCISE-cat-01">cat 1</option>
+            <option value="EXERCISE-cat-02">cat 2</option>
+            <option value="EXERCISE-cat-03">cat 3</option>
+            <option value="EXERCISE-cat-04">cat 4</option>
+            <option value="EXERCISE-echo-01">echo 1</option>
+            <option value="EXERCISE-echo-02">echo 2</option>
+            <option value="EXERCISE-echo-03">echo 3</option>
+            <option value="EXERCISE-find-01">find 1</option>
+            <option value="EXERCISE-find-02">find 2</option>
+            <option value="EXERCISE-find-03">find 3</option>
+            <option value="EXERCISE-grep-01">grep 1</option>
+            <option value="EXERCISE-grep-02">grep 2</option>
+            <option value="EXERCISE-grep-03">grep 3</option>
+            <option value="EXERCISE-grep-04">grep 4</option>
+            <option value="EXERCISE-sed-01">sed 1</option>
+            <option value="EXERCISE-sed-02">sed 2</option>
+            <option value="EXERCISE-sed-03">sed 3</option>
+            <option value="EXERCISE-sed-04">sed 4</option>
+            <option value="EXERCISE-sed-05">sed 5</option>
+            <option value="EXERCISE-sed-06">sed 6</option>
+            <option value="EXERCISE-sort-01">sort 1</option>
+            <option value="EXERCISE-sort-02">sort 2</option>
+            <option value="EXERCISE-sort-03">sort 3</option>
+            <option value="EXERCISE-uniq-01">uniq 1</option>
+            <option value="EXERCISE-uniq-02">uniq 2</option>
+            <option value="EXERCISE-wc-01">wc 1</option>
+            <option value="EXERCISE-wc-02">wc 2</option>
+            <option value="EXERCISE-wc-03">wc 3</option>
           </select>
         </label>
         <table>
