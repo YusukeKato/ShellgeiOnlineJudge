@@ -8,7 +8,7 @@ import "../css/common.css";
 
 interface SojValuesInterface {
   soj_url: string;
-  selectedValue: string;
+  selectedProblem: string;
   handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   setSelectedProblem: (value: string) => void;
   setProblemStatement: (value: string) => void;
@@ -18,7 +18,7 @@ interface SojValuesInterface {
 
 const SojSelectStandard: React.FC<SojValuesInterface> = ({
   soj_url,
-  selectedValue,
+  selectedProblem,
   handleSelectChange,
   setSelectedProblem,
   setProblemStatement,
@@ -26,8 +26,8 @@ const SojSelectStandard: React.FC<SojValuesInterface> = ({
   setProblemOutput,
 }) => {
   const SelectClick = () => {
-    setSelectedProblem(selectedValue);
-    updateProblem(soj_url, selectedValue, setProblemStatement, setProblemInput, setProblemOutput);
+    setSelectedProblem(selectedProblem);
+    updateProblem(soj_url, selectedProblem, setProblemStatement, setProblemInput, setProblemOutput);
   };
   return (
     <div className="soj-main">
@@ -35,7 +35,7 @@ const SojSelectStandard: React.FC<SojValuesInterface> = ({
       <h3>通常問題 / STANDARD PROBLEMS</h3>
       <div className="soj-centering">
         <label className="selectbox">
-          <select value={selectedValue} id="select-form-standard" onChange={handleSelectChange}>
+          <select value={selectedProblem} id="select-form-standard" onChange={handleSelectChange}>
             <option value="GENERAL-00000001">1 : 出力テスト / Output Test</option>
             <option value="GENERAL-00000002">2 : 入力テスト / Input Test</option>
             <option value="GENERAL-00000003">3 : 改行テスト / Newline Test</option>

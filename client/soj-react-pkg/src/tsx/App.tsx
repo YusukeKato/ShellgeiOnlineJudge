@@ -28,20 +28,20 @@ const App: React.FC = () => {
   const blog_url: string = "https://yusukekato.jp";
   const mixi2_url: string =
     "https://mixi.social/communities/dcf8e9d8-a6c4-40a9-8e05-328b4424f886/about";
-  const update_date: string = "2025/08/12";
+  const update_date: string = "2025/08/13";
   const current_version: string = "2.0.0";
 
-  const [selectedValueStandard, setSelectedValueStandard] = useState("GENERAL-00000001");
+  const [selectedProblemStandard, setSelectedProblemStandard] = useState("GENERAL-00000001");
   const handleSelectChangeStandard = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedValueStandard(event.target.value);
+    setSelectedProblemStandard(event.target.value);
   };
-  const [selectedValuePractice, setSelectedValuePractice] = useState("EXERCISE-awk-01");
+  const [selectedProblemPractice, setSelectedProblemPractice] = useState("EXERCISE-awk-01");
   const handleSelectChangePractice = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedValuePractice(event.target.value);
+    setSelectedProblemPractice(event.target.value);
   };
-  const [selectedValueImage, setSelectedValueImage] = useState("IMAGE-00000001");
+  const [selectedProblemImage, setSelectedProblemImage] = useState("IMAGE-00000001");
   const handleSelectChangeImage = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedValueImage(event.target.value);
+    setSelectedProblemImage(event.target.value);
   };
   const [selectedProblem, setSelectedProblem] = useState("Select a problem.");
 
@@ -72,7 +72,7 @@ const App: React.FC = () => {
       <SojOthers />
       <SojSelectStandard
         soj_url={soj_url}
-        selectedValue={selectedValueStandard}
+        selectedProblem={selectedProblemStandard}
         handleSelectChange={handleSelectChangeStandard}
         setSelectedProblem={setSelectedProblem}
         setProblemStatement={setProblemStatement}
@@ -81,7 +81,7 @@ const App: React.FC = () => {
       />
       <SojSelectPractice
         soj_url={soj_url}
-        selectedValue={selectedValuePractice}
+        selectedProblem={selectedProblemPractice}
         handleSelectChange={handleSelectChangePractice}
         setSelectedProblem={setSelectedProblem}
         setProblemStatement={setProblemStatement}
@@ -90,7 +90,7 @@ const App: React.FC = () => {
       />
       <SojSelectImage
         soj_url={soj_url}
-        selectedValue={selectedValueImage}
+        selectedProblem={selectedProblemImage}
         handleSelectChange={handleSelectChangeImage}
         setSelectedProblem={setSelectedProblem}
         setProblemStatement={setProblemStatement}

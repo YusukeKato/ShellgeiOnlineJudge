@@ -8,7 +8,7 @@ import "../css/common.css";
 
 interface SojValuesInterface {
   soj_url: string;
-  selectedValue: string;
+  selectedProblem: string;
   handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   setSelectedProblem: (value: string) => void;
   setProblemStatement: (value: string) => void;
@@ -18,7 +18,7 @@ interface SojValuesInterface {
 
 const SojSelectImage: React.FC<SojValuesInterface> = ({
   soj_url,
-  selectedValue,
+  selectedProblem,
   handleSelectChange,
   setSelectedProblem,
   setProblemStatement,
@@ -26,15 +26,15 @@ const SojSelectImage: React.FC<SojValuesInterface> = ({
   setProblemOutput,
 }) => {
   const SelectClick = () => {
-    setSelectedProblem(selectedValue);
-    updateProblem(soj_url, selectedValue, setProblemStatement, setProblemInput, setProblemOutput);
+    setSelectedProblem(selectedProblem);
+    updateProblem(soj_url, selectedProblem, setProblemStatement, setProblemInput, setProblemOutput);
   };
   return (
     <div className="soj-main">
       <h3>画像問題 / IMAGE PROBLEMS</h3>
       <div className="soj-centering">
         <label className="selectbox">
-          <select value={selectedValue} id="select-form-image" onChange={handleSelectChange}>
+          <select value={selectedProblem} id="select-form-image" onChange={handleSelectChange}>
             <option value="IMAGE-00000001">1: 画像テスト</option>
             <option value="IMAGE-00000002">2: 横線</option>
             <option value="IMAGE-00000003">3: 円</option>

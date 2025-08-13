@@ -8,7 +8,7 @@ import "../css/common.css";
 
 interface SojValuesInterface {
   soj_url: string;
-  selectedValue: string;
+  selectedProblem: string;
   handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   setSelectedProblem: (value: string) => void;
   setProblemStatement: (value: string) => void;
@@ -18,7 +18,7 @@ interface SojValuesInterface {
 
 const SojSelectPractice: React.FC<SojValuesInterface> = ({
   soj_url,
-  selectedValue,
+  selectedProblem,
   handleSelectChange,
   setSelectedProblem,
   setProblemStatement,
@@ -26,15 +26,15 @@ const SojSelectPractice: React.FC<SojValuesInterface> = ({
   setProblemOutput,
 }) => {
   const SelectClick = () => {
-    setSelectedProblem(selectedValue);
-    updateProblem(soj_url, selectedValue, setProblemStatement, setProblemInput, setProblemOutput);
+    setSelectedProblem(selectedProblem);
+    updateProblem(soj_url, selectedProblem, setProblemStatement, setProblemInput, setProblemOutput);
   };
   return (
     <div className="soj-main">
       <h3>練習問題 / PRACTICE PROBLEMS</h3>
       <div className="soj-centering">
         <label className="selectbox">
-          <select value={selectedValue} id="select-form-practice" onChange={handleSelectChange}>
+          <select value={selectedProblem} id="select-form-practice" onChange={handleSelectChange}>
             <option value="EXERCISE-awk-01">awk 1</option>
             <option value="EXERCISE-awk-02">awk 2</option>
             <option value="EXERCISE-awk-03">awk 3</option>
