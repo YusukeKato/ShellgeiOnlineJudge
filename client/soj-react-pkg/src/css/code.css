@@ -30,3 +30,19 @@ pre {
   font-weight: 600;
   font-size: 1rem;
 }
+
+.text-block {
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-weight: normal;
+  color: #666;
+  margin-top: 0.8rem;
+  margin-bottom: 0.8rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0.8rem;
+  background-color: #eeeeee;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-all;
+}

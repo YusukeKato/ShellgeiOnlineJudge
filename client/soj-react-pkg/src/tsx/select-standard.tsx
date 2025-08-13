@@ -5,14 +5,27 @@ import "../css/select.css";
 import "../css/button.css";
 import "../css/common.css";
 
-const SojSelectStandard: React.FC = () => {
+interface SojValuesInterface {
+  selectedValue: string;
+  handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  setSelectedProblem: (value: string) => void;
+}
+
+const SojSelectStandard: React.FC<SojValuesInterface> = ({
+  selectedValue,
+  handleSelectChange,
+  setSelectedProblem,
+}) => {
+  const SelectClick = () => {
+    setSelectedProblem(selectedValue);
+  };
   return (
     <div className="soj-main">
       <h2>問題選択 / SELECT PROBLEMS</h2>
       <h3>通常問題 / STANDARD PROBLEMS</h3>
       <div className="soj-centering">
         <label className="selectbox">
-          <select defaultValue="STANDARD-00000001" id="select-form-standard">
+          <select value={selectedValue} id="select-form-standard" onChange={handleSelectChange}>
             <option value="STANDARD-00000001">1 : 出力テスト / Output Test</option>
             <option value="STANDARD-00000002">2 : 入力テスト / Input Test</option>
             <option value="STANDARD-00000003">3 : 改行テスト / Newline Test</option>
@@ -88,6 +101,7 @@ const SojSelectStandard: React.FC = () => {
                   value="決定 / SELECT"
                   className="main-button"
                   id="select-button-standard"
+                  onClick={SelectClick}
                 />
               </td>
               <td>

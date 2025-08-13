@@ -5,13 +5,26 @@ import "../css/select.css";
 import "../css/button.css";
 import "../css/common.css";
 
-const SojSelectPractice: React.FC = () => {
+interface SojValuesInterface {
+  selectedValue: string;
+  handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  setSelectedProblem: (value: string) => void;
+}
+
+const SojSelectPractice: React.FC<SojValuesInterface> = ({
+  selectedValue,
+  handleSelectChange,
+  setSelectedProblem,
+}) => {
+  const SelectClick = () => {
+    setSelectedProblem(selectedValue);
+  };
   return (
     <div className="soj-main">
       <h3>練習問題 / PRACTICE PROBLEMS</h3>
       <div className="soj-centering">
         <label className="selectbox">
-          <select defaultValue="PRACTICE-awk-01" id="select-form-practice">
+          <select value={selectedValue} id="select-form-practice" onChange={handleSelectChange}>
             <option value="PRACTICE-awk-01">awk 1</option>
             <option value="PRACTICE-awk-02">awk 2</option>
             <option value="PRACTICE-awk-03">awk 3</option>
@@ -65,6 +78,7 @@ const SojSelectPractice: React.FC = () => {
                   value="決定 / SELECT"
                   className="main-button"
                   id="select-button-practice"
+                  onClick={SelectClick}
                 />
               </td>
               <td>

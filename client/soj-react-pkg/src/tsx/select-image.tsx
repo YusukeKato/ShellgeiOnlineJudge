@@ -5,13 +5,26 @@ import "../css/select.css";
 import "../css/button.css";
 import "../css/common.css";
 
-const SojSelectImage: React.FC = () => {
+interface SojValuesInterface {
+  selectedValue: string;
+  handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  setSelectedProblem: (value: string) => void;
+}
+
+const SojSelectImage: React.FC<SojValuesInterface> = ({
+  selectedValue,
+  handleSelectChange,
+  setSelectedProblem,
+}) => {
+  const SelectClick = () => {
+    setSelectedProblem(selectedValue);
+  };
   return (
     <div className="soj-main">
       <h3>画像問題 / IMAGE PROBLEMS</h3>
       <div className="soj-centering">
         <label className="selectbox">
-          <select defaultValue="IMAGE-00000001" id="select-form-image">
+          <select value={selectedValue} id="select-form-image" onChange={handleSelectChange}>
             <option value="IMAGE-00000001">1: 画像テスト</option>
             <option value="IMAGE-00000002">2: 横線</option>
             <option value="IMAGE-00000003">3: 円</option>
@@ -31,6 +44,7 @@ const SojSelectImage: React.FC = () => {
                   value="決定 / SELECT"
                   className="main-button"
                   id="select-button-image"
+                  onClick={SelectClick}
                 />
               </td>
               <td>

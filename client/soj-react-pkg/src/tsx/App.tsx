@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import SojHeader from "./header";
 import SojFooter from "./footer";
 import SojNavList from "./nav_list";
@@ -11,6 +11,7 @@ import SojOthers from "./others";
 import SojSelectStandard from "./select-standard";
 import SojSelectPractice from "./select-practice";
 import SojSelectImage from "./select-image";
+import SojSelected from "./selected";
 import SojLogo from "./logo";
 import "../css/App.css";
 import "../css/common.css";
@@ -24,6 +25,21 @@ const App: React.FC = () => {
     "https://mixi.social/communities/dcf8e9d8-a6c4-40a9-8e05-328b4424f886/about";
   const update_date: string = "2025/08/12";
   const current_version: string = "2.0.0";
+
+  const [selectedValueStandard, setSelectedValueStandard] = useState("STANDARD-00000001");
+  const handleSelectChangeStandard = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedValueStandard(event.target.value);
+  };
+  const [selectedValuePractice, setSelectedValuePractice] = useState("PRACTICE-awk-01");
+  const handleSelectChangePractice = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedValuePractice(event.target.value);
+  };
+  const [selectedValueImage, setSelectedValueImage] = useState("IMAGE-00000001");
+  const handleSelectChangeImage = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedValueImage(event.target.value);
+  };
+  const [selectedProblem, setSelectedProblem] = useState("Select a problem.");
+
   return (
     <div className="App">
       <SojHeader />
@@ -40,9 +56,22 @@ const App: React.FC = () => {
         mixi2_url={mixi2_url}
       />
       <SojOthers />
-      <SojSelectStandard />
-      <SojSelectPractice />
-      <SojSelectImage />
+      <SojSelectStandard
+        selectedValue={selectedValueStandard}
+        handleSelectChange={handleSelectChangeStandard}
+        setSelectedProblem={setSelectedProblem}
+      />
+      <SojSelectPractice
+        selectedValue={selectedValuePractice}
+        handleSelectChange={handleSelectChangePractice}
+        setSelectedProblem={setSelectedProblem}
+      />
+      <SojSelectImage
+        selectedValue={selectedValueImage}
+        handleSelectChange={handleSelectChangeImage}
+        setSelectedProblem={setSelectedProblem}
+      />
+      <SojSelected selectedValue={selectedProblem} />
       <SojLogo />
       <SojFooter />
     </div>
