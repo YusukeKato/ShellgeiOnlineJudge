@@ -8,6 +8,7 @@ details {
   margin-right: auto;
   margin-left: auto;
   background-color: #fff;
+  color: #666;
 }
 
 summary {
@@ -16,6 +17,7 @@ summary {
   margin: -0.5rem -0.5rem 0;
   padding: 0.5rem;
   background-color: #fff;
+  color: #666;
 }
 
 details[open] {
@@ -25,6 +27,7 @@ details[open] {
   margin-right: auto;
   margin-left: auto;
   background-color: #fff;
+  color: #666;
 }
 
 details[open] summary {
@@ -33,4 +36,5 @@ details[open] summary {
   margin-right: auto;
   margin-left: auto;
   background-color: #fff;
+  color: #666;
 }
