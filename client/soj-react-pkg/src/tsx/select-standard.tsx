@@ -12,7 +12,7 @@ const SojSelectStandard: React.FC = () => {
       <h3>通常問題 / STANDARD PROBLEMS</h3>
       <div className="soj-centering">
         <label className="selectbox">
-          <select defaultValue="STANDARD-00000001" id="select-form-1">
+          <select defaultValue="STANDARD-00000001" id="select-form-standard">
             <option value="STANDARD-00000001">1 : 出力テスト / Output Test</option>
             <option value="STANDARD-00000002">2 : 入力テスト / Input Test</option>
             <option value="STANDARD-00000003">3 : 改行テスト / Newline Test</option>
@@ -75,18 +75,28 @@ const SojSelectStandard: React.FC = () => {
           <tbody>
             <tr>
               <td>
-                <input type="button" value="<" className="one-step-button" id="select-pre-1" />
+                <input
+                  type="button"
+                  value="<"
+                  className="one-step-button"
+                  id="select-pre-standard"
+                />
               </td>
               <td>
                 <input
                   type="button"
                   value="決定 / SELECT"
                   className="main-button"
-                  id="select-button-1"
+                  id="select-button-standard"
                 />
               </td>
               <td>
-                <input type="button" value=">" className="one-step-button" id="select-next-1" />
+                <input
+                  type="button"
+                  value=">"
+                  className="one-step-button"
+                  id="select-next-standard"
+                />
               </td>
             </tr>
           </tbody>

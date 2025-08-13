@@ -10,6 +10,7 @@ import SojContact from "./contact";
 import SojOthers from "./others";
 import SojSelectStandard from "./select-standard";
 import SojSelectPractice from "./select-practice";
+import SojSelectImage from "./select-image";
 import SojLogo from "./logo";
 import "../css/App.css";
 import "../css/common.css";
@@ -41,6 +42,7 @@ const App: React.FC = () => {
       <SojOthers />
       <SojSelectStandard />
       <SojSelectPractice />
+      <SojSelectImage />
       <SojLogo />
       <SojFooter />
     </div>

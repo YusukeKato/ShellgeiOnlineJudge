@@ -11,7 +11,7 @@ const SojSelectPractice: React.FC = () => {
       <h3>練習問題 / PRACTICE PROBLEMS</h3>
       <div className="soj-centering">
         <label className="selectbox">
-          <select defaultValue="PRACTICE-awk-01" id="select-form-2">
+          <select defaultValue="PRACTICE-awk-01" id="select-form-practice">
             <option value="PRACTICE-awk-01">awk 1</option>
             <option value="PRACTICE-awk-02">awk 2</option>
             <option value="PRACTICE-awk-03">awk 3</option>
@@ -52,18 +52,28 @@ const SojSelectPractice: React.FC = () => {
           <tbody>
             <tr>
               <td>
-                <input type="button" value="<" className="one-step-button" id="select-pre-2" />
+                <input
+                  type="button"
+                  value="<"
+                  className="one-step-button"
+                  id="select-pre-practice"
+                />
               </td>
               <td>
                 <input
                   type="button"
                   value="決定 / SELECT"
                   className="main-button"
-                  id="select-button-2"
+                  id="select-button-practice"
                 />
               </td>
               <td>
-                <input type="button" value=">" className="one-step-button" id="select-next-2" />
+                <input
+                  type="button"
+                  value=">"
+                  className="one-step-button"
+                  id="select-next-practice"
+                />
               </td>
             </tr>
           </tbody>
