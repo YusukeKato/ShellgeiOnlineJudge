@@ -3,11 +3,11 @@ import "../css/nav_list.css";
 
 interface SojUrlsInterface {
   x_url: string;
-  github_url: string;
+  github_repository_url: string;
   blog_url: string;
 }
 
-const SojNavList: React.FC<SojUrlsInterface> = ({ x_url, github_url, blog_url }) => {
+const SojNavList: React.FC<SojUrlsInterface> = ({ x_url, github_repository_url, blog_url }) => {
   return (
     <ul className="nav-list">
       <li className="nav-list-item">
@@ -16,7 +16,7 @@ const SojNavList: React.FC<SojUrlsInterface> = ({ x_url, github_url, blog_url })
         </a>
       </li>
       <li className="nav-list-item">
-        <a href={github_url} className="nav-list-button">
+        <a href={github_repository_url} className="nav-list-button">
           GITHUB
         </a>
       </li>

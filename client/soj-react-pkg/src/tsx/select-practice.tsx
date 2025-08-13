@@ -1,5 +1,5 @@
 import React from "react";
-import { updateProblem } from "../scripts/select_button";
+import { updateProblem } from "../functions/update_problem";
 import "../css/summary.css";
 import "../css/headline.css";
 import "../css/select.css";
@@ -8,8 +8,8 @@ import "../css/common.css";
 
 interface SojValuesInterface {
   soj_url: string;
-  selectedProblem: string;
-  handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  selectedProblemPractice: string;
+  changeSelectedProblemPractice: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   setSelectedProblem: (value: string) => void;
   setProblemStatement: (value: string) => void;
   setProblemInput: (value: string) => void;
@@ -18,23 +18,33 @@ interface SojValuesInterface {
 
 const SojSelectPractice: React.FC<SojValuesInterface> = ({
   soj_url,
-  selectedProblem,
-  handleSelectChange,
+  selectedProblemPractice,
+  changeSelectedProblemPractice,
   setSelectedProblem,
   setProblemStatement,
   setProblemInput,
   setProblemOutput,
 }) => {
   const SelectClick = () => {
-    setSelectedProblem(selectedProblem);
-    updateProblem(soj_url, selectedProblem, setProblemStatement, setProblemInput, setProblemOutput);
+    setSelectedProblem(selectedProblemPractice);
+    updateProblem(
+      soj_url,
+      selectedProblemPractice,
+      setProblemStatement,
+      setProblemInput,
+      setProblemOutput,
+    );
   };
   return (
     <div className="soj-main">
       <h3>練習問題 / PRACTICE PROBLEMS</h3>
       <div className="soj-centering">
         <label className="selectbox">
-          <select value={selectedProblem} id="select-form-practice" onChange={handleSelectChange}>
+          <select
+            value={selectedProblemPractice}
+            id="select-form-practice"
+            onChange={changeSelectedProblemPractice}
+          >
             <option value="EXERCISE-awk-01">awk 1</option>
             <option value="EXERCISE-awk-02">awk 2</option>
             <option value="EXERCISE-awk-03">awk 3</option>

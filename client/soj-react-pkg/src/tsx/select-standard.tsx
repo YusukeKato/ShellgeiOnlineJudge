@@ -1,5 +1,5 @@
 import React from "react";
-import { updateProblem } from "../scripts/select_button";
+import { updateProblem } from "../functions/update_problem";
 import "../css/summary.css";
 import "../css/headline.css";
 import "../css/select.css";
@@ -8,8 +8,8 @@ import "../css/common.css";
 
 interface SojValuesInterface {
   soj_url: string;
-  selectedProblem: string;
-  handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  selectedProblemStandard: string;
+  changeSelectedProblemStandard: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   setSelectedProblem: (value: string) => void;
   setProblemStatement: (value: string) => void;
   setProblemInput: (value: string) => void;
@@ -18,16 +18,22 @@ interface SojValuesInterface {
 
 const SojSelectStandard: React.FC<SojValuesInterface> = ({
   soj_url,
-  selectedProblem,
-  handleSelectChange,
+  selectedProblemStandard,
+  changeSelectedProblemStandard,
   setSelectedProblem,
   setProblemStatement,
   setProblemInput,
   setProblemOutput,
 }) => {
   const SelectClick = () => {
-    setSelectedProblem(selectedProblem);
-    updateProblem(soj_url, selectedProblem, setProblemStatement, setProblemInput, setProblemOutput);
+    setSelectedProblem(selectedProblemStandard);
+    updateProblem(
+      soj_url,
+      selectedProblemStandard,
+      setProblemStatement,
+      setProblemInput,
+      setProblemOutput,
+    );
   };
   return (
     <div className="soj-main">
@@ -35,7 +41,11 @@ const SojSelectStandard: React.FC<SojValuesInterface> = ({
       <h3>通常問題 / STANDARD PROBLEMS</h3>
       <div className="soj-centering">
         <label className="selectbox">
-          <select value={selectedProblem} id="select-form-standard" onChange={handleSelectChange}>
+          <select
+            value={selectedProblemStandard}
+            id="select-form-standard"
+            onChange={changeSelectedProblemStandard}
+          >
             <option value="GENERAL-00000001">1 : 出力テスト / Output Test</option>
             <option value="GENERAL-00000002">2 : 入力テスト / Input Test</option>
             <option value="GENERAL-00000003">3 : 改行テスト / Newline Test</option>

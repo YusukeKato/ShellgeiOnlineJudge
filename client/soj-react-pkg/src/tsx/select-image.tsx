@@ -1,5 +1,5 @@
 import React from "react";
-import { updateProblem } from "../scripts/select_button";
+import { updateProblem } from "../functions/update_problem";
 import "../css/summary.css";
 import "../css/headline.css";
 import "../css/select.css";
@@ -8,8 +8,8 @@ import "../css/common.css";
 
 interface SojValuesInterface {
   soj_url: string;
-  selectedProblem: string;
-  handleSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  selectedProblemImage: string;
+  changeSelectedProblemImage: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   setSelectedProblem: (value: string) => void;
   setProblemStatement: (value: string) => void;
   setProblemInput: (value: string) => void;
@@ -18,23 +18,33 @@ interface SojValuesInterface {
 
 const SojSelectImage: React.FC<SojValuesInterface> = ({
   soj_url,
-  selectedProblem,
-  handleSelectChange,
+  selectedProblemImage,
+  changeSelectedProblemImage,
   setSelectedProblem,
   setProblemStatement,
   setProblemInput,
   setProblemOutput,
 }) => {
   const SelectClick = () => {
-    setSelectedProblem(selectedProblem);
-    updateProblem(soj_url, selectedProblem, setProblemStatement, setProblemInput, setProblemOutput);
+    setSelectedProblem(selectedProblemImage);
+    updateProblem(
+      soj_url,
+      selectedProblemImage,
+      setProblemStatement,
+      setProblemInput,
+      setProblemOutput,
+    );
   };
   return (
     <div className="soj-main">
       <h3>画像問題 / IMAGE PROBLEMS</h3>
       <div className="soj-centering">
         <label className="selectbox">
-          <select value={selectedProblem} id="select-form-image" onChange={handleSelectChange}>
+          <select
+            value={selectedProblemImage}
+            id="select-form-image"
+            onChange={changeSelectedProblemImage}
+          >
             <option value="IMAGE-00000001">1: 画像テスト</option>
             <option value="IMAGE-00000002">2: 横線</option>
             <option value="IMAGE-00000003">3: 円</option>

@@ -1,7 +1,3 @@
-/* reference:
- * https://munibus.hatenablog.com/entry/2022/09/30/225938
- */
-
 export const getProblem = async (file_name: string): Promise<string> => {
   try {
     const response = await fetch(file_name);

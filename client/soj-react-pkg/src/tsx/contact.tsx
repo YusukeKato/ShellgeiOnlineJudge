@@ -5,7 +5,7 @@ import "../css/common.css";
 
 interface SojUrlsInterface {
   x_url: string;
-  github_url: string;
+  github_repository_url: string;
   github_author_url: string;
   blog_url: string;
   mixi2_url: string;
@@ -13,7 +13,7 @@ interface SojUrlsInterface {
 
 const SojContact: React.FC<SojUrlsInterface> = ({
   x_url,
-  github_url,
+  github_repository_url,
   github_author_url,
   blog_url,
   mixi2_url,
@@ -36,10 +36,10 @@ const SojContact: React.FC<SojUrlsInterface> = ({
         <h4>GITHUB</h4>
         <ul>
           <li>
-            <a href={github_url + "/discussions"}>GitHub - Discussions</a>
+            <a href={github_repository_url + "/discussions"}>GitHub - Discussions</a>
           </li>
           <li>
-            <a href={github_url + "/issues"}>GitHub - Issues</a>
+            <a href={github_repository_url + "/issues"}>GitHub - Issues</a>
           </li>
         </ul>
         <h4>AUTHOR</h4>

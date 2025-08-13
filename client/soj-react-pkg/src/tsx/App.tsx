@@ -20,51 +20,57 @@ import "../css/App.css";
 import "../css/common.css";
 
 const App: React.FC = () => {
+  /* SOJ URLs */
   const x_url: string = "https://x.com/yusukekato_main";
   // const soj_url: string = "https://shellgei-online-judge.com";
   const soj_url: string = "http://localhost";
-  const github_url: string = "https://github.com/YusukeKato/ShellgeiOnlineJudge";
+  const github_repository_url: string = "https://github.com/YusukeKato/ShellgeiOnlineJudge";
   const github_author_url: string = "https://github.com/YusukeKato";
   const blog_url: string = "https://yusukekato.jp";
   const mixi2_url: string =
     "https://mixi.social/communities/dcf8e9d8-a6c4-40a9-8e05-328b4424f886/about";
-  const update_date: string = "2025/08/13";
+
+  /* SOJ Info */
+  const update_date: string = "2025/08/14";
   const current_version: string = "2.0.0";
 
+  /* SOJ useState: select problem */
   const [selectedProblemStandard, setSelectedProblemStandard] = useState("GENERAL-00000001");
-  const handleSelectChangeStandard = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const changeSelectedProblemStandard = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedProblemStandard(event.target.value);
   };
   const [selectedProblemPractice, setSelectedProblemPractice] = useState("EXERCISE-awk-01");
-  const handleSelectChangePractice = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const changeSelectedProblemPractice = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedProblemPractice(event.target.value);
   };
   const [selectedProblemImage, setSelectedProblemImage] = useState("IMAGE-00000001");
-  const handleSelectChangeImage = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const changeSelectedProblemImage = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedProblemImage(event.target.value);
   };
   const [selectedProblem, setSelectedProblem] = useState("Select a problem.");
 
+  /* SOJ useState: get problem */
   const [problemStatement, setProblemStatement] = useState("Select a problem.");
   const [problemInput, setProblemInput] = useState("Select a problem.");
   const [problemOutput, setProblemOutput] = useState("Select a problem.");
 
+  /* SOJ useState: input shellgei */
   const [inputShellgei, setInputShellgei] = useState("");
-  const handleInputShellgeiChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const changeInputShellgei = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputShellgei(event.target.value);
   };
 
   return (
     <div className="App">
       <SojHeader />
-      <SojNavList x_url={x_url} github_url={github_url} blog_url={blog_url} />
+      <SojNavList x_url={x_url} github_repository_url={github_repository_url} blog_url={blog_url} />
       <SojInfo update_date={update_date} current_version={current_version} />
       <SojNews blog_url={blog_url} />
       <SojAbout />
       <SojHistory />
       <SojContact
         x_url={x_url}
-        github_url={github_url}
+        github_repository_url={github_repository_url}
         github_author_url={github_author_url}
         blog_url={blog_url}
         mixi2_url={mixi2_url}
@@ -72,8 +78,8 @@ const App: React.FC = () => {
       <SojOthers />
       <SojSelectStandard
         soj_url={soj_url}
-        selectedProblem={selectedProblemStandard}
-        handleSelectChange={handleSelectChangeStandard}
+        selectedProblemStandard={selectedProblemStandard}
+        changeSelectedProblemStandard={changeSelectedProblemStandard}
         setSelectedProblem={setSelectedProblem}
         setProblemStatement={setProblemStatement}
         setProblemInput={setProblemInput}
@@ -81,8 +87,8 @@ const App: React.FC = () => {
       />
       <SojSelectPractice
         soj_url={soj_url}
-        selectedProblem={selectedProblemPractice}
-        handleSelectChange={handleSelectChangePractice}
+        selectedProblemPractice={selectedProblemPractice}
+        changeSelectedProblemPractice={changeSelectedProblemPractice}
         setSelectedProblem={setSelectedProblem}
         setProblemStatement={setProblemStatement}
         setProblemInput={setProblemInput}
@@ -90,8 +96,8 @@ const App: React.FC = () => {
       />
       <SojSelectImage
         soj_url={soj_url}
-        selectedProblem={selectedProblemImage}
-        handleSelectChange={handleSelectChangeImage}
+        selectedProblemImage={selectedProblemImage}
+        changeSelectedProblemImage={changeSelectedProblemImage}
         setSelectedProblem={setSelectedProblem}
         setProblemStatement={setProblemStatement}
         setProblemInput={setProblemInput}
@@ -103,7 +109,7 @@ const App: React.FC = () => {
         problemInput={problemInput}
         problemOutput={problemOutput}
       />
-      <SojRun inputShellgei={inputShellgei} handleInputShellgeiChange={handleInputShellgeiChange} />
+      <SojRun inputShellgei={inputShellgei} changeInputShellgei={changeInputShellgei} />
       <SojResult />
       <SojLogo />
       <SojFooter />

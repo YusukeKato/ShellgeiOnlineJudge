@@ -5,10 +5,10 @@ import "../css/common.css";
 
 interface SojValuesInterface {
   inputShellgei: string;
-  handleInputShellgeiChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  changeInputShellgei: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
 }
 
-const SojRun: React.FC<SojValuesInterface> = ({ inputShellgei, handleInputShellgeiChange }) => {
+const SojRun: React.FC<SojValuesInterface> = ({ inputShellgei, changeInputShellgei }) => {
   return (
     <div className="soj-main">
       <h2>実行 / RUN</h2>
@@ -44,7 +44,7 @@ const SojRun: React.FC<SojValuesInterface> = ({ inputShellgei, handleInputShellg
       <div className="soj-centering">
         <textarea
           value={inputShellgei}
-          onChange={handleInputShellgeiChange}
+          onChange={changeInputShellgei}
           cols={50}
           rows={12}
           id="cmdline"

@@ -1,4 +1,4 @@
-import { getProblem } from "../scripts/get_problem";
+import { getProblem } from "./get_problem";
 
 export const updateProblem = async (
   soj_url: string,
