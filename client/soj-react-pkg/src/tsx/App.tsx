@@ -8,6 +8,7 @@ import SojAbout from "./about";
 import SojHistory from "./history";
 import SojContact from "./contact";
 import SojOthers from "./others";
+import SojSelectStandard from "./select-standard";
 import SojLogo from "./logo";
 import "../css/App.css";
 import "../css/common.css";
@@ -39,6 +40,7 @@ const App: React.FC = () => {
         mixi2_url={mixi2_url}
       />
       <SojOthers />
+      <SojSelectStandard />
       <SojLogo />
       <footer>
         <SojFooter />

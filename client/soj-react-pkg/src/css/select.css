@@ -1,0 +1,64 @@
+/* reference: 
+ * https://pote-chil.com/css-stock/ja/selectbox
+ */
+
+select {
+  width: 80%;
+}
+
+.selectbox {
+  position: relative;
+}
+
+.selectbox::before,
+.selectbox::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+}
+
+.selectbox::before {
+  right: 0;
+  display: inline-block;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 0 0.2rem 0.2rem 0;
+  background-color: #666;
+  content: "";
+}
+
+.selectbox::after {
+  position: absolute;
+  top: 50%;
+  right: 1.4rem;
+  transform: translate(50%, -50%) rotate(45deg);
+  width: 0.5rem;
+  height: 0.5rem;
+  border-bottom: 3px solid #fff;
+  border-right: 3px solid #fff;
+  content: "";
+}
+
+.selectbox select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  min-width: 230px;
+  height: 2.8rem;
+  padding: 0.6rem 4rem 0.6rem 1rem;
+  border: 1px solid #666;
+  border-radius: 0.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #666;
+  background-color: #fff;
+}
+
+.selectbox select:focus {
+  outline: 1px solid #67a7cc;
+}
+
+table {
+  width: 40%;
+  margin: auto;
+}
