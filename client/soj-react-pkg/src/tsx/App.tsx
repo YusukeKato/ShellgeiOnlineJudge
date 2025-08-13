@@ -13,6 +13,7 @@ import SojSelectPractice from "./select-practice";
 import SojSelectImage from "./select-image";
 import SojSelected from "./selected";
 import SojProblem from "./problem";
+import SojRun from "./run";
 import SojLogo from "./logo";
 import "../css/App.css";
 import "../css/common.css";
@@ -46,6 +47,11 @@ const App: React.FC = () => {
   const [problemStatement, setProblemStatement] = useState("Select a problem.");
   const [problemInput, setProblemInput] = useState("Select a problem.");
   const [problemOutput, setProblemOutput] = useState("Select a problem.");
+
+  const [inputShellgei, setInputShellgei] = useState("");
+  const handleInputShellgeiChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputShellgei(event.target.value);
+  };
 
   return (
     <div className="App">
@@ -96,6 +102,7 @@ const App: React.FC = () => {
         problemInput={problemInput}
         problemOutput={problemOutput}
       />
+      <SojRun inputShellgei={inputShellgei} handleInputShellgeiChange={handleInputShellgeiChange} />
       <SojLogo />
       <SojFooter />
     </div>

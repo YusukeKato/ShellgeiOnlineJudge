@@ -43,3 +43,26 @@
   color: #333;
   background: #fff;
 }
+
+.run-button {
+  width: 30%;
+  font-size: 1rem;
+  cursor: pointer;
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  margin: 1rem auto;
+  padding: 0.8rem;
+  font-weight: bold;
+  border: 1px solid #333;
+  border-radius: 0.2rem;
+  transition: 0.2s;
+  color: #fff;
+  background-color: #333;
+}
+
+.run-button:hover {
+  font-weight: bold;
+  color: #333;
+  background: #fff;
+}

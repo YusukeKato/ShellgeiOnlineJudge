@@ -46,3 +46,21 @@ pre {
   word-wrap: break-word;
   word-break: break-all;
 }
+
+textarea {
+  font-family:
+    monospace, "Noto Sans JP", "Meiryo", "Hiragino Maru Gothic ProN W4", "Hiragino Mincho ProN",
+    "Verdana", "Times New Roman", "YuMincho", "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho",
+    serif, sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-size: 1rem;
+  width: 90%;
+  color: #666;
+  margin-top: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-all;
+}
