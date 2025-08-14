@@ -43,3 +43,12 @@
   color: #333;
   background: #fff;
 }
+
+@media screen and (max-width: 999px) {
+  .select-button {
+    width: 60%;
+  }
+  .run-button {
+    width: 60%;
+  }
+}

@@ -24,20 +24,20 @@ jobs:
 
       - name: React install dependencies
         run: yarn install --frozen-lockfile
-        working-directory: ./client/soj-react-pkg
+        working-directory: ./frontend
 
       - name: React lint
         run: yarn lint
-        working-directory: ./client/soj-react-pkg
+        working-directory: ./frontend
 
       - name: React format
         run: yarn format:check
-        working-directory: ./client/soj-react-pkg
+        working-directory: ./frontend
 
       - name: React Build
         run: yarn build
-        working-directory: ./client/soj-react-pkg
+        working-directory: ./frontend
 
       - name: React Run tests
         run: yarn test
-        working-directory: ./client/soj-react-pkg
+        working-directory: ./frontend
