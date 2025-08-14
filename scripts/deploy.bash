@@ -32,23 +32,6 @@ if [[ $find_target_str == *"$target_str"* ]]; then
   sudo rm -rf "$root_path_html"scripts
   sudo rm -rf "$root_path_html"soj-react-pkg
   
-  # delete web app
-  # sudo rm "$root_path_html"index.html
-  # sudo rm "$root_path_html"index.en.html
-  # sudo rm "$root_path_html"index.js
-  # sudo rm "$root_path_html"style.css
-
-  # sudo rm  "$root_path_html"index.html
-  # sudo rm  "$root_path_html"build
-  # sudo rm  "$root_path_html"global.css
-  # sudo rm  "$root_path_html"scripts
-  # sudo rm  "$root_path_html"src
-
-  sudo rm "$root_path_html"BlackTreeIcon.jpg
-  sudo rm "$root_path_html"favicon.jpg
-  sudo rm "$root_path_html"white.jpg
-  sudo rm "$root_path_html"black.jpg
-  
   # delete server
   sudo rm "$root_path_html"connection.php
   sudo rm "$root_path"run_shellgei.py
