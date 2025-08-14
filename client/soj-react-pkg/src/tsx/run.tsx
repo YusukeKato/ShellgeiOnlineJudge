@@ -1,14 +1,38 @@
 import React from "react";
+import { submit } from "../functions/submit";
 import "../css/code.css";
 import "../css/button.css";
 import "../css/common.css";
 
 interface SojValuesInterface {
+  shellgei_limit: number;
+  soj_url: string;
   inputShellgei: string;
   changeInputShellgei: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  selectedProblem: string;
+  setOutputResult: (value: string) => void;
+  setJudgeResult: (value: string) => void;
 }
 
-const SojRun: React.FC<SojValuesInterface> = ({ inputShellgei, changeInputShellgei }) => {
+const SojRun: React.FC<SojValuesInterface> = ({
+  shellgei_limit,
+  soj_url,
+  inputShellgei,
+  changeInputShellgei,
+  selectedProblem,
+  setOutputResult,
+  setJudgeResult,
+}) => {
+  const SubmitClick = () => {
+    submit(
+      shellgei_limit,
+      soj_url,
+      inputShellgei,
+      selectedProblem,
+      setOutputResult,
+      setJudgeResult,
+    );
+  };
   return (
     <div className="soj-main">
       <h2>実行 / RUN</h2>
@@ -50,7 +74,13 @@ const SojRun: React.FC<SojValuesInterface> = ({ inputShellgei, changeInputShellg
           id="cmdline"
           placeholder="ここにシェル芸を入力... / Input your shell-gei here..."
         ></textarea>
-        <input type="button" value="実行 / RUN" className="run-button" id="submit-button" />
+        <input
+          type="button"
+          value="実行 / RUN"
+          className="run-button"
+          id="submit-button"
+          onClick={SubmitClick}
+        />
       </div>
     </div>
   );

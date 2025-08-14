@@ -4,7 +4,13 @@ import "../css/button.css";
 import "../css/image.css";
 import "../css/common.css";
 
-const SojResult: React.FC = () => {
+interface SojValuesInterface {
+  outputResult: string;
+  judgeResult: string;
+  inputShellgei: string;
+}
+
+const SojResult: React.FC<SojValuesInterface> = ({ outputResult, judgeResult, inputShellgei }) => {
   return (
     <div className="soj-main">
       <h2>結果 / RESULT</h2>
@@ -12,7 +18,7 @@ const SojResult: React.FC = () => {
       <div className="text-block">
         <pre>
           <code className="code-font" id="result-text">
-            NULL
+            {judgeResult}
           </code>
         </pre>
       </div>
@@ -20,7 +26,7 @@ const SojResult: React.FC = () => {
       <div className="text-block">
         <pre>
           <code className="code-font" id="user-output-text">
-            NULL
+            {outputResult}
           </code>
         </pre>
       </div>
@@ -32,7 +38,7 @@ const SojResult: React.FC = () => {
       <div className="text-block">
         <pre>
           <code className="code-font" id="shellgei-text">
-            NULL
+            {inputShellgei}
           </code>
         </pre>
       </div>

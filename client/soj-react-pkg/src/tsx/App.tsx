@@ -20,6 +20,8 @@ import "../css/App.css";
 import "../css/common.css";
 
 const App: React.FC = () => {
+  /* SOJ param */
+  const shellgei_limit: number = 1000;
   /* SOJ URLs */
   const x_url: string = "https://x.com/yusukekato_main";
   // const soj_url: string = "https://shellgei-online-judge.com";
@@ -59,6 +61,10 @@ const App: React.FC = () => {
   const changeInputShellgei = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputShellgei(event.target.value);
   };
+
+  /* SOJ useState: result */
+  const [outputResult, setOutputResult] = useState("");
+  const [judgeResult, setJudgeResult] = useState("");
 
   return (
     <div className="App">
@@ -109,8 +115,20 @@ const App: React.FC = () => {
         problemInput={problemInput}
         problemOutput={problemOutput}
       />
-      <SojRun inputShellgei={inputShellgei} changeInputShellgei={changeInputShellgei} />
-      <SojResult />
+      <SojRun
+        shellgei_limit={shellgei_limit}
+        soj_url={soj_url}
+        inputShellgei={inputShellgei}
+        changeInputShellgei={changeInputShellgei}
+        selectedProblem={selectedProblem}
+        setOutputResult={setOutputResult}
+        setJudgeResult={setJudgeResult}
+      />
+      <SojResult
+        outputResult={outputResult}
+        judgeResult={judgeResult}
+        inputShellgei={inputShellgei}
+      />
       <SojLogo />
       <SojFooter />
     </div>
