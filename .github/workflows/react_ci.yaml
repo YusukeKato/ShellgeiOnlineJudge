@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'yarn'
-          cache-dependency-path: ./client/soj-react-pkg/yarn.lock
+          cache-dependency-path: ./frontend/yarn.lock
 
       - name: React install dependencies
         run: yarn install --frozen-lockfile
