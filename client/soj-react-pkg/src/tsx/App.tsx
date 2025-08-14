@@ -55,6 +55,9 @@ const App: React.FC = () => {
   const [problemStatement, setProblemStatement] = useState("Select a problem.");
   const [problemInput, setProblemInput] = useState("Select a problem.");
   const [problemOutput, setProblemOutput] = useState("Select a problem.");
+  const [problemImage, setProblemImage] = useState(
+    soj_url + "/problem_images/GENERAL-00000001.jpg",
+  );
 
   /* SOJ useState: input shellgei */
   const [inputShellgei, setInputShellgei] = useState("");
@@ -90,6 +93,7 @@ const App: React.FC = () => {
         setProblemStatement={setProblemStatement}
         setProblemInput={setProblemInput}
         setProblemOutput={setProblemOutput}
+        setProblemImage={setProblemImage}
       />
       <SojSelectPractice
         soj_url={soj_url}
@@ -99,6 +103,7 @@ const App: React.FC = () => {
         setProblemStatement={setProblemStatement}
         setProblemInput={setProblemInput}
         setProblemOutput={setProblemOutput}
+        setProblemImage={setProblemImage}
       />
       <SojSelectImage
         soj_url={soj_url}
@@ -108,12 +113,14 @@ const App: React.FC = () => {
         setProblemStatement={setProblemStatement}
         setProblemInput={setProblemInput}
         setProblemOutput={setProblemOutput}
+        setProblemImage={setProblemImage}
       />
       <SojSelected selectedValue={selectedProblem} />
       <SojProblem
         problemStatement={problemStatement}
         problemInput={problemInput}
         problemOutput={problemOutput}
+        problemImage={problemImage}
       />
       <SojRun
         shellgei_limit={shellgei_limit}

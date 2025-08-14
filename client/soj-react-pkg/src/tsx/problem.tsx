@@ -7,12 +7,14 @@ interface SojValuesInterface {
   problemStatement: string;
   problemInput: string;
   problemOutput: string;
+  problemImage: string;
 }
 
 const SojProblem: React.FC<SojValuesInterface> = ({
   problemStatement,
   problemInput,
   problemOutput,
+  problemImage,
 }) => {
   return (
     <div className="soj-main">
@@ -42,8 +44,8 @@ const SojProblem: React.FC<SojValuesInterface> = ({
         </pre>
       </div>
       <h3>想定画像 / EXPECTED IMAGE</h3>
-      <div className="soj-img" id="output-image">
-        {/* insert image */}
+      <div className="soj-centering">
+        <img className="soj-image" src={problemImage} id="expected-image" alt="expected-image" />
       </div>
     </div>
   );

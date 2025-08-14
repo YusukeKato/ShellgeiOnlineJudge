@@ -14,6 +14,7 @@ interface SojValuesInterface {
   setProblemStatement: (value: string) => void;
   setProblemInput: (value: string) => void;
   setProblemOutput: (value: string) => void;
+  setProblemImage: (value: string) => void;
 }
 
 const SojSelectStandard: React.FC<SojValuesInterface> = ({
@@ -24,6 +25,7 @@ const SojSelectStandard: React.FC<SojValuesInterface> = ({
   setProblemStatement,
   setProblemInput,
   setProblemOutput,
+  setProblemImage,
 }) => {
   const SelectClick = () => {
     setSelectedProblem(selectedProblemStandard);
@@ -33,6 +35,7 @@ const SojSelectStandard: React.FC<SojValuesInterface> = ({
       setProblemStatement,
       setProblemInput,
       setProblemOutput,
+      setProblemImage,
     );
   };
   return (

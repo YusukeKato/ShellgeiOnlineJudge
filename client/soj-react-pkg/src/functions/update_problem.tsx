@@ -6,6 +6,7 @@ export const updateProblem = async (
   setProblemStatement: (value: string) => void,
   setProblemInput: (value: string) => void,
   setProblemOutput: (value: string) => void,
+  setProblemImage: (value: string) => void,
 ) => {
   try {
     const problem_statement_str = await getProblem(
@@ -30,4 +31,5 @@ export const updateProblem = async (
     console.error("Failed to get problem:", error);
     setProblemOutput("Error: Failed to get problem");
   }
+  setProblemImage(soj_url + "/problem_images/" + selectedValue + ".jpg");
 };
