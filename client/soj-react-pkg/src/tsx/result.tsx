@@ -7,10 +7,16 @@ import "../css/common.css";
 interface SojValuesInterface {
   outputResult: string;
   judgeResult: string;
+  imageResult: string;
   inputShellgei: string;
 }
 
-const SojResult: React.FC<SojValuesInterface> = ({ outputResult, judgeResult, inputShellgei }) => {
+const SojResult: React.FC<SojValuesInterface> = ({
+  outputResult,
+  judgeResult,
+  imageResult,
+  inputShellgei,
+}) => {
   return (
     <div className="soj-main">
       <h2>結果 / RESULT</h2>
@@ -31,8 +37,8 @@ const SojResult: React.FC<SojValuesInterface> = ({ outputResult, judgeResult, in
         </pre>
       </div>
       <h3>出力画像 / OUTPUT IMAGE</h3>
-      <div className="soj-image" id="result-image">
-        {/* insert output image */}
+      <div className="soj-centering" id="result-image">
+        <img className="soj-image" src={imageResult} id="result-image" alt="result-image" />
       </div>
       <h3>実行したシェル芸 / EXECUTED SHELLGEI</h3>
       <div className="text-block">

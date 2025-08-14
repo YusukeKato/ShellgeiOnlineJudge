@@ -2,7 +2,7 @@ export const postShellgei = async (
   soj_url: string,
   shellgei: string,
   selectedProblem: string,
-): Promise<[string, string]> => {
+): Promise<[string, string, string]> => {
   const timeoutMessage = "Timeout: 5000ms";
   const timeoutPromise = new Promise<Response>((_, reject) => {
     setTimeout(() => {
@@ -29,18 +29,18 @@ export const postShellgei = async (
 
     if (res.shellgei != null) {
       if (String(res.shellgei).length > 0 && String(res.shellgei_judge).length > 0) {
-        return [String(res.shellgei), String(res.shellgei_judge)];
+        return [String(res.shellgei), String(res.shellgei_judge), String(res.shellgei_image)];
       } else {
-        return ["", ""];
+        return ["error response", "error response", "error response"];
       }
     } else {
-      return ["", ""];
+      return ["error response", "error response", "error response"];
     }
   } catch (error: any) {
     console.error("Failed to post shellgei:", error);
     if (error.message === timeoutMessage) {
-      return [timeoutMessage, timeoutMessage];
+      return [timeoutMessage, timeoutMessage, timeoutMessage];
     }
-    return [`Error: ${error.message}`, `Error: ${error.message}`];
+    return [`Error: ${error.message}`, `Error: ${error.message}`, `Error: ${error.message}`];
   }
 };

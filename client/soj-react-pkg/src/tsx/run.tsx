@@ -6,31 +6,37 @@ import "../css/common.css";
 
 interface SojValuesInterface {
   shellgei_limit: number;
+  default_image: string;
   soj_url: string;
   inputShellgei: string;
   changeInputShellgei: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   selectedProblem: string;
   setOutputResult: (value: string) => void;
   setJudgeResult: (value: string) => void;
+  setImageResult: (value: string) => void;
 }
 
 const SojRun: React.FC<SojValuesInterface> = ({
   shellgei_limit,
+  default_image,
   soj_url,
   inputShellgei,
   changeInputShellgei,
   selectedProblem,
   setOutputResult,
   setJudgeResult,
+  setImageResult,
 }) => {
   const SubmitClick = () => {
     submit(
       shellgei_limit,
+      default_image,
       soj_url,
       inputShellgei,
       selectedProblem,
       setOutputResult,
       setJudgeResult,
+      setImageResult,
     );
   };
   return (

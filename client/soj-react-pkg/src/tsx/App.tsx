@@ -20,8 +20,6 @@ import "../css/App.css";
 import "../css/common.css";
 
 const App: React.FC = () => {
-  /* SOJ param */
-  const shellgei_limit: number = 1000;
   /* SOJ URLs */
   const x_url: string = "https://x.com/yusukekato_main";
   // const soj_url: string = "https://shellgei-online-judge.com";
@@ -31,6 +29,10 @@ const App: React.FC = () => {
   const blog_url: string = "https://yusukekato.jp";
   const mixi2_url: string =
     "https://mixi.social/communities/dcf8e9d8-a6c4-40a9-8e05-328b4424f886/about";
+
+  /* SOJ param */
+  const shellgei_limit: number = 1000;
+  const default_image: string = soj_url + "/problem_images/GENERAL-00000001.jpg";
 
   /* SOJ Info */
   const update_date: string = "2025/08/14";
@@ -55,9 +57,7 @@ const App: React.FC = () => {
   const [problemStatement, setProblemStatement] = useState("Select a problem.");
   const [problemInput, setProblemInput] = useState("Select a problem.");
   const [problemOutput, setProblemOutput] = useState("Select a problem.");
-  const [problemImage, setProblemImage] = useState(
-    soj_url + "/problem_images/GENERAL-00000001.jpg",
-  );
+  const [problemImage, setProblemImage] = useState(default_image);
 
   /* SOJ useState: input shellgei */
   const [inputShellgei, setInputShellgei] = useState("");
@@ -68,6 +68,7 @@ const App: React.FC = () => {
   /* SOJ useState: result */
   const [outputResult, setOutputResult] = useState("Run your shell-gei.");
   const [judgeResult, setJudgeResult] = useState("Run your shell-gei.");
+  const [imageResult, setImageResult] = useState(soj_url + "/problem_images/GENERAL-00000001.jpg");
 
   return (
     <div className="App">
@@ -124,16 +125,19 @@ const App: React.FC = () => {
       />
       <SojRun
         shellgei_limit={shellgei_limit}
+        default_image={default_image}
         soj_url={soj_url}
         inputShellgei={inputShellgei}
         changeInputShellgei={changeInputShellgei}
         selectedProblem={selectedProblem}
         setOutputResult={setOutputResult}
         setJudgeResult={setJudgeResult}
+        setImageResult={setImageResult}
       />
       <SojResult
         outputResult={outputResult}
         judgeResult={judgeResult}
+        imageResult={imageResult}
         inputShellgei={inputShellgei}
       />
       <SojLogo />
