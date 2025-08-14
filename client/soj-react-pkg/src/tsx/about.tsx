@@ -22,7 +22,7 @@ const SojAbout: React.FC = () => {
           シェル芸とはCLI環境におけるシェルのワンライナーで様々なタスクをこなすことを指します。詳しくは
           <a href="https://b.ueda.tech/?page=01434">シェル芸のトップページ</a>を参照してください。
         </p>
-        <p>SHELLGEI is a shell one-liner that performs various tasks in the CLI environment.</p>
+        <p>Shell-gei is a shell one-liner that performs various tasks in the CLI environment.</p>
         <h4>シェル芸の例 / EXAMPLES OF SHELLGEI</h4>
         <p>Example 1: Output random String</p>
         <div className="code-block">

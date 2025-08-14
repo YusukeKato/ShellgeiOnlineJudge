@@ -3,15 +3,23 @@ export const postShellgei = async (
   shellgei: string,
   selectedProblem: string,
 ): Promise<[string, string]> => {
+  const timeoutMessage = "Timeout: 5000ms";
+  const timeoutPromise = new Promise<Response>((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, 5000);
+  });
+
   try {
     const formData = new FormData();
     formData.append("shellgei", shellgei);
     formData.append("problemNum", selectedProblem);
 
-    const response = await fetch(soj_url + "/connection.php", {
+    const fetchPromise = fetch(soj_url + "/connection.php", {
       method: "POST",
       body: formData,
     });
+    const response = await Promise.race([fetchPromise, timeoutPromise]);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -28,8 +36,11 @@ export const postShellgei = async (
     } else {
       return ["", ""];
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to post shellgei:", error);
-    throw error;
+    if (error.message === timeoutMessage) {
+      return [timeoutMessage, timeoutMessage];
+    }
+    return [`Error: ${error.message}`, `Error: ${error.message}`];
   }
 };

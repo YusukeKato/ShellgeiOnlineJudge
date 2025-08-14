@@ -63,8 +63,8 @@ const App: React.FC = () => {
   };
 
   /* SOJ useState: result */
-  const [outputResult, setOutputResult] = useState("");
-  const [judgeResult, setJudgeResult] = useState("");
+  const [outputResult, setOutputResult] = useState("Run your shell-gei.");
+  const [judgeResult, setJudgeResult] = useState("Run your shell-gei.");
 
   return (
     <div className="App">
