@@ -2,11 +2,10 @@
 import sys
 import subprocess
 import asyncio
-import time
 
 async def main(cid):
   try:
-    result = await asyncio.wait_for(shellgei(cid), timeout=10)
+    result = await asyncio.wait_for(shellgei(cid), timeout=10.0)
     print(result)
   except asyncio.TimeoutError:
     print("!!time out!!")

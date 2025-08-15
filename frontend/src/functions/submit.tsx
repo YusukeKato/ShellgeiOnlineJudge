@@ -11,6 +11,7 @@ export const submit = async (
   setOutputResult: (value: string) => void,
   setJudgeResult: (value: string) => void,
   setImageResult: (value: string) => void,
+  setUserShellgeiStatus: (value: string) => void,
 ) => {
   if (shellgei.length === 0) {
     setOutputResult("No input provided");
@@ -21,20 +22,29 @@ export const submit = async (
     setJudgeResult("Running...");
     setImageResult(soj_url + "/problem_images/GENERAL-00000001.jpg");
     shellgei = escapeShellgei(shellgei);
-    let [result, judge, image] = await postShellgei(soj_url, shellgei, selectedProblem);
+    let [result, id, date, judge, image] = await postShellgei(soj_url, shellgei, selectedProblem);
     if (!result || result.length === 0) {
       setOutputResult("Error: No result returned from server");
       setJudgeResult("Error: No result returned from server");
+      setUserShellgeiStatus("Error: No result returned from server");
       setImageResult(default_image);
     } else {
       judge = judgeResult(judge);
       setOutputResult(result);
       setJudgeResult(judge);
-      setImageResult("data:image/jpeg;base64," + image);
+      setUserShellgeiStatus(
+        "SHELLGEI ID: " + id + "\nDATE: " + date + "(JST)\nYOUR SHELLGEI: " + shellgei,
+      );
+      if (image.length === 0) {
+        setImageResult(default_image);
+      } else {
+        setImageResult("data:image/jpeg;base64," + image);
+      }
     }
   } else {
     setOutputResult("Exceeded character limit:" + shellgei_limit.toString());
     setJudgeResult("Exceeded character limit:" + shellgei_limit.toString());
+    setUserShellgeiStatus("Exceeded character limit:" + shellgei_limit.toString());
     setImageResult(default_image);
   }
 };

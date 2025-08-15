@@ -8,14 +8,14 @@ interface SojValuesInterface {
   outputResult: string;
   judgeResult: string;
   imageResult: string;
-  inputShellgei: string;
+  userShellgeiStatus: string;
 }
 
 const SojResult: React.FC<SojValuesInterface> = ({
   outputResult,
   judgeResult,
   imageResult,
-  inputShellgei,
+  userShellgeiStatus,
 }) => {
   return (
     <div className="soj-main">
@@ -44,7 +44,7 @@ const SojResult: React.FC<SojValuesInterface> = ({
       <div className="text-block">
         <pre>
           <code className="code-font" id="shellgei-text">
-            {inputShellgei}
+            {userShellgeiStatus}
           </code>
         </pre>
       </div>

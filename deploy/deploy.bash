@@ -19,13 +19,6 @@ sudo cp ../backend/run_shellgei.py "$root_path_soj"
 sudo cp ../backend/judge.py "$root_path_soj"
 sudo cp ../backend/z.bash "$root_path_soj"
 
-find_target_str=$(find "$root_path_soj")
-target_str="shellgei_time.txt"
-if [[ $find_target_str != *"$target_str"* ]]; then
-  sudo touch "$root_path_soj""$target_str"
-  echo "2000-01-01 00:00:00" | sudo tee "$root_path_soj""$target_str" >/dev/null
-  sudo chmod 766 "$root_path_soj""$target_str"
-fi
 target_str="shellgei_time_ms.txt"
 if [[ $find_target_str != *"$target_str"* ]]; then
   sudo touch "$root_path_soj""$target_str"

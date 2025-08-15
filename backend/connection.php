@@ -1,7 +1,6 @@
 <?php
-// JavaScriptからPOSTを受け取る
-$data = $_POST['shellgei'];
-$num = $_POST['problemNum'];
+$shellgei = $_POST['shellgei'];
+$problem = $_POST['problem'];
 
 // デバッグ：PHPを実行するユーザ名
 // $username = posix_getpwuid(posix_geteuid())['name'];
@@ -14,8 +13,8 @@ $shellgei_newtime_ms = microtime(true);
 $time_ms_diff = (float)((float)$shellgei_newtime_ms - (float)$shellgei_oldtime_ms);
 // file_put_contents("../debug_time_ms_diff.txt", $time_ms_diff, LOCK_EX);
 if($time_ms_diff < (float)0.1) {
-  $res['shellgei'] = "The server is busy(0.1s).";
-  $res['shellgei_id'] = "-1";
+  $res['shellgei_output'] = "The server is busy(0.1s).";
+  $res['shellgei_id'] = "-99";
   $res['shellgei_date'] = $shellgei_newtime;
   $res['shellgei_image'] = "";
   echo json_encode($res);
@@ -23,26 +22,9 @@ if($time_ms_diff < (float)0.1) {
 }
 file_put_contents($filename_time_ms, $shellgei_newtime_ms, LOCK_EX);
 
-$filename_time = '../shellgei_time.txt';
-$shellgei_oldtime = file_get_contents($filename_time);
-date_default_timezone_set('Asia/Tokyo');
-$shellgei_newtime = date('Y-m-d H:i:s');
-$time_old = new DateTime($shellgei_oldtime);
-$time_new = new DateTime($shellgei_newtime);
-$time_diff = $time_old->diff($time_new);
-// if($time_diff->s < 2) {
-//   $res['shellgei'] = "The server is busy(1.0s).";
-//   $res['shellgei_id'] = "-1";
-//   $res['shellgei_date'] = $shellgei_newtime;
-//   $res['shellgei_image'] = "";
-//   echo json_encode($res);
-//   exit();
-// }
-file_put_contents($filename_time, $shellgei_newtime, LOCK_EX);
-
 // \rを全て置換
-$data = str_replace('\r', '', $data);
-$num = str_replace('\r', '', $num);
+$shellgei = str_replace('\r', '', $shellgei);
+$problem = str_replace('\r', '', $problem);
 
 // 実行したシェル芸のIDを取得
 $filename_id = '../shellgei_id.txt';
@@ -59,12 +41,12 @@ $filename_log = '../shellgei_log.txt';
 file_put_contents($filename_log, "\n", FILE_APPEND);
 file_put_contents($filename_log, "SHELLGEI ID : ".$shellgei_id_str."\n", FILE_APPEND);
 file_put_contents($filename_log, "date : ".$datetime."\n", FILE_APPEND);
-file_put_contents($filename_log, "num : ".$num."\n", FILE_APPEND);
-file_put_contents($filename_log, "cmd : ".str_replace(array("\r\n", "\r", "\n"), ' ', $data)."\n", FILE_APPEND);
+file_put_contents($filename_log, "problem : ".$problem."\n", FILE_APPEND);
+file_put_contents($filename_log, "cmd : ".str_replace(array("\r\n", "\r", "\n"), ' ', $shellgei)."\n", FILE_APPEND);
 
 // コマンドを実行ファイルに書き込み
 $filename_z = '../z.bash';
-file_put_contents($filename_z, $data);
+file_put_contents($filename_z, $shellgei);
 
 // \rをすべて置換
 $str = file_get_contents($filename_z);
@@ -78,7 +60,7 @@ shell_exec("sudo docker run -dit --rm --ipc=none --network=none theoldmoon0602/s
 $cid = shell_exec("sudo docker ps | awk 'NR==2{print $1}'");
 
 // 入力ファイルをコンテナ内にコピー
-$cmd0 = "sudo docker cp ./input/$num.txt $cid:/input.txt";
+$cmd0 = "sudo docker cp ./input/$problem.txt $cid:/input.txt";
 $cmd0 = str_replace(PHP_EOL, "", $cmd0);
 shell_exec("$cmd0");
 
@@ -137,7 +119,7 @@ $cmd3 = str_replace(PHP_EOL, "", $cmd3);
 shell_exec("$cmd3");
 
 // 正誤判定
-$answer_file_path =  "./output/$num.txt";
+$answer_file_path =  "./output/$problem.txt";
 $answer_file = file_get_contents($answer_file_path);
 $tmp_answer = str_replace(" ", "SPACE", $answer_file);
 $tmp_answer = str_replace("\r", "", $tmp_answer);
@@ -145,7 +127,7 @@ $tmp_answer = str_replace("\n", "NEWLINE", $tmp_answer);
 $tmp_answer = str_replace("\t", "TAB", $tmp_answer);
 $tmp_answer = str_replace("<", "LT", $tmp_answer);
 $tmp_answer = str_replace(">", "GT", $tmp_answer);
-$cmd_answer_image = "base64 -w 0 ./problem_images/$num.jpg";
+$cmd_answer_image = "base64 -w 0 ./problem_images/$problem.jpg";
 $cmd_answer_image = str_replace(PHP_EOL, "", $cmd_answer_image);
 $answer_image_base64 = shell_exec("$cmd_answer_image");
 $cmd_judge_result = "python3 ../judge.py $tmp_out $output_image_base64 $tmp_answer $answer_image_base64 2>&1";
@@ -153,7 +135,7 @@ $cmd_judge_result = str_replace(PHP_EOL, "", $cmd_judge_result);
 $judge_result = shell_exec("$cmd_judge_result");
 
 // コマンドの実行結果を送り返す
-$res['shellgei'] = $out;
+$res['shellgei_output'] = $out;
 $res['shellgei_id'] = $shellgei_id_str;
 $res['shellgei_date'] = $datetime;
 $res['shellgei_image'] = $output_image_base64;

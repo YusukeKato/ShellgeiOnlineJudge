@@ -14,6 +14,7 @@ interface SojValuesInterface {
   setOutputResult: (value: string) => void;
   setJudgeResult: (value: string) => void;
   setImageResult: (value: string) => void;
+  setUserShellgeiStatus: (value: string) => void;
 }
 
 const SojRun: React.FC<SojValuesInterface> = ({
@@ -26,6 +27,7 @@ const SojRun: React.FC<SojValuesInterface> = ({
   setOutputResult,
   setJudgeResult,
   setImageResult,
+  setUserShellgeiStatus,
 }) => {
   const SubmitClick = () => {
     submit(
@@ -37,6 +39,7 @@ const SojRun: React.FC<SojValuesInterface> = ({
       setOutputResult,
       setJudgeResult,
       setImageResult,
+      setUserShellgeiStatus,
     );
   };
   return (
@@ -60,7 +63,7 @@ const SojRun: React.FC<SojValuesInterface> = ({
         </ul>
         <h4>実行制限 / EXECUTION LIMITS</h4>
         <ul>
-          <li>実行時間 / Execution Time : 5.0s</li>
+          <li>実行時間 / Execution Time : 10.0s</li>
           <li>入出力文字数 / Input/Output Size : 1000</li>
         </ul>
         <h4>実行環境 / EXECUTION ENVIRONMENT</h4>

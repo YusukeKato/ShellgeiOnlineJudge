@@ -69,6 +69,7 @@ const App: React.FC = () => {
   const [outputResult, setOutputResult] = useState("Run your shell-gei.");
   const [judgeResult, setJudgeResult] = useState("Run your shell-gei.");
   const [imageResult, setImageResult] = useState(soj_url + "/problem_images/GENERAL-00000001.jpg");
+  const [userShellgeiStatus, setUserShellgeiStatus] = useState("Run your shell-gei.");
 
   return (
     <div className="App">
@@ -133,12 +134,13 @@ const App: React.FC = () => {
         setOutputResult={setOutputResult}
         setJudgeResult={setJudgeResult}
         setImageResult={setImageResult}
+        setUserShellgeiStatus={setUserShellgeiStatus}
       />
       <SojResult
         outputResult={outputResult}
         judgeResult={judgeResult}
         imageResult={imageResult}
-        inputShellgei={inputShellgei}
+        userShellgeiStatus={userShellgeiStatus}
       />
       <SojLogo />
       <SojFooter />
