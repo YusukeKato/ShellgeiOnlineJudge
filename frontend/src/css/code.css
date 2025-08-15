@@ -70,4 +70,8 @@ textarea {
   .code-font {
     font-size: 0.9rem;
   }
+
+  textarea {
+    font-size: 0.9rem;
+  }
 }

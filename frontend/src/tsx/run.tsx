@@ -58,7 +58,7 @@ const SojRun: React.FC<SojValuesInterface> = ({
             出力は想定出力&想定画像と一致すること / The output must match the expected output and
             expected image.
           </li>
-          <li>危険なシェル芸（危険シェル芸）は禁止 / Dangerous shell tricks are prohibited.</li>
+          <li>危険なシェル芸（危険シェル芸）は禁止 / Dangerous shell-gei are prohibited.</li>
           <li>
             余計な空白や改行は正誤判定に影響する可能性あり / Extra spaces and line breaks may affect
             the correctness judgment.

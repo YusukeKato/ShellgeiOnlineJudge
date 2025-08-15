@@ -3,11 +3,11 @@ SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-j
 
 ## Documents
 - [frontend](./frontend/README.md): React
-- [backend](./backend/README.md): php, python
-- [problems](./problems/README.md): problem text files
-- [deploy](./deploy/README.md): deploy and test scripts
-- [setup](./docs/setup.md): setup nginx and docker
-- [maintenance](./docs/maintenance.md): how to maintenance
+- [backend](./backend/README.md): PHP, Python
+- [problems](./problems/README.md): Problem text files
+- [deploy](./deploy/README.md): Deploy and test scripts
+- [setup](./docs/setup.md): Setup nginx and docker
+- [maintenance](./docs/maintenance.md): How to maintenance
 
 ## References
 - [上田ブログ/シェル芸のトップページ](https://b.ueda.tech/?page=01434)

@@ -57,3 +57,9 @@ select {
 .selectbox select:focus {
   outline: 1px solid #67a7cc;
 }
+
+@media screen and (max-width: 999px) {
+  .selectbox select {
+    font-size: 0.9rem;
+  }
+}
