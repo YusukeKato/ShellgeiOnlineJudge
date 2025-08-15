@@ -13,7 +13,7 @@ sudo rm -rf "$root_path_soj"
 sudo mkdir -p "$root_path_main"
 
 sudo cp -r ../frontend/build/* "$root_path_main"
-sudo cp -r ../data/* "$root_path_main"
+sudo cp -r ../problems/* "$root_path_main"
 sudo cp ../backend/connection.php "$root_path_main"
 sudo cp ../backend/run_shellgei.py "$root_path_soj"
 sudo cp ../backend/judge.py "$root_path_soj"
