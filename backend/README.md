@@ -1,5 +1,5 @@
-# SHELLGEI ONLINE JUDGE SERVER
-This repository is the server for SHELLGEI ONLINE JUDGE.
+# SHELLGEI ONLINE JUDGE: backend
+This repository is the webapp backend for SHELLGEI ONLINE JUDGE.
 
 - connection.php: main script
 - run_shellgei.py: Execute shellgei
