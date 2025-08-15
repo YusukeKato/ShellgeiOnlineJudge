@@ -1,2 +1,0 @@
-Factorize the numbers in each line without using the factor command.
-Also, if the number is a prime number, output "素数".

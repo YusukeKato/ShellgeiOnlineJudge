@@ -1,1 +1,0 @@
-Duplicate each line into two lines of output.

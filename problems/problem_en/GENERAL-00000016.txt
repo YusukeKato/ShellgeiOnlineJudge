@@ -1,1 +1,0 @@
-Output the HTML tags of the input as is.

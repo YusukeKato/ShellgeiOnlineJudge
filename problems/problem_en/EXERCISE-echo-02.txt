@@ -1,2 +1,0 @@
-Exercise: echo
-Output a string containing newlines with echo.

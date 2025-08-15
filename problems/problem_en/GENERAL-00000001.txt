@@ -1,2 +1,0 @@
-Output the string "test".
-ex: echo "test"

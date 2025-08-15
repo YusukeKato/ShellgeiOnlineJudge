@@ -23,13 +23,12 @@ const SojOthers: React.FC = () => {
         <p>Thank you very much for the example answer.</p>
         <ul>
           <li>
-            -{" "}
             <a href="https://gist.github.com/eggplants/71c0459f38028938a15d35b19bab47b5">
               eggplants/ans.csv
             </a>
           </li>
           <li>
-            - <a href="https://shellgei.wiki/?cat=5">シェル芸非公式WIKI</a>
+            <a href="https://shellgei.wiki/?cat=5">シェル芸非公式WIKI</a>
           </li>
         </ul>
         <h4>おすすめ / RECOMMENDS</h4>

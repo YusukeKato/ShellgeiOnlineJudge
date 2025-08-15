@@ -1,2 +1,0 @@
-Exercise: sed
-Replace "XXX" with "SHELLGEI" in the input file "input.txt".

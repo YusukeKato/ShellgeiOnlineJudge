@@ -1,9 +1,0 @@
-Grouping each member by team.
-
-Input:
-- first row: the member's name
-- second row: the team number
-
-Output:
-- first row: the team number
-- second row: the member's name

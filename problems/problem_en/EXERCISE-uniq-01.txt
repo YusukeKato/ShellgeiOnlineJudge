@@ -1,2 +1,0 @@
-Exercise: uniq, sort
-Output the input file "input.txt" without duplicate lines.

@@ -32,7 +32,7 @@ const App: React.FC = () => {
 
   /* SOJ param */
   const shellgei_limit: number = 1000;
-  const default_image: string = soj_url + "/problem_images/GENERAL-00000001.jpg";
+  const default_image: string = soj_url + "/image/GENERAL-00000001.jpg";
 
   /* SOJ Info */
   const update_date: string = "2025/08/14";
@@ -68,7 +68,7 @@ const App: React.FC = () => {
   /* SOJ useState: result */
   const [outputResult, setOutputResult] = useState("Run your shell-gei.");
   const [judgeResult, setJudgeResult] = useState("Run your shell-gei.");
-  const [imageResult, setImageResult] = useState(soj_url + "/problem_images/GENERAL-00000001.jpg");
+  const [imageResult, setImageResult] = useState(default_image);
   const [userShellgeiStatus, setUserShellgeiStatus] = useState("Run your shell-gei.");
 
   return (
@@ -117,7 +117,7 @@ const App: React.FC = () => {
         setProblemOutput={setProblemOutput}
         setProblemImage={setProblemImage}
       />
-      <SojSelected selectedValue={selectedProblem} />
+      <SojSelected selectedProblem={selectedProblem} />
       <SojProblem
         problemStatement={problemStatement}
         problemInput={problemInput}

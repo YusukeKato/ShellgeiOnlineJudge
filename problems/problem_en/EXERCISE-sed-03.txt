@@ -1,2 +1,0 @@
-Exercise: sed, Regular Expression
-Delete only the numbers in the input file "input.txt".

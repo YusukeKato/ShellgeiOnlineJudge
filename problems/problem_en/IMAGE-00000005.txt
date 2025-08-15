@@ -1,3 +1,0 @@
-Draw squares at 10[px] intervals on a red 200x200[px] image.
-Leave 5[px] space at the edges.
-Output image as media/output.jpg.

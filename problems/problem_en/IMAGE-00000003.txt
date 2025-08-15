@@ -1,2 +1,0 @@
-Draw a circle with a radius of 50[px] in the center of the red 200x200[px] image.
-Output image as media/output.jpg.

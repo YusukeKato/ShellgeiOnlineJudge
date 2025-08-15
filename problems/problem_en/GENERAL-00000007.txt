@@ -1,2 +1,0 @@
-Find pi to 100 decimal places.
-Round down after the 101th digit.

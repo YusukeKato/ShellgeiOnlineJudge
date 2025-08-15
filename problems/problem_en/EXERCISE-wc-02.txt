@@ -1,2 +1,0 @@
-Exercise: wc
-Output the number of words in the input file "input.txt".

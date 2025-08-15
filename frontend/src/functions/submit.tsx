@@ -20,7 +20,7 @@ export const submit = async (
   } else if (shellgei.length <= shellgei_limit) {
     setOutputResult("Running...");
     setJudgeResult("Running...");
-    setImageResult(soj_url + "/problem_images/GENERAL-00000001.jpg");
+    setImageResult(default_image);
     shellgei = escapeShellgei(shellgei);
     let [result, id, date, judge, image] = await postShellgei(soj_url, shellgei, selectedProblem);
     if (!result || result.length === 0) {

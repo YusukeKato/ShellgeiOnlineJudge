@@ -1,2 +1,0 @@
-Exercise: awk
-Output 1 through 10 separated by newlines.

@@ -1,2 +1,0 @@
-Exercise: sed
-Replace "XXX" with "SHELLGEI", and replace "YYY" with "ONLINE" in the input file "input.txt".

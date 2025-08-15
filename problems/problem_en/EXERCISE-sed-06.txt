@@ -1,2 +1,0 @@
-Exercise: sed, Regular Expression
-Append ".jpg" to the end of each line of the input file "input.txt".
