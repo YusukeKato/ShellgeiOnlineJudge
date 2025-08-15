@@ -1,0 +1,2 @@
+1列目の値が2列目の値で割り切れるかどうか判定してください。
+Judge if the value in the first column is divisible by the value in the second column.

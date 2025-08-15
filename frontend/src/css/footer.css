@@ -1,0 +1,35 @@
+.soj-footer {
+  font-weight: normal;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: #fff;
+  background: #333;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  margin: 0;
+}
+
+.soj-footer::before {
+  display: block;
+  font-weight: bold;
+  font-size: 2rem;
+  line-height: 1.5;
+  letter-spacing: 0.02rem;
+  text-align: center;
+  content: attr(data-label);
+  background: #333;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  margin: 0;
+}
+
+@media screen and (max-width: 999px) {
+  .soj-footer {
+    font-size: 0.9rem;
+  }
+
+  .soj-footer::before {
+    font-size: 1.5rem;
+  }
+}

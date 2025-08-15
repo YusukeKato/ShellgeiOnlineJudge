@@ -1,3 +1,0 @@
-練習：cat
-catコマンドで入力ファイル"input.txt"と"/ShellGeiData/vol.65/input"を連結して出力してください。
-使用データ : https://github.com/ryuichiueda/ShellGeiData/blob/master/vol.65/input

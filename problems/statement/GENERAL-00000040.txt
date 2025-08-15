@@ -1,0 +1,2 @@
+入力の文字列において、aとbとcがそれぞれ何文字あるか数えてください。
+Output the number of characters for a, b, and c.

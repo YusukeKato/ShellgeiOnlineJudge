@@ -1,2 +1,0 @@
-Exercise: awk
-Output the string "SHELLGEI ONLINE JUDGE".

@@ -1,6 +1,0 @@
-Find the distance of the shortest path from the S(Start) to the G(Goal).
-
-Rule:
-- Move up, down, left and right one square at a time to reach S to G
-- '.' is a passable square and '#' is a non-passable square
-- It cannot be moved diagonally 

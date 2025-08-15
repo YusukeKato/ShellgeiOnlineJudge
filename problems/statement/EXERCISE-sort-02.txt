@@ -1,0 +1,4 @@
+練習：sort
+sortコマンドで入力ファイル"input.txt"の数値を降順に並び替えてください。
+Exercise: sort 
+Sort the values in the input file "input.txt" in descending order.

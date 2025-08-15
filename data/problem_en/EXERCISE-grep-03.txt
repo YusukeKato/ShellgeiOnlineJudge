@@ -1,2 +1,0 @@
-Exercise: grep
-Output only lines from the input file "input.txt" that do not have a ".txt" extension.

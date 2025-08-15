@@ -1,1 +1,0 @@
-Output all combined strings using one each of 'A', 'B', and 'C'.

@@ -1,0 +1,2 @@
+入力の中のIPアドレスを改行区切りで出力してください。
+Output the IP addresses in the input, separated by new lines.

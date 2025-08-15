@@ -1,0 +1,36 @@
+.soj-centering {
+  width: 100%;
+  text-align: center;
+}
+
+.soj-main {
+  width: 60%;
+  margin: 0 auto;
+}
+
+li {
+  color: #666;
+}
+
+p {
+  font-size: 1rem;
+  color: #666;
+}
+
+.black-line {
+  border-top: 0.5rem double #000000;
+}
+
+@media screen and (max-width: 999px) {
+  .soj-main {
+    width: 96%;
+  }
+
+  li {
+    font-size: 0.9rem;
+  }
+
+  p {
+    font-size: 0.9rem;
+  }
+}

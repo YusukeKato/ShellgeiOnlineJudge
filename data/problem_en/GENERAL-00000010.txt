@@ -1,2 +1,0 @@
-Correct the diary.
-The blanks will contain, in order, "川", "魚", "新幹線" and "富士山".

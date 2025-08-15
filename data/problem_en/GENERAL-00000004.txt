@@ -1,1 +1,0 @@
-Output the sum of the numbers in the line.

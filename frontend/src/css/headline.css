@@ -1,0 +1,32 @@
+h2 {
+  background: #333;
+  color: #fff;
+  padding: 0.5rem;
+}
+
+h3 {
+  padding: 0.25rem 0.5rem;
+  color: #494949;
+  background: transparent;
+  border-left: solid 0.4rem #666;
+}
+
+h4 {
+  color: #333;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+@media screen and (max-width: 999px) {
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+  }
+
+  h4 {
+    font-size: 1rem;
+  }
+}

@@ -1,0 +1,43 @@
+name: React CI
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "45 10 * * 2" # At 10:45 AM (UTC) every Tuesday.
+
+jobs:
+  build_and_test:
+    name: React Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: React Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+          cache-dependency-path: ./frontend/yarn.lock
+
+      - name: React install dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: ./frontend
+
+      - name: React lint
+        run: yarn lint
+        working-directory: ./frontend
+
+      - name: React format
+        run: yarn format:check
+        working-directory: ./frontend
+
+      - name: React Build
+        run: yarn build
+        working-directory: ./frontend
+
+      - name: React Run tests
+        run: yarn test
+        working-directory: ./frontend

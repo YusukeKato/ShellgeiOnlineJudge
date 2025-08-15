@@ -1,0 +1,4 @@
+Fibonacci: F(0) = 0, F(1) = 1, F(n+2) = F(n) + F(n+1)
+F(0)からF(10)まで出力してください。
+Fibonacci: F(0) = 0, F(1) = 1, F(n+2) = F(n) + F(n+1)
+Output from F(0) to F(10).

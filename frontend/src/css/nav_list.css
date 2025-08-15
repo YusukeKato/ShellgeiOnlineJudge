@@ -1,0 +1,33 @@
+.nav-list {
+  width: 100%;
+  text-align: center;
+  padding: 1rem 0;
+  margin: 0 auto;
+}
+
+.nav-list-item {
+  list-style: none;
+  display: inline-block;
+  margin: 0 1.5rem;
+}
+
+.nav-list-button {
+  display: block;
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 0.5rem;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0.3rem;
+  margin-bottom: 0.3rem;
+  color: #333;
+  background: #ffffff;
+  text-decoration: none;
+  border-radius: 0px;
+}
+
+.nav-list-button:hover {
+  font-weight: bold;
+  color: #6495ed;
+}

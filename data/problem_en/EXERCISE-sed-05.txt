@@ -1,2 +1,0 @@
-Exercise: sed, Regular Expression
-Output only the lines that contain numbers in the input file "input.txt".

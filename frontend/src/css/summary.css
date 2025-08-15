@@ -1,0 +1,45 @@
+/*
+ * reference:
+ * https://www.digitalboo.net/post/2199/details_summary
+ */
+
+details {
+  font-size: 1rem;
+  border: 1px solid #666;
+  border-radius: 0px;
+  padding: 0.5rem 0.5rem 0;
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+  margin-right: auto;
+  margin-left: auto;
+  background-color: #fff;
+  color: #666;
+}
+
+summary {
+  font-weight: normal;
+  font-size: 1rem;
+  margin: -0.5rem -0.5rem 0;
+  padding: 0.5rem;
+  background-color: #fff;
+  color: #666;
+}
+
+details[open] {
+  padding: 0.5rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+  margin-right: auto;
+  margin-left: auto;
+  background-color: #fff;
+  color: #666;
+}
+
+details[open] summary {
+  border-bottom: 1px solid #666;
+  margin-bottom: 0.5em;
+  margin-right: auto;
+  margin-left: auto;
+  background-color: #fff;
+  color: #666;
+}

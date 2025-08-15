@@ -1,0 +1,2 @@
+2の1024乗の桁数を求めてください。
+Find the number of digits to the 1024th power of 2.

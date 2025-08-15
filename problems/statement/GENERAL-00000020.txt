@@ -1,0 +1,4 @@
+各行の数字をfactorコマンドを使用せずに素因数分解してください。
+また、数字が素数の場合は「素数」を出力してください。
+Factorize the numbers in each line without using the factor command.
+Also, if the number is a prime number, output "素数".

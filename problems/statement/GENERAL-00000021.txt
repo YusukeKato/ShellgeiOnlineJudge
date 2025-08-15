@@ -1,0 +1,2 @@
+各行の文字列が回文なら"YES"を、回文ではないなら"NO"を出力してください。
+Output "YES" if the string in each line is a palindrome, or "NO" if it is not a palindrome.

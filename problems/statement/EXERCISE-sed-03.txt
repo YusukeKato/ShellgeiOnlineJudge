@@ -1,0 +1,4 @@
+練習：sed、正規表現
+sedコマンドで入力ファイル"input.txt"の数字だけを削除してください。
+Exercise: sed, Regular Expression
+Delete only the numbers in the input file "input.txt".

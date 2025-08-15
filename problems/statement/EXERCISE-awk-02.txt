@@ -1,0 +1,4 @@
+練習：awk
+awkコマンドで入力ファイル"input.txt"の2列目だけを出力してください。
+Exercise: awk
+Output only the second column of the input file "input.txt".

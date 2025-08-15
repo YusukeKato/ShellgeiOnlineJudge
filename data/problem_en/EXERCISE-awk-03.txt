@@ -1,2 +1,0 @@
-Exercise: awk
-Please replace the second and third columns of the input file "input.txt" in the output.

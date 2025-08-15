@@ -1,0 +1,2 @@
+sortコマンドを使用せずに昇順にソートしてください。
+Sort in ascending order without using the sort command.

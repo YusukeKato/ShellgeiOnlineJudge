@@ -1,2 +1,0 @@
-ShellGeiData/vol.68ディレクトリの中にあるファイルにおいて、"entrepreneurial"という文字列が書かれているファイルの名前を出力してください。
-使用データ：https://github.com/ryuichiueda/ShellGeiData/tree/master/vol.68

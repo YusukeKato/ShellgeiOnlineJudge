@@ -1,0 +1,2 @@
+入力の中から数字だけを抽出してください。
+Extract only the numbers from the input.

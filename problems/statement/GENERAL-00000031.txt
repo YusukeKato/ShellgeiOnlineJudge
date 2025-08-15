@@ -1,0 +1,2 @@
+最大公約数を求めてください。
+Find the greatest common divisor.

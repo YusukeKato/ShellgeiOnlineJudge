@@ -1,0 +1,4 @@
+練習：uniq, sort
+uniqコマンドで入力ファイル"input.txt"の重複行を除いて出力してください。
+Exercise: uniq, sort
+Output the input file "input.txt" without duplicate lines.

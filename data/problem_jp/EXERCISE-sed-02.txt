@@ -1,2 +1,0 @@
-練習：sed
-sedコマンドで入力ファイル"input.txt"の"XXX"を"SHELLGEI"に、"YYY"を"ONLINE"に置換してください。

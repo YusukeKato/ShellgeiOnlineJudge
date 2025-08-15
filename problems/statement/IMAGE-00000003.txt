@@ -1,0 +1,4 @@
+大きさ200x200[px]の赤色の画像の中央に半径50[px]の円を描いてください。
+画像はmedia/output.jpgとして作成してください。
+Draw a circle with a radius of 50[px] in the center of the red 200x200[px] image.
+Output image as media/output.jpg.

@@ -1,0 +1,2 @@
+文字列の中から最大文字数の回文を探して出力してください。
+Find and output the longest palindrome from the string.

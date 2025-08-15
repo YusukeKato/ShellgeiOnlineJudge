@@ -1,0 +1,4 @@
+練習：sed
+sedコマンドで入力ファイル"input.txt"の"XXX"を"SHELLGEI"に、"YYY"を"ONLINE"に置換してください。
+Exercise: sed
+Replace "XXX" with "SHELLGEI", and replace "YYY" with "ONLINE" in the input file "input.txt".

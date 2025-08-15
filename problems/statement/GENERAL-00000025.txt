@@ -1,0 +1,2 @@
+AとBとCをそれぞれひとつずつ使用して組み合わせた文字列を全て出力してください。
+Output all combined strings using one each of 'A', 'B', and 'C'.

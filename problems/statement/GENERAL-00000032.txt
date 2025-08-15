@@ -1,0 +1,2 @@
+最小公倍数を求めてください。
+Find the least common multiple.

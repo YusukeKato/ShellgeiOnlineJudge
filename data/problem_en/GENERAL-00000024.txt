@@ -1,8 +1,0 @@
-Find the total maximum value.
-Knapsack capacity size is 185.
-Each luggage can be packed more than 0 pieces.
-
-Input (luggage):
-- first row: name
-- second row: value
-- third row: size

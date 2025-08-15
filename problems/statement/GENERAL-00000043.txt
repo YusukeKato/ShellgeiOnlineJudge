@@ -1,0 +1,2 @@
+入力の各行の文字列の末尾にそれぞれ".png"と".jpg"を加えてスペース区切りで出力してください。
+Add '.png' and '.jpg' to the end of each line of the input string, and output them separated by a space.
