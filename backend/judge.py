@@ -33,7 +33,7 @@ else:
 print(judge)
 
 # debug
-f = open('../debug.txt', 'w', encoding='UTF-8')
+f = open('../../debug.txt', 'w', encoding='UTF-8')
 f.write('output: '+output+'\n')
 f.write('answer: '+answer+'\n')
 f.write('output_len: '+str(len(output))+'\n')

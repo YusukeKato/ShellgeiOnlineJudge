@@ -7,7 +7,7 @@ $problem = $_POST['problem'];
 // file_put_contents("../debug.txt", $username, FILE_APPEND);
 
 // 時間管理
-$filename_time_ms = '../shellgei_time_ms.txt';
+$filename_time_ms = '../../shellgei_time_ms.txt';
 $shellgei_oldtime_ms = file_get_contents($filename_time_ms);
 $shellgei_newtime_ms = microtime(true);
 $time_ms_diff = (float)((float)$shellgei_newtime_ms - (float)$shellgei_oldtime_ms);
@@ -27,7 +27,7 @@ $shellgei = str_replace('\r', '', $shellgei);
 $problem = str_replace('\r', '', $problem);
 
 // 実行したシェル芸のIDを取得
-$filename_id = '../shellgei_id.txt';
+$filename_id = '../../shellgei_id.txt';
 $shellgei_id_str = file_get_contents($filename_id);
 $shellgei_id = (int) $shellgei_id_str;
 $shellgei_id = $shellgei_id + 1;
@@ -37,7 +37,7 @@ file_put_contents($filename_id, $shellgei_id_str, LOCK_EX);
 // ログをファイルに書き込み
 date_default_timezone_set('Asia/Tokyo');
 $datetime = date('Y-m-d H:i:s');
-$filename_log = '../shellgei_log.txt';
+$filename_log = '../../shellgei_log.txt';
 file_put_contents($filename_log, "\n", FILE_APPEND);
 file_put_contents($filename_log, "SHELLGEI ID : ".$shellgei_id_str."\n", FILE_APPEND);
 file_put_contents($filename_log, "date : ".$datetime."\n", FILE_APPEND);

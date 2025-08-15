@@ -21,6 +21,8 @@ sudo apt -y install php-fpm
 execute the following command:
 
 ```sh
+sudo vim /etc/nginx/nginx.conf
+# or
 sudo vim /etc/nginx/conf.d/default.conf
 # or
 sudo vim /etc/nginx/sites-available/default
@@ -29,10 +31,15 @@ sudo vim /etc/nginx/sites-available/default
 Update as follows:
 
 ```sh
+# ex:
+root /usr/share/nginx/html/soj/main/;
+root /var/www/html/soj/main/;
+
 # example: php8.1-fpm
 location ~ \.php$ {
   fastcgi_pass unix:/run/php/php8.1-fpm.sock;
   fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+  # or: fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
   # WSL2(Ubuntu 24.04 LTS): fastcgi_param SCRIPT_FILENAME <root_path>$fastcgi_script_name;
   # ex: fastcgi_param SCRIPT_FILENAME /var/www/html/$fastcgi_script_name;
   include fastcgi_params;
