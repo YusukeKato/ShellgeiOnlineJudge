@@ -51,3 +51,15 @@
     left: -100%;
   }
 }
+
+@media screen and (max-width: 999px) {
+  .slide {
+    width: 320px;
+    height: 180px;
+  }
+
+  .slide img {
+    width: 320px;
+    height: 180px;
+  }
+}

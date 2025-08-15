@@ -43,3 +43,13 @@ details[open] summary {
   background-color: #fff;
   color: #666;
 }
+
+@media screen and (max-width: 999px) {
+  details {
+    font-size: 0.9rem;
+  }
+
+  summary {
+    font-size: 0.9rem;
+  }
+}

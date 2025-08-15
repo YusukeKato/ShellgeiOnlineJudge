@@ -31,3 +31,9 @@
   font-weight: bold;
   color: #6495ed;
 }
+
+@media screen and (max-width: 999px) {
+  .nav-list-item {
+    margin: 0 0.5rem;
+  }
+}

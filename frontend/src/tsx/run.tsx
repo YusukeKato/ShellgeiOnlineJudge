@@ -3,6 +3,8 @@ import { submit } from "../functions/submit";
 import "../css/code.css";
 import "../css/button.css";
 import "../css/common.css";
+import blue_image from "../images/Blue.jpg";
+import sample_gif from "../images/sample.gif";
 
 interface SojValuesInterface {
   shellgei_limit: number;
@@ -51,11 +53,12 @@ const SojRun: React.FC<SojValuesInterface> = ({
         <ul>
           <li>入力の取得 / Get Input : "cat input.txt"</li>
           <li>画像の出力先 / Output Image file : "media/output.jpg"</li>
+          <li>GIF画像の出力先 / Output GIF Image file : "media/output.gif"</li>
           <li>
             出力は想定出力&想定画像と一致すること / The output must match the expected output and
             expected image.
           </li>
-          <li>危険なシェル芸（危険シェル芸）は禁止 / Dangerous shell tricks are prohibited.</li>
+          <li>危険なシェル芸（危険シェル芸）は禁止 / Dangerous shell-gei are prohibited.</li>
           <li>
             余計な空白や改行は正誤判定に影響する可能性あり / Extra spaces and line breaks may affect
             the correctness judgment.
@@ -73,6 +76,35 @@ const SojRun: React.FC<SojValuesInterface> = ({
           <li>bash --version</li>
           <li>python3 -V</li>
         </ul>
+      </details>
+      <details>
+        <summary>シェル芸例 / EXAMPLES SHELLGEI</summary>
+        <p>Example 1: Simple arithmetic</p>
+        <div className="code-block">
+          <pre>
+            <code className="code-font">seq 10 | paste -s -d+ | bc # Output: 55</code>
+          </pre>
+        </div>
+        <p>Example 2: Output Image</p>
+        <div className="code-block">
+          <pre>
+            <code className="code-font">convert -size 200x200 xc:#0000AA media/output.jpg</code>
+          </pre>
+        </div>
+        <div className="soj-centering">
+          <img className="soj-image" src={blue_image} id="blue-image" alt="blue-image" />
+        </div>
+        <p>Example 3: Output GIF Image</p>
+        <div className="code-block">
+          <pre>
+            <code className="code-font">
+              seq 0 9 | xargs -I@ textimg @ -F100 -o @.jpg; convert -delay 10 *.jpg media/output.gif
+            </code>
+          </pre>
+        </div>
+        <div className="soj-centering">
+          <img className="soj-image" src={sample_gif} id="sample-gif" alt="sample-gif" />
+        </div>
       </details>
       <div className="soj-centering">
         <textarea
