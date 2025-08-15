@@ -2,3 +2,7 @@
 findコマンドで"/ShellGeiData/sd201701" の中にある"dangerous"と名前が付いたファイルの一覧を出力してください。
 出力はsortしてください。
 使用データ : https://github.com/ryuichiueda/ShellGeiData/tree/master/sd201701
+Exercise: find
+Output a list of files named “dangerous” in "/ShellGeiData/sd201701".
+sort the output.
+data: https://github.com/ryuichiueda/ShellGeiData/tree/master/sd201701

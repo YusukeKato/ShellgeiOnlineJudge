@@ -1,1 +1,2 @@
 日記を時系列順に並び替えてください。
+Sort the diary in chronological order.

@@ -1,1 +1,2 @@
 各行を二行に複製して出力してください。
+Duplicate each line into two lines of output.

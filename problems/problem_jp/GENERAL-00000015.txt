@@ -1,1 +1,2 @@
 素数の場合は"YES"、素数ではない場合は"NO"を出力してください。
+Output "YES" if the number is prime, "NO" if the number is not prime.

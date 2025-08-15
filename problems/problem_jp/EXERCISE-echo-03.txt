@@ -1,2 +1,4 @@
 練習：echo
 echoコマンドで設定されているシェルを確認してください。
+Exercise: echo
+Check the shell.

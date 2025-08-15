@@ -1,2 +1,4 @@
 練習：sed、正規表現
 sedコマンドで入力ファイル"input.txt"の数字の行だけを出力してください。
+Exercise: sed, Regular Expression
+Output only the lines that contain numbers in the input file "input.txt".

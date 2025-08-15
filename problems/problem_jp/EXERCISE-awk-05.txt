@@ -1,2 +1,4 @@
 練習：awk
 awkコマンドで1から10を改行区切りで出力してください。
+Exercise: awk
+Output 1 through 10 separated by newlines.

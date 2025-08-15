@@ -1,2 +1,4 @@
 練習：sort
 sortコマンドで入力ファイル"input.txt"の数値を重複無しで昇順に並び替えてください。
+Exercise: sort 
+Sort the numbers in the input file "input.txt" in ascending order with no duplicates.

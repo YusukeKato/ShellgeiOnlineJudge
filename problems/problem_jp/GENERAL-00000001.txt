@@ -1,2 +1,4 @@
 文字列"test"を出力してください。
 ex: echo "test"
+Output the string "test".
+ex: echo "test"

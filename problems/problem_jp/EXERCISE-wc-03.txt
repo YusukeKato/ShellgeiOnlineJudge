@@ -1,2 +1,4 @@
 練習：wc
 wcコマンドで入力ファイル"input.txt"の文字数を出力してください（改行を含む）。
+Exercise: wc
+Output the number of characters in the input file "input.txt"(Including line breaks).

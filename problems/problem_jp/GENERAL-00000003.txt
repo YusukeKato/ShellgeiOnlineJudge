@@ -1,2 +1,4 @@
 1から10までの数字を改行区切りで出力してください。
 ex: seq 10
+Output numbers from 1 to 10, separated by newlines.
+ex: seq 10

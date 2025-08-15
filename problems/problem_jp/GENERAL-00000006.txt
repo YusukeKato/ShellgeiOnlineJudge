@@ -1,2 +1,4 @@
 円周率を小数点以下10桁まで求めてください。
 11桁目以降は切り捨ててください。
+Find pi to 10 decimal places.
+Round down after the 11th digit.

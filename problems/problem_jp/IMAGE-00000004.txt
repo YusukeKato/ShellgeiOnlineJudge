@@ -1,2 +1,4 @@
 200x200[px]の画像に赤色と黒色で市松模様を描いてください。
 画像はmedia/output.jpgとして作成してください。
+Draw a checkered pattern in black on a red 200x200[px] image.
+Output image as media/output.jpg.

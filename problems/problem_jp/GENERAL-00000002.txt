@@ -1,2 +1,4 @@
 入力の文字列をそのまま出力してください。
 ex: cat input.txt
+Output the input string as is.
+ex: cat input.txt

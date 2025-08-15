@@ -1,1 +1,2 @@
 文字列の中で連続している文字を個数に置き換えてください。
+Replace consecutive identical characters in the string with their counts.

@@ -1,2 +1,4 @@
 練習：sed
 sedコマンドで入力ファイル"input.txt"の"XXX"を"SHELLGEI"に置換してください。
+Exercise: sed
+Replace "XXX" with "SHELLGEI" in the input file "input.txt".

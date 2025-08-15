@@ -1,2 +1,4 @@
 練習：uniq, sort
 uniqコマンドで入力ファイル"input.txt"の各行の個数を出力してください。
+Exercise: uniq, sort
+Output the number of pieces in each line of the input file "input.txt".

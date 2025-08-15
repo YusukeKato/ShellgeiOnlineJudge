@@ -1,2 +1,4 @@
 練習：wc
 wcコマンドで入力ファイル"input.txt"の行数を出力してください。
+Exercise: wc
+Output the number of lines in the input file "input.txt".
