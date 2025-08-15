@@ -31,5 +31,5 @@ export const updateProblem = async (
     console.error("Failed to get problem:", error);
     setProblemOutput("Error: Failed to get problem");
   }
-  setProblemImage(soj_url + "/problem_images/" + selectedValue + ".jpg");
+  setProblemImage(soj_url + "/image/" + selectedValue + ".jpg");
 };
