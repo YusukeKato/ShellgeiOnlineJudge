@@ -22,3 +22,13 @@
   padding-bottom: 3rem;
   margin: 0;
 }
+
+@media screen and (max-width: 999px) {
+  .soj-header {
+    font-size: 1.0rem;
+  }
+
+  .soj-header::before {
+    font-size: 2.0rem;
+  }
+}

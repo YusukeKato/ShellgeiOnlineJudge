@@ -46,9 +46,9 @@
 
 @media screen and (max-width: 999px) {
   .select-button {
-    width: 60%;
+    width: 50%;
   }
   .run-button {
-    width: 60%;
+    width: 50%;
   }
 }

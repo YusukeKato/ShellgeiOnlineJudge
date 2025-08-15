@@ -55,6 +55,7 @@ textarea {
   font-optical-sizing: auto;
   font-weight: 500;
   font-size: 1rem;
+  max-width: 90%;
   width: 90%;
   color: #666;
   margin-top: 1rem;
@@ -63,4 +64,10 @@ textarea {
   overflow-wrap: break-word;
   word-wrap: break-word;
   word-break: break-all;
+}
+
+@media screen and (max-width: 999px) {
+  .code-font {
+    font-size: 0.9rem;
+  }
 }

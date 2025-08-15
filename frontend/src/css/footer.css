@@ -5,8 +5,8 @@
   text-align: center;
   color: #fff;
   background: #333;
-  padding-top: 3rem;
-  padding-bottom: 3rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
   margin: 0;
 }
 
@@ -19,7 +19,17 @@
   text-align: center;
   content: attr(data-label);
   background: #333;
-  padding-top: 3rem;
-  padding-bottom: 3rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
   margin: 0;
+}
+
+@media screen and (max-width: 999px) {
+  .soj-footer {
+    font-size: 0.9rem;
+  }
+
+  .soj-footer::before {
+    font-size: 1.5rem;
+  }
 }

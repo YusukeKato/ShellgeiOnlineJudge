@@ -1,6 +1,7 @@
 .slide {
   position: relative;
   overflow: hidden;
+  max-width: 90%;
   width: 480px;
   height: 270px;
   padding: 0.5rem 1rem;
@@ -16,6 +17,7 @@
 .slide img {
   display: block;
   position: absolute;
+  max-width: 90%;
   width: 480px;
   height: 270px;
   margin-left: auto;
