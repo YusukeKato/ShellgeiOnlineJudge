@@ -22,8 +22,8 @@ import "../css/common.css";
 const App: React.FC = () => {
   /* SOJ URLs */
   const x_url: string = "https://x.com/yusukekato_main";
-  // const soj_url: string = "https://shellgei-online-judge.com";
-  const soj_url: string = "http://localhost";
+  const soj_url: string = "https://shellgei-online-judge.com";
+  // const soj_url: string = "http://localhost";
   const github_repository_url: string = "https://github.com/YusukeKato/ShellgeiOnlineJudge";
   const github_author_url: string = "https://github.com/YusukeKato";
   const blog_url: string = "https://yusukekato.jp";
@@ -35,7 +35,7 @@ const App: React.FC = () => {
   const default_image: string = soj_url + "/image/GENERAL-00000001.jpg";
 
   /* SOJ Info */
-  const update_date: string = "2025/08/14";
+  const update_date: string = "2025/08/15";
   const current_version: string = "2.0.0";
 
   /* SOJ useState: select problem */

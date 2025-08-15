@@ -8,17 +8,24 @@ This repository is the webapp frontend for SHELLGEI ONLINE JUDGE.
   - yarn and react: https://qiita.com/NaoyaOgura/items/cb94fefb6a63b7965f15
   - nginx + react: https://www.yoheim.net/blog.php?q=20180407
 
-### Install nodejs and npm
+### Install
 
 ```sh
+# Amazon Linux: apt -> dnf
 sudo apt update && sudo upgrade -y
 sudo apt install -y nodejs npm
 sudo npm install n -g
 sudo n stable
 sudo apt purge -y nodejs npm
+# sudo dnf remove -y nodejs npm
 sudo apt autoremove -y
 sudo npm install --global yarn
 yarn global add create-react-app
+```
+
+```sh
+cd /path/to/frontend/
+yarn install
 ```
 
 ## dev commands

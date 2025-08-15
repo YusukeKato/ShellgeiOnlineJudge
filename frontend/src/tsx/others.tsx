@@ -31,6 +31,10 @@ const SojOthers: React.FC = () => {
             <a href="https://shellgei.wiki/?cat=5">シェル芸非公式WIKI</a>
           </li>
         </ul>
+        <h4>回答例 / EXAMPLE ANSWERS</h4>
+        <a href="https://github.com/YusukeKato/ShellgeiOnlineJudge/tree/main/problems/answer">
+          GitHub - problems/answer/
+        </a>
         <h4>おすすめ / RECOMMENDS</h4>
         <p>さらに難しい問題や面白い問題が解きたい方には以下がおすすめです。</p>
         <p>
