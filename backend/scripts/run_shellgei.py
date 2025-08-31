@@ -15,7 +15,7 @@ class ShellgeiDockerClient:
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.base_dir = Path(__file__).resolve().parent.parent
 
-    def exec_shellgei(self, shellgei: str, problem_id: str, timeout: int) -> list[str, str]:
+    def exec_shellgei(self, shellgei: str, problem_id: str, timeout: int, limit_str: int) -> list[str, str]:
         container = None
         # コンテナ作成
         try:
@@ -89,9 +89,22 @@ class ShellgeiDockerClient:
                 image_str = container.exec_run("base64 -w 0 media/output.gif")
             else:
                 image_str = container.exec_run("base64 -w 0 media/output.jpg")
-            return [output.decode('utf-8'), image_str.output.decode('utf-8')]
         except Exception as e:
             return [f"Error: get image: {e}", ""]
+
+        # 返す
+        try:
+            output_utf8 = output.decode('utf-8')
+            if len(output_utf8) == 0:
+                output_utf8 = "NULL"
+            elif len(output_utf8) > limit_str:
+                output_utf8 = output_utf8[:limit_str] + "..."
+            image_str_utf8 = image_str.output.decode('utf-8')
+            if len(image_str_utf8) > 1000_000:
+                image_str_utf8 = image_str_utf8[:1000_000]
+            return [output_utf8, image_str_utf8]
+        except Exception as e:
+            return [f"Error: return: {e}", ""]
 
         # 最後にコンテナを削除
         finally:
@@ -102,11 +115,11 @@ class ShellgeiDockerClient:
                 except Exception as e:
                     return [f"Error: stop/remove container: {e}", ""]
 
-    async def run_with_timeout(self, shellgei: str, problem_id: str, timeout: int = 30) -> list[str, str]:
+    async def run_with_timeout(self, shellgei: str, problem_id: str, timeout: int = 30, limit_str: int = 1000) -> list[str, str]:
         loop = asyncio.get_running_loop()
         try:
             result: list[str, str] = await asyncio.wait_for(
-                loop.run_in_executor(self.executor, self.exec_shellgei, shellgei, problem_id, timeout),
+                loop.run_in_executor(self.executor, self.exec_shellgei, shellgei, problem_id, timeout, limit_str),
                 timeout=timeout
             )
             return result

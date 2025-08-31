@@ -6,11 +6,12 @@ services:
     container_name: nginx
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - ${SOJ_PATH}backend/nginx/conf.d/fastapi.conf:/etc/nginx/conf.d/fastapi.conf
+      # - ${SOJ_PATH}backend/nginx/conf.d/fastapi.conf:/etc/nginx/conf.d/fastapi.conf
+      - ${SOJ_PATH}deploy/public:/var/www/html/
+      - ${SOJ_PATH}backend/nginx/conf.d/:/etc/nginx/conf.d/
       - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - fastapi
     restart: always
 
   fastapi:  # http://localhost:8000/docs
@@ -21,4 +22,4 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: always
-    network_mode: "host"
+    # network_mode: "host"

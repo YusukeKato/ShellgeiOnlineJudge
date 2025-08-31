@@ -3,21 +3,25 @@ export const postShellgei = async (
   shellgei: string,
   selectedProblem: string,
 ): Promise<[string, string, string, string, string]> => {
-  const timeoutMessage = "Timeout: 10.0s";
+  const timeoutMessage = "Timeout: 20.0s";
   const timeoutPromise = new Promise<Response>((_, reject) => {
     setTimeout(() => {
       reject(new Error(timeoutMessage));
-    }, 10000);
+    }, 20000);
   });
 
   try {
-    const formData = new FormData();
-    formData.append("shellgei", shellgei);
-    formData.append("problem", selectedProblem);
+    const requestBody = {
+      shellgei: shellgei,
+      problem_id: selectedProblem,
+    };
 
-    const fetchPromise = fetch(soj_url + "/connection.php", {
+    const fetchPromise = fetch(soj_url + ":8000/api/shellgei", {
       method: "POST",
-      body: formData,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
     });
     const response = await Promise.race([fetchPromise, timeoutPromise]);
 
@@ -27,14 +31,14 @@ export const postShellgei = async (
 
     const res = await response.json();
 
-    if (res.shellgei_output != null) {
-      if (String(res.shellgei_output).length > 0 && String(res.shellgei_judge).length > 0) {
+    if (res.output != null) {
+      if (String(res.output).length > 0 && String(res.judge).length > 0) {
         return [
-          String(res.shellgei_output),
-          String(res.shellgei_id),
-          String(res.shellgei_date),
-          String(res.shellgei_judge),
-          String(res.shellgei_image),
+          String(res.output),
+          String(res.id),
+          String(res.date),
+          String(res.judge),
+          String(res.image),
         ];
       } else {
         return ["Error: response is empty", "", "", "", ""];
