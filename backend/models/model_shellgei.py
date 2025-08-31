@@ -6,7 +6,5 @@ class ShellgeiData(BaseModel):
 
 class ShellgeiResultResponse(BaseModel):
     output: str
-    id: str
-    date: str
     image: str
     judge: str

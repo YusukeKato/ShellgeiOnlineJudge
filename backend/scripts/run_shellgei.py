@@ -2,7 +2,10 @@
 import docker
 import asyncio
 import time
+import tarfile
+import io
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 
 class ShellgeiDockerClient:
@@ -10,9 +13,11 @@ class ShellgeiDockerClient:
         self.client = docker.from_env()
         self.image_id = "theoldmoon0602/shellgeibot"
         self.executor = ThreadPoolExecutor(max_workers=1)
+        self.base_dir = Path(__file__).resolve().parent.parent
 
-    def exec_shellgei(self, shellgei: str, timeout: int) -> str:
+    def exec_shellgei(self, shellgei: str, problem_id: str, timeout: int) -> str:
         container = None
+        # コンテナ作成
         try:
             container = self.client.containers.run(
                 self.image_id,
@@ -23,6 +28,20 @@ class ShellgeiDockerClient:
             )
         except Exception as e:
             return f"Error: create container: {e}"
+
+        # input.txtをコンテナ内へコピー
+        try:
+            tar_stream = io.BytesIO()
+            input_path = self.base_dir / "problems" / "input" / problem_id
+            input_path_str = f"{input_path}.txt"
+            with tarfile.open(fileobj=tar_stream, mode='w') as tar:
+                tar.add(input_path_str, arcname="input.txt")
+            tar_stream.seek(0)
+            container.put_archive(path="/", data=tar_stream)
+        except Exception as e:
+            return f"Error: copy input.txt: {e}"
+
+        # シェル芸を実行
         try:
             exec_stream = container.exec_run(
                 shellgei,
@@ -44,6 +63,8 @@ class ShellgeiDockerClient:
             return output.decode('utf-8')
         except Exception as e:
             return f"Error: run shellgei: {e}"
+
+        # 最後にコンテナを削除
         finally:
             if container:
                 try:
@@ -52,11 +73,11 @@ class ShellgeiDockerClient:
                 except Exception as e:
                     return f"Error: stop/remove container: {e}"
 
-    async def run_with_timeout(self, shellgei: str, timeout: int = 20) -> str:
+    async def run_with_timeout(self, shellgei: str, problem_id: str, timeout: int = 20) -> str:
         loop = asyncio.get_running_loop()
         try:
             result = await asyncio.wait_for(
-                loop.run_in_executor(self.executor, self.exec_shellgei, shellgei, timeout),
+                loop.run_in_executor(self.executor, self.exec_shellgei, shellgei, problem_id, timeout),
                 timeout=timeout
             )
             return result
@@ -64,9 +85,3 @@ class ShellgeiDockerClient:
             return "Error: asyncio: timed out."
         except Exception as e:
             return f"Error: {e}"
-
-if __name__ == "__main__":
-    docker_client = ShellgeiDockerClient()
-    print(asyncio.run(docker_client.run_with_timeout("echo hello")))
-    print(asyncio.run(docker_client.run_with_timeout("sleep 20")))
-    print("end")

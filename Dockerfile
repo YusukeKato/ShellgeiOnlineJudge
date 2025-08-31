@@ -1,10 +1,9 @@
 FROM python:3.10-slim
+
+COPY backend/ backend/
+COPY problems/ backend/problems/
 WORKDIR /backend
-
-COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
 
 RUN groupadd -r docker && usermod -aG docker www-data
 

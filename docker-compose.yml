@@ -14,7 +14,7 @@ services:
     restart: always
 
   fastapi:  # http://localhost:8000/docs
-    build: ./backend
+    build: ./
     container_name: fastapi
     ports:
       - "8000:8000"

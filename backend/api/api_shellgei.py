@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
-from api.scripts.run_shellgei import ShellgeiDockerClient
+from scripts.run_shellgei import ShellgeiDockerClient
 
 router = APIRouter()
 docker_client = ShellgeiDockerClient()
@@ -11,11 +11,9 @@ async def post_shellgei(
     ) -> ShellgeiResultResponse:
     shellgei_str = shellgei_data.shellgei.replace('\r', '')
     problem_id_str = shellgei_data.problem_id.replace('\r', '')
-    output = await docker_client.run_with_timeout(shellgei_str)
+    output = await docker_client.run_with_timeout(shellgei_str, problem_id_str)
     return ShellgeiResultResponse(
         output=output,
-        id="id",
-        date="date",
         image="image",
         judge="judge"
     )
