@@ -1,11 +1,5 @@
 # Maintenance
 
-## Output log
-
-```sh
-cat root_path/shellgei_log.txt | tail -n 20
-```
-
 ## Update docker image file
 
 ```sh

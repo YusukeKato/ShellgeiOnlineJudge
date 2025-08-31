@@ -1,28 +1,43 @@
 # Deploy
 
-## nginx root path
-- `usr`: `/usr/share/nginx/html/soj/main/`
-- `var`: `/var/www/html/soj/main/`
-
-## Edit server url
+## Edit local/server
 
 edit `frontend/src/tsx/App.tsx`
 
 ```sh
-# server
-const soj_url: string = "https://shellgei-online-judge.com";
-# local
 const soj_url: string = "http://localhost";
+# const soj_url: string = "https://shellgei-online-judge.com";
+```
+
+edit `backend/main.py`
+
+```sh
+server_url = "http://localhost"
+# server_url = "https://shellgei-online-judge.com"
+```
+
+edit `backend/conf.d/fastapi.conf`
+
+```sh
+server_name localhost;
+# server_name shellgei-online-judge.com;
+root /var/www/html/;
+# root /usr/share/nginx/html/;
+
+add_header Access-Control-Allow-Origin "http://localhost" always;
+# add_header Access-Control-Allow-Origin "https://shellgei-online-judge.com" always;
 ```
 
 ## Deploy
-execute the following command:
 
 ```sh
-# usr
-./deploy.bash usr
-# var
-./deploy.bash var
+cd /path/to/deploy/
+./deploy.bash
+```
+
+```sh
+cd /path/to/ShellgeiOnlineJudge/
+docker compose up --build
 ```
 
 ## Test

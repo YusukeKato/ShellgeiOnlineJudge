@@ -1,6 +1,10 @@
 # SHELLGEI ONLINE JUDGE
 SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-judge.com/
 
+## 感謝
+- [シェル芸botのDockerイメージ](https://github.com/theoremoon/ShellgeiBot-Image)を利用しています
+- システム構成は[jiro4989/websh](https://github.com/jiro4989/websh)を参考にしています
+
 ## Documents
 - [frontend](./frontend/README.md): React
 - [backend](./backend/README.md): PHP, Python
