@@ -61,13 +61,13 @@ class ShellgeiDockerClient:
             return [f"Error: create sample image: {e}", ""]
 
         # シェル芸を実行
+        output = b''
         try:
             exec_stream = container.exec_run(
                 "bash z.bash",
                 demux=False,
                 stream=True,
             )
-            output = b''
             start_time = time.time()
             while True:
                 if time.time() - start_time > timeout:
@@ -79,18 +79,19 @@ class ShellgeiDockerClient:
                     output += chunk
                 except StopIteration:
                     break
-            # 画像も取得して返す
-            try:
-                find_str = container.exec_run("find media -name output.gif")
-                if "output.gif" in find_str.output.decode('utf-8'):
-                    image_str = container.exec_run("base64 -w 0 media/output.gif")
-                else:
-                    image_str = container.exec_run("base64 -w 0 media/output.jpg")
-                return [output.decode('utf-8'), image_str.output.decode('utf-8')]
-            except Exception as e:
-                return [f"Error: get image: {e}", ""]
         except Exception as e:
             return [f"Error: run shellgei: {e}", ""]
+
+        # 画像も取得して返す
+        try:
+            find_str = container.exec_run("find media -name output.gif")
+            if "output.gif" in find_str.output.decode('utf-8'):
+                image_str = container.exec_run("base64 -w 0 media/output.gif")
+            else:
+                image_str = container.exec_run("base64 -w 0 media/output.jpg")
+            return [output.decode('utf-8'), image_str.output.decode('utf-8')]
+        except Exception as e:
+            return [f"Error: get image: {e}", ""]
 
         # 最後にコンテナを削除
         finally:

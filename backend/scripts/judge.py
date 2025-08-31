@@ -1,46 +1,67 @@
 #!/usr/bin/env python3
-import sys
 import re
+from pathlib import Path
+import base64
 
-args = sys.argv
-output = args[1]
-output_image = args[2]
-answer = args[3]
-answer_image = args[4]
+class ShellgeiJudge:
+    def __init__(self):
+        self.base_dir = Path(__file__).resolve().parent.parent
 
-#output = re.sub('\r', '', output)
-#answer = re.sub('\r', '', answer)
-while re.match(r'.*NEWLINE$', output) != None:
-  output = re.sub(r'NEWLINE$', '', output)
-while re.match(r'.*NEWLINE$', answer) != None:
-  answer = re.sub(r'NEWLINE$', '', answer)
-while re.match(r'.*SPACE$', output) != None:
-  output = re.sub(r'SPACE$', '', output)
-while re.match(r'.*SPACE$', answer) != None:
-  answer = re.sub(r'SPACE$', '', answer)
-output_image = output_image[28:]
-answer_image = answer_image[28:]
+    def str_replace(self, s: str) -> str:
+        s = s.replace("\r", "")
+        s = s.replace(" ", "SPACE")
+        s = s.replace("\n", "NEWLINE")
+        s = s.replace("\t", "TAB")
+        s = s.replace("<", "LT")
+        s = s.replace(">", "GT")
+        return s
 
-judge = "0"
-if (output == answer and output_image == answer_image):
-  judge = "1"
-elif (output == answer and output_image != answer_image):
-  judge = "2"
-elif (output != answer and output_image == answer_image):
-  judge = "3"
-else:
-  judge = "4"
-print(judge)
+    def judge(self, output_str: str, output_image: str, problem_id: str) -> str:
+        if len(output_str) == 0:
+            output_str = "NULL"
+        answer_str_path = self.base_dir / "problems" / "output" / problem_id
+        answer_str_path_str = f"{answer_str_path}.txt"
+        answer_image_path = self.base_dir / "problems" / "image" / problem_id
+        answer_image_path_str = f"{answer_image_path}.jpg"
+        # 答えの文字列の取得
+        try:
+            with open(answer_str_path_str, 'r', encoding='utf-8') as file:
+                answer_str = file.read()
+        except FileNotFoundError:
+            return "Error: answer str file not found."
+        except Exception as e:
+            return f"Error: get answer str file: {e}"
+        # 答えの画像の取得
+        try:
+            with open(answer_image_path_str, 'rb') as image_file:
+                image_bytes = image_file.read()
+                base64_bytes = base64.b64encode(image_bytes)
+                answer_image = base64_bytes.decode('utf-8')
+        except FileNotFoundError:
+            return "Error: answer image file not found."
+        except Exception as e:
+            return f"Error: get answer image file: {e}"
 
-# debug
-f = open('../../debug.txt', 'w', encoding='UTF-8')
-f.write('output: '+output+'\n')
-f.write('answer: '+answer+'\n')
-f.write('output_len: '+str(len(output))+'\n')
-f.write('answer_len: '+str(len(answer))+'\n')
-f.write('output_image: '+output_image+'\n')
-f.write('answer_image: '+answer_image+'\n')
-f.write('output_image_len: '+str(len(output_image))+'\n')
-f.write('answer_image_len: '+str(len(answer_image))+'\n')
-f.write('judge: '+judge+'\n')
-f.close()
+        output_str_replaced = self.str_replace(output_str)
+        answer_str_replaced = self.str_replace(answer_str)
+        while re.match(r'.*NEWLINE$', output_str_replaced) != None:
+            output_str_replaced = re.sub(r'NEWLINE$', '', output_str_replaced)
+        while re.match(r'.*NEWLINE$', answer_str_replaced) != None:
+            answer_str_replaced = re.sub(r'NEWLINE$', '', answer_str_replaced)
+        while re.match(r'.*SPACE$', output_str_replaced) != None:
+            output_str_replaced = re.sub(r'SPACE$', '', output_str_replaced)
+        while re.match(r'.*SPACE$', answer_str_replaced) != None:
+            answer_str_replaced = re.sub(r'SPACE$', '', answer_str_replaced)
+        output_image_sliced = output_image[28:]
+        answer_image_sliced = answer_image[28:]
+
+        judge = "9"
+        if (output_str_replaced == answer_str_replaced and output_image_sliced == answer_image_sliced):
+            judge = "1"
+        elif (output_str_replaced == answer_str_replaced and output_image_sliced != answer_image_sliced):
+            judge = "2"
+        elif (output_str_replaced != answer_str_replaced and output_image_sliced == answer_image_sliced):
+            judge = "3"
+        else:
+            judge = "4"
+        return judge
