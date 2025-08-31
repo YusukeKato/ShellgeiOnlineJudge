@@ -4,11 +4,13 @@ from api import api_shellgei
 
 app = FastAPI()
 
+server_url = "http://localhost"
+# server_url = "https://shellgei-online-judge.com"
 origins = [
-    "http://localhost",
-    "http://localhost:80",
-    "http://localhost:443",
-    "http://localhost:8000",
+    f"{server_url}",
+    f"{server_url}:80",
+    f"{server_url}:443",
+    f"{server_url}:8000",
 ]
 
 app.add_middleware(
