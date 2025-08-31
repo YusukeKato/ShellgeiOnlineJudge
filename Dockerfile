@@ -12,3 +12,4 @@ RUN touch unixtime.txt && chown www-data:www-data unixtime.txt && echo 0.0 > uni
 RUN touch shellgei_id.txt && chown www-data:www-data shellgei_id.txt && echo 0 > shellgei_id.txt
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--worker-class", "uvicorn.workers.UvicornWorker", "main:app"]

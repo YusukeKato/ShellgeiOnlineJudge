@@ -51,6 +51,7 @@ cd /path/to/deploy/
 
 ```sh
 cd /path/to/ShellgeiOnlineJudge/
+docker compose up -d
 docker compose up --build
 docker compose up --build -d
 ```
