@@ -4,29 +4,29 @@ import sys
 import os
 
 args = sys.argv
-main_url = 'https://shellgei-online-judge.com/connection.php';
+main_url = 'https://shellgei-online-judge.com:8000/api/shellgei';
 if len(args) > 1 and args[1] == "local":
-  main_url = 'http://localhost/connection.php';
+  main_url = 'http://localhost:8000/api/shellgei';
   print("start test: local")
 else:
   print("start test: server")
 
 def test_func(shellgei, problem, is_correct):
-    time.sleep(2.0)
+    time.sleep(1.0)
     data = {  
       "shellgei": shellgei,
-      "problem": problem
+      "problem_id": problem,
     }
     response = requests.post(
       url=main_url,
-      data=data,
+      json=data,
     )
-    print(problem+"\ninput: "+shellgei+"\noutput: "+response.json()["shellgei_output"])
+    print(problem+"\ninput: "+shellgei+"\noutput: "+response.json()["output"])
     if response.status_code == 200:
       print("Status 200: OK")
     else:
       print("Status " + str(response.status_code) + ": NG...")
-    judge = response.json()["shellgei_judge"].replace("\n","")
+    judge = response.json()["judge"].replace("\n","")
     if judge == "1":
       print("Correct!!")
     else:

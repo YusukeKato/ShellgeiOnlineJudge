@@ -52,6 +52,14 @@ cd /path/to/deploy/
 ```sh
 cd /path/to/ShellgeiOnlineJudge/
 docker compose up --build
+docker compose up --build -d
+```
+
+## Stop
+```sh
+docker compose down
+docker system prune
+docker rm $(docker ps -a -q)
 ```
 
 ## Test
