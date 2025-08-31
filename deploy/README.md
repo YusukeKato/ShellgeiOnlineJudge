@@ -28,6 +28,20 @@ add_header Access-Control-Allow-Origin "http://localhost" always;
 # add_header Access-Control-Allow-Origin "https://shellgei-online-judge.com" always;
 ```
 
+## dot_env
+
+edit `dot_env`
+
+```sh
+SOJ_PATH=/home/username/ShellgeiOnlineJudge/
+```
+
+execute the following command:
+
+```sh
+cp dot_env .env
+```
+
 ## Deploy
 
 ```sh

@@ -7,10 +7,10 @@ SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-j
 
 ## Documents
 - [frontend](./frontend/README.md): React
-- [backend](./backend/README.md): PHP, Python
+- [backend](./backend/README.md): FastAPI
 - [problems](./problems/README.md): Problem text files
 - [deploy](./deploy/README.md): Deploy and test scripts
-- [setup](./docs/setup.md): Setup nginx and docker
+- [setup](./docs/setup.md): Setup
 - [maintenance](./docs/maintenance.md): How to maintenance
 
 ## References
