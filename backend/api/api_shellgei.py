@@ -11,8 +11,7 @@ async def post_shellgei(
     ) -> ShellgeiResultResponse:
     shellgei_str = shellgei_data.shellgei.replace('\r', '')
     problem_id_str = shellgei_data.problem_id.replace('\r', '')
-    output = docker_client.exec_shellgei(shellgei_str)
-    # output = "test"
+    output = await docker_client.run_with_timeout(shellgei_str)
     return ShellgeiResultResponse(
         output=output,
         id="id",
