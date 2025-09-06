@@ -2,10 +2,8 @@
 This repository is the webapp backend for SHELLGEI ONLINE JUDGE.
 
 - FastAPI
-- nginx
 
 ## setup
-
 ```sh
 sudo apt install python3-venv
 # sudo dnf install python3

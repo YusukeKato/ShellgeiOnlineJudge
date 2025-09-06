@@ -5,16 +5,9 @@
 - Ubuntu 22.04 LTS
 - Amazon Linux 2023
 
-## Setup Docker
+## Docker
 
-### Install
-execute the following command:
-
-```sh
-sudo apt update && sudo apt -y upgrade
-# Amazon Linux 2023: sudo dnf update && sudo dnf upgrade
-sudo apt -y install nginx
-```
+### Install docker
 
 ```sh
 sudo apt update && sudo apt -y upgrade
@@ -32,29 +25,16 @@ sudo chmod +x /usr/local/bin/docker-compose
 docker-compose --version
 ```
 
-### Settings
-execute the following command:
+### Setup docker
 
 ```sh
 # sudo gpasswd -a $USER docker
 # sudo systemctl restart docker
 ```
 
-### Download image file
-execute the following command:
-
-```sh
-docker pull theoldmoon0602/shellgeibot
-```
-
-### Permissions to execute Docker
-execute the following command:
-
 ```sh
 # sudo visudo
 ```
-
-Add the following line to the end.
 
 ```sh
 # the username that executes PHP: www-data
@@ -62,7 +42,22 @@ Add the following line to the end.
 www-data ALL=(ALL) NOPASSWD: /usr/bin/docker
 ```
 
-### nginx
+### Download image file
+
+```sh
+docker pull theoldmoon0602/shellgeibot
+```
+
+## nginx
+
+### Install nginx
+```sh
+sudo apt update && sudo apt -y upgrade
+# Amazon Linux 2023: sudo dnf update && sudo dnf upgrade
+sudo apt -y install nginx
+```
+
+### Setup nginx
 
 `sudo vim /etc/nginx/nginx.conf`
 

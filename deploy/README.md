@@ -1,29 +1,29 @@
 # Deploy
 
-## Edit local/server
+## Switch local/server
 
-edit `frontend/src/tsx/App.tsx`
+Edit `frontend/src/tsx/App.tsx`
 
 ```ts
 # const soj_url: string = "http://localhost";
 const soj_url: string = "https://shellgei-online-judge.com";
 ```
 
-edit `frontend/src/functions/post_shellgei.tsx`
+Edit `frontend/src/functions/post_shellgei.tsx`
 
 ```ts
 // const api_endpoint = soj_url + ":8000/api/shellgei";
 const api_endpoint = soj_url + "/api/shellgei";
 ```
 
-edit `backend/main.py`
+Edit `backend/main.py`
 
 ```py
 # server_url = "http://localhost"
 server_url = "https://shellgei-online-judge.com"
 ```
 
-edit `deploy/deploy.bash`
+Edit `deploy/deploy.bash`
 
 ```sh
 root_path="/usr/share/nginx/html/"
@@ -32,21 +32,20 @@ root_path="/usr/share/nginx/html/"
 
 ## Deploy
 
-## frontend
+### frontend
 ```sh
 cd /path/to/frontend/
 yarn install
 yarn build
 ```
 
-## setup dir
+### setup data
 ```sh
 cd /path/to/deploy/
 ./deploy.bash
 ```
 
 ### backend
-
 ```sh
 cd /path/to/backend/
 uvicorn main:app --host 0.0.0.0 --port 8000
@@ -59,11 +58,11 @@ nohup uvicorn main:app --host 0.0.0.0 --port 8000 &
 nohup gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-class uvicorn.workers.UvicornWorker main:app &
 
 # stop
+pkill uvicorn
 pkill gunicorn
 ```
 
 ### nginx
-
 ```sh
 sudo systemctl start nginx
 sudo systemctl restart nginx
@@ -72,8 +71,6 @@ sudo systemctl stop nginx
 ```
 
 ## Test
-execute the following command:
-
 ```sh
 # server
 python3 test.py server
