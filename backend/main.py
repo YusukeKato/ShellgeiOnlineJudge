@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api import api_shellgei
+from api import api_shellgei  # type: ignore
 
 app = FastAPI()
 
@@ -19,6 +19,7 @@ app.add_middleware(
 )
 
 app.include_router(api_shellgei.router, prefix="/api")
+
 
 @app.get("/api")
 def read_root():

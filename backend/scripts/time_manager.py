@@ -2,6 +2,7 @@
 import time
 from pathlib import Path
 
+
 class TimeManager:
     def __init__(self):
         self.base_dir = Path(__file__).resolve().parent.parent
@@ -23,4 +24,3 @@ class TimeManager:
             return True
         else:
             return False
-

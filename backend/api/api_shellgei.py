@@ -1,11 +1,11 @@
 from fastapi import APIRouter
 from datetime import datetime
 import pytz
-from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
-from scripts.run_shellgei import ShellgeiDockerClient
-from scripts.judge import ShellgeiJudge
-from scripts.time_manager import TimeManager
-from scripts.log_manager import LogManager
+from models.model_shellgei import ShellgeiData, ShellgeiResultResponse  # type: ignore
+from scripts.run_shellgei import ShellgeiDockerClient  # type: ignore
+from scripts.judge import ShellgeiJudge  # type: ignore
+from scripts.time_manager import TimeManager  # type: ignore
+from scripts.log_manager import LogManager  # type: ignore
 
 router = APIRouter()
 docker_client = ShellgeiDockerClient()
@@ -13,11 +13,12 @@ shellgei_judge = ShellgeiJudge()
 time_manager = TimeManager()
 log_manager = LogManager()
 
+
 @router.post("/shellgei")
 async def post_shellgei(
     shellgei_data: ShellgeiData,
-    ) -> ShellgeiResultResponse:
-    japan_timezone = pytz.timezone('Asia/Tokyo')
+) -> ShellgeiResultResponse:
+    japan_timezone = pytz.timezone("Asia/Tokyo")
     japan_date = datetime.now(japan_timezone)
     if not time_manager.is_time_exceeded():
         return ShellgeiResultResponse(
@@ -27,8 +28,8 @@ async def post_shellgei(
             image="",
             judge="4",
         )
-    shellgei_str = shellgei_data.shellgei.replace('\r', '')
-    problem_id_str = shellgei_data.problem_id.replace('\r', '')
+    shellgei_str = shellgei_data.shellgei.replace("\r", "")
+    problem_id_str = shellgei_data.problem_id.replace("\r", "")
     output, image = await docker_client.run_with_timeout(shellgei_str, problem_id_str)
     judge: str = shellgei_judge.judge(output, image, problem_id_str)
     new_id: str = log_manager.update_shellgei_id()
