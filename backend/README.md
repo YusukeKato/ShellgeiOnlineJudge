@@ -15,7 +15,8 @@ source ~/venv/bin/activate
 ```
 
 ```sh
-pip install --no-cache-dir -r requirements.txt
+/path/to/ShellgeiOnlineJudge/
+poetry install
 ```
 
 ## check

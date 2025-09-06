@@ -1,6 +1,0 @@
-fastapi
-uvicorn
-gunicorn
-pydantic
-docker
-pytz
