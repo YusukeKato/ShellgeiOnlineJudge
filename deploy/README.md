@@ -1,75 +1,74 @@
 # Deploy
 
-## Stop nginx on the host
-
-```sh
-sudo systemctl stop nginx
-```
-
 ## Edit local/server
 
 edit `frontend/src/tsx/App.tsx`
 
-```sh
-const soj_url: string = "http://localhost";
-# const soj_url: string = "https://shellgei-online-judge.com";
+```ts
+# const soj_url: string = "http://localhost";
+const soj_url: string = "https://shellgei-online-judge.com";
+```
+
+edit `frontend/src/functions/post_shellgei.tsx`
+
+```ts
+// const api_endpoint = soj_url + ":8000/api/shellgei";
+const api_endpoint = soj_url + "/api/shellgei";
 ```
 
 edit `backend/main.py`
 
-```sh
-server_url = "http://localhost"
-# server_url = "https://shellgei-online-judge.com"
+```py
+# server_url = "http://localhost"
+server_url = "https://shellgei-online-judge.com"
 ```
 
-edit `backend/conf.d/fastapi.conf`
+edit `deploy/deploy.bash`
 
 ```sh
-server_name localhost;
-# server_name shellgei-online-judge.com;
-
-add_header Access-Control-Allow-Origin "http://localhost" always;
-# add_header Access-Control-Allow-Origin "https://shellgei-online-judge.com" always;
-```
-
-## dot_env
-
-edit `dot_env`
-
-```sh
-SOJ_PATH=/home/username/ShellgeiOnlineJudge/
-```
-
-execute the following command:
-
-```sh
-cp dot_env .env
+root_path="/usr/share/nginx/html/"
+# root_path="/var/www/html/"
 ```
 
 ## Deploy
 
+## frontend
 ```sh
 cd /path/to/frontend/
+yarn install
 yarn build
 ```
 
+## setup dir
 ```sh
 cd /path/to/deploy/
 ./deploy.bash
 ```
 
+### backend
+
 ```sh
-cd /path/to/ShellgeiOnlineJudge/
-docker compose up -d
-docker compose up --build
-docker compose up --build -d
+cd /path/to/backend/
+uvicorn main:app --host 0.0.0.0 --port 8000
+# or
+gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-class uvicorn.workers.UvicornWorker main:app
+
+# background
+nohup uvicorn main:app --host 0.0.0.0 --port 8000 &
+# or
+nohup gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-class uvicorn.workers.UvicornWorker main:app &
+
+# stop
+pkill gunicorn
 ```
 
-## Stop
+### nginx
+
 ```sh
-docker compose down
-docker system prune
-docker rm $(docker ps -a -q)
+sudo systemctl start nginx
+sudo systemctl restart nginx
+sudo systemctl status nginx
+sudo systemctl stop nginx
 ```
 
 ## Test

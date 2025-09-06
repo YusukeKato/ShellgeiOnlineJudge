@@ -4,6 +4,8 @@ export const postShellgei = async (
   selectedProblem: string,
 ): Promise<[string, string, string, string, string]> => {
   const timeoutMessage = "Timeout: 20.0s";
+  // const api_endpoint = soj_url + ":8000/api/shellgei";
+  const api_endpoint = soj_url + "/api/shellgei";
   const timeoutPromise = new Promise<Response>((_, reject) => {
     setTimeout(() => {
       reject(new Error(timeoutMessage));
@@ -16,7 +18,7 @@ export const postShellgei = async (
       problem_id: selectedProblem,
     };
 
-    const fetchPromise = fetch(soj_url + ":8000/api/shellgei", {
+    const fetchPromise = fetch(api_endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

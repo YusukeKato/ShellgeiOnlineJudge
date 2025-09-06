@@ -22,8 +22,8 @@ import "../css/common.css";
 const App: React.FC = () => {
   /* SOJ URLs */
   const x_url: string = "https://x.com/yusukekato_main";
-  // const soj_url: string = "https://shellgei-online-judge.com";
-  const soj_url: string = "http://localhost";
+  const soj_url: string = "https://shellgei-online-judge.com";
+  // const soj_url: string = "http://localhost";
   const github_repository_url: string = "https://github.com/YusukeKato/ShellgeiOnlineJudge";
   const github_author_url: string = "https://github.com/YusukeKato";
   const blog_url: string = "https://yusukekato.jp";
@@ -35,8 +35,8 @@ const App: React.FC = () => {
   const default_image: string = soj_url + "/image/GENERAL-00000001.jpg";
 
   /* SOJ Info */
-  const update_date: string = "2025/08/31";
-  const current_version: string = "2.1.0";
+  const update_date: string = "2025/09/06";
+  const current_version: string = "2.2.0";
 
   /* SOJ useState: select problem */
   const [selectedProblemStandard, setSelectedProblemStandard] = useState("GENERAL-00000001");

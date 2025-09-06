@@ -12,6 +12,12 @@ execute the following command:
 
 ```sh
 sudo apt update && sudo apt -y upgrade
+# Amazon Linux 2023: sudo dnf update && sudo dnf upgrade
+sudo apt -y install nginx
+```
+
+```sh
+sudo apt update && sudo apt -y upgrade
 sudo apt install ca-certificates curl gnupg lsb-release
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -58,21 +64,24 @@ www-data ALL=(ALL) NOPASSWD: /usr/bin/docker
 
 ### nginx
 
+`sudo vim /etc/nginx/nginx.conf`
+
 ```sh
 server {
     listen 80;
-    # listen 443 ssh:
+    listen 443 ssh:
 
-    server_name localhost;
-    # server_name shellgei-online-judge.com;
+    # server_name localhost;
+    server_name shellgei-online-judge.com;
 
-    root /var/www/html/soj/;
-    # root /usr/share/nginx/html/soj/;
+    # root /var/www/html/soj/;
+    root /usr/share/nginx/html/soj/;
 
-    location /api/ {
-        add_header Access-Control-Allow-Origin '*' always;
+    # /apiか/api/か最後にスラッシュがあるかないかで挙動が異なるので注意
+    location /api {
+        # add_header Access-Control-Allow-Origin '*' always;
         # add_header Access-Control-Allow-Origin "http://localhost" always;
-        # add_header Access-Control-Allow-Origin "https://shellgei-online-judge.com" always;
+        add_header Access-Control-Allow-Origin "https://shellgei-online-judge.com" always;
         proxy_pass http://localhost:8000;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
