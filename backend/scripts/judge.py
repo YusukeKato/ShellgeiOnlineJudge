@@ -19,9 +19,9 @@ class ShellgeiJudge:
     def judge(self, output_str: str, output_image: str, problem_id: str) -> str:
         if len(output_str) == 0:
             output_str = "NULL"
-        answer_str_path = self.base_dir / "problems" / "output" / problem_id
+        answer_str_path = self.base_dir / "public" / "output" / problem_id
         answer_str_path_str = f"{answer_str_path}.txt"
-        answer_image_path = self.base_dir / "problems" / "image" / problem_id
+        answer_image_path = self.base_dir / "public" / "image" / problem_id
         answer_image_path_str = f"{answer_image_path}.jpg"
         # 答えの文字列の取得
         try:

@@ -32,7 +32,7 @@ class ShellgeiDockerClient:
         # input.txtをコンテナ内へコピー
         try:
             tar_stream = io.BytesIO()
-            input_path = self.base_dir / "problems" / "input" / problem_id
+            input_path = self.base_dir / "public" / "input" / problem_id
             input_path_str = f"{input_path}.txt"
             with tarfile.open(fileobj=tar_stream, mode='w') as tar:
                 tar.add(input_path_str, arcname="input.txt")

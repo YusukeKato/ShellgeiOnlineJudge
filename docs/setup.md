@@ -20,12 +20,18 @@ sudo apt update
 sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 ```
 
+```sh
+sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+docker-compose --version
+```
+
 ### Settings
 execute the following command:
 
 ```sh
-sudo gpasswd -a $USER docker
-sudo systemctl restart docker
+# sudo gpasswd -a $USER docker
+# sudo systemctl restart docker
 ```
 
 ### Download image file
@@ -39,7 +45,7 @@ docker pull theoldmoon0602/shellgeibot
 execute the following command:
 
 ```sh
-sudo visudo
+# sudo visudo
 ```
 
 Add the following line to the end.
@@ -48,4 +54,35 @@ Add the following line to the end.
 # the username that executes PHP: www-data
 # $ which docker: /usr/bin/docker
 www-data ALL=(ALL) NOPASSWD: /usr/bin/docker
+```
+
+### nginx
+
+```sh
+server {
+    listen 80;
+    # listen 443 ssh:
+
+    server_name localhost;
+    # server_name shellgei-online-judge.com;
+
+    root /var/www/html/soj/;
+    # root /usr/share/nginx/html/soj/;
+
+    location /api/ {
+        add_header Access-Control-Allow-Origin '*' always;
+        # add_header Access-Control-Allow-Origin "http://localhost" always;
+        # add_header Access-Control-Allow-Origin "https://shellgei-online-judge.com" always;
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
+    }
+
+    location / {
+        index  index.html;
+    }
+}
 ```

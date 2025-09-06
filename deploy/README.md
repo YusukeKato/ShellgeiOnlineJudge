@@ -1,5 +1,11 @@
 # Deploy
 
+## Stop nginx on the host
+
+```sh
+sudo systemctl stop nginx
+```
+
 ## Edit local/server
 
 edit `frontend/src/tsx/App.tsx`
@@ -21,8 +27,6 @@ edit `backend/conf.d/fastapi.conf`
 ```sh
 server_name localhost;
 # server_name shellgei-online-judge.com;
-root /var/www/html/;
-# root /usr/share/nginx/html/;
 
 add_header Access-Control-Allow-Origin "http://localhost" always;
 # add_header Access-Control-Allow-Origin "https://shellgei-online-judge.com" always;
@@ -43,6 +47,11 @@ cp dot_env .env
 ```
 
 ## Deploy
+
+```sh
+cd /path/to/frontend/
+yarn build
+```
 
 ```sh
 cd /path/to/deploy/
