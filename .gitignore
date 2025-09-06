@@ -1,1 +1,6 @@
 .vscode
+.env
+deploy/public
+backend/public
+__pycache__
+nohup.out

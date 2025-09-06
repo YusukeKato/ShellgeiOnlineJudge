@@ -1,14 +1,11 @@
 # SHELLGEI ONLINE JUDGE: frontend
 This repository is the webapp frontend for SHELLGEI ONLINE JUDGE.
 
-## Setup
+## Environment
+- React
+- TypeScript
 
-- reference
-  - nodejs and npm: https://qiita.com/nouernet/items/d6ad4d5f4f08857644de
-  - yarn and react: https://qiita.com/NaoyaOgura/items/cb94fefb6a63b7965f15
-  - nginx + react: https://www.yoheim.net/blog.php?q=20180407
-
-### Install
+## Install
 
 ```sh
 # Amazon Linux: apt -> dnf
@@ -28,7 +25,7 @@ cd /path/to/frontend/
 yarn install
 ```
 
-## dev commands
+## build
 
 ```sh
 yarn format
@@ -36,3 +33,10 @@ yarn lint
 yarn build
 yarn test
 ```
+
+## 参考
+下記記事を参考にさせていただきました。
+
+- nodejs and npm: https://qiita.com/nouernet/items/d6ad4d5f4f08857644de
+- yarn and react: https://qiita.com/NaoyaOgura/items/cb94fefb6a63b7965f15
+- nginx + react: https://www.yoheim.net/blog.php?q=20180407

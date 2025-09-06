@@ -5,51 +5,9 @@
 - Ubuntu 22.04 LTS
 - Amazon Linux 2023
 
-## Setup nginx
+## Docker
 
-### Install
-execute the following command:
-
-```sh
-sudo apt update && sudo apt -y upgrade
-# Amazon Linux 2023: sudo dnf update && sudo dnf upgrade
-sudo apt -y install nginx
-sudo apt -y install php-fpm
-```
-
-### Config
-execute the following command:
-
-```sh
-sudo vim /etc/nginx/nginx.conf
-# or
-sudo vim /etc/nginx/conf.d/default.conf
-# or
-sudo vim /etc/nginx/sites-available/default
-```
-
-Update as follows:
-
-```sh
-# ex:
-root /usr/share/nginx/html/soj/main/;
-root /var/www/html/soj/main/;
-
-# example: php8.1-fpm
-location ~ \.php$ {
-  fastcgi_pass unix:/run/php/php8.1-fpm.sock;
-  fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-  # or: fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-  # WSL2(Ubuntu 24.04 LTS): fastcgi_param SCRIPT_FILENAME <root_path>$fastcgi_script_name;
-  # ex: fastcgi_param SCRIPT_FILENAME /var/www/html/$fastcgi_script_name;
-  include fastcgi_params;
-}
-```
-
-## Setup Docker
-
-### Install
-execute the following command:
+### Install docker
 
 ```sh
 sudo apt update && sudo apt -y upgrade
@@ -61,46 +19,22 @@ sudo apt update
 sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 ```
 
-### Settings
-execute the following command:
-
 ```sh
-sudo gpasswd -a $USER docker
-sudo systemctl restart docker
+sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+docker-compose --version
 ```
 
-### Download image file
-execute the following command:
+### Setup docker
 
 ```sh
-docker pull theoldmoon0602/shellgeibot
+# sudo gpasswd -a $USER docker
+# sudo systemctl restart docker
 ```
-
-### Execution user
-Change the execution user from nginx to www-data in WSL.
 
 ```sh
-sudo vim /etc/php/8.3/fpm/pool.d/www.conf
-# ex:
-# listen = /run/php/php8.3-fpm.sock
-# listen.owner = www-data
-# listen.group = www-data
-# listen.mode = 0660
-# user = www-data
-# group = www-data
-sudo vim /etc/nginx/nginx.conf
-# ex:
-# user  www-data;
+# sudo visudo
 ```
-
-### Permissions to execute Docker
-execute the following command:
-
-```sh
-sudo visudo
-```
-
-Add the following line to the end.
 
 ```sh
 # the username that executes PHP: www-data
@@ -108,12 +42,51 @@ Add the following line to the end.
 www-data ALL=(ALL) NOPASSWD: /usr/bin/docker
 ```
 
-## Start nginx
-execute the following command:
+### Download image file
 
 ```sh
-sudo systemctl start nginx
-sudo systemctl restart nginx
-sudo systemctl status nginx
-sudo systemctl stop nginx
+docker pull theoldmoon0602/shellgeibot
+```
+
+## nginx
+
+### Install nginx
+```sh
+sudo apt update && sudo apt -y upgrade
+# Amazon Linux 2023: sudo dnf update && sudo dnf upgrade
+sudo apt -y install nginx
+```
+
+### Setup nginx
+
+`sudo vim /etc/nginx/nginx.conf`
+
+```sh
+server {
+    listen 80;
+    listen 443 ssh:
+
+    # server_name localhost;
+    server_name shellgei-online-judge.com;
+
+    # root /var/www/html/soj/;
+    root /usr/share/nginx/html/soj/;
+
+    # /apiか/api/か最後にスラッシュがあるかないかで挙動が異なるので注意
+    location /api {
+        # add_header Access-Control-Allow-Origin '*' always;
+        # add_header Access-Control-Allow-Origin "http://localhost" always;
+        add_header Access-Control-Allow-Origin "https://shellgei-online-judge.com" always;
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
+    }
+
+    location / {
+        index  index.html;
+    }
+}
 ```

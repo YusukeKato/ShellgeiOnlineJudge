@@ -1,33 +1,76 @@
 # Deploy
 
-## nginx root path
-- `usr`: `/usr/share/nginx/html/soj/main/`
-- `var`: `/var/www/html/soj/main/`
+## Switch local/server
 
-## Edit server url
+Edit `frontend/src/tsx/App.tsx`
 
-edit `frontend/src/tsx/App.tsx`
+```ts
+# const soj_url: string = "http://localhost";
+const soj_url: string = "https://shellgei-online-judge.com";
+```
+
+Edit `frontend/src/functions/post_shellgei.tsx`
+
+```ts
+// const api_endpoint = soj_url + ":8000/api/shellgei";
+const api_endpoint = soj_url + "/api/shellgei";
+```
+
+Edit `backend/main.py`
+
+```py
+# server_url = "http://localhost"
+server_url = "https://shellgei-online-judge.com"
+```
+
+Edit `deploy/deploy.bash`
 
 ```sh
-# server
-const soj_url: string = "https://shellgei-online-judge.com";
-# local
-const soj_url: string = "http://localhost";
+root_path="/usr/share/nginx/html/"
+# root_path="/var/www/html/"
 ```
 
 ## Deploy
-execute the following command:
 
+### frontend
 ```sh
-# usr
-./deploy.bash usr
-# var
-./deploy.bash var
+cd /path/to/frontend/
+yarn install
+yarn build
+```
+
+### setup data
+```sh
+cd /path/to/deploy/
+./deploy.bash
+```
+
+### backend
+```sh
+cd /path/to/backend/
+uvicorn main:app --host 0.0.0.0 --port 8000
+# or
+gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-class uvicorn.workers.UvicornWorker main:app
+
+# background
+nohup uvicorn main:app --host 0.0.0.0 --port 8000 &
+# or
+nohup gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-class uvicorn.workers.UvicornWorker main:app &
+
+# stop
+pkill uvicorn
+pkill gunicorn
+```
+
+### nginx
+```sh
+sudo systemctl start nginx
+sudo systemctl restart nginx
+sudo systemctl status nginx
+sudo systemctl stop nginx
 ```
 
 ## Test
-execute the following command:
-
 ```sh
 # server
 python3 test.py server
