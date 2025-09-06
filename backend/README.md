@@ -1,7 +1,10 @@
 # SHELLGEI ONLINE JUDGE: backend
 This repository is the webapp backend for SHELLGEI ONLINE JUDGE.
 
+## Environment
 - FastAPI
+- Python
+- nginx
 
 ## setup
 ```sh
@@ -22,3 +25,8 @@ ruff format /backend/
 ruff check /backend/
 mypy /backend/
 ```
+
+## 参考
+下記記事を参考にさせていただきました。
+
+- FastAPI + nginx: https://qiita.com/junzai/items/4b737a4fafbe888bc709
