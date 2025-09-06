@@ -4,7 +4,7 @@ import sys
 import os
 
 args = sys.argv
-main_url = 'https://shellgei-online-judge.com:8000/api/shellgei';
+main_url = 'https://shellgei-online-judge.com/api/shellgei';
 if len(args) > 1 and args[1] == "local":
   main_url = 'http://localhost:8000/api/shellgei';
   print("start test: local")
