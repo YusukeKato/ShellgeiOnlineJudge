@@ -16,3 +16,11 @@ source ~/venv/bin/activate
 ```sh
 pip install --no-cache-dir -r requirements.txt
 ```
+
+## check
+
+```sh
+ruff format /backend/
+ruff check /backend/
+mypy /backend/
+```
