@@ -1,3 +1,11 @@
+[tool.poetry]
+name = "ShellgeiOnlineJudge"
+version = "2.2.0"
+description = "Shellgei Online Judge"
+authors = ["YusukeKato"]
+license = "Apache 2.0"
+readme = "README.md"
+
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = "^0.116.1"
