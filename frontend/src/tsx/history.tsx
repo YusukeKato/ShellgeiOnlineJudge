@@ -12,6 +12,7 @@ const SojHistory: React.FC = () => {
         <details>
           <summary>2025</summary>
           <ul>
+            <li>11/06: サーバ更新</li>
             <li>09/06: バックエンドをFastAPIで書き換えた。</li>
             <li>08/15: フロントエンドをReactで書き換え。そのほかも軽く修正</li>
             <li>08/09: サーバ更新</li>
