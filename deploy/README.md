@@ -46,6 +46,9 @@ cd /path/to/deploy/
 ```
 
 ### backend
+
+[backend/README.md](../backend/README.md)に記載のvenv環境でuvicornかgunicornをインストールする。
+
 ```sh
 cd /path/to/backend/
 uvicorn main:app --host 0.0.0.0 --port 8000
