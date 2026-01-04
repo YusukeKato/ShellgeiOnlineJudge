@@ -10,6 +10,12 @@ const SojHistory: React.FC = () => {
         <p>シェル芸オンラインジャッジの更新履歴です。</p>
         <p>Update history of SHELLGEI ONLINE JUDGE.</p>
         <details>
+          <summary>2026</summary>
+          <ul>
+            <li>01/04: サーバ更新、Dockerイメージの更新</li>
+          </ul>
+        </details>
+        <details>
           <summary>2025</summary>
           <ul>
             <li>11/06: サーバ更新、Dockerイメージの更新</li>
