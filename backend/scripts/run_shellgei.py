@@ -64,6 +64,8 @@ class ShellgeiDockerClient:
 
         # サンプル像を作成しておく
         try:
+            container.exec_run("chmod 777 /media")
+            container.exec_run("chmod 777 /ShellGeiData")
             container.exec_run("convert -size 200x200 xc:white media/output.jpg")
         except Exception as e:
             return [f"Error: create sample image: {e}", ""]
@@ -73,6 +75,7 @@ class ShellgeiDockerClient:
         try:
             exec_stream = container.exec_run(
                 "bash z.bash",
+                user="1000:1000", # 非rootユーザーで実行
                 demux=False,
                 stream=True,
             )
