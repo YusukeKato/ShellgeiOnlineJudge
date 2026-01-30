@@ -27,6 +27,12 @@ class ShellgeiDockerClient:
                 command="sleep 60",
                 ipc_mode="none",
                 network_mode="none",
+                mem_limit="128m",             # メモリ制限
+                memswap_limit="128m",         # スワップ制限(メモリと同じ値にしてスワップさせない)
+                nano_cpus=500000000,          # CPU使用率制限 (0.5 CPU)
+                pids_limit=50,                # 最大プロセス数制限(フォーク爆弾対策)
+                cap_drop=["ALL"],             # 全ての特権(Capabilities)を剥奪
+                # user="1000:1000",             # 非rootユーザーで実行
             )
         except Exception as e:
             return [f"Error: create container: {e}", ""]
