@@ -75,7 +75,7 @@ class ShellgeiDockerClient:
         try:
             exec_stream = container.exec_run(
                 "bash z.bash",
-                user="1000:1000", # 非rootユーザーで実行
+                user="1000:1000",  # 非rootユーザーで実行
                 demux=False,
                 stream=True,
             )
