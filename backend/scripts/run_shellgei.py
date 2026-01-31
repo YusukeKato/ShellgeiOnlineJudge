@@ -32,7 +32,7 @@ class ShellgeiDockerClient:
                 nano_cpus=500000000,  # CPU使用率制限 (0.5 CPU)
                 pids_limit=50,  # 最大プロセス数制限(フォーク爆弾対策)
                 cap_drop=["ALL"],  # 全ての特権(Capabilities)を剥奪
-                tmpfs={"/media": "size=100M,uid=1000,gid=1000,mode=1777"},
+                tmpfs={"/media": "size=100M"},
                 ulimits=[
                     # fsize (file size): 1プロセスが作成できる最大ファイルサイズ（バイト単位）
                     docker.types.Ulimit(name="fsize", soft=50000000, hard=50000000)

@@ -13,6 +13,7 @@ const SojHistory: React.FC = () => {
           <summary>2026</summary>
           <ul>
             <li>01/04: サーバ更新、Dockerイメージの更新</li>
+            <li>01/31: コンテナのリソース制限を設定</li>
           </ul>
         </details>
         <details>
