@@ -27,13 +27,13 @@ class ShellgeiDockerClient:
                 command="sleep 60",
                 ipc_mode="none",
                 network_mode="none",
-                mem_limit="128m",  # メモリ制限
-                memswap_limit="128m",  # スワップ制限(メモリと同じ値にしてスワップさせない)
+                mem_limit="256m",  # メモリ制限
+                memswap_limit="1024m",  # スワップ制限(メモリと同じ値にしてスワップさせない)
                 nano_cpus=500000000,  # CPU使用率制限 (0.5 CPU)
                 pids_limit=50,  # 最大プロセス数制限(フォーク爆弾対策)
                 cap_drop=["ALL"],  # 全ての特権(Capabilities)を剥奪
                 tmpfs={
-                    "/media": "size=50M,uid=1000,gid=1000,mode=1777"
+                    "/media": "size=100M,uid=1000,gid=1000,mode=1777"
                 },
                 ulimits=[
                     # fsize (file size): 1プロセスが作成できる最大ファイルサイズ（バイト単位）
@@ -68,11 +68,20 @@ class ShellgeiDockerClient:
         except Exception as e:
             return [f"Error: copy bash file: {e}", ""]
 
+        # goのバイナリを/usr/local/binへコピー
+        try:
+            container.exec_run("bash -c 'cp /root/go/bin/* /usr/local/bin/'")
+            container.exec_run("bash -c 'chown 1000:1000 /usr/local/bin/*'")
+            container.exec_run("chmod -R 755 /usr/local/bin")
+        except Exception as e:
+            return [f"Error: copy go binaries: {e}", ""]
+
         # サンプル像を作成しておく
         try:
-            container.exec_run("chmod 777 /media")
-            container.exec_run("chmod 755 /ShellGeiData")
+            container.exec_run("chown -R 1000:1000 /media")
+            container.exec_run("chown -R 1000:1000 /ShellGeiData")
             container.exec_run("convert -size 200x200 xc:white media/output.jpg", user="1000:1000")
+            container.exec_run("chown -R 1000:1000 /media")
         except Exception as e:
             return [f"Error: create sample image: {e}", ""]
 
@@ -81,7 +90,7 @@ class ShellgeiDockerClient:
         try:
             exec_stream = container.exec_run(
                 "bash z.bash",
-                # user="1000:1000",  # 非rootユーザーで実行
+                user="1000:1000",  # 非rootユーザーで実行
                 demux=False,
                 stream=True,
             )
@@ -101,11 +110,11 @@ class ShellgeiDockerClient:
 
         # 画像も取得して返す
         try:
-            find_str = container.exec_run("find media -name output.gif")
+            find_str = container.exec_run("find media -name output.gif", user="1000:1000")
             if "output.gif" in find_str.output.decode("utf-8"):
-                image_str = container.exec_run("base64 -w 0 media/output.gif")
+                image_str = container.exec_run("base64 -w 0 media/output.gif", user="1000:1000")
             else:
-                image_str = container.exec_run("base64 -w 0 media/output.jpg")
+                image_str = container.exec_run("base64 -w 0 media/output.jpg", user="1000:1000")
         except Exception as e:
             return [f"Error: get image: {e}", ""]
 
