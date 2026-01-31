@@ -22,8 +22,9 @@ import "../css/common.css";
 const App: React.FC = () => {
   /* SOJ URLs */
   const x_url: string = "https://x.com/yusukekato_main";
-  const soj_url: string = "https://shellgei-online-judge.com";
+  // const soj_url: string = "https://shellgei-online-judge.com";
   // const soj_url: string = "http://localhost";
+  const soj_url: string = "";
   const github_repository_url: string = "https://github.com/YusukeKato/ShellgeiOnlineJudge";
   const github_author_url: string = "https://github.com/YusukeKato";
   const blog_url: string = "https://yusukekato.jp";
