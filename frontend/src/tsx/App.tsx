@@ -35,8 +35,8 @@ const App: React.FC = () => {
   const default_image: string = soj_url + "/image/GENERAL-00000001.jpg";
 
   /* SOJ Info */
-  const update_date: string = "2026/01/04";
-  const current_version: string = "2.2.0";
+  const update_date: string = "2026/01/31";
+  const current_version: string = "2.2.1";
 
   /* SOJ useState: select problem */
   const [selectedProblemStandard, setSelectedProblemStandard] = useState("GENERAL-00000001");

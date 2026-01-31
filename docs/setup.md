@@ -27,6 +27,8 @@ docker-compose --version
 
 ### Setup docker
 
+2026/01/31: おそらくこの設定は必要ない
+
 ```sh
 # sudo gpasswd -a $USER docker
 # sudo systemctl restart docker
@@ -39,7 +41,7 @@ docker-compose --version
 ```sh
 # the username that executes PHP: www-data
 # $ which docker: /usr/bin/docker
-www-data ALL=(ALL) NOPASSWD: /usr/bin/docker
+# www-data ALL=(ALL) NOPASSWD: /usr/bin/docker
 ```
 
 ### Download image file
