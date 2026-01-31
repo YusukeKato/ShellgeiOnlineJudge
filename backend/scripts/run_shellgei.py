@@ -32,7 +32,13 @@ class ShellgeiDockerClient:
                 nano_cpus=500000000,  # CPU使用率制限 (0.5 CPU)
                 pids_limit=50,  # 最大プロセス数制限(フォーク爆弾対策)
                 cap_drop=["ALL"],  # 全ての特権(Capabilities)を剥奪
-                # user="1000:1000",             # 非rootユーザーで実行
+                tmpfs={
+                    "/media": "size=50M,uid=1000,gid=1000,mode=1777"
+                },
+                ulimits=[
+                    # fsize (file size): 1プロセスが作成できる最大ファイルサイズ（バイト単位）
+                    docker.types.Ulimit(name='fsize', soft=50000000, hard=50000000)
+                ],
             )
         except Exception as e:
             return [f"Error: create container: {e}", ""]
@@ -65,8 +71,8 @@ class ShellgeiDockerClient:
         # サンプル像を作成しておく
         try:
             container.exec_run("chmod 777 /media")
-            container.exec_run("chmod 777 /ShellGeiData")
-            container.exec_run("convert -size 200x200 xc:white media/output.jpg")
+            container.exec_run("chmod 755 /ShellGeiData")
+            container.exec_run("convert -size 200x200 xc:white media/output.jpg", user="1000:1000")
         except Exception as e:
             return [f"Error: create sample image: {e}", ""]
 
