@@ -37,6 +37,7 @@ root_path="/usr/share/nginx/html/"
 
 ```sh
 cd /path/to/ShellgeiOnlineJudge/
+bash create_backend_data.bash
 docker compose up -d --build
 ```
 
