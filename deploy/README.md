@@ -6,7 +6,8 @@ Edit `frontend/src/tsx/App.tsx`
 
 ```ts
 # const soj_url: string = "http://localhost";
-const soj_url: string = "https://shellgei-online-judge.com";
+# const soj_url: string = "https://shellgei-online-judge.com";
+const soj_url: string = "";
 ```
 
 Edit `frontend/src/functions/post_shellgei.tsx`
@@ -32,20 +33,32 @@ root_path="/usr/share/nginx/html/"
 
 ## Deploy
 
+2026/02/01: docker composeだけで起動できる（ホスト側でnginxの設定と起動は必要）
+
+```sh
+cd /path/to/ShellgeiOnlineJudge/
+docker compose up -d --build
+```
+
 ### frontend
 ```sh
-cd /path/to/frontend/
-yarn install
-yarn build
+# cd /path/to/frontend/
+# yarn install
+# yarn build
 ```
 
 ### setup data
+
+2026/02/01: コンテナ内で起動するため不要
+
 ```sh
-cd /path/to/deploy/
-./deploy.bash
+# cd /path/to/deploy/
+# ./deploy.bash
 ```
 
 ### backend
+
+2026/02/01: コンテナ内で起動するため不要
 
 [backend/README.md](../backend/README.md)に記載のvenv環境でuvicornかgunicornをインストールする。
 
