@@ -7,6 +7,8 @@
 
 ## Docker
 
+docker, docker composeを使用できる状態にする
+
 ### Install docker
 
 ```sh
@@ -79,7 +81,7 @@ server {
         # add_header Access-Control-Allow-Origin '*' always;
         # add_header Access-Control-Allow-Origin "http://localhost" always;
         add_header Access-Control-Allow-Origin "https://shellgei-online-judge.com" always;
-        proxy_pass http://localhost:8000;
+        proxy_pass http://localhost:8080; # バックエンドは8080
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
