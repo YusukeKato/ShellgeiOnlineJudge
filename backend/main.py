@@ -1,8 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api import api_shellgei  # type: ignore
+from contextlib import asynccontextmanager
+from scripts.container_manager import manager
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # アプリ起動時にプールを作る
+    manager.initialize_pool()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 # server_url = "http://localhost"
 server_url = "https://shellgei-online-judge.com"

@@ -1,145 +1,97 @@
 #!/usr/bin/env python3
-import docker
 import asyncio
 import time
 import tarfile
 import io
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from scripts.container_manager import manager
 
 
 class ShellgeiDockerClient:
     def __init__(self):
-        self.client = docker.from_env()
-        self.image_id = "theoldmoon0602/shellgeibot"
-        self.executor = ThreadPoolExecutor(max_workers=1)
+        self.executor = ThreadPoolExecutor(
+            max_workers=5
+        )  # 並列処理できるよう少し数を増やす
         self.base_dir = Path(__file__).resolve().parent.parent
 
     def exec_shellgei(
         self, shellgei: str, problem_id: str, timeout: int, limit_str: int
     ) -> list[str]:
         container = None
-        # コンテナ作成
+        # プールからコンテナを取得
         try:
-            container = self.client.containers.run(
-                self.image_id,
-                detach=True,
-                command="sleep 60",
-                ipc_mode="none",
-                network_mode="none",
-                mem_limit="256m",  # メモリ制限
-                memswap_limit="1024m",  # スワップ制限(メモリと同じ値にしてスワップさせない)
-                nano_cpus=500000000,  # CPU使用率制限 (0.5 CPU)
-                pids_limit=50,  # 最大プロセス数制限(フォーク爆弾対策)
-                cap_drop=["ALL"],  # 全ての特権(Capabilities)を剥奪
-                tmpfs={"/media": "size=100M"},
-                ulimits=[
-                    # fsize (file size): 1プロセスが作成できる最大ファイルサイズ（バイト単位）
-                    docker.types.Ulimit(name="fsize", soft=50000000, hard=50000000)
-                ],
-            )
+            container = manager.get_container()
         except Exception as e:
-            return [f"Error: create container: {e}", ""]
+            return [f"Error: failed to get container: {e}", ""]
 
-        # input.txtをコンテナ内へコピー
         try:
+            # === input.txt のコピー ===
             tar_stream = io.BytesIO()
             input_path = self.base_dir / "public" / "input" / problem_id
             input_path_str = f"{input_path}.txt"
-            with tarfile.open(fileobj=tar_stream, mode="w") as tar:
-                tar.add(input_path_str, arcname="input.txt")
-            tar_stream.seek(0)
-            container.put_archive(path="/", data=tar_stream)
-        except Exception as e:
-            return [f"Error: copy input.txt: {e}", ""]
-
-        # 実行するbashファイルをコピー
-        try:
+            # ファイルが存在するか確認
+            if Path(input_path_str).exists():
+                with tarfile.open(fileobj=tar_stream, mode="w") as tar:
+                    tar.add(input_path_str, arcname="input.txt")
+                tar_stream.seek(0)
+                container.put_archive(path="/", data=tar_stream)
+            # === ユーザのシェル芸のbashファイルのコピー ===
             bash_file_path = self.base_dir / "z.bash"
             with open(bash_file_path, "w", encoding="utf-8") as file:
                 file.write(shellgei)
-            tar_stream = io.BytesIO()
-            with tarfile.open(fileobj=tar_stream, mode="w") as tar:
+            tar_stream_bash = io.BytesIO()
+            with tarfile.open(fileobj=tar_stream_bash, mode="w") as tar:
                 tar.add(bash_file_path, arcname="z.bash")
-            tar_stream.seek(0)
-            container.put_archive(path="/", data=tar_stream)
-        except Exception as e:
-            return [f"Error: copy bash file: {e}", ""]
-
-        # サンプル像を作成しておく
-        try:
+            tar_stream_bash.seek(0)
+            container.put_archive(path="/", data=tar_stream_bash)
+            # === サンプル画像作成 ===
             container.exec_run("convert -size 200x200 xc:white media/output.jpg")
-        except Exception as e:
-            return [f"Error: create sample image: {e}", ""]
-
-        # シェル芸を実行
-        output = b""
-        try:
+            # === シェル芸を実行 ===
+            output = b""
             exec_stream = container.exec_run(
                 "bash z.bash",
-                # user="1000:1000",  # 非rootユーザーで実行
                 demux=False,
                 stream=True,
             )
+            # ストリーム読み込みとタイムアウト管理
             start_time = time.time()
-            while True:
+            for chunk in exec_stream.output:
                 if time.time() - start_time > timeout:
-                    return ["Error: exec stream: timed out.", ""]
-                try:
-                    chunk = next(exec_stream.output, None)
-                    if chunk is None:
-                        break
-                    output += chunk
-                except StopIteration:
+                    output += b"\n[Timed out]"
                     break
-        except Exception as e:
-            return [f"Error: run shellgei: {e}", ""]
-
-        # 画像も取得して返す
-        try:
-            find_str = container.exec_run(
-                "find media -name output.gif", user="1000:1000"
-            )
-            if "output.gif" in find_str.output.decode("utf-8"):
-                image_str = container.exec_run(
-                    "base64 -w 0 media/output.gif", user="1000:1000"
-                )
+                if chunk:
+                    output += chunk
+            # === 画像取得 ===
+            find_result = container.exec_run("find media -name output.gif")
+            if "output.gif" in find_result.output.decode("utf-8", errors="ignore"):
+                img_exec = container.exec_run("base64 -w 0 media/output.gif")
             else:
-                image_str = container.exec_run(
-                    "base64 -w 0 media/output.jpg", user="1000:1000"
-                )
-        except Exception as e:
-            return [f"Error: get image: {e}", ""]
-
-        # 返す
-        try:
-            output_utf8 = output.decode("utf-8")
-            if len(output_utf8) == 0:
+                img_exec = container.exec_run("base64 -w 0 media/output.jpg")
+            image_str_utf8 = img_exec.output.decode("utf-8", errors="ignore")
+            # === 結果整形 ===
+            output_utf8 = output.decode("utf-8", errors="ignore")
+            if not output_utf8:
                 output_utf8 = "NULL"
             elif len(output_utf8) > limit_str:
                 output_utf8 = output_utf8[:limit_str] + "..."
-            image_str_utf8 = image_str.output.decode("utf-8")
-            if len(image_str_utf8) > 1000_000:
-                image_str_utf8 = image_str_utf8[:1000_000]
+            if len(image_str_utf8) > 1_000_000:
+                image_str_utf8 = image_str_utf8[:1_000_000]
             return [output_utf8, image_str_utf8]
         except Exception as e:
-            return [f"Error: return: {e}", ""]
+            return [f"Error during execution: {e}", ""]
 
-        # 最後にコンテナを削除
         finally:
+            # コンテナマネージャーにコンテナを管理してもらう
             if container:
-                try:
-                    container.stop()
-                    container.remove(force=True)
-                except Exception as e:
-                    return [f"Error: stop/remove container: {e}", ""]
+                manager.release_container(container)
 
     async def run_with_timeout(
         self, shellgei: str, problem_id: str, timeout: int = 30, limit_str: int = 1000
     ) -> list[str]:
         loop = asyncio.get_running_loop()
         try:
-            result: list[str] = await asyncio.wait_for(
+            result = await asyncio.wait_for(
                 loop.run_in_executor(
                     self.executor,
                     self.exec_shellgei,
@@ -148,7 +100,7 @@ class ShellgeiDockerClient:
                     timeout,
                     limit_str,
                 ),
-                timeout=timeout,
+                timeout=timeout + 2,  # スレッド処理自体の余裕を持たせる
             )
             return result
         except asyncio.TimeoutError:
