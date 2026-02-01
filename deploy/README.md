@@ -42,6 +42,9 @@ docker compose up -d --build
 ```
 
 ### frontend
+
+2026/02/01: コンテナ内で実行されるため不要
+
 ```sh
 # cd /path/to/frontend/
 # yarn install
@@ -80,6 +83,9 @@ pkill gunicorn
 ```
 
 ### nginx
+
+2026/02/01: nginxもコンテナ内で動かすので不要
+
 ```sh
 sudo systemctl start nginx
 sudo systemctl restart nginx
