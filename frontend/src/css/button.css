@@ -46,13 +46,13 @@
 
 @media screen and (max-width: 999px) {
   .select-button {
-    min-width: 160px;
-    width: 30%;
-    font-size: 0.9rem;
+    min-width: 200px;
+    width: 50%;
+    font-size: 0.8rem;
   }
   .run-button {
-    min-width: 160px;
-    width: 30%;
-    font-size: 0.9rem;
+    min-width: 200px;
+    width: 50%;
+    font-size: 0.8rem;
   }
 }
