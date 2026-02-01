@@ -44,6 +44,12 @@ const SojRun: React.FC<SojValuesInterface> = ({
       setUserShellgeiStatus,
     );
   };
+  // ctrl + Enter で実行
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.ctrlKey && e.key === "Enter") {
+      SubmitClick();
+    }
+  };
   return (
     <div className="soj-main">
       <h2>実行 / RUN</h2>
@@ -110,6 +116,7 @@ const SojRun: React.FC<SojValuesInterface> = ({
         <textarea
           value={inputShellgei}
           onChange={changeInputShellgei}
+          onKeyDown={handleKeyDown}
           cols={50}
           rows={12}
           id="cmdline"
@@ -117,7 +124,7 @@ const SojRun: React.FC<SojValuesInterface> = ({
         ></textarea>
         <input
           type="button"
-          value="実行 / RUN"
+          value="実行 / RUN (Ctrl+Enter)"
           className="run-button"
           id="submit-button"
           onClick={SubmitClick}
