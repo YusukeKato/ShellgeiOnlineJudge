@@ -7,9 +7,10 @@
 
 ## Docker
 
-docker, docker composeを使用できる状態にする
-
 ### Install docker
+
+- docker, docker composeを使用できる状態にする
+- 下記のインストール方法が古いかも？
 
 ```sh
 sudo apt update && sudo apt -y upgrade
@@ -55,6 +56,9 @@ docker pull theoldmoon0602/shellgeibot
 ## nginx
 
 ### Install nginx
+
+2026/02/01: nginxをコンテナ内で動かせるようになったので不要
+
 ```sh
 sudo apt update && sudo apt -y upgrade
 # Amazon Linux 2023: sudo dnf update && sudo dnf upgrade
@@ -62,6 +66,8 @@ sudo apt -y install nginx
 ```
 
 ### Setup nginx
+
+2026/02/01: /frontend/nginx/にconfファイルを用意
 
 `sudo vim /etc/nginx/nginx.conf`
 
