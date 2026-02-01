@@ -13,8 +13,7 @@ const SojHistory: React.FC = () => {
           <summary>2026</summary>
           <ul>
             <li>
-              02/01: 2.3.3:
-              フロントエンドとバックエンド、nginxをdockerコンテナ内で起動、
+              02/01: 2.3.3: フロントエンドとバックエンド、nginxをdockerコンテナ内で起動、
               コンテナをプールして応答の高速化、Ctrl+Enterで実行する機能追加
             </li>
             <li>01/31: コンテナのリソース制限を設定</li>
