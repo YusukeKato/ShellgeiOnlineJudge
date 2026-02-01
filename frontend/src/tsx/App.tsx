@@ -37,7 +37,7 @@ const App: React.FC = () => {
 
   /* SOJ Info */
   const update_date: string = "2026/02/01";
-  const current_version: string = "2.3.1";
+  const current_version: string = "2.3.2";
 
   /* SOJ useState: select problem */
   const [selectedProblemStandard, setSelectedProblemStandard] = useState("GENERAL-00000001");
