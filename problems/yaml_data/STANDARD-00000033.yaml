@@ -1,0 +1,26 @@
+id: STANDARD-00000033
+title_ja: ''
+title_en: ''
+statement_ja: |
+  各行の文字数をカウントしてください。
+statement_en: |
+  Count the number of characters in each line.
+input: |
+  sssss
+  hh
+  eeeeeee
+  lllllll
+  llll
+  ggggggggg
+  e
+  iii
+expected_output: |
+  s 5
+  h 2
+  e 7
+  l 7
+  l 4
+  g 9
+  e 1
+  i 3
+answer: cat input.txt | awk '{print substr($1,1,1), length($1)}'

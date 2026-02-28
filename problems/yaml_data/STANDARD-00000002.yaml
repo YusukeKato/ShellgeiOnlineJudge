@@ -1,0 +1,14 @@
+id: STANDARD-00000002
+title_ja: ''
+title_en: ''
+statement_ja: |
+  入力の文字列をそのまま出力してください。
+  ex: cat input.txt
+statement_en: |
+  Output the input string as is.
+  ex: cat input.txt
+input: |
+  SHELLGEI
+expected_output: |
+  SHELLGEI
+answer: cat input.txt

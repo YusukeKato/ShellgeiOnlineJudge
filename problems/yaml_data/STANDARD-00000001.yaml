@@ -1,0 +1,13 @@
+id: STANDARD-00000001
+title_ja: ''
+title_en: ''
+statement_ja: |
+  文字列"test"を出力してください。
+  ex: echo "test"
+statement_en: |
+  Output the string "test".
+  ex: echo "test"
+input: ''
+expected_output: |
+  test
+answer: echo test

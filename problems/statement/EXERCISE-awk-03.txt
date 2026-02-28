@@ -1,4 +1,0 @@
-練習：awk
-awkコマンドで入力ファイル"input.txt"の2列目と3列目を入れ替えて出力してください。
-Exercise: awk
-Please replace the second and third columns of the input file "input.txt" in the output.

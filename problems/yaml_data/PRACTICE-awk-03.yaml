@@ -1,0 +1,28 @@
+id: PRACTICE-awk-03
+title_ja: ''
+title_en: ''
+statement_ja: |
+  練習：awk
+  awkコマンドで入力ファイル"input.txt"の2列目と3列目を入れ替えて出力してください。
+statement_en: |
+  Exercise: awk
+  Please replace the second and third columns of the input file "input.txt" in the output.
+input: |
+  A CCC BB
+  D FFF EE
+  G III HH
+  J LLL KK
+  M OOO NN
+  P RRR QQ
+  S UUU TT
+  V XXX WW
+expected_output: |
+  A BB CCC
+  D EE FFF
+  G HH III
+  J KK LLL
+  M NN OOO
+  P QQ RRR
+  S TT UUU
+  V WW XXX
+answer: cat input.txt | awk '{print $1,$3,$2}'

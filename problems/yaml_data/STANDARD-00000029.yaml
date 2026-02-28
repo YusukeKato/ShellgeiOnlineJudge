@@ -1,0 +1,18 @@
+id: STANDARD-00000029
+title_ja: ''
+title_en: ''
+statement_ja: |
+  次の想定出力のような模様を描いてください。
+statement_en: |
+  Output the same pattern as the expected output.
+input: ''
+expected_output: |
+  30 31 32 33 34
+  29 16 17 18 19
+  28 15 10 11 20
+  27 14 13 12 21
+  26 25 24 23 22
+answer: echo | awk 'BEGIN{for(i=0;i<5;i++){for(j=0;j<5;j++){a[i,j]=10}}}{i=2;j=3;n=11;f=0;d=1;d2=1;p=0;while(1){a[i,j]=n;n+=1;if(i==0&&j==4||(i>4&&j>4)){break};if(d>0){d-=1}else
+  if(d==0){d=d2;if(p==1){d2+=1;p=0}else{p=1};f+=1};if(f>3){f=0};if(f==0){i+=1}else
+  if(f==1){j-=1}else if(f==2){i-=1}else if(f==3){j+=1}}}END{for(i=0;i<5;i++){for(j=0;j<5;j++){printf("%d
+  ",a[i,j])};printf("\n")}}' | sed 's/ $//g'

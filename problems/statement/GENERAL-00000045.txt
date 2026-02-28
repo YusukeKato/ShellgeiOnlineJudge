@@ -1,2 +1,0 @@
-次の想定出力のような模様を描いてください。
-Output the same pattern as the expected output.

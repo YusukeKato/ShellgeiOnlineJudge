@@ -1,0 +1,30 @@
+id: PRACTICE-grep-02
+title_ja: ''
+title_en: ''
+statement_ja: |
+  練習：grep
+  grepコマンドで入力ファイル"input.txt"から拡張子".jpg"か".png"が付いた行だけを出力してください。
+statement_en: |
+  Exercise: grep
+  Output only lines with the extension ".jpg" or ".png" from the input file "input.txt".
+input: |
+  file_01.txt
+  file_02.txt
+  file_03.png
+  file_05.c
+  file_06.cpp
+  file_09
+  file_10.jpg
+  file_11.png
+  file_12.jpg
+  file_13.txt
+  file_15.py
+  file_16.php
+  file_18.jpg
+expected_output: |
+  file_03.png
+  file_10.jpg
+  file_11.png
+  file_12.jpg
+  file_18.jpg
+answer: cat input.txt | grep -e ".jpg" -e ".png"

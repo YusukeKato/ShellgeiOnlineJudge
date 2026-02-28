@@ -1,1 +1,0 @@
-find ShellGeiData/vol.68 -type f | xargs -I@ grep entrepreneurial -rl @ | awk -F'/' '{print $NF}'

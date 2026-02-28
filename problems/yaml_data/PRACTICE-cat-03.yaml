@@ -1,0 +1,18 @@
+id: PRACTICE-cat-03
+title_ja: ''
+title_en: ''
+statement_ja: |
+  練習：cat
+  catコマンドで入力ファイル"input.txt"の各行の末尾に'$'を付けて出力してください。
+statement_en: |
+  Exercise: cat
+  Output the input file "input.txt" with '$' appended to the end.
+input: |
+  SHELLGEI
+  ONLINE
+  JUDGE
+expected_output: |
+  SHELLGEI$
+  ONLINE$
+  JUDGE$
+answer: cat -e input.txt

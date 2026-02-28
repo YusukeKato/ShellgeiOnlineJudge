@@ -3,6 +3,7 @@ import asyncio
 import time
 import tarfile
 import io
+import yaml
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from scripts.container_manager import manager
@@ -28,14 +29,20 @@ class ShellgeiDockerClient:
         try:
             # === input.txt のコピー ===
             tar_stream = io.BytesIO()
-            input_path = self.base_dir / "public" / "input" / problem_id
-            input_path_str = f"{input_path}.txt"
+            yaml_path = self.base_dir / "problems" / "yaml_data" / f"{problem_id}.yaml"
             # ファイルが存在するか確認
-            if Path(input_path_str).exists():
-                with tarfile.open(fileobj=tar_stream, mode="w") as tar:
-                    tar.add(input_path_str, arcname="input.txt")
-                tar_stream.seek(0)
-                container.put_archive(path="/", data=tar_stream)
+            if yaml_path.exists():
+                with open(yaml_path, "r", encoding="utf-8") as yf:
+                    p_data = yaml.safe_load(yf)
+                input_str = p_data.get("input", "")
+                if input_str:
+                    input_tmp_path = self.base_dir / "input_tmp.txt"
+                    with open(input_tmp_path, "w", encoding="utf-8") as f:
+                        f.write(input_str)
+                    with tarfile.open(fileobj=tar_stream, mode="w") as tar:
+                        tar.add(input_tmp_path, arcname="input.txt")
+                    tar_stream.seek(0)
+                    container.put_archive(path="/", data=tar_stream)
             # === ユーザのシェル芸のbashファイルのコピー ===
             bash_file_path = self.base_dir / "z.bash"
             with open(bash_file_path, "w", encoding="utf-8") as file:

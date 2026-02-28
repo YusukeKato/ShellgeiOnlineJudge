@@ -1,1 +1,0 @@
-cat input.txt | sed 's/\([a-z]\)/\1\n/g' | sort | uniq -c | awk 'NR>1{print $2,$1}'

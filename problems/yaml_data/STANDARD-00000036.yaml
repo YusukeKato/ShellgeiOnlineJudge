@@ -1,0 +1,30 @@
+id: STANDARD-00000036
+title_ja: ''
+title_en: ''
+statement_ja: |
+  入力の数字NをN回出力してください。
+statement_en: |
+  The number of inputs N is output N times.
+input: |
+  1
+  2
+  3
+  4
+  5
+expected_output: |
+  1
+  2
+  2
+  3
+  3
+  3
+  4
+  4
+  4
+  4
+  5
+  5
+  5
+  5
+  5
+answer: cat input.txt | awk '{for(i=0;i<s$1;i++){print $1}}'

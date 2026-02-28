@@ -1,0 +1,19 @@
+id: STANDARD-00000041
+title_ja: ''
+title_en: ''
+statement_ja: |
+  xを求めて魔法陣を完成させてください。
+  参考 : https://ja.wikipedia.org/wiki/%E9%AD%94%E6%96%B9%E9%99%A3
+statement_en: |
+  Complete the magic square.
+  Reference: https://ja.wikipedia.org/wiki/%E9%AD%94%E6%96%B9%E9%99%A3
+input: |
+  8 1 6
+  3 x 7
+  4 9 2
+expected_output: |
+  8 1 6
+  3 5 7
+  4 9 2
+answer: cat input.txt | awk 'NR==1{a=$1+$2+$3;print $0}NR==2{x=a-$1-$3;print $1,x,$3}NR==3{print
+  $0}'

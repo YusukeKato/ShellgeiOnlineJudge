@@ -1,1 +1,0 @@
-cat input.txt | awk '{print substr($1,1,1), length($1)}'

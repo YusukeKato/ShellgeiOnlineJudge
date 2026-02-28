@@ -1,0 +1,23 @@
+id: STANDARD-00000005
+title_ja: ''
+title_en: ''
+statement_ja: ''
+statement_en: |
+  Fibonacci: F(0) = 0, F(1) = 1, F(n+2) = F(n) + F(n+1)
+  F(0)からF(10)まで出力してください。
+  Fibonacci: F(0) = 0, F(1) = 1, F(n+2) = F(n) + F(n+1)
+  Output from F(0) to F(10).
+input: ''
+expected_output: |
+  0
+  1
+  1
+  2
+  3
+  5
+  8
+  13
+  21
+  34
+  55
+answer: seq 9 | awk 'BEGIN{a=0;b=1;print a;print b}{c=a+b;print c;a=b;b=c}'

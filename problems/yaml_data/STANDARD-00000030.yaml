@@ -1,0 +1,21 @@
+id: STANDARD-00000030
+title_ja: ''
+title_en: ''
+statement_ja: |
+  シーザー暗号を解読してください。
+statement_en: |
+  Decipher the Caesar cipher.
+input: |
+  APMTTOMQ
+expected_output: |
+  SHELLGEI
+answer: cat input.txt | sed -E 's/(.)/\1\n/g' | awk '{if($1=="A"){print "S"}else if($1=="B"){print
+  "T"}else if($1=="C"){print "U"}else if($1=="D"){print "V"}else if($1=="E"){print
+  "W"}else if($1=="F"){print "X"}else if($1=="G"){print "Y"}else if($1=="H"){print
+  "Z"}else if($1=="I"){print "A"}else if($1=="J"){print "B"}else if($1=="K"){print
+  "C"}else if($1=="L"){print "D"}else if($1=="M"){print "E"}else if($1=="N"){print
+  "F"}else if($1=="O"){print "G"}else if($1=="P"){print "H"}else if($1=="Q"){print
+  "I"}else if($1=="R"){print "J"}else if($1=="S"){print "K"}else if($1=="T"){print
+  "L"}else if($1=="U"){print "M"}else if($1=="V"){print "N"}else if($1=="W"){print
+  "O"}else if($1=="X"){print "P"}else if($1=="Y"){print "Q"}else if($1=="Z"){print
+  "R"}}' | xargs | sed 's/ //g'

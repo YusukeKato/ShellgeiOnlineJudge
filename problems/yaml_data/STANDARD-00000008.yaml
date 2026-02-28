@@ -1,0 +1,24 @@
+id: STANDARD-00000008
+title_ja: ''
+title_en: ''
+statement_ja: |
+  鶴亀算を行ってください。
+  入力の一列目の値は鶴と亀の合計、二列目の値は足の数の合計です。
+  出力の一列目は鶴の数、二列目は亀の数としてください。
+  ただし、鶴の足は二本、亀の足は四本とします。
+statement_en: "Input:\n- first column: the sum of cranes and turtles \n- second column:\
+  \ the sum of the number of legs\n\nOutput:\n- first column: the number of cranes\n\
+  - second column: the number of turtles\n\nWhere cranes have two legs and turtles\
+  \ have four legs.\n"
+input: |
+  6 20
+  10 30
+  2 6
+  11 28
+expected_output: |
+  2 4
+  5 5
+  1 1
+  8 3
+answer: cat input.txt | awk '{for(i=0;i<10;i++){for(j=0;j<10;j++){if(i+j==$1&&i*2+j*4==$2){print
+  i, j}}}}'

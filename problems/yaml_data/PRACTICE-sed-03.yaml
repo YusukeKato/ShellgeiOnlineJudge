@@ -1,0 +1,14 @@
+id: PRACTICE-sed-03
+title_ja: ''
+title_en: ''
+statement_ja: |
+  練習：sed、正規表現
+  sedコマンドで入力ファイル"input.txt"の数字だけを削除してください。
+statement_en: |
+  Exercise: sed, Regular Expression
+  Delete only the numbers in the input file "input.txt".
+input: |
+  S502HE99LL1805GE34I 888ONL931IN93E1 J854U2D2G97E777
+expected_output: |
+  SHELLGEI ONLINE JUDGE
+answer: cat input.txt | sed "s/[0-9]//g"

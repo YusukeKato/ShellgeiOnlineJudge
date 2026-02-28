@@ -1,0 +1,21 @@
+id: PRACTICE-uniq-02
+title_ja: ''
+title_en: ''
+statement_ja: |
+  練習：uniq, sort
+  uniqコマンドで入力ファイル"input.txt"の各行の個数を出力してください。
+statement_en: |
+  Exercise: uniq, sort
+  Output the number of pieces in each line of the input file "input.txt".
+input: |
+  SHELL
+  ONLINE
+  SHELL
+  SHELL
+  JUDGE
+  ONLINE
+expected_output: |2
+        1 JUDGE
+        2 ONLINE
+        3 SHELL
+answer: cat input.txt | sort | uniq -c

@@ -1,0 +1,15 @@
+id: PRACTICE-cat-02
+title_ja: ''
+title_en: ''
+statement_ja: |
+  練習：cat
+  catコマンドで入力ファイル"input.txt"の各行の先頭に行番号を付けて出力してください。
+statement_en: |
+  Exercise: cat
+  Output the input file "input.txt" with line numbers.
+input: |
+  SHELLGEI
+  ONLINE
+  JUDGE
+expected_output: "     1\tSHELLGEI\n     2\tONLINE\n     3\tJUDGE\n"
+answer: cat -n input.txt

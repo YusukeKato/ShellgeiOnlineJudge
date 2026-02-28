@@ -1,0 +1,35 @@
+id: STANDARD-00000046
+title_ja: ''
+title_en: ''
+statement_ja: |
+  入力Nに対してNxNの単位行列を出力してください。
+statement_en: |
+  Output an N x N identity matrix, when given an input N.
+input: |
+  3
+  5
+  2
+  4
+  6
+expected_output: |
+  100
+  010
+  001
+  10000
+  01000
+  00100
+  00010
+  00001
+  10
+  01
+  1000
+  0100
+  0010
+  0001
+  100000
+  010000
+  001000
+  000100
+  000010
+  000001
+answer: cat input.txt | awk '{for(i=0;i<$1;i++){for(j=0;j<$1;j++){if(i==j){printf("1")}else{printf("0")}}printf("\n")}}'

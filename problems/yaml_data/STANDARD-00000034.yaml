@@ -1,0 +1,14 @@
+id: STANDARD-00000034
+title_ja: ''
+title_en: ''
+statement_ja: |
+  xを5乗すると1099511627776になります。
+  xを求めてください。
+statement_en: |
+  When x^5 = 1099511627776, Find x.
+input: |
+  1099511627776
+expected_output: |
+  256
+answer: cat input.txt | factor | xargs -n1 | awk 'NR>1' | xargs | awk '{for(i=1;i<=NF/5;i++){print
+  $i}}' | awk 'BEGIN{a=1}{a=a*$1}END{print a}'

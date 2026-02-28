@@ -1,0 +1,17 @@
+id: STANDARD-00000045
+title_ja: ''
+title_en: ''
+statement_ja: |
+  次の想定出力のような模様を描いてください。
+statement_en: |
+  Output the same pattern as the expected output.
+input: ''
+expected_output: |
+  222111
+  222111
+  222111
+  333444
+  333444
+  333444
+answer: echo | awk '{for(i=0;i<6;i++){for(j=0;j<6;j++){if(i>=3&&j<3){printf("3")}else
+  if(i<3&&j<3){printf("2")}else if(i<3&&j>=3){printf("1")}else if(i>=3&&j>=3){printf("4")}};printf("\n")}}'

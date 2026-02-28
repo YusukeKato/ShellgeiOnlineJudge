@@ -1,4 +1,0 @@
-<h1>タイトル</h1>
-<p>何かの文章</p>
-<a href="https://shellgei-online-judge.com">シェル芸オンラインジャッジ</a>
-<marquee>タグのテスト</marquee>

@@ -1,7 +1,0 @@
-shellgei.png shellgei.jpg
-online.png online.jpg
-judge.png judge.jpg
-apple.png apple.jpg
-20240825_01.png 20240825_01.jpg
-20240825_02.png 20240825_02.jpg
-20240825_03.png 20240825_03.jpg

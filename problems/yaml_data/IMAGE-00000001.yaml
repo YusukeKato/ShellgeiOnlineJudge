@@ -1,0 +1,12 @@
+id: IMAGE-00000001
+title_ja: ''
+title_en: ''
+statement_ja: |
+  大きさ200x200[px]、赤色（#FF0000）の画像をmedia/output.jpgとして作成してください。
+  ex: convert -size 200x200 xc:#FF0000 media/output.jpg
+statement_en: |
+  Create an image with a size of 200x200[px] and color #FF0000(red) as media/output.jpg.
+  ex: convert -size 200x200 xc:#FF0000 media/output.jpg
+input: ''
+expected_output: ''
+answer: convert -size 200x200 xc:#FF0000 media/output.jpg

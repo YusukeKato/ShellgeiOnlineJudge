@@ -1,0 +1,14 @@
+id: PRACTICE-sed-01
+title_ja: ''
+title_en: ''
+statement_ja: |
+  練習：sed
+  sedコマンドで入力ファイル"input.txt"の"XXX"を"SHELLGEI"に置換してください。
+statement_en: |
+  Exercise: sed
+  Replace "XXX" with "SHELLGEI" in the input file "input.txt".
+input: |
+  XXX ONLINE JUDGE
+expected_output: |
+  SHELLGEI ONLINE JUDGE
+answer: cat input.txt | sed "s/XXX/SHELLGEI/"

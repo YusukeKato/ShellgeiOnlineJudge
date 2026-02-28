@@ -1,1 +1,0 @@
-find "/ShellGeiData/sd201701" -type f | sort

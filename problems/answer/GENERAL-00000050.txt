@@ -1,1 +1,0 @@
-cat input.txt | tr -d '=' | sed 's/*/\\*/g;s/\//\\\//g' | awk '{cmd1="echo -n "$0"=;echo "$0" | bc";system(cmd1)}' | sed 's/=/= /g'

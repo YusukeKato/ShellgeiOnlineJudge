@@ -1,0 +1,13 @@
+id: PRACTICE-echo-03
+title_ja: ''
+title_en: ''
+statement_ja: |
+  練習：echo
+  echoコマンドで設定されているシェルを確認してください。
+statement_en: |
+  Exercise: echo
+  Check the shell.
+input: ''
+expected_output: |
+  /bin/bash
+answer: echo $SHELL

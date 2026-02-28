@@ -1,0 +1,13 @@
+id: STANDARD-00000013
+title_ja: ''
+title_en: ''
+statement_ja: |
+  26種類のアルファベットのうち、足りないものを出力してください。
+statement_en: |
+  Please output the missing alphabets.
+input: |
+  qwertyuiopasdfhjklzxcvbnm
+expected_output: |
+  g
+answer: echo {a..z} | tr $(cat input.txt) '                         ' | awk '{print
+  $1}'

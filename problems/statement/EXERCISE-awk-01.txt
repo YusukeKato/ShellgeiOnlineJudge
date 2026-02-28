@@ -1,4 +1,0 @@
-練習：awk
-awkコマンドで文字列"SHELLGEI ONLINE JUDGE"を出力してください。
-Exercise: awk
-Output the string "SHELLGEI ONLINE JUDGE".

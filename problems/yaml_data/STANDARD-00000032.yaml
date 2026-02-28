@@ -1,0 +1,15 @@
+id: STANDARD-00000032
+title_ja: ''
+title_en: ''
+statement_ja: |
+  最小公倍数を求めてください。
+statement_en: |
+  Find the least common multiple.
+input: |
+  256
+  512
+  1024
+expected_output: |
+  1024
+answer: cat input.txt | xargs | awk '{a=$1;for(i=100;i>=1;i--){for(j=100;j>=1;j--){for(k=100;k>=1;k--){if($1*i==$2*j&&$2*j==$3*k){a=$1*i}}}};print
+  a}'

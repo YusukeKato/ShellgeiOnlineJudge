@@ -1,0 +1,12 @@
+id: STANDARD-00000012
+title_ja: ''
+title_en: ''
+statement_ja: |
+  0は1に、1は0に、反転させてください。
+statement_en: |
+  Invert 0 to 1 and 1 to 0.
+input: |
+  010100110011000111000111000011110000111100000111110000011111
+expected_output: |
+  101011001100111000111000111100001111000011111000001111100000
+answer: cat input.txt | tr 01 10

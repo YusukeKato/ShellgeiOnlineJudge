@@ -1,1 +1,0 @@
-cat input.txt | awk '{for(i=0;i<s$1;i++){print $1}}'

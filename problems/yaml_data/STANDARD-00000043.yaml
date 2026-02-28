@@ -1,0 +1,24 @@
+id: STANDARD-00000043
+title_ja: ''
+title_en: ''
+statement_ja: |
+  入力の各行の文字列の末尾にそれぞれ".png"と".jpg"を加えてスペース区切りで出力してください。
+statement_en: |
+  Add '.png' and '.jpg' to the end of each line of the input string, and output them separated by a space.
+input: |
+  shellgei
+  online
+  judge
+  apple
+  20240825_01
+  20240825_02
+  20240825_03
+expected_output: |
+  shellgei.png shellgei.jpg
+  online.png online.jpg
+  judge.png judge.jpg
+  apple.png apple.jpg
+  20240825_01.png 20240825_01.jpg
+  20240825_02.png 20240825_02.jpg
+  20240825_03.png 20240825_03.jpg
+answer: cat input.txt | awk '{print $1".png",$1".jpg"}'

@@ -1,0 +1,29 @@
+id: STANDARD-00000024
+title_ja: ''
+title_en: ''
+statement_ja: |
+  ナップサック問題を解いてください。
+  容量185のナップサックに、入力で与えられた荷物をそれぞれ好きな数だけ詰め込みます。
+  入力の一列目は荷物の名前、二列目は価値、三列目はサイズです。
+  荷物のサイズの合計がナップサックの容量を超えることはできません。
+  このとき、ナップサックに詰め込んだ荷物の総価値の最大値を出力してください。
+  ただし、同じ荷物はいくつでも詰め込んでよいです（つまり、各荷物はそれぞれ0個以上詰め込めます）。
+statement_en: |
+  Find the total maximum value.
+  Knapsack capacity size is 185.
+  Each luggage can be packed more than 0 pieces.
+
+  Input (luggage):
+  - first row: name
+  - second row: value
+  - third row: size
+input: |
+  A 121 15
+  B 86 11
+  C 162 18
+  D 68 8
+  E 187 21
+expected_output: |
+  1651
+answer: echo | awk '{m=0;for(a=0;a<14;a++){for(b=0;b<19;b++){for(c=0;c<12;c++){for(d=0;d<24;d++){for(e=0;e<11;e++){if(a*15+b*11+c*18+d*8+e*21<=185&&a*121+b*86+c*162+d*68+e*187>m){m=a*121+b*86+c*162+d*68+e*187}}}}}};print
+  m}'

@@ -1,0 +1,14 @@
+id: STANDARD-00000044
+title_ja: ''
+title_en: ''
+statement_ja: |
+  ShellGeiData/vol.68ディレクトリの中にあるファイルにおいて、"entrepreneurial"という文字列が書かれているファイルの名前を出力してください。
+  使用データ：https://github.com/ryuichiueda/ShellGeiData/tree/master/vol.68
+statement_en: |
+  Output the names of the files that contain the string "entrepreneurial" in the ShellGeiData/vol.68 directory.
+  data: https://github.com/ryuichiueda/ShellGeiData/tree/master/vol.68
+input: ''
+expected_output: |
+  words3.txt
+answer: find ShellGeiData/vol.68 -type f | xargs -I@ grep entrepreneurial -rl @ |
+  awk -F'/' '{print $NF}'

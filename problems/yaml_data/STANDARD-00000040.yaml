@@ -1,0 +1,15 @@
+id: STANDARD-00000040
+title_ja: ''
+title_en: ''
+statement_ja: |
+  入力の文字列において、aとbとcがそれぞれ何文字あるか数えてください。
+statement_en: |
+  Output the number of characters for a, b, and c.
+input: |
+  abcabababcccbbaaaca
+expected_output: |
+  a 8
+  b 6
+  c 5
+answer: cat input.txt | sed 's/\([a-z]\)/\1\n/g' | sort | uniq -c | awk 'NR>1{print
+  $2,$1}'

@@ -1,2 +1,0 @@
-電車の時刻表が与えられるので、8:00ちょうどにA駅から出発してD駅に到着するとき、最も早い到着時刻を出力してください。
-Given a train schedule, output the earliest arrival time for a train leaving station A at exactly 8:00 and arriving at station D.

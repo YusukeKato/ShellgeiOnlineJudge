@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends
-from datetime import datetime, timezone
 import pytz
+import yaml
+from pathlib import Path
+from fastapi import APIRouter, Depends, HTTPException
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
@@ -61,3 +63,27 @@ async def post_shellgei(
         image=image,
         judge=judge,
     )
+
+
+@router.get("/problems/{problem_id}")
+async def get_problem(problem_id: str):
+    # backend/problems/yaml_data/{problem_id}.yaml を参照
+    base_dir = Path(__file__).resolve().parent.parent
+    yaml_path = base_dir / "problems" / "yaml_data" / f"{problem_id}.yaml"
+
+    if not yaml_path.exists():
+        raise HTTPException(status_code=404, detail="Problem not found")
+
+    with open(yaml_path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    return {
+        "title_ja": data.get("title_ja", ""),
+        "title_en": data.get("title_en", ""),
+        "statement_ja": data.get("statement_ja", ""),
+        "statement_en": data.get("statement_en", ""),
+        "input": data.get("input", ""),
+        "expected_output": data.get("expected_output", ""),
+        "answer": data.get("answer", ""),
+        "image": f"/image/{problem_id}.jpg",  # Nginxから配信される画像URL
+    }
