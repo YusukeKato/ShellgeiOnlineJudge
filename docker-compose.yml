@@ -1,6 +1,20 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: soj-db
+    restart: always
+    environment:
+      - POSTGRES_USER=soj_user
+      - POSTGRES_PASSWORD=soj_password
+      - POSTGRES_DB=soj_db
+      - TZ=Asia/Tokyo
+    volumes:
+      - db_data:/var/lib/postgresql/data  # DBデータの永続化用ボリュームを設定
+    ports:
+      - "5432:5432"
+
   backend:
     build:
       context: .
@@ -10,11 +24,11 @@ services:
     volumes:
       # ホストのDockerソケットをマウント (DooD)
       - /var/run/docker.sock:/var/run/docker.sock
-      # データファイル
-      - ./backend_data/shellgei_id.txt:/app/backend/shellgei_id.txt
-      - ./backend_data/unixtime.txt:/app/backend/unixtime.txt
     environment:
       - TZ=Asia/Tokyo
+      - DATABASE_URL=postgresql://soj_user:soj_password@db:5432/soj_db
+    depends_on:
+      - db
 
   frontend:
     build:
@@ -31,3 +45,6 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
+
+volumes:
+  db_data: # DB永続化用ボリューム

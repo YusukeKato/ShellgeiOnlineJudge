@@ -21,8 +21,5 @@ COPY problems/ ./backend/public/
 # 作業ディレクトリをbackendに変更
 WORKDIR /app/backend
 
-RUN echo "0.0" > unixtime.txt && chmod 666 unixtime.txt \
-    && echo "0" > shellgei_id.txt && chmod 666 shellgei_id.txt
-
 # uvicornサーバーの起動
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
