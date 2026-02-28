@@ -3,7 +3,6 @@ import SojHeader from "./header";
 import SojFooter from "./footer";
 import SojNavList from "./nav_list";
 import SojInfo from "./info";
-import SojNews from "./news";
 import SojAbout from "./about";
 import SojHistory from "./history";
 import SojContact from "./contact";
@@ -37,7 +36,7 @@ const App: React.FC = () => {
 
   /* SOJ Info */
   const update_date: string = "2026/02/28";
-  const current_version: string = "2.5.0";
+  const current_version: string = "2.5.1";
 
   /* SOJ useState: select problem */
   const [selectedProblemStandard, setSelectedProblemStandard] = useState("STANDARD-00000001");
@@ -77,7 +76,6 @@ const App: React.FC = () => {
       <SojHeader />
       <SojNavList x_url={x_url} github_repository_url={github_repository_url} blog_url={blog_url} />
       <SojInfo update_date={update_date} current_version={current_version} />
-      <SojNews blog_url={blog_url} />
       <SojAbout />
       <SojHistory />
       <SojContact

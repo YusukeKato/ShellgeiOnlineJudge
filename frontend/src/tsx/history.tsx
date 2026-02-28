@@ -12,6 +12,7 @@ const SojHistory: React.FC = () => {
         <details>
           <summary>2026</summary>
           <ul>
+            <li>02/28: 2.5.1: 情報更新</li>
             <li>02/28: 2.5.0: 問題データをYAMLで管理、問題データをAPI経由で取得</li>
             <li>02/28: 2.4.0: データベース追加、サーバメンテナンス</li>
             <li>
