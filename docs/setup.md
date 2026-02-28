@@ -28,25 +28,6 @@ sudo chmod +x /usr/local/bin/docker-compose
 docker-compose --version
 ```
 
-### Setup docker
-
-2026/01/31: おそらくこの設定は必要ない
-
-```sh
-# sudo gpasswd -a $USER docker
-# sudo systemctl restart docker
-```
-
-```sh
-# sudo visudo
-```
-
-```sh
-# the username that executes PHP: www-data
-# $ which docker: /usr/bin/docker
-# www-data ALL=(ALL) NOPASSWD: /usr/bin/docker
-```
-
 ### Download image file
 
 ```sh
@@ -57,8 +38,6 @@ docker pull theoldmoon0602/shellgeibot
 
 ### Install nginx
 
-2026/02/01: nginxをコンテナ内で動かせるようになったので不要
-
 ```sh
 sudo apt update && sudo apt -y upgrade
 # Amazon Linux 2023: sudo dnf update && sudo dnf upgrade
@@ -66,8 +45,6 @@ sudo apt -y install nginx
 ```
 
 ### Setup nginx
-
-2026/02/01: /frontend/nginx/にconfファイルを用意
 
 `sudo vim /etc/nginx/nginx.conf`
 

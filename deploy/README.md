@@ -31,60 +31,18 @@ root_path="/usr/share/nginx/html/"
 # root_path="/var/www/html/"
 ```
 
-## Deploy
+## .env
 
-2026/02/01: docker composeだけで起動できる（ホスト側でnginxの設定と起動は必要）
+`.env.example` を参考に `ShellgeiOnlineJudge/.env` を作成する
+
+## Deploy
 
 ```sh
 cd /path/to/ShellgeiOnlineJudge/
-bash create_backend_data.bash
 docker compose up -d --build
 ```
 
-### frontend
-
-2026/02/01: コンテナ内で実行されるため不要
-
-```sh
-# cd /path/to/frontend/
-# yarn install
-# yarn build
-```
-
-### setup data
-
-2026/02/01: コンテナ内で起動するため不要
-
-```sh
-# cd /path/to/deploy/
-# ./deploy.bash
-```
-
-### backend
-
-2026/02/01: コンテナ内で起動するため不要
-
-[backend/README.md](../backend/README.md)に記載のvenv環境でuvicornかgunicornをインストールする。
-
-```sh
-cd /path/to/backend/
-uvicorn main:app --host 0.0.0.0 --port 8000
-# or
-gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-class uvicorn.workers.UvicornWorker main:app
-
-# background
-nohup uvicorn main:app --host 0.0.0.0 --port 8000 &
-# or
-nohup gunicorn --bind 0.0.0.0:8000 --workers 2 --worker-class uvicorn.workers.UvicornWorker main:app &
-
-# stop
-pkill uvicorn
-pkill gunicorn
-```
-
 ### nginx
-
-2026/02/01: nginxもコンテナ内で動かすので不要
 
 ```sh
 sudo systemctl start nginx
