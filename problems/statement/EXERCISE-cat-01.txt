@@ -1,4 +1,0 @@
-練習：cat
-catコマンドで入力ファイル"input.txt"をそのまま出力してください。
-Exercise: cat
-Output the input file "input.txt" as is.

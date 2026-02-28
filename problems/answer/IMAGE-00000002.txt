@@ -1,1 +1,0 @@
-convert -size 200x200 xc:#FF0000 jpg:- | convert - -stroke "#000000" -strokewidth 50 -draw "line 0,100 200,100" media/output.jpg

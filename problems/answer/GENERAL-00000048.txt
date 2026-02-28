@@ -1,1 +1,0 @@
-cat input.txt | tr -d '\n' | sed 's/\([a-z]\)/\1\n/g' | uniq -c | awk '{print $2,$1}' | tr -d ' ' | tr -d '\n'

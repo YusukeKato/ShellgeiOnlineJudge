@@ -1,4 +1,0 @@
-練習：grep
-grepコマンドで入力ファイル"input.txt"から拡張子".jpg"か".png"が付いた行だけを出力してください。
-Exercise: grep
-Output only lines with the extension ".jpg" or ".png" from the input file "input.txt".

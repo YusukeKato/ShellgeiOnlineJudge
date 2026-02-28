@@ -1,2 +1,0 @@
-26種類のアルファベットのうち、足りないものを出力してください。
-Please output the missing alphabets.

@@ -1,4 +1,0 @@
-練習：echo
-echoコマンドで文字列"SHELLGEI ONLINE JUDGE"を出力してください。
-Exercise: echo
-Output the string "SHELLGEI ONLINE JUDGE".

@@ -1,2 +1,0 @@
-各行において、並んでいる数字を足し合わせた合計を出力してください。
-Output the sum of the numbers in the line.

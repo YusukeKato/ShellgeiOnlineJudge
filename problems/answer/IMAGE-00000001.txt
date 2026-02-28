@@ -1,1 +1,0 @@
-convert -size 200x200 xc:#FF0000 media/output.jpg

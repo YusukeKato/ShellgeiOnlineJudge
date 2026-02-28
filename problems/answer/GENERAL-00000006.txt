@@ -1,1 +1,0 @@
-echo "scale=11; 4*a(1)" | bc -l | cut -c 1-12

@@ -1,4 +1,0 @@
-AとBとCは1点、DとEは2点、Fは3点です。
-各行において、点数の合計を出力してください。
-A, B and C are worth 1 point, D and E are worth 2 points, and F is worth 3 points.
-In each line, output the total number of points.

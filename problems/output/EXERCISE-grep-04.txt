@@ -1,3 +1,0 @@
-file_01.jpg
-test_02.jpg
-test_11.jpg.jpg

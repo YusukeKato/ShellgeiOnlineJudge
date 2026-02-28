@@ -1,1 +1,0 @@
-cat input.txt | xargs | awk '{a=$1;for(i=100;i>=1;i--){for(j=100;j>=1;j--){for(k=100;k>=1;k--){if($1*i==$2*j&&$2*j==$3*k){a=$1*i}}}};print a}'

@@ -1,1 +1,0 @@
-echo | awk '{print "SHELLGEI ONLINE JUDGE"}'

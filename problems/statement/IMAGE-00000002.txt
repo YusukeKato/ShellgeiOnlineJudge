@@ -1,4 +1,0 @@
-大きさ200x200[px]の赤色の画像の真ん中に50[px]の横線を引いてください。
-画像はmedia/output.jpgとして作成してください。
-Draw a 50[px] horizontal line down the middle of the red 200x200[px] image.
-Output image as media/output.jpg.

@@ -1,1 +1,0 @@
-convert -size 200x200 xc:#FF0000 jpg:- | convert - -draw "circle 100,100 100,150" media/output.jpg

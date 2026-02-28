@@ -1,2 +1,0 @@
-入力Nに対してNxNの単位行列を出力してください。
-Output an N x N identity matrix, when given an input N.

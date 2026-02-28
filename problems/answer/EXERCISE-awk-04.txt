@@ -1,1 +1,0 @@
-cat input.txt | awk 'BEGIN{cnt=0}{cnt+=1}END{print cnt}'
