@@ -1,5 +1,13 @@
 # Deploy
 
+## Setup
+
+- install
+  - docker
+  - docker compose
+- image
+  - `docker pull theoldmoon0602/shellgeibot`
+
 ## Switch local/server
 
 Edit `frontend/src/tsx/App.tsx`
@@ -57,4 +65,11 @@ sudo systemctl stop nginx
 python3 test.py server
 # local
 python3 test.py local
+```
+
+## Update Let's Encrypt
+
+```sh
+sudo certbot certonly --standalone
+sudo systemctl reload nginx
 ```

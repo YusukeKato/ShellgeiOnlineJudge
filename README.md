@@ -12,8 +12,7 @@ SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-j
 - [backend](./backend/README.md): FastAPI
 - [problems](./problems/README.md): Problem text files
 - [deploy](./deploy/README.md): Deploy and test scripts
-- [setup](./docs/setup.md): How to setup
-- [maintenance](./docs/maintenance.md): How to maintenance
+- [maintenance](./deploy/maintenance.md): How to maintenance
 
 ## References
 - [上田ブログ/シェル芸のトップページ](https://b.ueda.tech/?page=01434)

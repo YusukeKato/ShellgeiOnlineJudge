@@ -20,12 +20,6 @@ sudo dnf update
 sudo dnf upgrade
 ```
 
-## Update Let's Encrypt
-
-```sh
-sudo certbot certonly --standalone
-sudo systemctl reload nginx
-```
 
 ## How to use SSH
 
