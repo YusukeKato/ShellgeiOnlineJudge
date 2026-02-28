@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api import api_shellgei  # type: ignore
 from contextlib import asynccontextmanager
 from scripts.container_manager import manager
-from database import engine, Base
+from scripts.database import engine, Base
 
 
 @asynccontextmanager

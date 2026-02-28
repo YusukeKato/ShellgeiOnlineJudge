@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
 from models.model_db import ExecutionLog
-from database import get_db
+from scripts.database import get_db
 from scripts.run_shellgei import ShellgeiDockerClient
 from scripts.judge import ShellgeiJudge
 
