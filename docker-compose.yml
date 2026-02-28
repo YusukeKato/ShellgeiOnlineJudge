@@ -5,10 +5,9 @@ services:
     image: postgres:15-alpine
     container_name: soj-db
     restart: always
+    env_file:
+      - .env
     environment:
-      - POSTGRES_USER=soj_user
-      - POSTGRES_PASSWORD=soj_password
-      - POSTGRES_DB=soj_db
       - TZ=Asia/Tokyo
     volumes:
       - db_data:/var/lib/postgresql/data  # DBデータの永続化用ボリュームを設定
@@ -21,12 +20,13 @@ services:
       dockerfile: backend/Dockerfile
     container_name: soj-backend
     restart: always
+    env_file:
+      - .env
     volumes:
       # ホストのDockerソケットをマウント (DooD)
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - TZ=Asia/Tokyo
-      - DATABASE_URL=postgresql://soj_user:soj_password@db:5432/soj_db
     depends_on:
       - db
 
