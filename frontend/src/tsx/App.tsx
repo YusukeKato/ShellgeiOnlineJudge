@@ -33,18 +33,18 @@ const App: React.FC = () => {
 
   /* SOJ param */
   const shellgei_limit: number = 1000;
-  const default_image: string = soj_url + "/image/GENERAL-00000001.jpg";
+  const default_image: string = soj_url + "/image/STANDARD-00000001.jpg";
 
   /* SOJ Info */
   const update_date: string = "2026/02/28";
   const current_version: string = "2.4.0";
 
   /* SOJ useState: select problem */
-  const [selectedProblemStandard, setSelectedProblemStandard] = useState("GENERAL-00000001");
+  const [selectedProblemStandard, setSelectedProblemStandard] = useState("STANDARD-00000001");
   const changeSelectedProblemStandard = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedProblemStandard(event.target.value);
   };
-  const [selectedProblemPractice, setSelectedProblemPractice] = useState("EXERCISE-awk-01");
+  const [selectedProblemPractice, setSelectedProblemPractice] = useState("PRACTICE-awk-01");
   const changeSelectedProblemPractice = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedProblemPractice(event.target.value);
   };

@@ -16,7 +16,7 @@ RUN poetry config virtualenvs.create false \
 COPY backend/ ./backend/
 
 # 問題データのコピー
-COPY problems/ ./backend/public/
+COPY problems/ ./backend/problems/
 
 # 作業ディレクトリをbackendに変更
 WORKDIR /app/backend
