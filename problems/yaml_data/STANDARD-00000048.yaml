@@ -1,0 +1,13 @@
+id: STANDARD-00000048
+title_ja: ''
+title_en: ''
+statement_ja: |
+  文字列の中で連続している文字を個数に置き換えてください。
+statement_en: |
+  Replace consecutive identical characters in the string with their counts.
+input: |
+  aaabbcccccdeeeefghhiijjjkkkkkk
+expected_output: |
+  a3b2c5d1e4f1g1h2i2j3k6
+answer: cat input.txt | tr -d '\n' | sed 's/\([a-z]\)/\1\n/g' | uniq -c | awk '{print
+  $2,$1}' | tr -d ' ' | tr -d '\n'

@@ -1,0 +1,17 @@
+id: STANDARD-00000025
+title_ja: ''
+title_en: ''
+statement_ja: |
+  AとBとCをそれぞれひとつずつ使用して組み合わせた文字列を全て出力してください。
+statement_en: |
+  Output all combined strings using one each of 'A', 'B', and 'C'.
+input: ''
+expected_output: |
+  ABC
+  ACB
+  BAC
+  BCA
+  CAB
+  CBA
+answer: echo {A,B,C}{A,B,C}{A,B,C} | xargs -n1 | awk '{if(substr($0,1,1)!=substr($0,2,1)&&substr($0,1,1)!=substr($0,3,1)&&substr($0,2,1)!=substr($0,3,1)){print
+  $0}}'

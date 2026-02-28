@@ -1,0 +1,23 @@
+id: PRACTICE-find-03
+title_ja: ''
+title_en: ''
+statement_ja: |
+  練習：find
+  findコマンドで"/ShellGeiData/sd201701" の中にある"dangerous"と名前が付いたファイルの一覧を出力してください。
+  出力はsortしてください。
+  使用データ : https://github.com/ryuichiueda/ShellGeiData/tree/master/sd201701
+statement_en: |
+  Exercise: find
+  Output a list of files named “dangerous” in "/ShellGeiData/sd201701".
+  sort the output.
+  data: https://github.com/ryuichiueda/ShellGeiData/tree/master/sd201701
+input: ''
+expected_output: |
+  /ShellGeiData/sd201701/version_sort/dangerous1.2
+  /ShellGeiData/sd201701/version_sort/dangerous1.2.1
+  /ShellGeiData/sd201701/version_sort/dangerous11.3
+  /ShellGeiData/sd201701/version_sort/dangerous2.0.4
+  /ShellGeiData/sd201701/version_sort/dangerous2.1
+  /ShellGeiData/sd201701/version_sort/dangerous2.1.1
+  /ShellGeiData/sd201701/version_sort/dangerous2.7
+answer: find "/ShellGeiData/sd201701" -type f -name "dangerous*" | sort

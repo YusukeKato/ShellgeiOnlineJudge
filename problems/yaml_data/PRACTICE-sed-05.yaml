@@ -1,0 +1,33 @@
+id: PRACTICE-sed-05
+title_ja: ''
+title_en: ''
+statement_ja: |
+  練習：sed、正規表現
+  sedコマンドで入力ファイル"input.txt"の数字の行だけを出力してください。
+statement_en: |
+  Exercise: sed, Regular Expression
+  Output only the lines that contain numbers in the input file "input.txt".
+input: |
+  1
+  22
+  SHELLGEI
+  333
+  4444
+  55555
+  666666
+  7777777
+  ONLINE
+  88888888
+  JUDGE
+  999999999
+expected_output: |
+  1
+  22
+  333
+  4444
+  55555
+  666666
+  7777777
+  88888888
+  999999999
+answer: cat input.txt | sed -n "/[0-9]/p"

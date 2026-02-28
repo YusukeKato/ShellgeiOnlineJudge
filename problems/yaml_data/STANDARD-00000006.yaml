@@ -1,0 +1,13 @@
+id: STANDARD-00000006
+title_ja: ''
+title_en: ''
+statement_ja: |
+  円周率を小数点以下10桁まで求めてください。
+  11桁目以降は切り捨ててください。
+statement_en: |
+  Find pi to 10 decimal places.
+  Round down after the 11th digit.
+input: ''
+expected_output: |
+  3.1415926535
+answer: echo "scale=11; 4*a(1)" | bc -l | cut -c 1-12

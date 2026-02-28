@@ -1,0 +1,35 @@
+id: PRACTICE-find-02
+title_ja: ''
+title_en: ''
+statement_ja: |
+  練習：find
+  findコマンドで"/ShellGeiData/sd201701" の中にあるファイルのみの一覧を出力してください。
+  出力はsortしてください。
+  使用データ : https://github.com/ryuichiueda/ShellGeiData/tree/master/sd201701
+statement_en: |
+  Exercise: find
+  Output a list of only the files in "/ShellGeiData/sd201701".
+  sort the output.
+  data: https://github.com/ryuichiueda/ShellGeiData/tree/master/sd201701
+input: ''
+expected_output: |
+  /ShellGeiData/sd201701/address_list/syain.list
+  /ShellGeiData/sd201701/address_list/yakuin.list
+  /ShellGeiData/sd201701/alphabet_connection
+  /ShellGeiData/sd201701/crypt
+  /ShellGeiData/sd201701/files.txt
+  /ShellGeiData/sd201701/hoge
+  /ShellGeiData/sd201701/httpd-access.log
+  /ShellGeiData/sd201701/kaibun
+  /ShellGeiData/sd201701/log_range.log
+  /ShellGeiData/sd201701/not_kaibun
+  /ShellGeiData/sd201701/ntp.conf
+  /ShellGeiData/sd201701/tac
+  /ShellGeiData/sd201701/version_sort/dangerous1.2
+  /ShellGeiData/sd201701/version_sort/dangerous1.2.1
+  /ShellGeiData/sd201701/version_sort/dangerous11.3
+  /ShellGeiData/sd201701/version_sort/dangerous2.0.4
+  /ShellGeiData/sd201701/version_sort/dangerous2.1
+  /ShellGeiData/sd201701/version_sort/dangerous2.1.1
+  /ShellGeiData/sd201701/version_sort/dangerous2.7
+answer: find "/ShellGeiData/sd201701" -type f | sort

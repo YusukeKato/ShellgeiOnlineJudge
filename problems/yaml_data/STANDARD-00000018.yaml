@@ -1,0 +1,18 @@
+id: STANDARD-00000018
+title_ja: ''
+title_en: ''
+statement_ja: |
+  1 <= N <= 100のとき、Nが何か当ててください。
+statement_en: |
+  When 1 <= N <= 100, Find the N.
+input: |
+  N > 50
+  N < 75
+  N > 62
+  N < 68
+  N > 65
+  N > 66
+expected_output: |
+  67
+answer: cat input.txt | awk 'BEGIN{a=1;b=100}{if($2==">"){if(a<$3){a=$3}}else{if(b>$3){b=$3}}}END{for(i=1;i<=100;i++){if(i>a&&i<b){print
+  i}}}'

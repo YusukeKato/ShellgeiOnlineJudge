@@ -1,0 +1,31 @@
+id: STANDARD-00000017
+title_ja: ''
+title_en: ''
+statement_ja: |
+  sortコマンドを使用せずに昇順にソートしてください。
+statement_en: |
+  Sort in ascending order without using the sort command.
+input: |
+  8
+  99
+  12
+  7
+  1024
+  999
+  1
+  5
+  10
+  1000
+expected_output: |
+  1
+  5
+  7
+  8
+  10
+  12
+  99
+  999
+  1000
+  1024
+answer: cat input.txt | awk 'BEGIN{a=0}{b[a]=$1;a+=1}END{for(i=0;i<length(b);i++){for(j=i+1;j<length(b);j++){if(b[i]>b[j]){c=b[i];b[i]=b[j];b[j]=c}}};for(k=0;k<length(b);k++){print
+  b[k]}}'

@@ -1,0 +1,25 @@
+id: STANDARD-00000035
+title_ja: ''
+title_en: ''
+statement_ja: |
+  各行を二行に複製して出力してください。
+statement_en: |
+  Duplicate each line into two lines of output.
+input: |
+  shellgei
+  apple
+  switch
+  book
+  tomato
+expected_output: |
+  shellgei
+  shellgei
+  apple
+  apple
+  switch
+  switch
+  book
+  book
+  tomato
+  tomato
+answer: cat input.txt | awk '{print $1,$1}' | xargs -n1

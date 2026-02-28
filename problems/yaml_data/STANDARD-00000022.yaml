@@ -1,0 +1,12 @@
+id: STANDARD-00000022
+title_ja: ''
+title_en: ''
+statement_ja: |
+  2の1024乗の桁数を求めてください。
+statement_en: |
+  Find the number of digits to the 1024th power of 2.
+input: ''
+expected_output: |
+  309
+answer: echo 'l(2)/l(10)' | bc -l | awk '{printf("%lf*1024\n",$0)}' | bc -l | awk
+  '{print int($0)+1}'

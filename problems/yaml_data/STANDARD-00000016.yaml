@@ -1,0 +1,18 @@
+id: STANDARD-00000016
+title_ja: ''
+title_en: ''
+statement_ja: |
+  入力のHTMLタグをそのまま出力してください。
+statement_en: |
+  Output the HTML tags of the input as is.
+input: |
+  <h1>タイトル</h1>
+  <p>何かの文章</p>
+  <a href="https://shellgei-online-judge.com">シェル芸オンラインジャッジ</a>
+  <marquee>タグのテスト</marquee>
+expected_output: |
+  <h1>タイトル</h1>
+  <p>何かの文章</p>
+  <a href="https://shellgei-online-judge.com">シェル芸オンラインジャッジ</a>
+  <marquee>タグのテスト</marquee>
+answer: cat input.txt

@@ -1,0 +1,32 @@
+id: STANDARD-00000015
+title_ja: ''
+title_en: ''
+statement_ja: |
+  素数の場合は"YES"、素数ではない場合は"NO"を出力してください。
+statement_en: |
+  Output "YES" if the number is prime, "NO" if the number is not prime.
+input: |
+  2
+  7
+  57
+  97
+  401
+  407
+  2635
+  7727
+  102611
+  102613
+  200560490131
+expected_output: |
+  YES
+  YES
+  NO
+  YES
+  YES
+  NO
+  NO
+  YES
+  YES
+  NO
+  YES
+answer: cat input.txt | factor | awk '{if(NF==2){print "YES"}else{print "NO"}}'

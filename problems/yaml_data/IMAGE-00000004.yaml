@@ -1,0 +1,13 @@
+id: IMAGE-00000004
+title_ja: ''
+title_en: ''
+statement_ja: |
+  200x200[px]の画像に赤色と黒色で市松模様を描いてください。
+  画像はmedia/output.jpgとして作成してください。
+statement_en: |
+  Draw a checkered pattern in black on a red 200x200[px] image.
+  Output image as media/output.jpg.
+input: ''
+expected_output: ''
+answer: convert -size 200x200 xc:#FF0000 jpg:- | convert - -draw "rectangle 0,0 100,100"
+  - | convert - -draw "rectangle 100,100, 200, 200" media/output.jpg

@@ -1,0 +1,22 @@
+id: STANDARD-00000003
+title_ja: ''
+title_en: ''
+statement_ja: |
+  1から10までの数字を改行区切りで出力してください。
+  ex: seq 10
+statement_en: |
+  Output numbers from 1 to 10, separated by newlines.
+  ex: seq 10
+input: ''
+expected_output: |
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+  10
+answer: seq 10

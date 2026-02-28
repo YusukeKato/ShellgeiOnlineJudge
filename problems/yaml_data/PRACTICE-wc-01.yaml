@@ -1,0 +1,18 @@
+id: PRACTICE-wc-01
+title_ja: ''
+title_en: ''
+statement_ja: |
+  練習：wc
+  wcコマンドで入力ファイル"input.txt"の行数を出力してください。
+statement_en: |
+  Exercise: wc
+  Output the number of lines in the input file "input.txt".
+input: |
+  apple train
+  tomato
+  SHELL ONLINE JUDGE
+  test text think
+  good nice
+expected_output: |
+  5
+answer: cat input.txt | wc -l

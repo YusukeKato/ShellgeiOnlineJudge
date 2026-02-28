@@ -1,0 +1,37 @@
+id: STANDARD-00000014
+title_ja: ''
+title_en: ''
+statement_ja: |
+  メンバーのリストが入力として与えられるので、各メンバーをチームごとに並べてください。
+  入力の一列目はメンバーの名前、二列目はチーム番号です。
+  出力の一列目はチーム番号、二列目以降はメンバーの名前としてください。
+  また、メンバーの名前はリストで上になっている人が先にくるように並べてください。
+statement_en: |
+  Grouping each member by team.
+
+  Input:
+  - first row: the member's name
+  - second row: the team number
+
+  Output:
+  - first row: the team number
+  - second row: the member's name
+input: |
+  田中 2
+  鈴木 1
+  二階堂 1
+  佐藤 3
+  加藤 1
+  大久保 2
+  米田 4
+  森 2
+  大谷 5
+  源田 5
+expected_output: |
+  1 鈴木 二階堂 加藤
+  2 田中 大久保 森
+  3 佐藤
+  4 米田
+  5 大谷 源田
+answer: cat input.txt | sort -s -k 2,2 | awk 'BEGIN{a=1;printf("%d",a)}{if($2==a){printf("
+  %s",$1)}else{a+=1;printf("\n%d %s",a,$1)}}'

@@ -1,0 +1,13 @@
+id: IMAGE-00000002
+title_ja: ''
+title_en: ''
+statement_ja: |
+  大きさ200x200[px]の赤色の画像の真ん中に50[px]の横線を引いてください。
+  画像はmedia/output.jpgとして作成してください。
+statement_en: |
+  Draw a 50[px] horizontal line down the middle of the red 200x200[px] image.
+  Output image as media/output.jpg.
+input: ''
+expected_output: ''
+answer: convert -size 200x200 xc:#FF0000 jpg:- | convert - -stroke "#000000" -strokewidth
+  50 -draw "line 0,100 200,100" media/output.jpg

@@ -1,0 +1,22 @@
+id: STANDARD-00000047
+title_ja: ''
+title_en: ''
+statement_ja: |
+  入力の中のIPアドレスを改行区切りで出力してください。
+statement_en: |
+  Output the IP addresses in the input, separated by new lines.
+input: |
+  server20250101 777 198.51.100.8
+  server 203.0.113.100 server2 198.51.100.0
+  local 192.0.2.21 local3 198.51.100.111
+  100 100 100 100 203.0.113.99
+  100-100-100-100 : 198.51.100.201
+expected_output: |
+  198.51.100.8
+  203.0.113.100
+  198.51.100.0
+  192.0.2.21
+  198.51.100.111
+  203.0.113.99
+  198.51.100.201
+answer: cat input.txt | sed "s/ /\n/g" | grep -E "[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+"

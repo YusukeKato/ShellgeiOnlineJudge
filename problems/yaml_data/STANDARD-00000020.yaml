@@ -1,0 +1,34 @@
+id: STANDARD-00000020
+title_ja: ''
+title_en: ''
+statement_ja: |
+  各行の数字をfactorコマンドを使用せずに素因数分解してください。
+  また、数字が素数の場合は「素数」を出力してください。
+statement_en: |
+  Factorize the numbers in each line without using the factor command.
+  Also, if the number is a prime number, output "素数".
+input: |
+  2
+  5
+  10
+  12
+  57
+  59
+  101
+  988
+  1024
+  2023
+expected_output: |
+  素数
+  素数
+  2 5
+  2 2 3
+  3 19
+  素数
+  素数
+  2 2 13 19
+  2 2 2 2 2 2 2 2 2 2
+  7 17 17
+answer: cat input.txt | awk '{z=$0;a=0;for(i=2;i<=z;i++){if(z%i==0){z/=i;a=1;printf("%d
+  ",i);i=1}};printf("\n")}' | awk '{if(NF==1){print "素数"}else{for(i=1;i<=NF;i++){printf("%d
+  ",$i)}printf("\n")}}' | sed 's/ $//g'
