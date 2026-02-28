@@ -3,10 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from api import api_shellgei  # type: ignore
 from contextlib import asynccontextmanager
 from scripts.container_manager import manager
+from scripts.database import engine, Base
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # テーブルが存在しない場合は作成する
+    Base.metadata.create_all(bind=engine)
     # アプリ起動時にプールを作る
     manager.initialize_pool()
     yield

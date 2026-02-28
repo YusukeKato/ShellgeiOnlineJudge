@@ -23,6 +23,8 @@ mypy = "^1.17.1"
 types-requests = "^2.32.4.20250809"
 types-docker = "^7.1.0.20250822"
 types-pytz = "^2025.2.0.20250809"
+sqlalchemy = "^2.0.47"
+psycopg2-binary = "^2.9.11"
 
 [tool.mypy]
 mypy_path = "backend"
