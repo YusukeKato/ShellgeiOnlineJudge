@@ -16,10 +16,10 @@ shellgei_judge = ShellgeiJudge()
 # 実行間隔の制限 [s]
 TIME_LIMIT_SECONDS = 0.1
 
+
 @router.post("/shellgei")
 async def post_shellgei(
-    shellgei_data: ShellgeiData,
-    db: Session = Depends(get_db)
+    shellgei_data: ShellgeiData, db: Session = Depends(get_db)
 ) -> ShellgeiResultResponse:
     japan_timezone = pytz.timezone("Asia/Tokyo")
     japan_date = datetime.now(japan_timezone)
@@ -47,16 +47,16 @@ async def post_shellgei(
     new_log = ExecutionLog(
         problem_id=problem_id_str,
         shellgei=shellgei_str,
-        output=output[:1000], # 出力を1000文字に制限
-        judge=judge
+        output=output[:1000],  # 出力を1000文字に制限
+        judge=judge,
     )
     db.add(new_log)
     db.commit()
-    db.refresh(new_log) # 保存して自動採番されたIDを取得
+    db.refresh(new_log)  # 保存して自動採番されたIDを取得
 
     return ShellgeiResultResponse(
         output=output,
-        id=str(new_log.id), # DBで自動採番されたIDを返す
+        id=str(new_log.id),  # DBで自動採番されたIDを返す
         date=f"{japan_date.strftime('%Y-%m-%d %H:%M:%S')}",
         image=image,
         judge=judge,

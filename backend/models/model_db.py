@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, DateTime
 from sqlalchemy.sql import func
 from scripts.database import Base
 
+
 class ExecutionLog(Base):
     __tablename__ = "execution_logs"
 
