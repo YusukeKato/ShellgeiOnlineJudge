@@ -12,6 +12,7 @@ const SojHistory: React.FC = () => {
         <details>
           <summary>2026</summary>
           <ul>
+            <li>02/28: 2.4.0: データベース追加、サーバメンテナンス</li>
             <li>
               02/01: 2.3.3: フロントエンドとバックエンド、nginxをdockerコンテナ内で起動、
               コンテナをプールして応答の高速化、Ctrl+Enterで実行する機能追加
