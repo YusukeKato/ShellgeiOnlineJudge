@@ -11,18 +11,18 @@ const SojNavList: React.FC<SojUrlsInterface> = ({ x_url, github_repository_url, 
   return (
     <ul className="nav-list">
       <li className="nav-list-item">
-        <a href={x_url} className="nav-list-button">
-          X(TWITTER)
-        </a>
-      </li>
-      <li className="nav-list-item">
         <a href={github_repository_url} className="nav-list-button">
           GITHUB
         </a>
       </li>
       <li className="nav-list-item">
-        <a href={blog_url} className="nav-list-button">
+        <a href={blog_url + "/html/2025/0102.html"} className="nav-list-button">
           YK-BLOG
+        </a>
+      </li>
+      <li className="nav-list-item">
+        <a href={x_url} className="nav-list-button">
+          X(TWITTER)
         </a>
       </li>
     </ul>
