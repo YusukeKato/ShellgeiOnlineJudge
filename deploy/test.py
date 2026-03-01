@@ -21,6 +21,7 @@ print(f"start test: {server_url}")
 api_shellgei_url = f"{server_url}/api/shellgei"
 api_problems_url = f"{server_url}/api/problems"
 
+
 # テスト処理
 def test_func(shellgei, problem_id, is_correct):
     time.sleep(0.5)
@@ -53,6 +54,7 @@ def test_func(shellgei, problem_id, is_correct):
         print(f"Status {response.status_code}: NG...")
         print("")
         assert False, "API request failed"
+
 
 # 問題IDのリストを取得
 yaml_dir = Path(__file__).resolve().parent.parent / "problems" / "yaml_data"
