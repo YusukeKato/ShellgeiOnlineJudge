@@ -20,23 +20,20 @@ import "../css/common.css";
 
 const App: React.FC = () => {
   /* SOJ URLs */
-  const x_url: string = "https://x.com/yusukekato_main";
-  // const soj_url: string = "https://shellgei-online-judge.com";
-  // const soj_url: string = "http://localhost";
-  const soj_url: string = "";
-  const github_repository_url: string = "https://github.com/YusukeKato/ShellgeiOnlineJudge";
-  const github_author_url: string = "https://github.com/YusukeKato";
-  const blog_url: string = "https://yusukekato.jp";
-  const mixi2_url: string =
-    "https://mixi.social/communities/dcf8e9d8-a6c4-40a9-8e05-328b4424f886/about";
+  const x_url: string = process.env.REACT_APP_X_URL || "";
+  const soj_url: string = process.env.REACT_APP_SOJ_URL || "";
+  const github_repository_url: string = process.env.REACT_APP_GITHUB_REPO_URL || "";
+  const github_author_url: string = process.env.REACT_APP_GITHUB_AUTHOR_URL || "";
+  const blog_url: string = process.env.REACT_APP_BLOG_URL || "";
+  const mixi2_url: string = process.env.REACT_APP_MIXI2_URL || "";
 
   /* SOJ param */
   const shellgei_limit: number = 1000;
   const default_image: string = soj_url + "/image/STANDARD-00000001.jpg";
 
   /* SOJ Info */
-  const update_date: string = "2026/02/28";
-  const current_version: string = "2.5.1";
+  const update_date: string = process.env.REACT_APP_UPDATE_DATE || "";
+  const current_version: string = process.env.REACT_APP_VERSION || "";
 
   /* SOJ useState: select problem */
   const [selectedProblemStandard, setSelectedProblemStandard] = useState("STANDARD-00000001");
