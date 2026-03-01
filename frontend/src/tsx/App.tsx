@@ -4,7 +4,6 @@ import SojFooter from "./footer";
 import SojNavList from "./nav_list";
 import SojInfo from "./info";
 import SojAbout from "./about";
-import SojHistory from "./history";
 import SojContact from "./contact";
 import SojOthers from "./others";
 import SojSelectStandard from "./select-standard";
