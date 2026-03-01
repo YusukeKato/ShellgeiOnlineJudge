@@ -74,7 +74,6 @@ const App: React.FC = () => {
       <SojNavList x_url={x_url} github_repository_url={github_repository_url} blog_url={blog_url} />
       <SojInfo update_date={update_date} current_version={current_version} />
       <SojAbout />
-      <SojHistory />
       <SojContact
         x_url={x_url}
         github_repository_url={github_repository_url}

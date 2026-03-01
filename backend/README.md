@@ -9,7 +9,6 @@ This repository is the webapp backend for SHELLGEI ONLINE JUDGE.
 ## setup
 ```sh
 sudo apt install python3-venv
-# sudo dnf install python3
 python3 -m venv ~/venv
 source ~/venv/bin/activate
 ```
@@ -17,6 +16,9 @@ source ~/venv/bin/activate
 ```sh
 /path/to/ShellgeiOnlineJudge/
 poetry install
+# poetryのインストールが必要かも
+# pip install poetry
+# sudo apt install python3-poetry
 ```
 
 ## check
