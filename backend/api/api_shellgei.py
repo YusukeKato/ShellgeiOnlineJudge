@@ -64,6 +64,7 @@ async def post_shellgei(
         judge=judge,
     )
 
+
 @router.get("/problems")
 async def get_problems_list():
     base_dir = Path(__file__).resolve().parent.parent
@@ -74,14 +75,17 @@ async def get_problems_list():
             with open(yaml_path, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
                 # ファイル名のプレフィックスからカテゴリを判定
-                category = yaml_path.stem.split("-")[0] 
-                problems.append({
-                    "id": yaml_path.stem,
-                    "category": category,
-                    "title_ja": data.get("title_ja", ""),
-                    "title_en": data.get("title_en", "")
-                })
+                category = yaml_path.stem.split("-")[0]
+                problems.append(
+                    {
+                        "id": yaml_path.stem,
+                        "category": category,
+                        "title_ja": data.get("title_ja", ""),
+                        "title_en": data.get("title_en", ""),
+                    }
+                )
     return problems
+
 
 @router.get("/problems/{problem_id}")
 async def get_problem(problem_id: str):

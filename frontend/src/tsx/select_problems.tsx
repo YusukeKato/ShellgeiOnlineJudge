@@ -3,7 +3,7 @@ import { updateProblem } from "../functions/update_problem";
 import "../css/summary.css";
 import "../css/headline.css";
 import "../css/common.css";
-import "../css/table_tab.css"; 
+import "../css/table_tab.css";
 
 interface ProblemMeta {
   id: string;
@@ -59,7 +59,7 @@ const SojSelectProblems: React.FC<SojValuesInterface> = ({
       setProblemStatement,
       setProblemInput,
       setProblemOutput,
-      setProblemImage
+      setProblemImage,
     );
   };
 
@@ -69,22 +69,22 @@ const SojSelectProblems: React.FC<SojValuesInterface> = ({
   return (
     <div className="soj-main">
       <h2>問題選択 / SELECT PROBLEM</h2>
-      
+
       {/* タブUI */}
       <div className="tab-container">
-        <button 
+        <button
           className={`tab-button ${activeTab === "STANDARD" ? "active" : ""}`}
           onClick={() => setActiveTab("STANDARD")}
         >
           通常問題 / STANDARD
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === "PRACTICE" ? "active" : ""}`}
           onClick={() => setActiveTab("PRACTICE")}
         >
           練習問題 / PRACTICE
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === "IMAGE" ? "active" : ""}`}
           onClick={() => setActiveTab("IMAGE")}
         >
@@ -106,15 +106,17 @@ const SojSelectProblems: React.FC<SojValuesInterface> = ({
               // YAMLにタイトルがない場合のフォールバック
               const titleJa = p.title_ja || "タイトル未設定";
               const titleEn = p.title_en || "Untitled";
-              
+
               return (
-                <tr 
-                  key={p.id} 
+                <tr
+                  key={p.id}
                   onClick={() => handleSelectClick(p.id)}
                   className={selectedProblem === p.id ? "selected-row" : ""}
                 >
                   <td className="col-id">{p.id}</td>
-                  <td className="col-title">{titleJa} / {titleEn}</td>
+                  <td className="col-title">
+                    {titleJa} / {titleEn}
+                  </td>
                 </tr>
               );
             })}
