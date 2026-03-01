@@ -2,7 +2,6 @@ import React from "react";
 import "../css/nav_list.css";
 
 interface SojUrlsInterface {
-  x_url: string;
   github_repository_url: string;
   blog_url: string;
 }
