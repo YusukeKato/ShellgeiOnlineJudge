@@ -93,7 +93,6 @@ const App: React.FC = () => {
         imageResult={imageResult}
         userShellgeiStatus={userShellgeiStatus}
       />
-      <SojLogo />
       <SojFooter />
     </div>
   );
