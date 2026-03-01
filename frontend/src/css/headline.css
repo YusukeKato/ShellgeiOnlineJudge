@@ -2,7 +2,7 @@ h2 {
   color: #333;
   background: transparent;
   padding: 0 0 0.5rem 0;
-  border-bottom: 3px solid #007acc;
+  border-bottom: 3px solid #333;
   margin-top: 0;
   margin-bottom: 1.5rem;
 }
@@ -11,7 +11,7 @@ h3 {
   padding: 0.25rem 0.8rem;
   color: #444;
   background: transparent;
-  border-left: 4px solid #007acc;
+  border-left: 4px solid #333;
   margin-top: 2rem;
 }
 
