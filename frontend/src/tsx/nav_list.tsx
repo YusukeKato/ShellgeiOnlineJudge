@@ -16,7 +16,10 @@ const SojNavList: React.FC<SojUrlsInterface> = ({ github_repository_url, blog_ur
         </a>
       </li>
       <li className="nav-list-item">
-        <a href={github_repository_url + "/blob/main/UPDATE_HISTORY.md"} className="nav-list-button">
+        <a
+          href={github_repository_url + "/blob/main/UPDATE_HISTORY.md"}
+          className="nav-list-button"
+        >
           HISTORY
         </a>
       </li>
