@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import SojHeader from "./header";
 import SojFooter from "./footer";
-import SojNavList from "./nav_list";
 import SojInfo from "./info";
 import SojAbout from "./about";
 import SojContact from "./contact";
@@ -11,7 +10,6 @@ import SojSelected from "./selected";
 import SojProblem from "./problem";
 import SojRun from "./run";
 import SojResult from "./result";
-import SojLogo from "./logo";
 import "../css/App.css";
 import "../css/common.css";
 
@@ -50,7 +48,6 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <SojHeader />
-      <SojNavList github_repository_url={github_repository_url} blog_url={blog_url} />
       <SojInfo update_date={update_date} current_version={current_version} />
       <SojAbout />
       <SojContact
@@ -95,7 +92,6 @@ const App: React.FC = () => {
         imageResult={imageResult}
         userShellgeiStatus={userShellgeiStatus}
       />
-      <SojLogo />
       <SojFooter />
     </div>
   );

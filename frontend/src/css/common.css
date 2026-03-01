@@ -5,11 +5,17 @@
 
 .soj-main {
   width: 60%;
-  margin: 0 auto;
+  margin: 2rem auto;
+  background-color: #ffffff;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
 }
 
 li {
-  color: #666;
+  color: #555;
+  line-height: 1.6;
 }
 
 p {
@@ -18,12 +24,15 @@ p {
 }
 
 .black-line {
-  border-top: 0.5rem double #000000;
+  border-top: 2px solid #eee;
+  margin: 2rem 0;
 }
 
 @media screen and (max-width: 999px) {
   .soj-main {
     width: 96%;
+    margin: 1rem auto;
+    padding: 1.2rem;
   }
 
   li {

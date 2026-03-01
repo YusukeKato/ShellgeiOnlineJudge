@@ -31,17 +31,17 @@
   margin: 1rem auto;
   padding: 0.8rem;
   font-weight: bold;
-  border: 1px solid #333;
-  border-radius: 0.2rem;
-  transition: 0.2s;
+  background-color: #007acc;
   color: #fff;
-  background-color: #333;
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 122, 204, 0.2);
 }
-
 .run-button:hover {
-  font-weight: bold;
-  color: #333;
-  background: #fff;
+  background-color: #005999;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 122, 204, 0.3);
 }
 
 @media screen and (max-width: 999px) {
