@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import SojHeader from "./header";
 import SojFooter from "./footer";
-import SojNavList from "./nav_list";
 import SojInfo from "./info";
 import SojAbout from "./about";
 import SojContact from "./contact";
