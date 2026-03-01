@@ -1,10 +1,10 @@
 id: STANDARD-00000005
-title_ja: ''
-title_en: ''
-statement_ja: ''
-statement_en: |
+title_ja: 'フィボナッチ数列'
+title_en: 'Fibonacci Sequence'
+statement_ja: |
   Fibonacci: F(0) = 0, F(1) = 1, F(n+2) = F(n) + F(n+1)
   F(0)からF(10)まで出力してください。
+statement_en: |
   Fibonacci: F(0) = 0, F(1) = 1, F(n+2) = F(n) + F(n+1)
   Output from F(0) to F(10).
 input: ''

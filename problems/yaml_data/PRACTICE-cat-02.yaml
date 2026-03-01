@@ -1,6 +1,6 @@
 id: PRACTICE-cat-02
-title_ja: ''
-title_en: ''
+title_ja: 'cat 2'
+title_en: 'cat 2'
 statement_ja: |
   練習：cat
   catコマンドで入力ファイル"input.txt"の各行の先頭に行番号を付けて出力してください。

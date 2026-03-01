@@ -6,9 +6,7 @@ import SojInfo from "./info";
 import SojAbout from "./about";
 import SojContact from "./contact";
 import SojOthers from "./others";
-import SojSelectStandard from "./select-standard";
-import SojSelectPractice from "./select-practice";
-import SojSelectImage from "./select-image";
+import SojSelectProblems from "./select_problems";
 import SojSelected from "./selected";
 import SojProblem from "./problem";
 import SojRun from "./run";
@@ -25,42 +23,24 @@ const App: React.FC = () => {
   const github_author_url: string = process.env.REACT_APP_GITHUB_AUTHOR_URL || "";
   const blog_url: string = process.env.REACT_APP_BLOG_URL || "";
   const mixi2_url: string = process.env.REACT_APP_MIXI2_URL || "";
-
   /* SOJ param */
   const shellgei_limit: number = 1000;
   const default_image: string = soj_url + "/image/STANDARD-00000001.jpg";
-
   /* SOJ Info */
   const update_date: string = process.env.REACT_APP_UPDATE_DATE || "";
   const current_version: string = process.env.REACT_APP_VERSION || "";
-
   /* SOJ useState: select problem */
-  const [selectedProblemStandard, setSelectedProblemStandard] = useState("STANDARD-00000001");
-  const changeSelectedProblemStandard = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedProblemStandard(event.target.value);
-  };
-  const [selectedProblemPractice, setSelectedProblemPractice] = useState("PRACTICE-awk-01");
-  const changeSelectedProblemPractice = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedProblemPractice(event.target.value);
-  };
-  const [selectedProblemImage, setSelectedProblemImage] = useState("IMAGE-00000001");
-  const changeSelectedProblemImage = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedProblemImage(event.target.value);
-  };
   const [selectedProblem, setSelectedProblem] = useState("Select a problem.");
-
   /* SOJ useState: get problem */
   const [problemStatement, setProblemStatement] = useState("Select a problem.");
   const [problemInput, setProblemInput] = useState("Select a problem.");
   const [problemOutput, setProblemOutput] = useState("Select a problem.");
   const [problemImage, setProblemImage] = useState(default_image);
-
   /* SOJ useState: input shellgei */
   const [inputShellgei, setInputShellgei] = useState("");
   const changeInputShellgei = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputShellgei(event.target.value);
   };
-
   /* SOJ useState: result */
   const [outputResult, setOutputResult] = useState("Run your shell-gei.");
   const [judgeResult, setJudgeResult] = useState("Run your shell-gei.");
@@ -81,30 +61,9 @@ const App: React.FC = () => {
         mixi2_url={mixi2_url}
       />
       <SojOthers />
-      <SojSelectStandard
+      <SojSelectProblems
         soj_url={soj_url}
-        selectedProblemStandard={selectedProblemStandard}
-        changeSelectedProblemStandard={changeSelectedProblemStandard}
-        setSelectedProblem={setSelectedProblem}
-        setProblemStatement={setProblemStatement}
-        setProblemInput={setProblemInput}
-        setProblemOutput={setProblemOutput}
-        setProblemImage={setProblemImage}
-      />
-      <SojSelectPractice
-        soj_url={soj_url}
-        selectedProblemPractice={selectedProblemPractice}
-        changeSelectedProblemPractice={changeSelectedProblemPractice}
-        setSelectedProblem={setSelectedProblem}
-        setProblemStatement={setProblemStatement}
-        setProblemInput={setProblemInput}
-        setProblemOutput={setProblemOutput}
-        setProblemImage={setProblemImage}
-      />
-      <SojSelectImage
-        soj_url={soj_url}
-        selectedProblemImage={selectedProblemImage}
-        changeSelectedProblemImage={changeSelectedProblemImage}
+        selectedProblem={selectedProblem}
         setSelectedProblem={setSelectedProblem}
         setProblemStatement={setProblemStatement}
         setProblemInput={setProblemInput}

@@ -1,6 +1,6 @@
 id: STANDARD-00000034
-title_ja: ''
-title_en: ''
+title_ja: 'xの5乗'
+title_en: 'x to the 5th power'
 statement_ja: |
   xを5乗すると1099511627776になります。
   xを求めてください。

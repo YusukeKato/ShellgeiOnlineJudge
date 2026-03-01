@@ -1,6 +1,6 @@
 id: STANDARD-00000037
-title_ja: ''
-title_en: ''
+title_ja: '数字の抽出'
+title_en: 'Extract numbers'
 statement_ja: |
   入力の中から数字だけを抽出してください。
 statement_en: |

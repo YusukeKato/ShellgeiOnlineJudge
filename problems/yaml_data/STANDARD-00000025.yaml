@@ -1,6 +1,6 @@
 id: STANDARD-00000025
-title_ja: ''
-title_en: ''
+title_ja: '文字列の組み合わせ'
+title_en: 'String combination'
 statement_ja: |
   AとBとCをそれぞれひとつずつ使用して組み合わせた文字列を全て出力してください。
 statement_en: |

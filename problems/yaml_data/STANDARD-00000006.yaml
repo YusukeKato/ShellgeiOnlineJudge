@@ -1,6 +1,6 @@
 id: STANDARD-00000006
-title_ja: ''
-title_en: ''
+title_ja: '円周率10桁'
+title_en: 'Pi to 10 Digits'
 statement_ja: |
   円周率を小数点以下10桁まで求めてください。
   11桁目以降は切り捨ててください。

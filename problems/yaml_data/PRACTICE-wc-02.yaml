@@ -1,6 +1,6 @@
 id: PRACTICE-wc-02
-title_ja: ''
-title_en: ''
+title_ja: 'wc 2'
+title_en: 'wc 2'
 statement_ja: |
   練習：wc
   wcコマンドで入力ファイル"input.txt"の単語数を出力してください。

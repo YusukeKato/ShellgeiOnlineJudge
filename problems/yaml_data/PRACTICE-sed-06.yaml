@@ -1,6 +1,6 @@
 id: PRACTICE-sed-06
-title_ja: ''
-title_en: ''
+title_ja: 'sed 6'
+title_en: 'sed 6'
 statement_ja: |
   練習：sed、正規表現
   sedコマンドで入力ファイル"input.txt"の各行の末尾に".jpg"を付けて出力してください。

@@ -1,6 +1,6 @@
 id: STANDARD-00000041
-title_ja: ''
-title_en: ''
+title_ja: '魔法陣3x3'
+title_en: 'Magic Square 3x3'
 statement_ja: |
   xを求めて魔法陣を完成させてください。
   参考 : https://ja.wikipedia.org/wiki/%E9%AD%94%E6%96%B9%E9%99%A3

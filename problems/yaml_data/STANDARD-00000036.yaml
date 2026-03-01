@@ -1,6 +1,6 @@
 id: STANDARD-00000036
-title_ja: ''
-title_en: ''
+title_ja: 'NをN回出力'
+title_en: 'Output N N times'
 statement_ja: |
   入力の数字NをN回出力してください。
 statement_en: |

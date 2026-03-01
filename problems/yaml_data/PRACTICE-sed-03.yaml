@@ -1,6 +1,6 @@
 id: PRACTICE-sed-03
-title_ja: ''
-title_en: ''
+title_ja: 'sed 3'
+title_en: 'sed 3'
 statement_ja: |
   練習：sed、正規表現
   sedコマンドで入力ファイル"input.txt"の数字だけを削除してください。

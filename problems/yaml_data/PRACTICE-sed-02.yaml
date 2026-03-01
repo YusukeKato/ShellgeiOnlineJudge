@@ -1,6 +1,6 @@
 id: PRACTICE-sed-02
-title_ja: ''
-title_en: ''
+title_ja: 'sed 2'
+title_en: 'sed 2'
 statement_ja: |
   練習：sed
   sedコマンドで入力ファイル"input.txt"の"XXX"を"SHELLGEI"に、"YYY"を"ONLINE"に置換してください。

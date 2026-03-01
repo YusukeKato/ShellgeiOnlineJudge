@@ -1,6 +1,6 @@
 id: IMAGE-00000003
-title_ja: ''
-title_en: ''
+title_ja: '円'
+title_en: 'Circle'
 statement_ja: |
   大きさ200x200[px]の赤色の画像の中央に半径50[px]の円を描いてください。
   画像はmedia/output.jpgとして作成してください。

@@ -1,6 +1,6 @@
 id: STANDARD-00000014
-title_ja: ''
-title_en: ''
+title_ja: 'グループ分け'
+title_en: 'Grouping'
 statement_ja: |
   メンバーのリストが入力として与えられるので、各メンバーをチームごとに並べてください。
   入力の一列目はメンバーの名前、二列目はチーム番号です。

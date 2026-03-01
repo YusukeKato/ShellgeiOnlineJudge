@@ -1,6 +1,6 @@
 id: STANDARD-00000021
-title_ja: ''
-title_en: ''
+title_ja: '回文判定'
+title_en: 'Palindrome'
 statement_ja: |
   各行の文字列が回文なら"YES"を、回文ではないなら"NO"を出力してください。
 statement_en: |

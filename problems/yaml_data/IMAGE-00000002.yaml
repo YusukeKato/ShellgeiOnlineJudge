@@ -1,6 +1,6 @@
 id: IMAGE-00000002
-title_ja: ''
-title_en: ''
+title_ja: '横線'
+title_en: 'Side line'
 statement_ja: |
   大きさ200x200[px]の赤色の画像の真ん中に50[px]の横線を引いてください。
   画像はmedia/output.jpgとして作成してください。

@@ -1,6 +1,6 @@
 id: PRACTICE-uniq-01
-title_ja: ''
-title_en: ''
+title_ja: 'uniq 1'
+title_en: 'uniq 1'
 statement_ja: |
   練習：uniq, sort
   uniqコマンドで入力ファイル"input.txt"の重複行を除いて出力してください。

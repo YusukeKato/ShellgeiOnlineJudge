@@ -1,6 +1,6 @@
 id: PRACTICE-echo-02
-title_ja: ''
-title_en: ''
+title_ja: 'echo 2'
+title_en: 'echo 2'
 statement_ja: |
   練習：echo
   echoコマンドで改行を含む文字列を出力してください。

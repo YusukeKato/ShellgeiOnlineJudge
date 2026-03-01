@@ -1,6 +1,6 @@
 id: STANDARD-00000031
-title_ja: ''
-title_en: ''
+title_ja: '最大公約数'
+title_en: 'Greatest common divisor'
 statement_ja: |
   最大公約数を求めてください。
 statement_en: |

@@ -1,6 +1,6 @@
 id: STANDARD-00000004
-title_ja: ''
-title_en: ''
+title_ja: '足し算'
+title_en: 'Addition'
 statement_ja: |
   各行において、並んでいる数字を足し合わせた合計を出力してください。
 statement_en: |

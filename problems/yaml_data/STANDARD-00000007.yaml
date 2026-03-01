@@ -1,6 +1,6 @@
 id: STANDARD-00000007
-title_ja: ''
-title_en: ''
+title_ja: '円周率100桁'
+title_en: 'Pi to 100 Digits'
 statement_ja: |
   円周率を小数点以下100桁まで求めてください。
   101桁目以降は切り捨ててください。
