@@ -4,7 +4,6 @@ import SojFooter from "./footer";
 import SojNavList from "./nav_list";
 import SojInfo from "./info";
 import SojAbout from "./about";
-import SojHistory from "./history";
 import SojContact from "./contact";
 import SojOthers from "./others";
 import SojSelectStandard from "./select-standard";
@@ -71,10 +70,9 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <SojHeader />
-      <SojNavList x_url={x_url} github_repository_url={github_repository_url} blog_url={blog_url} />
+      <SojNavList github_repository_url={github_repository_url} blog_url={blog_url} />
       <SojInfo update_date={update_date} current_version={current_version} />
       <SojAbout />
-      <SojHistory />
       <SojContact
         x_url={x_url}
         github_repository_url={github_repository_url}

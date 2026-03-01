@@ -8,16 +8,15 @@ This repository is the webapp frontend for SHELLGEI ONLINE JUDGE.
 ## Install
 
 ```sh
-# Amazon Linux: apt -> dnf
 sudo apt update && sudo upgrade -y
 sudo apt install -y nodejs npm
 sudo npm install n -g
 sudo n stable
 sudo apt purge -y nodejs npm
-# sudo dnf remove -y nodejs npm
 sudo apt autoremove -y
 sudo npm install --global yarn
 yarn global add create-react-app
+# Amazon Linuxの場合はaptではなくdnfを使用
 ```
 
 ```sh

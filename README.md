@@ -10,8 +10,8 @@ SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-j
 ## Documents
 - [frontend](./frontend/README.md): React
 - [backend](./backend/README.md): FastAPI
-- [problems](./problems/README.md): Problem text files
-- [deploy](./deploy/README.md): Deploy and test scripts
+- [problems](./problems/README.md): YAML files and Image files
+- [deploy](./deploy/README.md): Deploy and test
 
 ## References
 - [上田ブログ/シェル芸のトップページ](https://b.ueda.tech/?page=01434)

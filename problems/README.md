@@ -2,8 +2,5 @@
 This repository contains a collection of problem data for the SHELLGEI ONLINE JUDGE.
 
 # About data
-- statement: Japanese problem statement files
-- images: image files
-- input: Input files
-- output: Expected output files
-- answer: answer example files
+- yaml_data: 1問ごとに1つのYAMLファイルを作成
+- image: 1問ごとに想定画像ファイルが1つ
