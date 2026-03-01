@@ -1,6 +1,6 @@
 id: STANDARD-00000038
-title_ja: ''
-title_en: ''
+title_ja: '割り算判定'
+title_en: 'Division'
 statement_ja: |
   1列目の値が2列目の値で割り切れるかどうか判定してください。
 statement_en: |

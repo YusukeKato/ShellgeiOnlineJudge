@@ -1,6 +1,6 @@
 id: STANDARD-00000018
-title_ja: ''
-title_en: ''
+title_ja: '二分探索'
+title_en: 'Binary search'
 statement_ja: |
   1 <= N <= 100のとき、Nが何か当ててください。
 statement_en: |

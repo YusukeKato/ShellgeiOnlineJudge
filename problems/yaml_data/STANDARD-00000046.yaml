@@ -1,6 +1,6 @@
 id: STANDARD-00000046
-title_ja: ''
-title_en: ''
+title_ja: '単位行列の生成'
+title_en: 'Identity matrix generation'
 statement_ja: |
   入力Nに対してNxNの単位行列を出力してください。
 statement_en: |

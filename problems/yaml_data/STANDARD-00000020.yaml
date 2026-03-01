@@ -1,6 +1,6 @@
 id: STANDARD-00000020
-title_ja: ''
-title_en: ''
+title_ja: '素因数分解'
+title_en: 'Prime factorization'
 statement_ja: |
   各行の数字をfactorコマンドを使用せずに素因数分解してください。
   また、数字が素数の場合は「素数」を出力してください。

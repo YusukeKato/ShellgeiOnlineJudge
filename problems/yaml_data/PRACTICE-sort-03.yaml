@@ -1,6 +1,6 @@
 id: PRACTICE-sort-03
-title_ja: ''
-title_en: ''
+title_ja: 'sort 3'
+title_en: 'sort 3'
 statement_ja: |
   練習：sort
   sortコマンドで入力ファイル"input.txt"の数値を重複無しで昇順に並び替えてください。

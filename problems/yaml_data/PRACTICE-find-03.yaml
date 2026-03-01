@@ -1,6 +1,6 @@
 id: PRACTICE-find-03
-title_ja: ''
-title_en: ''
+title_ja: 'find 3'
+title_en: 'find 3'
 statement_ja: |
   練習：find
   findコマンドで"/ShellGeiData/sd201701" の中にある"dangerous"と名前が付いたファイルの一覧を出力してください。

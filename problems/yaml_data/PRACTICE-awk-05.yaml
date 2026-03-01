@@ -1,6 +1,6 @@
 id: PRACTICE-awk-05
-title_ja: ''
-title_en: ''
+title_ja: 'awk 5'
+title_en: 'awk 5'
 statement_ja: |
   練習：awk
   awkコマンドで1から10を改行区切りで出力してください。

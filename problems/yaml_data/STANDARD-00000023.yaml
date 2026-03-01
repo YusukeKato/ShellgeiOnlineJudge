@@ -1,6 +1,6 @@
 id: STANDARD-00000023
-title_ja: ''
-title_en: ''
+title_ja: 'スコア計算'
+title_en: 'Score calculation'
 statement_ja: |
   AとBとCは1点、DとEは2点、Fは3点です。
   各行において、点数の合計を出力してください。

@@ -1,6 +1,6 @@
 id: STANDARD-00000040
-title_ja: ''
-title_en: ''
+title_ja: '文字カウント2'
+title_en: 'Character Count 2'
 statement_ja: |
   入力の文字列において、aとbとcがそれぞれ何文字あるか数えてください。
 statement_en: |

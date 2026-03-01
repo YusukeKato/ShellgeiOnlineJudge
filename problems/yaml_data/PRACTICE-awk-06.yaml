@@ -1,6 +1,6 @@
 id: PRACTICE-awk-06
-title_ja: ''
-title_en: ''
+title_ja: 'awk 6'
+title_en: 'awk 6'
 statement_ja: |
   練習：awk
   awkコマンドで入力ファイル"input.txt"の各行が偶数か奇数か判定してください。

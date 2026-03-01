@@ -1,6 +1,6 @@
 id: PRACTICE-grep-03
-title_ja: ''
-title_en: ''
+title_ja: 'grep 3'
+title_en: 'grep 3'
 statement_ja: |
   練習：grep
   grepコマンドで入力ファイル"input.txt"から拡張子".txt"が付いていない行だけを出力してください。

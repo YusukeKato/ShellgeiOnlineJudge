@@ -1,6 +1,6 @@
 id: STANDARD-00000008
-title_ja: ''
-title_en: ''
+title_ja: '鶴亀算'
+title_en: 'Crane and turtle problem'
 statement_ja: |
   鶴亀算を行ってください。
   入力の一列目の値は鶴と亀の合計、二列目の値は足の数の合計です。

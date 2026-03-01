@@ -1,6 +1,6 @@
 id: STANDARD-00000026
-title_ja: ''
-title_en: ''
+title_ja: '最短経路探索'
+title_en: 'Shortest path search'
 statement_ja: |
   5マス×5マスの盤面が与えられるので、スタート（S）からゴール（G）までの最短経路の距離を出力してください。
   以下がルールです。

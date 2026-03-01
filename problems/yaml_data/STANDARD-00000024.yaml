@@ -1,6 +1,6 @@
 id: STANDARD-00000024
-title_ja: ''
-title_en: ''
+title_ja: 'ナップサック問題'
+title_en: 'Knapsack problem'
 statement_ja: |
   ナップサック問題を解いてください。
   容量185のナップサックに、入力で与えられた荷物をそれぞれ好きな数だけ詰め込みます。
