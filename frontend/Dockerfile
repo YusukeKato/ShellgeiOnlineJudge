@@ -7,6 +7,7 @@ COPY frontend/package.json frontend/yarn.lock* ./
 RUN yarn install --frozen-lockfile
 
 COPY frontend/ ./
+COPY .env ./
 RUN yarn build
 
 # --- Serve Stage ---

@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api import api_shellgei  # type: ignore
@@ -17,8 +18,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# server_url = "http://localhost"
-server_url = "https://shellgei-online-judge.com"
+server_url = os.getenv("SERVER_URL", "https://shellgei-online-judge.com")
 origins = [
     server_url,
 ]
