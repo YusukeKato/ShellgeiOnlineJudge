@@ -1,11 +1,12 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, NavLink } from "react-router-dom";
 import SojHeader from "./header";
 import SojFooter from "./footer";
 import Playground from "./playground";
 import AboutPage from "./about_page";
 import "../css/App.css";
 import "../css/common.css";
+import "../css/nav.css";
 
 const App: React.FC = () => {
   /* SOJ URLs */
@@ -24,33 +25,21 @@ const App: React.FC = () => {
     <Router>
       <div className="App">
         <SojHeader />
-        <nav style={{ textAlign: "center", margin: "1.5rem 0" }}>
-          <Link
+        <nav className="main-nav">
+          <NavLink
             to="/"
-            style={{
-              margin: "0 1rem",
-              fontWeight: "bold",
-              color: "#007acc",
-              textDecoration: "none",
-              fontSize: "1.1rem",
-            }}
+            className={({ isActive }) => (isActive ? "nav-button active" : "nav-button")}
+            end
           >
             PLAYGROUND
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/about"
-            style={{
-              margin: "0 1rem",
-              fontWeight: "bold",
-              color: "#007acc",
-              textDecoration: "none",
-              fontSize: "1.1rem",
-            }}
+            className={({ isActive }) => (isActive ? "nav-button active" : "nav-button")}
           >
             ABOUT & INFO
-          </Link>
+          </NavLink>
         </nav>
-
         <Routes>
           <Route path="/" element={<Playground soj_url={soj_url} />} />
           <Route

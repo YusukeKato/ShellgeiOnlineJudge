@@ -193,7 +193,7 @@ const AboutPage: React.FC<AboutPageProps> = ({
           </li>
           <li>
             <a href="https://atcoder.jp/" target="_blank" rel="noopener noreferrer">
-              AtCoder: 競技プログラミング / Competitive Programming
+              AtCoder: 競技プログラミングサイト / Competitive Programming Website
             </a>
           </li>
         </ul>
