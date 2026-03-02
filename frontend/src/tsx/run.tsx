@@ -122,7 +122,7 @@ const SojRun: React.FC<SojValuesInterface> = ({
           cols={50}
           rows={12}
           id="cmdline"
-          placeholder="ここにシェル芸を入力... / Input your shell-gei here..."
+          placeholder="ここにシェル芸を入力... / Type your shell one-liner here..."
         ></textarea>
         <input
           type="button"
