@@ -24,10 +24,12 @@ const Playground: React.FC<PlaygroundProps> = ({ soj_url }) => {
     setInputShellgei(event.target.value);
   };
 
-  const [outputResult, setOutputResult] = useState("Run your shell-gei.");
-  const [judgeResult, setJudgeResult] = useState("Run your shell-gei.");
+  const [outputResult, setOutputResult] = useState("Output will be displayed here.");
+  const [judgeResult, setJudgeResult] = useState("Judgment result will be displayed here.");
   const [imageResult, setImageResult] = useState(default_image);
-  const [userShellgeiStatus, setUserShellgeiStatus] = useState("Run your shell-gei.");
+  const [userShellgeiStatus, setUserShellgeiStatus] = useState(
+    "Executed command will be displayed here.",
+  );
 
   return (
     <>

@@ -68,7 +68,7 @@ const SojSelectProblems: React.FC<SojValuesInterface> = ({
 
   return (
     <div className="soj-main">
-      <h2>問題選択 / SELECT PROBLEM</h2>
+      <h2>問題選択 / PROBLEM SELECTION</h2>
 
       {/* タブUI */}
       <div className="tab-container">

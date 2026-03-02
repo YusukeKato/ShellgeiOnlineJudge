@@ -37,15 +37,15 @@ const AboutPage: React.FC<AboutPageProps> = ({
       {/* 詳細 / DETAILS */}
       <div className="soj-main">
         <h2>情報 / INFOMATION</h2>
-        <h3>シェル芸オンラインジャッジとは / WHAT'S SHELLGEI ONLINE JUDGE</h3>
+        <h3>シェル芸オンラインジャッジとは / WHAT IS SHELLGEI ONLINE JUDGE</h3>
         <p>
           シェル芸で問題を解いて遊べるシェル芸非公式のウェブサイトです。実行結果の正誤判定が自動で行われます。
         </p>
         <p>
-          SHELLGEI ONLINE JUDGE is Un-official website. This website automatically judges whether
-          the execution results are correct.
+          SHELLGEI ONLINE JUDGE is an unofficial website that automatically judges the correctness
+          of your execution results.
         </p>
-        <h3>シェル芸とは / WHAT'S SHELLGEI</h3>
+        <h3>シェル芸とは / WHAT IS SHELL-GEI</h3>
         <p>
           シェル芸とはCLI環境におけるシェルのワンライナーで様々なタスクをこなすことを指します。詳しくは
           <a href="https://b.ueda.tech/?page=01434" target="_blank" rel="noopener noreferrer">
@@ -53,7 +53,10 @@ const AboutPage: React.FC<AboutPageProps> = ({
           </a>
           を参照してください。
         </p>
-        <p>Shell-gei is a shell one-liner that performs various tasks in the CLI environment.</p>
+        <p>
+          Shell-gei refers to the art of performing various tasks using shell one-liners in a CLI
+          environment.
+        </p>
         <h3>GITHUB</h3>
         <ul>
           <li>
@@ -80,7 +83,7 @@ const AboutPage: React.FC<AboutPageProps> = ({
             </a>
           </li>
         </ul>
-        <h3>遊び方 / HOW TO PLAY</h3>
+        <h3>遊び方 / HOW TO USE</h3>
         <ol>
           <li>問題を選択 / Select Problem</li>
           <li>シェル芸を記入 / Enter Shell One-liner</li>
@@ -146,7 +149,7 @@ const AboutPage: React.FC<AboutPageProps> = ({
       {/* その他 / OTHERS */}
       <div className="soj-main">
         <h2>その他 / OTHERS</h2>
-        <h3>注意事項 / NOTES</h3>
+        <h3>注意事項 / DISCLAIMER</h3>
         <p>
           このウェブサイトではGoogle AnalyticsとGoogle Search Consoleを利用しています。
           このウェブサイトの利用によって生じる損害等について一切責任を負いません。
@@ -159,7 +162,7 @@ const AboutPage: React.FC<AboutPageProps> = ({
         </p>
         <h3>有志の方々 / CONTRIBUTORS</h3>
         <p>回答例を提供いただき、誠にありがとうございます。</p>
-        <p>Thank you very much for the example answer.</p>
+        <p>Thank you very much to everyone who provided the example answers.</p>
         <ul>
           <li>
             <a
@@ -171,7 +174,7 @@ const AboutPage: React.FC<AboutPageProps> = ({
             </a>
           </li>
         </ul>
-        <h3>回答例 / EXAMPLE ANSWERS</h3>
+        <h3>回答例 / SAMPLE SOLUTIONS</h3>
         <a
           href={`${github_repository_url}/tree/main/problems/yaml_data`}
           target="_blank"
@@ -179,7 +182,7 @@ const AboutPage: React.FC<AboutPageProps> = ({
         >
           GitHub - problems/yaml_data/
         </a>
-        <h3>おすすめ / RECOMMENDS</h3>
+        <h3>おすすめ / RECOMMENDATIONS</h3>
         <p>さらに難しい問題や面白い問題が解きたい方には以下がおすすめです。</p>
         <p>
           For those who want to solve more difficult and interesting problems, we recommend the

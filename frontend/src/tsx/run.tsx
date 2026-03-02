@@ -54,26 +54,28 @@ const SojRun: React.FC<SojValuesInterface> = ({
     <div className="soj-main">
       <h2>実行 / RUN</h2>
       <details>
-        <summary>注意点 / NOTES</summary>
-        <h4>注意点 / NOTES</h4>
+        <summary>注意点 / IMPORTANT NOTES</summary>
+        <h4>注意点 / IMPORTANT NOTES</h4>
         <ul>
-          <li>入力の取得 / Get Input : "cat input.txt"</li>
-          <li>画像の出力先 / Output Image file : "media/output.jpg"</li>
-          <li>GIF画像の出力先 / Output GIF Image file : "media/output.gif"</li>
+          <li>入力の取得 / How to read input : "cat input.txt"</li>
+          <li>画像の出力先 / Image output path : "media/output.jpg"</li>
+          <li>GIF画像の出力先 / GIF Image output path : "media/output.gif"</li>
           <li>
-            出力は想定出力&想定画像と一致すること / The output must match the expected output and
-            expected image.
+            出力は想定出力&想定画像と一致すること / Your output must exactly match the expected
+            output and image.
           </li>
-          <li>危険なシェル芸（危険シェル芸）は禁止 / Dangerous shell-gei are prohibited.</li>
+          <li>
+            危険なシェル芸（危険シェル芸）は禁止 / Malicious shell commands are strictly prohibited.
+          </li>
           <li>
             余計な空白や改行は正誤判定に影響する可能性あり / Extra spaces and line breaks may affect
-            the correctness judgment.
+            the final verdict.
           </li>
         </ul>
-        <h4>実行制限 / EXECUTION LIMITS</h4>
+        <h4>実行制限 / CONSTRAINTS</h4>
         <ul>
-          <li>実行時間 / Execution Time : 10.0s</li>
-          <li>入出力文字数 / Input/Output Size : 1000</li>
+          <li>実行時間 / Time Limit : 10.0s</li>
+          <li>入出力文字数 / I/O Size Limit : 1000 characters</li>
         </ul>
         <h4>実行環境 / EXECUTION ENVIRONMENT</h4>
         <ul>
@@ -84,14 +86,14 @@ const SojRun: React.FC<SojValuesInterface> = ({
         </ul>
       </details>
       <details>
-        <summary>シェル芸例 / EXAMPLES SHELLGEI</summary>
-        <p>Example 1: Simple arithmetic</p>
+        <summary>シェル芸例 / EXAMPLES SHELL-GEI</summary>
+        <p>Example 1: Calculating a Sum</p>
         <div className="code-block">
           <pre>
             <code className="code-font">seq 10 | paste -s -d+ | bc # Output: 55</code>
           </pre>
         </div>
-        <p>Example 2: Output Image</p>
+        <p>Example 2: Generating an Image</p>
         <div className="code-block">
           <pre>
             <code className="code-font">convert -size 200x200 xc:#0000AA media/output.jpg</code>
@@ -100,7 +102,7 @@ const SojRun: React.FC<SojValuesInterface> = ({
         <div className="soj-centering">
           <img className="soj-image" src={blue_image} id="blue-image" alt="blue-image" />
         </div>
-        <p>Example 3: Output GIF Image</p>
+        <p>Example 3: Generating a GIF Image</p>
         <div className="code-block">
           <pre>
             <code className="code-font">
