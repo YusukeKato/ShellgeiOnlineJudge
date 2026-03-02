@@ -20,7 +20,7 @@ const SojResult: React.FC<SojValuesInterface> = ({
   return (
     <div className="soj-main">
       <h2>結果 / RESULT</h2>
-      <h3>正誤判定 / JUDGEMENT</h3>
+      <h3>正誤判定 / VERDICT</h3>
       <div className="text-block">
         <pre>
           <code className="code-font" id="result-text">
@@ -28,7 +28,7 @@ const SojResult: React.FC<SojValuesInterface> = ({
           </code>
         </pre>
       </div>
-      <h3>出力結果 / OUTPUT RESULT</h3>
+      <h3>出力結果 / YOUR OUTPUT</h3>
       <div className="text-block">
         <pre>
           <code className="code-font" id="user-output-text">
@@ -40,7 +40,7 @@ const SojResult: React.FC<SojValuesInterface> = ({
       <div className="soj-centering" id="result-image">
         <img className="soj-image" src={imageResult} id="result-image" alt="result-image" />
       </div>
-      <h3>実行したシェル芸 / EXECUTED SHELLGEI</h3>
+      <h3>実行したシェル芸 / YOUR COMMAND</h3>
       <div className="text-block">
         <pre>
           <code className="code-font" id="shellgei-text">
