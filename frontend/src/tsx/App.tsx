@@ -15,7 +15,7 @@ const App: React.FC = () => {
   const github_author_url: string = process.env.REACT_APP_GITHUB_AUTHOR_URL || "";
   const blog_url: string = process.env.REACT_APP_BLOG_URL || "";
   const mixi2_url: string = process.env.REACT_APP_MIXI2_URL || "";
-  
+
   /* SOJ Info */
   const update_date: string = process.env.REACT_APP_UPDATE_DATE || "";
   const current_version: string = process.env.REACT_APP_VERSION || "";
@@ -25,15 +25,27 @@ const App: React.FC = () => {
       <div className="App">
         <SojHeader />
         <nav style={{ textAlign: "center", margin: "1.5rem 0" }}>
-          <Link 
-            to="/" 
-            style={{ margin: "0 1rem", fontWeight: "bold", color: "#007acc", textDecoration: "none", fontSize: "1.1rem" }}
+          <Link
+            to="/"
+            style={{
+              margin: "0 1rem",
+              fontWeight: "bold",
+              color: "#007acc",
+              textDecoration: "none",
+              fontSize: "1.1rem",
+            }}
           >
             PLAYGROUND
           </Link>
-          <Link 
-            to="/about" 
-            style={{ margin: "0 1rem", fontWeight: "bold", color: "#007acc", textDecoration: "none", fontSize: "1.1rem" }}
+          <Link
+            to="/about"
+            style={{
+              margin: "0 1rem",
+              fontWeight: "bold",
+              color: "#007acc",
+              textDecoration: "none",
+              fontSize: "1.1rem",
+            }}
           >
             ABOUT & INFO
           </Link>
@@ -41,22 +53,22 @@ const App: React.FC = () => {
 
         <Routes>
           <Route path="/" element={<Playground soj_url={soj_url} />} />
-          <Route 
-            path="/about" 
+          <Route
+            path="/about"
             element={
-              <AboutPage 
-                update_date={update_date} 
-                current_version={current_version} 
+              <AboutPage
+                update_date={update_date}
+                current_version={current_version}
                 x_url={x_url}
                 github_repository_url={github_repository_url}
                 github_author_url={github_author_url}
                 blog_url={blog_url}
                 mixi2_url={mixi2_url}
               />
-            } 
+            }
           />
         </Routes>
-        
+
         <SojFooter />
       </div>
     </Router>
