@@ -1,8 +1,8 @@
 id: STANDARD-00000026
 title_ja: '最短経路探索'
-title_en: 'Shortest path search'
+title_en: 'Shortest Path Search'
 statement_ja: |
-  5マス×5マスの盤面が与えられるので、スタート（S）からゴール（G）までの最短経路の距離を出力してください。
+  5マスx5マスの盤面が与えられるので、スタート（S）からゴール（G）までの最短経路の距離を出力してください。
   以下がルールです。
   ・Sから上下左右に1マスずつ移動してGを目指します。
   ・「.」が通過可能、「#」が通過不可能なマスです。
@@ -11,9 +11,9 @@ statement_en: |
   Find the distance of the shortest path from the S(Start) to the G(Goal).
 
   Rule:
-  - Move up, down, left and right one square at a time to reach S to G
+  - Move one square at a time (up, down, left, or right) from S to G.
   - '.' is a passable square and '#' is a non-passable square
-  - It cannot be moved diagonally
+  - Diagonal moves are not allowed
 input: |
   S..#.
   .#...

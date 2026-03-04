@@ -1,6 +1,6 @@
 id: STANDARD-00000016
 title_ja: 'HTMLテスト'
-title_en: 'HTML test'
+title_en: 'HTML Test'
 statement_ja: |
   入力のHTMLタグをそのまま出力してください。
 statement_en: |

@@ -1,6 +1,6 @@
 id: STANDARD-00000015
 title_ja: '素数判定'
-title_en: 'Prime number'
+title_en: 'Prime Number'
 statement_ja: |
   素数の場合は"YES"、素数ではない場合は"NO"を出力してください。
 statement_en: |

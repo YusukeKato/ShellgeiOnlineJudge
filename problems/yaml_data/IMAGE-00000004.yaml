@@ -1,6 +1,6 @@
 id: IMAGE-00000004
 title_ja: '市松模様'
-title_en: 'Checkered pattern'
+title_en: 'Checkered Pattern'
 statement_ja: |
   200x200[px]の画像に赤色と黒色で市松模様を描いてください。
   画像はmedia/output.jpgとして作成してください。

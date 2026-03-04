@@ -7,7 +7,7 @@ statement_ja: |
   出力の一列目はチーム番号、二列目以降はメンバーの名前としてください。
   また、メンバーの名前はリストで上になっている人が先にくるように並べてください。
 statement_en: |
-  Grouping each member by team.
+  Group the members by team.
 
   Input:
   - first row: the member's name

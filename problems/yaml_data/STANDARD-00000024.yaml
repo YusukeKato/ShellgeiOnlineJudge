@@ -1,6 +1,6 @@
 id: STANDARD-00000024
 title_ja: 'ナップサック問題'
-title_en: 'Knapsack problem'
+title_en: 'Knapsack Problem'
 statement_ja: |
   ナップサック問題を解いてください。
   容量185のナップサックに、入力で与えられた荷物をそれぞれ好きな数だけ詰め込みます。
@@ -11,7 +11,7 @@ statement_ja: |
 statement_en: |
   Find the total maximum value.
   Knapsack capacity size is 185.
-  Each luggage can be packed more than 0 pieces.
+  You can pack any non-negative number of each item.
 
   Input (luggage):
   - first row: name

@@ -1,6 +1,6 @@
 id: STANDARD-00000033
 title_ja: '文字カウント1'
-title_en: 'Character count 1'
+title_en: 'Character Count 1'
 statement_ja: |
   各行の文字数をカウントしてください。
 statement_en: |

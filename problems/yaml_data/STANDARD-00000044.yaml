@@ -1,6 +1,6 @@
 id: STANDARD-00000044
 title_ja: '文字列の検索'
-title_en: 'String search'
+title_en: 'String Search'
 statement_ja: |
   ShellGeiData/vol.68ディレクトリの中にあるファイルにおいて、"entrepreneurial"という文字列が書かれているファイルの名前を出力してください。
   使用データ：https://github.com/ryuichiueda/ShellGeiData/tree/master/vol.68

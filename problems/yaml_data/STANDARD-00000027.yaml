@@ -1,6 +1,6 @@
 id: STANDARD-00000027
 title_ja: '電車の乗り換え'
-title_en: 'Train transfer'
+title_en: 'Train Transfer'
 statement_ja: |
   電車の時刻表が与えられるので、8:00ちょうどにA駅から出発してD駅に到着するとき、最も早い到着時刻を出力してください。
 statement_en: |

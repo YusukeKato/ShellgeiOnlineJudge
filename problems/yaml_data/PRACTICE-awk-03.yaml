@@ -6,7 +6,7 @@ statement_ja: |
   awkコマンドで入力ファイル"input.txt"の2列目と3列目を入れ替えて出力してください。
 statement_en: |
   Exercise: awk
-  Please replace the second and third columns of the input file "input.txt" in the output.
+  Swap the second and third columns of the input file "input.txt" and output the result.
 input: |
   A CCC BB
   D FFF EE

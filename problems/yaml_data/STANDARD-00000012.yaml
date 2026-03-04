@@ -1,6 +1,6 @@
 id: STANDARD-00000012
 title_ja: 'ビットの反転'
-title_en: 'Bit reversal'
+title_en: 'Bit Reversal'
 statement_ja: |
   0は1に、1は0に、反転させてください。
 statement_en: |

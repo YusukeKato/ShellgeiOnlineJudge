@@ -1,6 +1,6 @@
 id: STANDARD-00000030
 title_ja: 'シーザー暗号'
-title_en: 'Caesar cipher'
+title_en: 'Caesar Cipher'
 statement_ja: |
   シーザー暗号を解読してください。
 statement_en: |

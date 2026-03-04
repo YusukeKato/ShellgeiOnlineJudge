@@ -1,6 +1,6 @@
 id: IMAGE-00000001
 title_ja: '画像テスト'
-title_en: 'Image test'
+title_en: 'Image Test'
 statement_ja: |
   大きさ200x200[px]、赤色（#FF0000）の画像をmedia/output.jpgとして作成してください。
   ex: convert -size 200x200 xc:#FF0000 media/output.jpg

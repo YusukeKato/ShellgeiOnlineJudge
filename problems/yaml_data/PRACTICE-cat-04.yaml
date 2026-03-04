@@ -7,7 +7,7 @@ statement_ja: |
   使用データ : https://github.com/ryuichiueda/ShellGeiData/blob/master/vol.65/input
 statement_en: |
   Exercise: cat
-  Output the input file "input.txt" and "/ShellGeiData/vol.65/input" concatenated.
+  Concatenate and output the input file "input.txt" and "/ShellGeiData/vol.65/input".
   data: https://github.com/ryuichiueda/ShellGeiData/blob/master/vol.65/input
 input: |
   SHELLGEI

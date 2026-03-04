@@ -1,6 +1,6 @@
 id: STANDARD-00000039
 title_ja: '重複削除'
-title_en: 'Remove duplicates'
+title_en: 'Remove Duplicates'
 statement_ja: |
   入力の文字列から重複している文字だけを削除してください。
 statement_en: |

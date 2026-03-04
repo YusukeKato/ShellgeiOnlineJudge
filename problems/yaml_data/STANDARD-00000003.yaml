@@ -1,6 +1,6 @@
 id: STANDARD-00000003
 title_ja: '改行テスト'
-title_en: 'Newline test'
+title_en: 'Newline Test'
 statement_ja: |
   1から10までの数字を改行区切りで出力してください。
   ex: seq 10

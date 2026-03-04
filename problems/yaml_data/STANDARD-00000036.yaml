@@ -1,10 +1,10 @@
 id: STANDARD-00000036
 title_ja: 'NをN回出力'
-title_en: 'Output N N times'
+title_en: 'Output N N Times'
 statement_ja: |
   入力の数字NをN回出力してください。
 statement_en: |
-  The number of inputs N is output N times.
+  Output the input number N, N times.
 input: |
   1
   2

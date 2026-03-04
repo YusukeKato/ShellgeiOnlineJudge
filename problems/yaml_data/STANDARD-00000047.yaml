@@ -1,6 +1,6 @@
 id: STANDARD-00000047
 title_ja: 'IPアドレスの抽出'
-title_en: 'Extract IP address'
+title_en: 'Extract IP Address'
 statement_ja: |
   入力の中のIPアドレスを改行区切りで出力してください。
 statement_en: |

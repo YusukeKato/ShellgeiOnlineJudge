@@ -1,6 +1,6 @@
 id: STANDARD-00000011
 title_ja: '行列の回転'
-title_en: 'Matrix rotation'
+title_en: 'Matrix Rotation'
 statement_ja: |
   行列を時計回りに90度回転させてください。
 statement_en: |

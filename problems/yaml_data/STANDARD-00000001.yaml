@@ -1,6 +1,6 @@
 id: STANDARD-00000001
 title_ja: '出力テスト'
-title_en: 'Output test'
+title_en: 'Output Test'
 statement_ja: |
   文字列"test"を出力してください。
   ex: echo "test"

@@ -1,6 +1,6 @@
 id: STANDARD-00000032
 title_ja: '最小公倍数'
-title_en: 'Least common multiple'
+title_en: 'Least Common Multiple'
 statement_ja: |
   最小公倍数を求めてください。
 statement_en: |

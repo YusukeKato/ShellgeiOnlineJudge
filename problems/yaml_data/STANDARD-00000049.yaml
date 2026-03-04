@@ -1,6 +1,6 @@
 id: STANDARD-00000049
 title_ja: '最大文字数の回文調査'
-title_en: 'Maximum length palindrome search'
+title_en: 'Maximum Length Palindrome Search'
 statement_ja: |
   文字列の中から最大文字数の回文を探して出力してください。
 statement_en: |

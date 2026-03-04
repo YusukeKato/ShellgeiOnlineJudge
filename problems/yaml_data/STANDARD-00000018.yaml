@@ -1,10 +1,10 @@
 id: STANDARD-00000018
 title_ja: '二分探索'
-title_en: 'Binary search'
+title_en: 'Binary Search'
 statement_ja: |
   1 <= N <= 100のとき、Nが何か当ててください。
 statement_en: |
-  When 1 <= N <= 100, Find the N.
+  Given 1 <= N <= 100, find N.
 input: |
   N > 50
   N < 75

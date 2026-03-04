@@ -1,12 +1,12 @@
 id: STANDARD-00000010
 title_ja: '虫食い日記'
-title_en: 'Incomplete diary'
+title_en: 'Incomplete Diary'
 statement_ja: |
   日記が虫食い状態になっているので、正しい文章に修正してください。
   虫が食った空欄には、順番に「川」「魚」「新幹線」「富士山」が入ります。
 statement_en: |
   Correct the diary.
-  The blanks will contain, in order, "川", "魚", "新幹線" and "富士山".
+  Fill in the blanks with "川", "魚", "新幹線", and "富士山" in that order.
 input: |
   2023/05/03　火曜日　晴れ
   今日は　に遊びに出かけました。

@@ -1,6 +1,6 @@
 id: STANDARD-00000002
 title_ja: '入力テスト'
-title_en: 'Input test'
+title_en: 'Input Test'
 statement_ja: |
   入力の文字列をそのまま出力してください。
   ex: cat input.txt
