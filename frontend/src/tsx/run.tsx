@@ -96,7 +96,9 @@ const SojRun: React.FC<SojValuesInterface> = ({
         <p>Example 2: Generating an Image</p>
         <div className="code-block">
           <pre>
-            <code className="code-font">convert -size 200x200 xc:#0000AA media/output.jpg</code>
+            <code className="code-font">
+              textimg SOJ -F50 | convert -size 200x200 xc:#0000AA - -gravity center -composite media/output.jpg
+            </code>
           </pre>
         </div>
         <div className="soj-centering">
@@ -106,7 +108,7 @@ const SojRun: React.FC<SojValuesInterface> = ({
         <div className="code-block">
           <pre>
             <code className="code-font">
-              seq 0 9 | xargs -I@ textimg @ -F100 -o @.jpg; convert -delay 10 *.jpg media/output.gif
+              seq 0 9 | xargs -I@ bash -c 'textimg "$1" -F100 | convert - miff:-' _ @ | convert -delay 10 miff:- media/output.gif
             </code>
           </pre>
         </div>
