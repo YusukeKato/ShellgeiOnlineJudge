@@ -1,0 +1,27 @@
+id: PRACTICE-awk-08
+title_ja: 'awk 8'
+title_en: 'awk 8'
+statement_ja: |
+  練習：awk
+  awkコマンドで入力ファイル"input.txt"の奇数行だけ出力してください。
+statement_en: |
+  Exercise: awk
+  Print only the odd lines of the input file "input.txt".
+input: |
+  tanaka
+  yamada
+  suzuki
+  okamura
+  harada
+  iida
+  takahashi
+  nakamura
+  kato
+  matsuda
+expected_output: |
+  tanaka
+  suzuki
+  harada
+  takahashi
+  kato
+answer: cat a.txt | awk 'NR%2==1'
