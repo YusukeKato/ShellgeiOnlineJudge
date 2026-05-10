@@ -24,4 +24,4 @@ expected_output: |
   harada
   takahashi
   kato
-answer: cat a.txt | awk 'NR%2==1'
+answer: cat input.txt | awk 'NR%2==1'

@@ -17,4 +17,4 @@ expected_output: |
   iiiii jjjjj kkkkk lllll mmmmm
   ddddd eeeee fffff ggggg hhhhh
   nnnnn ooooo ppppp
-answer: cat a.txt | awk 'NR==2{a=$0}NR==3{print $0;print a}NR!=2&&NR!=3{print $0}'
+answer: cat input.txt | awk 'NR==2{a=$0}NR==3{print $0;print a}NR!=2&&NR!=3{print $0}'
