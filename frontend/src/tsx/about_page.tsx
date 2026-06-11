@@ -90,6 +90,35 @@ const AboutPage: React.FC<AboutPageProps> = ({
           <li>シェル芸を実行 / Execute Shell One-liner</li>
           <li>正誤判定の結果を確認 / Check Result</li>
         </ol>
+        <h3>謝辞 / ACKNOWLEDGMENTS</h3>
+        <ul>
+          <li>
+            <a
+              href="https://github.com/theoremoon/ShellgeiBot-Image"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              ShellgeiBot-Image
+            </a>
+            を利用しています
+          </li>
+          <li>
+            <a href="https://github.com/jiro4989/websh" target="_blank" rel="noopener noreferrer">
+              websh
+            </a>
+            のシステム構成を参考にしています
+          </li>
+          <li>
+            <a
+              href="https://github.com/ryuichiueda/ShellGeiData"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              ShellGeiData
+            </a>
+            を利用しています
+          </li>
+        </ul>
       </div>
 
       {/* お問い合わせ / CONTACT */}

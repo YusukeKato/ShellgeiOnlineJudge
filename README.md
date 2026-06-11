@@ -3,7 +3,7 @@ SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-j
 
 シェル芸オンラインジャッジはシェル芸で問題を解いて遊ぶウェブアプリです。
 
-## 感謝
+## 謝辞
 - [シェル芸botのDockerイメージ](https://github.com/theoremoon/ShellgeiBot-Image)を利用しています
 - [jiro4989/websh](https://github.com/jiro4989/websh)のシステム構成を参考にしています
 
