@@ -32,3 +32,10 @@ types-pyyaml = "^6.0.12"
 mypy_path = "backend"
 namespace_packages = true
 explicit_package_bases = true
+
+[tool.pytest.ini_options]
+pythonpath = ["backend"]
+testpaths = ["backend/tests"]
+markers = [
+    "docker: requires an explicitly enabled Docker integration-test environment",
+]

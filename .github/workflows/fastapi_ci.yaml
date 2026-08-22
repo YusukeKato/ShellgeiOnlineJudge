@@ -32,3 +32,6 @@ jobs:
         
       - name: Run static type checking (mypy)
         run: poetry run mypy .
+
+      - name: Run backend unit tests
+        run: poetry run pytest -m "not docker"
