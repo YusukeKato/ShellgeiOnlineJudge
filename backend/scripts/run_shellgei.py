@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 import asyncio
 import time
-import tarfile
-import io
 import yaml
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from scripts.container_manager import manager
+from scripts.execution_archive import build_execution_archive
 
 
 class ShellgeiDockerClient:
@@ -27,31 +26,16 @@ class ShellgeiDockerClient:
             return [f"Error: failed to get container: {e}", ""]
 
         try:
-            # === input.txt のコピー ===
-            tar_stream = io.BytesIO()
+            # Build all request-specific files in memory. Host-side shared temporary
+            # files would allow concurrent requests to overwrite each other's data.
             yaml_path = self.base_dir / "problems" / "yaml_data" / f"{problem_id}.yaml"
-            # ファイルが存在するか確認
+            input_str = ""
             if yaml_path.exists():
                 with open(yaml_path, "r", encoding="utf-8") as yf:
                     p_data = yaml.safe_load(yf)
                 input_str = p_data.get("input", "")
-                if input_str:
-                    input_tmp_path = self.base_dir / "input_tmp.txt"
-                    with open(input_tmp_path, "w", encoding="utf-8") as f:
-                        f.write(input_str)
-                    with tarfile.open(fileobj=tar_stream, mode="w") as tar:
-                        tar.add(input_tmp_path, arcname="input.txt")
-                    tar_stream.seek(0)
-                    container.put_archive(path="/", data=tar_stream)
-            # === ユーザのシェル芸のbashファイルのコピー ===
-            bash_file_path = self.base_dir / "z.bash"
-            with open(bash_file_path, "w", encoding="utf-8") as file:
-                file.write(shellgei)
-            tar_stream_bash = io.BytesIO()
-            with tarfile.open(fileobj=tar_stream_bash, mode="w") as tar:
-                tar.add(bash_file_path, arcname="z.bash")
-            tar_stream_bash.seek(0)
-            container.put_archive(path="/", data=tar_stream_bash)
+            execution_archive = build_execution_archive(shellgei, input_str)
+            container.put_archive(path="/", data=execution_archive)
             # === サンプル画像作成 ===
             container.exec_run("convert -size 200x200 xc:white media/output.jpg")
             # === シェル芸を実行 ===
