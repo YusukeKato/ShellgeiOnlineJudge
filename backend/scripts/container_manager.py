@@ -1,90 +1,200 @@
-import docker
+import logging
 import threading
 from collections import deque
+from typing import Any
+
+import docker
+
+
+logger = logging.getLogger(__name__)
+
+DEFAULT_IMAGE_ID = "theoldmoon0602/shellgeibot"
+DEFAULT_POOL_SIZE = 3
+DOCKER_API_TIMEOUT_SECONDS = 15
+MANAGED_LABEL = "com.shellgei-online-judge.sandbox"
+
+
+class ContainerCapacityError(RuntimeError):
+    """Raised when the manager cannot create another managed container."""
+
+
+class RootlessDockerRequiredError(RuntimeError):
+    """Raised when the configured Docker daemon is not running rootless."""
 
 
 class ContainerManager:
-    _instance = None
+    def __init__(
+        self,
+        client: Any | None = None,
+        image_id: str = DEFAULT_IMAGE_ID,
+        pool_size: int = DEFAULT_POOL_SIZE,
+    ) -> None:
+        if pool_size < 1:
+            raise ValueError("pool_size must be at least 1")
+        # Defer connecting to Docker until startup initializes the pool. This keeps
+        # imports and non-Docker tests independent from daemon availability.
+        self.client = client
+        self.image_id = image_id
+        self.pool: deque[Any] = deque()
+        self.lock = threading.Lock()
+        self.pool_size = pool_size
+        self._slots = threading.BoundedSemaphore(pool_size)
+        self._managed: dict[str, Any] = {}
+        self._shutting_down = False
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(ContainerManager, cls).__new__(cls)
-            cls._instance.client = docker.from_env()
-            cls._instance.image_id = "theoldmoon0602/shellgeibot"
-            cls._instance.pool = deque()
-            cls._instance.lock = threading.Lock()
-            cls._instance.pool_size = 3  # 常時待機させるコンテナ数
-        return cls._instance
-
-    def initialize_pool(self):
-        """起動時にプールを満たす"""
-        print(f"Initializing container pool ({self.pool_size})...")
-        # 初回は同期的に作成して準備完了を待つ
-        for _ in range(self.pool_size):
-            self._create_and_add()
-        print("Container pool ready.")
-
-    def _create_and_add(self):
-        """新しいコンテナを作成してプールに追加する"""
-        try:
-            container = self.client.containers.run(
-                self.image_id,
-                detach=True,
-                command="sleep infinity",  # 常駐させる
-                ipc_mode="none",
-                network_mode="none",
-                mem_limit="512m",
-                memswap_limit="512m",
-                nano_cpus=500000000,
-                pids_limit=50,
-                cap_drop=["ALL"],
-                tmpfs={"/media": "size=100M"},
-                ulimits=[
-                    docker.types.Ulimit(name="fsize", soft=50000000, hard=50000000)
-                ],
-            )
-            with self.lock:
-                self.pool.append(container)
-        except Exception as e:
-            print(f"Error creating container: {e}")
-
-    def get_container(self):
-        """プールからコンテナを取得。なければその場で作る"""
+    def _get_client(self) -> Any:
         with self.lock:
+            if self._shutting_down:
+                raise RuntimeError("container manager is shutting down")
+            if self.client is None:
+                client = docker.from_env(
+                    timeout=DOCKER_API_TIMEOUT_SECONDS,
+                )
+                try:
+                    security_options = client.info().get("SecurityOptions", [])
+                    if "name=rootless" not in security_options:
+                        raise RootlessDockerRequiredError(
+                            "the sandbox Docker daemon must run in rootless mode"
+                        )
+                except Exception:
+                    client.close()
+                    raise
+                self.client = client
+            return self.client
+
+    def _container_options(self) -> dict[str, Any]:
+        return {
+            "detach": True,
+            "command": "sleep infinity",
+            "ipc_mode": "none",
+            "network_mode": "none",
+            "mem_limit": "512m",
+            "memswap_limit": "512m",
+            "nano_cpus": 500000000,
+            "pids_limit": 50,
+            "cap_drop": ["ALL"],
+            "security_opt": ["no-new-privileges:true"],
+            "tmpfs": {"/media": "size=100M"},
+            "ulimits": [
+                docker.types.Ulimit(name="fsize", soft=50000000, hard=50000000)
+            ],
+            "labels": {MANAGED_LABEL: "true"},
+        }
+
+    @staticmethod
+    def _container_id(container: Any) -> str:
+        return str(container.id)
+
+    def _create_container(self) -> Any:
+        with self.lock:
+            if self._shutting_down:
+                raise RuntimeError("container manager is shutting down")
+        if not self._slots.acquire(blocking=False):
+            raise ContainerCapacityError("managed container capacity reached")
+
+        try:
+            container = self._get_client().containers.run(
+                self.image_id,
+                **self._container_options(),
+            )
+        except Exception:
+            self._slots.release()
+            raise
+
+        with self.lock:
+            self._managed[self._container_id(container)] = container
+            shutting_down = self._shutting_down
+        if shutting_down:
+            self._cleanup_container(container)
+            raise RuntimeError("container manager is shutting down")
+        return container
+
+    def _create_and_add(self) -> Any:
+        container = self._create_container()
+        with self.lock:
+            if not self._shutting_down:
+                self.pool.append(container)
+                return container
+        self._cleanup_container(container)
+        raise RuntimeError("container manager is shutting down")
+
+    def initialize_pool(self) -> None:
+        """Synchronously create the complete warm pool or fail startup."""
+        logger.info("Initializing container pool (%s)", self.pool_size)
+        try:
+            for _ in range(self.pool_size):
+                self._create_and_add()
+        except Exception:
+            self.shutdown_pool()
+            raise
+        logger.info("Container pool ready")
+
+    def get_container(self) -> Any:
+        """Lease one container without ever exceeding the hard capacity."""
+        with self.lock:
+            if self._shutting_down:
+                raise RuntimeError("container manager is shutting down")
             if self.pool:
                 return self.pool.popleft()
-        # プールが空なら作成
-        print("Pool empty! Creating emergency container...")
-        # _create_and_add はプールに追加してしまうので、直接作成して返す
-        return self.client.containers.run(
-            self.image_id,
-            detach=True,
-            command="sleep infinity",  # 常駐させる
-            ipc_mode="none",
-            network_mode="none",
-            mem_limit="512m",
-            memswap_limit="512m",
-            nano_cpus=500000000,
-            pids_limit=50,
-            cap_drop=["ALL"],
-            tmpfs={"/media": "size=100M"},
-            ulimits=[docker.types.Ulimit(name="fsize", soft=50000000, hard=50000000)],
-        )
+        return self._create_container()
 
-    def release_container(self, container):
-        """使用済みコンテナを廃棄し、新しいコンテナを補充する"""
-        # 使い終わったコンテナを非同期で削除
-        threading.Thread(target=self._cleanup_old, args=(container,)).start()
-        # 新しいコンテナを非同期で補充
-        threading.Thread(target=self._create_and_add).start()
+    def _forget_removed_container(self, container: Any) -> None:
+        with self.lock:
+            removed = self._managed.pop(self._container_id(container), None)
+        if removed is not None:
+            self._slots.release()
 
-    def _cleanup_old(self, container):
+    def _cleanup_container(self, container: Any, kill: bool = True) -> bool:
+        if kill:
+            try:
+                container.kill()
+            except Exception as exc:
+                # force=True can still remove a container after kill fails.
+                logger.warning(
+                    "Failed to kill sandbox container %s: %s", container.id, exc
+                )
+
         try:
-            container.kill()
             container.remove(force=True)
-        except Exception as e:
-            print(f"Error cleaning up container: {e}")
+        except docker.errors.NotFound:
+            self._forget_removed_container(container)
+            return True
+        except Exception as exc:
+            logger.error("Failed to remove sandbox container %s: %s", container.id, exc)
+            return False
+
+        self._forget_removed_container(container)
+        return True
+
+    def release_container(self, container: Any, already_stopped: bool = False) -> None:
+        """Synchronously destroy a used container and replenish within capacity."""
+        removed = self._cleanup_container(container, kill=not already_stopped)
+        with self.lock:
+            should_replenish = removed and not self._shutting_down
+        if not should_replenish:
+            return
+        try:
+            self._create_and_add()
+        except Exception as exc:
+            logger.error("Failed to replenish sandbox container: %s", exc)
+
+    def shutdown_pool(self) -> None:
+        """Stop accepting work and remove every container owned by this manager."""
+        with self.lock:
+            self._shutting_down = True
+            containers = list(self._managed.values())
+            self.pool.clear()
+            client = self.client
+        for container in containers:
+            self._cleanup_container(container)
+        close = getattr(client, "close", None)
+        if close is not None:
+            close()
+
+    @property
+    def managed_count(self) -> int:
+        with self.lock:
+            return len(self._managed)
 
 
-# シングルトンインスタンス
 manager = ContainerManager()
