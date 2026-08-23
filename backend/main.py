@@ -13,7 +13,11 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     # アプリ起動時にプールを作る
     manager.initialize_pool()
-    yield
+    try:
+        yield
+    finally:
+        manager.shutdown_pool()
+        api_shellgei.docker_client.close()
 
 
 app = FastAPI(lifespan=lifespan)

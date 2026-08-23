@@ -8,7 +8,7 @@ from sqlalchemy import desc
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
 from models.model_db import ExecutionLog
 from scripts.database import get_db
-from scripts.run_shellgei import ShellgeiDockerClient
+from scripts.run_shellgei import SandboxBusyError, ShellgeiDockerClient
 from scripts.judge import ShellgeiJudge
 
 router = APIRouter()
@@ -42,7 +42,18 @@ async def post_shellgei(
     # シェル芸の実行
     shellgei_str = shellgei_data.shellgei.replace("\r", "")
     problem_id_str = shellgei_data.problem_id.replace("\r", "")
-    output, image = await docker_client.run_with_timeout(shellgei_str, problem_id_str)
+    try:
+        output, image = await docker_client.run_with_timeout(
+            shellgei_str, problem_id_str
+        )
+    except SandboxBusyError:
+        return ShellgeiResultResponse(
+            output="Error: server is busy.",
+            id="-1",
+            date=f"{japan_date.strftime('%Y-%m-%d %H:%M:%S')}",
+            image="",
+            judge="4",
+        )
     judge: str = shellgei_judge.judge(output, image, problem_id_str)
 
     # DBに実行結果を保存
