@@ -31,7 +31,9 @@ def test_all_problem_records_are_well_formed() -> None:
 
         assert isinstance(data, dict), yaml_path.name
         assert REQUIRED_FIELDS <= data.keys(), yaml_path.name
-        assert all(isinstance(data[field], str) for field in REQUIRED_FIELDS), yaml_path.name
+        assert all(isinstance(data[field], str) for field in REQUIRED_FIELDS), (
+            yaml_path.name
+        )
         assert (IMAGE_DIR / f"{yaml_path.stem}.jpg").is_file(), yaml_path.name
 
 
@@ -45,4 +47,6 @@ def test_judge_accepts_all_expected_problem_outputs() -> None:
         image_bytes = (IMAGE_DIR / f"{yaml_path.stem}.jpg").read_bytes()
         image = base64.b64encode(image_bytes).decode("ascii")
 
-        assert judge.judge(data["expected_output"], image, yaml_path.stem) == "1", yaml_path.name
+        assert judge.judge(data["expected_output"], image, yaml_path.stem) == "1", (
+            yaml_path.name
+        )
