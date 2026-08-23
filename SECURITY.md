@@ -236,15 +236,39 @@ runner APIは、Web APIから次の値を受け付けてはいけません。
 
 ## ネットワークとHTTPの制約
 
-frontend nginxには、次の明示的な制限がありません。
+frontend nginxは、すべてのrequest bodyを16 KiB以下に制限します。
+FastAPIへ転送する前にrequest body全体をbufferingします。
 
-- リクエスト頻度
-- 同時接続数
-- request body size
-- proxy timeout
+APIには、直接接続元のIP addressをkeyとして次の制限を適用します。
+
+| 対象 | 平均request数 | 即時処理するburst | 同時request数 |
+| --- | ---: | ---: | ---: |
+| `/api/shellgei` | 5 requests/second | 5 | 5 |
+| その他の`/api` | 20 requests/second | 40 | 20 |
+
+rateまたは同時request数を超えた場合は429を返します。
+burstはqueueで待機させず、上限内のrequestを即時に処理します。
+
+接続とproxyには次のtimeoutを適用します。
+
+- client request header受信: 10秒
+- client request body受信: 10秒
+- keep-alive: 15秒、1接続あたり100 requests
+- clientへの送信間隔: 30秒
+- backendへの接続: 5秒
+- backendへのrequest送信間隔: 5秒
+- backendからのresponse受信間隔: 30秒
 
 FastAPIは、JSONをparseした後のshell commandとproblem IDを検証します。
-ただし、parse前のHTTP request body全体に対する上限にはなりません。
+nginxの16 KiB制限は、その前段でrequest bodyを拒否します。
+
+frontend nginxは、受信した`X-Forwarded-For`をbackendへ引き継ぎません。
+backendへは、frontend nginxへ直接接続したIP addressだけを渡します。
+
+ホスト側reverse proxyまたはload balancerを使用する場合、
+frontend nginxから見た接続元はそのproxyになります。
+この場合、frontend nginxのrate・connection制限はproxy単位で集約されます。
+実際のclient単位の受付制御は外側proxyで行ってください。
 
 アプリケーションの実行slotだけでは、次の対象を十分に保護できません。
 
@@ -284,7 +308,7 @@ sandboxイメージとbase imageはtagで参照しており、digestを固定し
 - sandbox内の非rootユーザー化
 - read-only root filesystemと容量制限付き書き込み領域
 - rootless環境で利用可能なseccomp・LSMによる追加制約
-- nginxまたは外側proxyのrequest body・rate・connection・timeout制限
+- 外側proxyで実際のclient単位に共有するrate・connection制限
 - 複数worker・複数hostで共有する受付制御
 - 起動時の残存sandbox検出・回収
 - 判定値の正規化と画像比較処理の修正

@@ -287,6 +287,22 @@ APIの疎通を確認します。
 curl --insecure https://localhost:8443/api
 ```
 
+frontend nginxの設定を検査します。
+
+```sh
+./deploy/rootless-compose.sh exec frontend nginx -t
+```
+
+frontend nginxは、APIへ次の受付制御を適用します。
+
+- request bodyは最大16 KiB
+- shell実行APIは接続元IPごとに5 requests/second、burst 5
+- shell実行APIは接続元IPごとに同時5 requests
+- その他のAPIは接続元IPごとに20 requests/second、burst 40
+- その他のAPIは接続元IPごとに同時20 requests
+- rateまたは同時request数の超過時は429
+- backendからのresponse受信間隔は最大30秒
+
 ブラウザでは`https://localhost:8443`を開きます。
 
 ## 8. 停止・再起動

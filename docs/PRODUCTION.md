@@ -194,12 +194,30 @@ Composeは、既定で`127.0.0.1:8443`だけに公開します。
 - ホスト側reverse proxy
 
 終端後は`https://127.0.0.1:8443`へ転送します。
-外側の層では次を制限してください。
+Compose内のfrontend nginxにも、次の基準値を設定しています。
 
-- request body size
-- 接続数
-- リクエスト頻度
-- upstream timeout
+- request bodyは最大16 KiB
+- shell実行APIは直接接続元ごとに5 requests/second、burst 5
+- shell実行APIは直接接続元ごとに同時5 requests
+- その他のAPIは直接接続元ごとに20 requests/second、burst 40
+- その他のAPIは直接接続元ごとに同時20 requests
+- rateまたは同時request数の超過時は429
+- backendへの接続とrequest送信間隔は5秒
+- backendからのresponse受信間隔は30秒
+
+ホスト側reverse proxy経由では、frontend nginxから見た接続元がproxyに集約されます。
+実際のclient単位で、外側の層にも次を設定してください。
+
+- request bodyは16 KiB以下
+- 接続数とリクエスト頻度
+- burst
+- upstream timeoutはfrontend nginxの30秒より長くする（例: 35秒）
+- 429、413、5xxの記録と監視
+
+外側proxyは、受信した`X-Forwarded-For`を無条件に引き継がず、
+直接接続元から確認したclient IPを基に制限してください。
+frontend nginxも受信した`X-Forwarded-For`を破棄し、
+自身への直接接続元だけをbackendへ渡します。
 
 Compose内のfrontendもTLSを要求します。
 内部転送先はHTTPではなくHTTPSです。
