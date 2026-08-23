@@ -1,0 +1,15 @@
+.git
+.env
+.venv
+.mypy_cache
+.pytest_cache
+.ruff_cache
+**/__pycache__
+**/*.pyc
+backend/public
+backend_data*
+deploy/public
+deploy/tls
+frontend/build
+frontend/node_modules
+nohup.out
