@@ -12,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from scripts.container_manager import manager
 from scripts.execution_archive import build_execution_archive
+from scripts.input_validation import validate_problem_id
 from scripts.sandbox_limits import BoundedByteBuffer
 
 
@@ -171,6 +172,11 @@ class ShellgeiDockerClient:
     def exec_shellgei(
         self, shellgei: str, problem_id: str, timeout: float, limit_str: int
     ) -> list[str]:
+        try:
+            validate_problem_id(problem_id)
+        except ValueError:
+            return ["Error: invalid problem ID.", ""]
+
         container = None
         container_stopped = False
         try:

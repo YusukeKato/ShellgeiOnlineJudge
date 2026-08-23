@@ -8,6 +8,7 @@ from sqlalchemy import desc
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
 from models.model_db import ExecutionLog
 from scripts.database import get_db
+from scripts.input_validation import ProblemId
 from scripts.run_shellgei import SandboxBusyError, ShellgeiDockerClient
 from scripts.judge import ShellgeiJudge
 
@@ -26,6 +27,11 @@ async def post_shellgei(
     japan_timezone = pytz.timezone("Asia/Tokyo")
     japan_date = datetime.now(japan_timezone)
 
+    base_dir = Path(__file__).resolve().parent.parent
+    yaml_path = base_dir / "problems" / "yaml_data" / f"{shellgei_data.problem_id}.yaml"
+    if not yaml_path.is_file():
+        raise HTTPException(status_code=404, detail="Problem not found")
+
     # DBから最新の実行ログを取得して実行間隔をチェック
     latest_log = db.query(ExecutionLog).order_by(desc(ExecutionLog.created_at)).first()
     if latest_log:
@@ -40,8 +46,8 @@ async def post_shellgei(
             )
 
     # シェル芸の実行
-    shellgei_str = shellgei_data.shellgei.replace("\r", "")
-    problem_id_str = shellgei_data.problem_id.replace("\r", "")
+    shellgei_str = shellgei_data.shellgei
+    problem_id_str = shellgei_data.problem_id
     try:
         output, image = await docker_client.run_with_timeout(
             shellgei_str, problem_id_str
@@ -99,12 +105,12 @@ async def get_problems_list():
 
 
 @router.get("/problems/{problem_id}")
-async def get_problem(problem_id: str):
+async def get_problem(problem_id: ProblemId):
     # backend/problems/yaml_data/{problem_id}.yaml を参照
     base_dir = Path(__file__).resolve().parent.parent
     yaml_path = base_dir / "problems" / "yaml_data" / f"{problem_id}.yaml"
 
-    if not yaml_path.exists():
+    if not yaml_path.is_file():
         raise HTTPException(status_code=404, detail="Problem not found")
 
     with open(yaml_path, "r", encoding="utf-8") as f:

@@ -4,6 +4,8 @@ import yaml
 import base64
 from pathlib import Path
 
+from scripts.input_validation import validate_problem_id
+
 
 class ShellgeiJudge:
     def __init__(self):
@@ -19,6 +21,10 @@ class ShellgeiJudge:
         return s
 
     def judge(self, output_str: str, output_image: str, problem_id: str) -> str:
+        try:
+            validate_problem_id(problem_id)
+        except ValueError:
+            return "Error: invalid problem ID."
         if len(output_str) == 0:
             output_str = "NULL"
         # 問題データのファイルパス

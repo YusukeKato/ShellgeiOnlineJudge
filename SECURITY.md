@@ -113,10 +113,33 @@ watchdogが有効な間に、次のいずれかをコンテナの書き込み可
 リクエスト間で共有するホスト側一時ファイルは使用しません。
 archiveは貸し出されたsandboxコンテナへ直接転送します。
 
-problem IDの形式検証とpath traversal対策は実装していません。
-問題ファイルを参照するAPIとsandbox準備処理では、
-API入力のproblem IDをファイルパスの一部として扱います。
-この入力にはサーバー側検証が必要です。
+problem IDには、ファイルパスへ使用する前に次の検証を適用します。
+
+- 長さは1文字以上64文字以下
+- ASCIIの英字、数字、区切りのハイフンだけを許可
+- 先頭、末尾、連続するハイフンを許可しない
+- path separator、ピリオド、underscore、空白、制御文字を許可しない
+
+この検証は次の入力経路と内部処理へ適用します。
+
+- shell実行APIのJSONに含まれる`problem_id`
+- 問題取得APIのURL parameter
+- sandboxへ問題入力を渡す処理
+- 判定用YAMLと画像を読み込む処理
+
+形式が正しくても登録されていないproblem IDは、
+sandboxの取得やDB照会を開始する前に404で拒否します。
+
+shell commandには次の検証を適用します。
+
+- carriage returnを除去して改行を正規化
+- 長さは1文字以上1,000文字以下
+- NULを許可しない
+- UTF-8としてencodeできない文字列を許可しない
+- JSONに定義されていない追加fieldを許可しない
+
+shell commandの改行、空白、記号、通常のUnicode文字は、
+任意のshell commandを扱うサービス仕様として許可します。
 
 ## コンテナの終了処理
 
@@ -220,6 +243,9 @@ frontend nginxには、次の明示的な制限がありません。
 - request body size
 - proxy timeout
 
+FastAPIは、JSONをparseした後のshell commandとproblem IDを検証します。
+ただし、parse前のHTTP request body全体に対する上限にはなりません。
+
 アプリケーションの実行slotだけでは、次の対象を十分に保護できません。
 
 - frontend
@@ -255,7 +281,6 @@ sandboxイメージとbase imageはtagで参照しており、digestを固定し
 
 ## 必要な追加対策
 
-- problem IDとAPI入力の形式・長さ検証
 - sandbox内の非rootユーザー化
 - read-only root filesystemと容量制限付き書き込み領域
 - rootless環境で利用可能なseccomp・LSMによる追加制約
