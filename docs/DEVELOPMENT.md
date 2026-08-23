@@ -177,6 +177,7 @@ POSTGRES_PASSWORD=開発専用のパスワード
 DATABASE_URL=postgresql://soj_user:開発専用のパスワード@db:5432/soj_db
 
 DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
+SANDBOX_OWNER_ID=shellgei-online-judge-development
 RUNNER_SHARED_SECRET=64文字のランダム16進数
 SERVER_URL=https://localhost:8443
 REACT_APP_SOJ_URL=https://localhost:8443
@@ -187,6 +188,7 @@ REACT_APP_SOJ_URL=https://localhost:8443
 - `POSTGRES_PASSWORD`と`DATABASE_URL`内のパスワードを一致させる
 - `RUNNER_SHARED_SECRET`には`openssl rand -hex 32`で生成した値を設定する
 - runnerとbackendへ同じ`RUNNER_SHARED_SECRET`が渡される
+- `SANDBOX_OWNER_ID`は同じDocker daemon上の他環境と重複させない
 - URLの予約文字を含むパスワードは、`DATABASE_URL`側でpercent-encodingする
 - TLS証明書の配置を変える場合は、`TLS_CERTIFICATE_PATH`と
   `TLS_PRIVATE_KEY_PATH`を合わせる

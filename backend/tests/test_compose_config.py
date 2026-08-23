@@ -33,6 +33,10 @@ def test_only_private_runner_receives_the_docker_socket() -> None:
         "${DOCKER_SOCKET_PATH:?Set DOCKER_SOCKET_PATH to the rootless Docker socket}:/run/docker.sock"
     ]
     assert "DOCKER_HOST=unix:///run/docker.sock" in services["runner"]["environment"]
+    assert (
+        "SANDBOX_OWNER_ID=${SANDBOX_OWNER_ID:-shellgei-online-judge}"
+        in services["runner"]["environment"]
+    )
     assert "ports" not in services["runner"]
     assert services["runner"]["networks"] == ["backend_runner"]
     assert set(services["backend"]["networks"]) == {

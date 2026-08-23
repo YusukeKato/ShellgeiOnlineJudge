@@ -16,11 +16,11 @@
 
 ## Current baseline
 
-- 最終確認日: 2026-08-23
+- 最終確認日: 2026-08-24
 - branch: `main`
-- 確認対象commit: `7cab18e08dc1d18cdf43f44985037d375e7c0607`
-- commit subject: `fix: isolate docker runner from web backend`
-- 監査開始時のworktree: clean
+- 確認対象commit: `41d31c8b78b27818d4079aa3d359cd43b0ed2937`
+- commit subject: `fix: disable sandbox container logs`
+- 今回の変更開始時のworktree: clean
 - 対象: repository、rootless Docker開発環境、保存済みimage
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
@@ -29,16 +29,17 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 7cab18e08dc1d18cdf43f44985037d375e7c0607..HEAD
+git diff 41d31c8b78b27818d4079aa3d359cd43b0ed2937..HEAD
 ```
 
 ## Current security status
 
 - Criticalとして確定した未解決課題はありません。
-- Highが3件Openです。
+- Highが2件Openです。
 - インターネット公開前のblocking issueがあります。
-- 最優先は、runner異常終了やDocker失敗時に
-  期限のないorphan sandboxが残り得る問題です。
+- 最優先は、問題一覧の同期parseとnginx受付制御のDoS経路です。
+- runner異常終了後のsandboxは再起動時に回収します。
+  Docker daemon単独の有効期限はないため、SOJ-002を部分解決として追跡します。
 - read-only root、tmpfs容量・inode、CPU、memory、swap、PID、
   capability、network、IPC、timeout等の主要sandbox制限は実装され、
   現在のrootless開発環境で実効値を確認しています。
@@ -63,11 +64,11 @@ Statusは次の意味で使用します。
 
 ### Open / Partially resolved / Deferred
 
-- `SOJ-002` — High / P0 / Open
-  - 概要: runner異常終了やDocker create/start失敗時に、
-    期限のないorphanが残り得る
+- `SOJ-002` — Medium / P1 / Partially resolved
+  - 概要: 起動時回収とDocker失敗時の追跡は実装したが、
+    daemon単独のsandbox有効期限はない
   - 関連: `backend/scripts/container_manager.py`、`backend/runner_main.py`
-  - 次: 起動時回収、create/register/startの管理、crash時deadlineを設計
+  - 次: runner再起動・回収失敗の監視と、独立した期限強制の要否を判断
 - `SOJ-003` — High / P1 / Open
   - 概要: `/api/problems`が毎回92 YAMLを同期parseしevent loopを飽和できる
   - 関連: `backend/api/api_shellgei.py`
@@ -153,10 +154,10 @@ Statusは次の意味で使用します。
 
 現在の未解決trackerは次の内訳です。
 
-- Open: 13件
-- Partially resolved: 1件
+- Open: 12件
+- Partially resolved: 2件
 - Deferred: 6件
-- Severity: High 3件、Medium 13件、Low 4件
+- Severity: High 2件、Medium 14件、Low 4件
 
 ## Resolved issues
 
@@ -175,51 +176,51 @@ Statusは次の意味で使用します。
 | RES-008 | DB実行ログ件数・期間とCompose service logを制限 | `ac42f29` | retention unit・PostgreSQL integration test |
 | RES-009 | sandbox開始頻度とcgroup実効値をfail-closedで検証 | `fd02020`、`d0efe75` | admission、container manager、Docker baseline test |
 | RES-010 | Docker socketを公開backendから内部runnerへ分離 | `7cab18e` | `test_runner_boundary.py`、Compose静的test |
-| RES-011 | 動的sandboxのDockerログを無効化し、待機PID 1のstdioを`/dev/null`へ分離 | この変更 | container manager unit、Docker baseline test |
+| RES-011 | 動的sandboxのDockerログを無効化し、待機PID 1のstdioを`/dev/null`へ分離 | `41d31c8` | container manager unit、Docker baseline test |
+| RES-012 | owner単位の起動時回収、create/start失敗追跡、shutdown競合防止を実装 | この変更 | container manager unit、Docker restart test |
 
-RES-003、RES-007、RES-008、RES-009、RES-011は、
+RES-003、RES-007、RES-008、RES-009、RES-011、RES-012は、
 記載した範囲では解決済みです。
-異常終了orphan、可変image等の残存経路は、
-別のOpen issueとして追跡しています。
+daemon単独のsandbox有効期限、可変image等の残存経路は、
+別のtracker issueとして追跡しています。
 
 ## Open issue details
 
-### SOJ-002: runner crashとDocker失敗時のorphan
+### SOJ-002: runner crash後の独立した期限強制
 
 問題:
 
-- watchdogはrunner process内のthreadであり、runnerの`SIGKILL`やOOM後は残りません。
-- 起動時に管理labelから残存sandboxを回収しません。
-- Docker SDKの`containers.run()`はcreate後のstart失敗や応答timeout時に、
-  呼出側がcontainer IDを得られない場合があります。
-- graceful shutdownでも、実行workerとpool cleanupが競合する経路を確認しました。
+- watchdogはrunner process内のthreadであり、runner停止中は期限を強制できません。
+- Docker daemonだけでsandboxを期限切れにする機能は実装していません。
+- runnerが再起動しない場合、sandboxは起動時回収まで残る可能性があります。
 
 重要性:
 
-- 実行中commandがdeadlineなしで残る可能性があります。
-- runner restartごとに新しいpoolを作り、process内hard capを越えて残存し得ます。
+- Composeの`restart: always`と起動時回収が正常に働けば、残存時間は限定されます。
+- daemon障害やrunner再起動失敗が重なる場合は、回収が遅延します。
 
 現在の防御:
 
-- process内の管理対象上限3件
-- label付与、graceful shutdown、killとforce remove
-- Docker API timeout 15秒
+- owner・runner instance labelと一意なcontainer名
+- 同じownerの旧sandboxをpool作成前に削除し、失敗時はrunner起動を拒否
+- containerをcreate直後から管理し、start前の失敗も名前から回収
+- 回収確認不能なcontainer名をprocess内hard capへ保持
+- cleanupの直列化と、実行thread終了後の最終削除
+- Composeの`restart: always`
 
 不足と次の対応:
 
-- startup時に同じ所有scopeの残存sandboxを列挙・停止・削除する
-- create、管理登録、startを分け、曖昧な失敗を回収可能にする
-- container名またはlabelへowner/revision/expiryを持たせる
-- daemon側でも期限を強制できる仕組みを検討する
-- shutdownとworker終了の順序・競合をtestする
+- productionでrunner再起動、起動時回収、owner別container数を監視する
+- 1 ownerにつきrunnerを1 instanceに限定する
+- runnerとは独立したhost監視またはreaperが必要か運用要件を決定する
+- 独立したreaperを追加する場合は、Docker socket権限の増加と分離方法を先に評価する
 
 想定変更範囲:
 
-- `backend/scripts/container_manager.py`
-- `backend/scripts/run_shellgei.py`
-- `backend/runner_main.py`
-- container lifecycleのunit・Docker integration test
-- `SECURITY.md`と運用文書
+- production監視・alert設定
+- 必要と判断した場合のみ、runnerと独立した回収component
+
+残存リスクを踏まえ、SOJ-002はMedium、P1、Partially resolvedとします。
 
 ### SOJ-003 / SOJ-004: 公開受付とevent loopのDoS
 
@@ -321,7 +322,8 @@ Deferredは不要という意味ではありません。
 - `backend/tests/test_input_validation.py`
   - problem ID、path traversal、command長、NUL、extra JSON field
 - `backend/tests/test_container_manager.py`
-  - hard cap、rootless/cgroup fail-closed、sandbox log無効化、cleanup failure
+  - hard cap、rootless/cgroup fail-closed、create/start失敗、
+    起動時回収、cleanup競合
 - `backend/tests/test_run_shellgei.py`
   - timeout、出力上限、実行slot、background cleanup
 - `backend/tests/test_runner_boundary.py`
@@ -329,7 +331,8 @@ Deferredは不要という意味ではありません。
 - `backend/tests/test_nginx_config.py`
   - nginx directiveの静的確認
 - `backend/tests/integration/test_docker_executor.py`
-  - 実containerのfilesystem、resource、logging、isolation、timeout、画像、状態分離
+  - 実containerの起動時回収、filesystem、resource、logging、
+    isolation、timeout、画像、状態分離
 - `backend/tests/integration/test_postgres_retention.py`
   - 実PostgreSQLの期間・件数制限
 - `backend/tests/integration/test_full_problem_regression.py`
@@ -340,7 +343,8 @@ Deferredは不要という意味ではありません。
 
 ### 不足しているtest
 
-- crash、startup reconciliation、create/start曖昧失敗、shutdown race
+- 実runner processの強制終了とCompose自動再起動を含むE2E
+- Docker create応答timeoutとdaemon停止を使うfailure test
 - 実Composeのfrontend -> backend -> runner -> Docker -> DB E2E
 - 実nginxのmethod別rate token、Host、redirect、security header
 - DB停止、lock、timeout、commit失敗、NUL、rollback後の回復
@@ -358,10 +362,9 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  SOJ-002: crash/orphan lifecycleを修正
+  SOJ-003 / SOJ-004: 公開受付とevent loopのDoSを修正
     ↓
 Then
-  SOJ-003 / SOJ-004: 公開受付とevent loopのDoSを修正
   SOJ-007 / SOJ-008 / SOJ-010: runner通信・DB・redirectを修正
     ↓
 Later

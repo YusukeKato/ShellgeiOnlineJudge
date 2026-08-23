@@ -127,6 +127,7 @@ POSTGRES_PASSWORD=十分に長いランダム値
 DATABASE_URL=postgresql://soj_user:十分に長いランダム値@db:5432/soj_db
 
 DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
+SANDBOX_OWNER_ID=shellgei-online-judge-production
 RUNNER_SHARED_SECRET=runner認証用の64文字のランダム16進数
 
 HTTPS_BIND_ADDRESS=127.0.0.1
@@ -146,6 +147,7 @@ REACT_APP_SOJ_URL=https://example.com
 - `RUNNER_SHARED_SECRET`にはDBパスワードとは異なる値を使用する
 - `REACT_APP_*`はfrontendのJavaScriptへ埋め込まれる公開値なので、秘密情報を設定しない
 - `DOCKER_SOCKET_PATH`はrunnerへmountするデプロイユーザー自身のrootless socketを指定する
+- `SANDBOX_OWNER_ID`は同じDocker daemon上の他環境と重複させない
 - `SERVER_URL`はCORSの許可originなので、公開URLのschemeとhostを正確に指定し、末尾に`/`を付けない
 - 実行ログの保持値を変更する場合は、どちらも1以上の整数にする
 
@@ -350,7 +352,7 @@ docker system df
 - backendの5xx、timeout、拒否数、応答時間
 - runnerの認証失敗、429、5xx、再起動、sandbox削除失敗
 - rootless Docker user serviceの稼働状態
-- sandboxコンテナ数と削除失敗
+- owner別のsandboxコンテナ数、起動時回収、削除失敗
 - TLS証明書の有効期限と更新hookの成功
 - OS、Docker、Python/npm依存関係、base imageのセキュリティ更新
 - 実行ログのretention件数・期間と、Dockerログへの機密情報混入

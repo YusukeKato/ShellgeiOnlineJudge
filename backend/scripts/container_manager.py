@@ -1,5 +1,8 @@
 import logging
+import os
+import re
 import threading
+import uuid
 from collections import deque
 from typing import Any
 
@@ -12,6 +15,11 @@ DEFAULT_IMAGE_ID = "theoldmoon0602/shellgeibot"
 DEFAULT_POOL_SIZE = 3
 DOCKER_API_TIMEOUT_SECONDS = 15
 MANAGED_LABEL = "com.shellgei-online-judge.sandbox"
+OWNER_LABEL = "com.shellgei-online-judge.owner"
+INSTANCE_LABEL = "com.shellgei-online-judge.runner-instance"
+DEFAULT_SANDBOX_OWNER_ID = "shellgei-online-judge"
+SANDBOX_OWNER_ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,62}")
+SANDBOX_CONTAINER_NAME_PREFIX = "soj-sandbox"
 SANDBOX_WORK_DIRECTORY = "/work"
 SANDBOX_HOME_DIRECTORY = "/tmp/home"
 SANDBOX_MEMORY_LIMIT_BYTES = 512 * 1024 * 1024
@@ -49,18 +57,27 @@ class ContainerManager:
         client: Any | None = None,
         image_id: str = DEFAULT_IMAGE_ID,
         pool_size: int = DEFAULT_POOL_SIZE,
+        owner_id: str = DEFAULT_SANDBOX_OWNER_ID,
+        instance_id: str | None = None,
     ) -> None:
         if pool_size < 1:
             raise ValueError("pool_size must be at least 1")
+        if SANDBOX_OWNER_ID_PATTERN.fullmatch(owner_id) is None:
+            raise ValueError("owner_id must contain only safe label characters")
         # Defer connecting to Docker until startup initializes the pool. This keeps
         # imports and non-Docker tests independent from daemon availability.
         self.client = client
         self.image_id = image_id
+        self.owner_id = owner_id
+        self.instance_id = instance_id or uuid.uuid4().hex
         self.pool: deque[Any] = deque()
         self.lock = threading.Lock()
+        self._create_shutdown_lock = threading.Lock()
+        self._cleanup_lock = threading.Lock()
         self.pool_size = pool_size
         self._slots = threading.BoundedSemaphore(pool_size)
         self._managed: dict[str, Any] = {}
+        self._pending_names: set[str] = set()
         self._shutting_down = False
 
     def _get_client(self) -> Any:
@@ -117,8 +134,44 @@ class ContainerManager:
                 docker.types.Ulimit(name="nofile", soft=256, hard=256),
                 docker.types.Ulimit(name="core", soft=0, hard=0),
             ],
-            "labels": {MANAGED_LABEL: "true"},
+            "labels": {
+                MANAGED_LABEL: "true",
+                OWNER_LABEL: self.owner_id,
+                INSTANCE_LABEL: self.instance_id,
+            },
         }
+
+    def _owned_container_filters(self) -> dict[str, list[str]]:
+        return {
+            "label": [
+                f"{MANAGED_LABEL}=true",
+                f"{OWNER_LABEL}={self.owner_id}",
+            ]
+        }
+
+    def _reconcile_stale_containers(self) -> None:
+        client = self._get_client()
+        try:
+            stale_containers = client.containers.list(
+                all=True,
+                filters=self._owned_container_filters(),
+            )
+        except Exception as exc:
+            raise RuntimeError("failed to list stale sandbox containers") from exc
+
+        for container in stale_containers:
+            try:
+                with self._cleanup_lock:
+                    container.remove(force=True)
+            except docker.errors.NotFound:
+                continue
+            except Exception as exc:
+                raise RuntimeError(
+                    f"failed to remove stale sandbox container {container.id}"
+                ) from exc
+
+    def _new_container_name(self) -> str:
+        return f"{SANDBOX_CONTAINER_NAME_PREFIX}-{uuid.uuid4().hex}"
 
     @staticmethod
     def _container_id(container: Any) -> str:
@@ -148,33 +201,59 @@ class ContainerManager:
             )
 
     def _create_container(self) -> Any:
-        with self.lock:
-            if self._shutting_down:
-                raise RuntimeError("container manager is shutting down")
-        if not self._slots.acquire(blocking=False):
-            raise ContainerCapacityError("managed container capacity reached")
+        with self._create_shutdown_lock:
+            with self.lock:
+                if self._shutting_down:
+                    raise RuntimeError("container manager is shutting down")
+            if not self._slots.acquire(blocking=False):
+                raise ContainerCapacityError("managed container capacity reached")
 
-        try:
-            container = self._get_client().containers.run(
-                self.image_id,
-                **self._container_options(),
-            )
-        except Exception:
-            self._slots.release()
-            raise
+            container_name = self._new_container_name()
+            with self.lock:
+                self._pending_names.add(container_name)
 
-        with self.lock:
-            self._managed[self._container_id(container)] = container
-            shutting_down = self._shutting_down
-        if shutting_down:
-            self._cleanup_container(container)
-            raise RuntimeError("container manager is shutting down")
-        try:
-            self._validate_container_resource_limits(container)
-        except Exception:
-            self._cleanup_container(container)
-            raise
-        return container
+            try:
+                client = self._get_client()
+            except Exception:
+                self._forget_pending_name(container_name)
+                raise
+            try:
+                try:
+                    container = client.containers.create(
+                        self.image_id,
+                        name=container_name,
+                        **self._container_options(),
+                    )
+                except docker.errors.ImageNotFound:
+                    client.images.pull(self.image_id)
+                    container = client.containers.create(
+                        self.image_id,
+                        name=container_name,
+                        **self._container_options(),
+                    )
+            except Exception:
+                if self._cleanup_pending_container(
+                    container_name,
+                    accept_not_found=False,
+                ):
+                    self._forget_pending_name(container_name)
+                raise
+
+            with self.lock:
+                self._pending_names.discard(container_name)
+                self._managed[self._container_id(container)] = container
+
+            try:
+                container.start()
+            except Exception:
+                self._cleanup_container(container, kill=False)
+                raise
+            try:
+                self._validate_container_resource_limits(container)
+            except Exception:
+                self._cleanup_container(container)
+                raise
+            return container
 
     def _create_and_add(self) -> Any:
         container = self._create_container()
@@ -189,6 +268,7 @@ class ContainerManager:
         """Synchronously create the complete warm pool or fail startup."""
         logger.info("Initializing container pool (%s)", self.pool_size)
         try:
+            self._reconcile_stale_containers()
             for _ in range(self.pool_size):
                 self._create_and_add()
         except Exception:
@@ -211,10 +291,56 @@ class ContainerManager:
         if removed is not None:
             self._slots.release()
 
+    def _forget_pending_name(self, container_name: str) -> None:
+        with self.lock:
+            removed = container_name in self._pending_names
+            self._pending_names.discard(container_name)
+        if removed:
+            self._slots.release()
+
+    def _cleanup_pending_container(
+        self,
+        container_name: str,
+        accept_not_found: bool = True,
+    ) -> bool:
+        client = self.client
+        if client is None:
+            return False
+        with self._cleanup_lock:
+            try:
+                container = client.containers.get(container_name)
+            except docker.errors.NotFound:
+                return accept_not_found
+            except Exception as exc:
+                logger.error(
+                    "Failed to resolve pending sandbox container %s: %s",
+                    container_name,
+                    exc,
+                )
+                return False
+            try:
+                container.remove(force=True)
+            except docker.errors.NotFound:
+                return True
+            except Exception as exc:
+                logger.error(
+                    "Failed to remove pending sandbox container %s: %s",
+                    container_name,
+                    exc,
+                )
+                return False
+        return True
+
     def _cleanup_container(self, container: Any, kill: bool = True) -> bool:
+        with self._cleanup_lock:
+            return self._cleanup_container_locked(container, kill=kill)
+
+    def _cleanup_container_locked(self, container: Any, kill: bool = True) -> bool:
         if kill:
             try:
                 container.kill()
+            except docker.errors.NotFound:
+                pass
             except Exception as exc:
                 # force=True can still remove a container after kill fails.
                 logger.warning(
@@ -233,6 +359,28 @@ class ContainerManager:
         self._forget_removed_container(container)
         return True
 
+    def begin_shutdown(self) -> None:
+        """Stop new work and kill managed containers to unblock execution threads."""
+        with self._create_shutdown_lock:
+            with self.lock:
+                if self._shutting_down:
+                    return
+                self._shutting_down = True
+                containers = list(self._managed.values())
+                self.pool.clear()
+        for container in containers:
+            with self._cleanup_lock:
+                try:
+                    container.kill()
+                except docker.errors.NotFound:
+                    continue
+                except Exception as exc:
+                    logger.warning(
+                        "Failed to kill sandbox container %s during shutdown: %s",
+                        container.id,
+                        exc,
+                    )
+
     def release_container(self, container: Any, already_stopped: bool = False) -> None:
         """Synchronously destroy a used container and replenish within capacity."""
         removed = self._cleanup_container(container, kill=not already_stopped)
@@ -247,13 +395,17 @@ class ContainerManager:
 
     def shutdown_pool(self) -> None:
         """Stop accepting work and remove every container owned by this manager."""
-        with self.lock:
-            self._shutting_down = True
-            containers = list(self._managed.values())
-            self.pool.clear()
-            client = self.client
+        self.begin_shutdown()
+        with self._create_shutdown_lock:
+            with self.lock:
+                containers = list(self._managed.values())
+                pending_names = list(self._pending_names)
+                client = self.client
         for container in containers:
-            self._cleanup_container(container)
+            self._cleanup_container(container, kill=False)
+        for container_name in pending_names:
+            if self._cleanup_pending_container(container_name):
+                self._forget_pending_name(container_name)
         close = getattr(client, "close", None)
         if close is not None:
             close()
@@ -261,7 +413,9 @@ class ContainerManager:
     @property
     def managed_count(self) -> int:
         with self.lock:
-            return len(self._managed)
+            return len(self._managed) + len(self._pending_names)
 
 
-manager = ContainerManager()
+manager = ContainerManager(
+    owner_id=os.getenv("SANDBOX_OWNER_ID", DEFAULT_SANDBOX_OWNER_ID),
+)

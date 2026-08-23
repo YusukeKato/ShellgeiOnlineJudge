@@ -1,11 +1,16 @@
 import asyncio
 import os
+import uuid
 from pathlib import Path
 
+import docker
 import pytest
 import yaml
 
 from scripts.container_manager import (
+    INSTANCE_LABEL,
+    MANAGED_LABEL,
+    OWNER_LABEL,
     SANDBOX_HOME_DIRECTORY,
     SANDBOX_TMPFS,
     SANDBOX_WORK_DIRECTORY,
@@ -23,6 +28,32 @@ pytestmark = [
 ]
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+
+
+def test_runner_restart_reconciles_owned_sandbox_containers() -> None:
+    owner_id = f"integration-{uuid.uuid4().hex}"
+    old_manager = ContainerManager(pool_size=1, owner_id=owner_id)
+    new_manager = ContainerManager(pool_size=1, owner_id=owner_id)
+    old_manager.initialize_pool()
+    old_container = old_manager.get_container()
+    old_container_id = old_container.id
+    try:
+        new_manager.initialize_pool()
+
+        assert new_manager.client is not None
+        with pytest.raises(docker.errors.NotFound):
+            new_manager.client.containers.get(old_container_id)
+
+        replacement = new_manager.get_container()
+        replacement.reload()
+        labels = replacement.attrs["Config"]["Labels"]
+        assert labels[MANAGED_LABEL] == "true"
+        assert labels[OWNER_LABEL] == owner_id
+        assert labels[INSTANCE_LABEL] == new_manager.instance_id
+        new_manager.release_container(replacement)
+    finally:
+        new_manager.shutdown_pool()
+        old_manager.shutdown_pool()
 
 
 def test_real_container_has_required_baseline_isolation() -> None:

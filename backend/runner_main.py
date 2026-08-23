@@ -27,8 +27,9 @@ async def lifespan(_app: FastAPI):
     try:
         yield
     finally:
-        manager.shutdown_pool()
+        manager.begin_shutdown()
         docker_client.close()
+        manager.shutdown_pool()
 
 
 app = FastAPI(

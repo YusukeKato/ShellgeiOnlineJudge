@@ -28,6 +28,7 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - 基本的なDocker隔離設定
 - 動的sandboxのlogging driverが`none`であること
 - sandboxの待機PID 1のstdin、stdout、stderrが`/dev/null`であること
+- 同じownerの旧sandboxをrunner起動時に回収すること
 - root filesystemがread-onlyであること
 - 通常ファイルの書き込み先が、容量・inode制限付きの
   `/work`、`/tmp`、`/media`、`/dev`に限定されていること

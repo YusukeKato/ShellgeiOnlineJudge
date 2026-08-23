@@ -201,19 +201,39 @@ shell commandの改行、空白、記号、通常のUnicode文字は、
 
 runnerのgraceful shutdownでは、次の終了処理を行います。
 
-- 管理対象コンテナの削除
-- Docker clientのclose
-- ThreadPoolExecutorのshutdown
+- 新しいsandbox取得を停止
+- 管理対象コンテナをkillして実行threadを解除
+- ThreadPoolExecutorの終了を待機
+- 管理対象コンテナを削除
+- Docker clientをclose
+
+sandboxには、次の管理情報を設定します。
+
+- 一意なcontainer名
+- sandboxを示すlabel
+- デプロイ環境を示すowner label
+- runner起動単位を示すinstance label
+
+runner起動時は、同じowner labelを持つ既存sandboxをpool作成前に削除します。
+一覧取得または削除に失敗した場合は、新しいpoolを作らずrunnerの起動に失敗します。
+`SANDBOX_OWNER_ID`は、同じDocker daemonを使う環境ごとに異なる値を設定し、
+1つのownerにつきrunnerは1 instanceだけ起動してください。
+
+containerはcreateとstartを分け、create前に一意な名前を管理対象へ登録します。
+create応答が失われた場合は名前からcontainerを再取得して削除します。
+startまたはcgroup検証に失敗したcontainerも、poolへ追加せず削除します。
+削除結果が確認できない名前またはcontainerは管理上限へ含め続けます。
 
 次の場合はコンテナが残存する可能性があります。
 
-- runnerの`SIGKILL`または異常終了
 - ホスト停止またはkernel障害
 - Docker daemon停止・応答不能
 - Docker APIによるkillまたはremoveの失敗
+- runnerが異常終了した後、再起動が完了しない場合
 
-起動時に以前のrunnerプロセスが残したコンテナをlabelから検出・回収する処理はありません。
-残存コンテナ数と削除失敗をホスト側で監視する必要があります。
+Composeのrunnerは`restart: always`で再起動し、起動時回収を実行します。
+ただし、Docker daemon側だけで強制するsandboxの有効期限はありません。
+runner再起動、残存sandbox数、起動時回収失敗をホスト側で監視してください。
 
 Docker clientのHTTP timeoutは15秒です。
 これはdaemon障害時の長時間blockを軽減しますが、
@@ -412,7 +432,7 @@ sandboxイメージとbase imageはtagで参照しており、digestを固定し
 - rootless環境で利用可能なseccomp・LSMによる追加制約
 - 外側proxyで実際のclient単位に共有するrate・connection制限
 - 複数frontend replica・複数hostで共有する受付制御
-- 起動時の残存sandbox検出・回収
+- runnerとは独立したsandbox期限強制の必要性評価
 - 判定値の正規化と画像比較処理の修正
 - イメージのdigest固定、SBOM、署名検証、脆弱性scan
 - runnerを別hostまたは使い捨てVMへ配置する追加隔離

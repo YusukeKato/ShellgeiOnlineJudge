@@ -164,6 +164,9 @@ def test_runner_lifespan_owns_the_docker_pool(
         def initialize_pool(self) -> None:
             events.append("pool_initialize")
 
+        def begin_shutdown(self) -> None:
+            events.append("pool_begin_shutdown")
+
         def shutdown_pool(self) -> None:
             events.append("pool_shutdown")
 
@@ -184,8 +187,9 @@ def test_runner_lifespan_owns_the_docker_pool(
     assert events == [
         "pool_initialize",
         "serving",
-        "pool_shutdown",
+        "pool_begin_shutdown",
         "docker_client_close",
+        "pool_shutdown",
     ]
 
 

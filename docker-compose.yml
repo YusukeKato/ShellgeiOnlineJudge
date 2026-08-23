@@ -35,6 +35,7 @@ services:
     environment:
       - TZ=Asia/Tokyo
       - DOCKER_HOST=unix:///run/docker.sock
+      - SANDBOX_OWNER_ID=${SANDBOX_OWNER_ID:-shellgei-online-judge}
       - RUNNER_SHARED_SECRET=${RUNNER_SHARED_SECRET:?Set RUNNER_SHARED_SECRET to a random value}
     read_only: true
     tmpfs:
