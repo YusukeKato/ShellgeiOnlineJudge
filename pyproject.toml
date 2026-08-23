@@ -38,4 +38,5 @@ pythonpath = ["backend"]
 testpaths = ["backend/tests"]
 markers = [
     "docker: requires an explicitly enabled Docker integration-test environment",
+    "full_regression: runs every problem answer in real sandbox containers",
 ]
