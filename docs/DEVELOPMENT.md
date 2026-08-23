@@ -137,6 +137,11 @@ sudo systemctl daemon-reload
 systemctl --user restart docker
 ```
 
+backendは起動時にcgroup v2とsystemd driverを確認し、
+各sandboxへCPU、メモリ、PID数の上限が実際に反映されたことも検査します。
+条件を満たさない場合はsandboxを破棄して起動に失敗するため、
+起動エラーが発生した場合は上記のdaemon設定とcontroller delegationを確認してください。
+
 ## 3. リポジトリとPython依存関係
 
 ```sh

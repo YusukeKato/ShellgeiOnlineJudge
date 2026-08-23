@@ -14,6 +14,9 @@ DOCKER_API_TIMEOUT_SECONDS = 15
 MANAGED_LABEL = "com.shellgei-online-judge.sandbox"
 SANDBOX_WORK_DIRECTORY = "/work"
 SANDBOX_HOME_DIRECTORY = "/tmp/home"
+SANDBOX_MEMORY_LIMIT_BYTES = 512 * 1024 * 1024
+SANDBOX_CPU_MAX = "50000 100000"
+SANDBOX_PIDS_LIMIT = 50
 SANDBOX_INIT_COMMAND = (
     f"umask 077; mkdir -p {SANDBOX_HOME_DIRECTORY}; "
     f"ln -s /media {SANDBOX_WORK_DIRECTORY}/media; "
@@ -34,6 +37,10 @@ class ContainerCapacityError(RuntimeError):
 
 class RootlessDockerRequiredError(RuntimeError):
     """Raised when the configured Docker daemon is not running rootless."""
+
+
+class CgroupResourceLimitsRequiredError(RuntimeError):
+    """Raised when required cgroup resource limits cannot be enforced."""
 
 
 class ContainerManager:
@@ -65,10 +72,19 @@ class ContainerManager:
                     timeout=DOCKER_API_TIMEOUT_SECONDS,
                 )
                 try:
-                    security_options = client.info().get("SecurityOptions", [])
+                    daemon_info = client.info()
+                    security_options = daemon_info.get("SecurityOptions", [])
                     if "name=rootless" not in security_options:
                         raise RootlessDockerRequiredError(
                             "the sandbox Docker daemon must run in rootless mode"
+                        )
+                    if (
+                        str(daemon_info.get("CgroupVersion")) != "2"
+                        or daemon_info.get("CgroupDriver") != "systemd"
+                    ):
+                        raise CgroupResourceLimitsRequiredError(
+                            "the sandbox Docker daemon must use cgroup v2 "
+                            "with the systemd driver"
                         )
                 except Exception:
                     client.close()
@@ -91,7 +107,7 @@ class ContainerManager:
             "mem_limit": "512m",
             "memswap_limit": "512m",
             "nano_cpus": 500000000,
-            "pids_limit": 50,
+            "pids_limit": SANDBOX_PIDS_LIMIT,
             "cap_drop": ["ALL"],
             "security_opt": ["no-new-privileges:true"],
             "tmpfs": dict(SANDBOX_TMPFS),
@@ -106,6 +122,29 @@ class ContainerManager:
     @staticmethod
     def _container_id(container: Any) -> str:
         return str(container.id)
+
+    @staticmethod
+    def _validate_container_resource_limits(container: Any) -> None:
+        result = container.exec_run(
+            [
+                "/bin/sh",
+                "-c",
+                "cat /sys/fs/cgroup/memory.max; "
+                "cat /sys/fs/cgroup/pids.max; "
+                "cat /sys/fs/cgroup/cpu.max",
+            ]
+        )
+        output = result.output.decode("ascii", errors="replace").splitlines()
+        expected = [
+            str(SANDBOX_MEMORY_LIMIT_BYTES),
+            str(SANDBOX_PIDS_LIMIT),
+            SANDBOX_CPU_MAX,
+        ]
+        if result.exit_code != 0 or output != expected:
+            raise CgroupResourceLimitsRequiredError(
+                "sandbox cgroup limits are not enforced: "
+                f"exit_code={result.exit_code}, values={output!r}"
+            )
 
     def _create_container(self) -> Any:
         with self.lock:
@@ -129,6 +168,11 @@ class ContainerManager:
         if shutting_down:
             self._cleanup_container(container)
             raise RuntimeError("container manager is shutting down")
+        try:
+            self._validate_container_resource_limits(container)
+        except Exception:
+            self._cleanup_container(container)
+            raise
         return container
 
     def _create_and_add(self) -> Any:

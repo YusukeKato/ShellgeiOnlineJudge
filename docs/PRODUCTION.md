@@ -86,6 +86,11 @@ controllerが不足する場合は、
 [開発環境のcgroupによる制限の確認](./DEVELOPMENT.md#cgroupによる制限の確認)に従い、
 systemd側でcontrollerをdelegateしてから本番運用を開始してください。
 
+backendは起動時にdaemonのcgroup構成と、各sandboxに反映されたCPU、
+メモリ、PID数の上限を検査します。
+検査に失敗したsandboxは破棄され、初期poolを作成できない場合は
+backendが起動しません。
+
 ## 3. アプリケーションの配置
 
 デプロイユーザーでリポジトリを配置します。

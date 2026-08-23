@@ -249,6 +249,10 @@ Compose操作には`deploy/rootless-compose.sh`を使用します。
 
 backendも起動時にDocker daemonの`SecurityOptions`を検査します。
 `name=rootless`がなければ起動に失敗します。
+同時にcgroup v2とsystemd cgroup driverを必須とし、作成した各sandbox内で
+メモリ512 MiB、PID数50、CPU 0.5 coreの実値を検査します。
+いずれかの制限が反映されていないsandboxは直ちに破棄し、
+初期poolを満たせない場合はbackendの起動に失敗します。
 開発環境と本番環境のどちらもrootless Dockerが必要です。
 
 Docker build contextから次を除外します。

@@ -4,23 +4,44 @@ import pytest
 
 import scripts.container_manager as container_manager_module
 from scripts.container_manager import (
+    CgroupResourceLimitsRequiredError,
     ContainerCapacityError,
     ContainerManager,
     RootlessDockerRequiredError,
+    SANDBOX_CPU_MAX,
     SANDBOX_HOME_DIRECTORY,
     SANDBOX_INIT_COMMAND,
+    SANDBOX_MEMORY_LIMIT_BYTES,
+    SANDBOX_PIDS_LIMIT,
     SANDBOX_TMPFS,
     SANDBOX_WORK_DIRECTORY,
 )
 
 
+class FakeExecResult:
+    def __init__(self, exit_code: int, output: bytes) -> None:
+        self.exit_code = exit_code
+        self.output = output
+
+
 class FakeContainer:
-    def __init__(self, container_id: str) -> None:
+    def __init__(
+        self,
+        container_id: str,
+        cgroup_exit_code: int,
+        cgroup_output: bytes,
+    ) -> None:
         self.id = container_id
         self.kill_calls = 0
         self.remove_calls = 0
         self.kill_error: Exception | None = None
         self.remove_error: Exception | None = None
+        self.cgroup_exit_code = cgroup_exit_code
+        self.cgroup_output = cgroup_output
+
+    def exec_run(self, command: list[str]) -> FakeExecResult:
+        assert command[:2] == ["/bin/sh", "-c"]
+        return FakeExecResult(self.cgroup_exit_code, self.cgroup_output)
 
     def kill(self) -> None:
         self.kill_calls += 1
@@ -39,29 +60,48 @@ class FakeContainers:
         self.created: list[FakeContainer] = []
         self.run_kwargs: list[dict[str, Any]] = []
         self.run_error: Exception | None = None
+        self.cgroup_exit_code = 0
+        self.cgroup_output = (
+            f"{SANDBOX_MEMORY_LIMIT_BYTES}\n{SANDBOX_PIDS_LIMIT}\n{SANDBOX_CPU_MAX}\n"
+        ).encode("ascii")
 
     def run(self, image_id: str, **kwargs: Any) -> FakeContainer:
         if self.run_error is not None:
             raise self.run_error
-        container = FakeContainer(f"container-{len(self.created)}")
+        container = FakeContainer(
+            f"container-{len(self.created)}",
+            self.cgroup_exit_code,
+            self.cgroup_output,
+        )
         self.created.append(container)
         self.run_kwargs.append({"image_id": image_id, **kwargs})
         return container
 
 
 class FakeDockerClient:
-    def __init__(self, rootless: bool = True) -> None:
+    def __init__(
+        self,
+        rootless: bool = True,
+        cgroup_version: str = "2",
+        cgroup_driver: str = "systemd",
+    ) -> None:
         self.containers = FakeContainers()
         self.closed = False
         self.rootless = rootless
+        self.cgroup_version = cgroup_version
+        self.cgroup_driver = cgroup_driver
         self.info_calls = 0
 
-    def info(self) -> dict[str, list[str]]:
+    def info(self) -> dict[str, Any]:
         self.info_calls += 1
         security_options = ["name=seccomp,profile=builtin"]
         if self.rootless:
             security_options.append("name=rootless")
-        return {"SecurityOptions": security_options}
+        return {
+            "SecurityOptions": security_options,
+            "CgroupVersion": self.cgroup_version,
+            "CgroupDriver": self.cgroup_driver,
+        }
 
     def close(self) -> None:
         self.closed = True
@@ -113,6 +153,49 @@ def test_default_docker_client_rejects_rootful_daemon(
 
     assert client.closed is True
     assert client.containers.created == []
+
+
+@pytest.mark.parametrize(
+    ("cgroup_version", "cgroup_driver"),
+    [("1", "systemd"), ("2", "cgroupfs")],
+)
+def test_default_docker_client_rejects_unsupported_cgroup_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+    cgroup_version: str,
+    cgroup_driver: str,
+) -> None:
+    client = FakeDockerClient(
+        cgroup_version=cgroup_version,
+        cgroup_driver=cgroup_driver,
+    )
+    monkeypatch.setattr(
+        container_manager_module.docker,
+        "from_env",
+        lambda **kwargs: client,
+    )
+    manager = ContainerManager(pool_size=1)
+
+    with pytest.raises(CgroupResourceLimitsRequiredError):
+        manager.initialize_pool()
+
+    assert client.closed is True
+    assert client.containers.created == []
+
+
+def test_pool_initialization_rejects_unenforced_container_limits() -> None:
+    client = FakeDockerClient()
+    client.containers.cgroup_output = b"max\nmax\nmax 100000\n"
+    manager = ContainerManager(client=client, pool_size=1)
+
+    with pytest.raises(CgroupResourceLimitsRequiredError):
+        manager.initialize_pool()
+
+    assert manager.managed_count == 0
+    assert len(client.containers.created) == 1
+    container = client.containers.created[0]
+    assert container.kill_calls == 1
+    assert container.remove_calls == 1
+    assert client.closed is True
 
 
 def test_manager_never_creates_more_than_hard_capacity() -> None:
