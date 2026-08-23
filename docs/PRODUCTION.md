@@ -17,7 +17,6 @@ ShellgeiOnlineJudgeは、インターネットから任意のシェルコマン�
 >
 > - 複数frontend replicaや複数hostで共有する受付制御
 > - 外側proxyでの実際のclient単位のリクエスト・接続制限
-> - Web APIとDocker操作の分離
 >
 > この文書は起動・運用方法を示すもので、
 > 安全なインターネット公開を保証するものではありません。
@@ -32,15 +31,17 @@ Internet
     -> 127.0.0.1:8443
       -> frontend（nginx）
         -> backend（FastAPI）
-          -> rootless Docker socket
-            -> sandbox containers（networkなし、リソース制限あり）
+          -> runner API（認証付き内部network）
+            -> rootless Docker socket
+              -> sandbox containers（networkなし、リソース制限あり）
       -> PostgreSQL（127.0.0.1:5432）
 ```
 
-backendはrootless Docker socketを使用します。
+backendにはDocker socketをmountしません。
+外部へportを公開しないrunnerだけがrootless Docker socketを使用します。
 このsocketからホストrootを直接取得する構成ではありません。
 
-ただし、backendの実行権限が意図しない形で利用された場合、
+runnerの実行権限が意図しない形で利用された場合、
 次のリソースが影響範囲に含まれます。
 
 - rootless daemonが管理する全コンテナ
@@ -53,12 +54,12 @@ backendはrootless Docker socketを使用します。
 - 専用VMに配置し、他サービスとDocker daemonを共有しない
 - 専用ユーザーを`docker`グループや`sudo`グループへ追加しない
 - 専用ユーザーのホームに、デプロイに不要なSSH鍵やクラウド資格情報を置かない
-- DB、backend、frontend以外の重要なコンテナを同じdaemonで動かさない
+- DB、runner、backend、frontend以外の重要なコンテナを同じdaemonで動かさない
 - VMやDBを別の信頼境界としてバックアップする
 
-現在のCompose構成では、Docker socketとWeb APIは独立した信頼境界に
-分離されていません。影響範囲をさらに限定するには、Docker操作を専用hostまたは
-使い捨てVM上のrunner APIへ分離します。
+現在のCompose構成では、Web APIとDocker操作を固定schemaの内部runner APIで
+分離しています。影響範囲をさらに限定するには、runnerとsandbox用daemonを
+専用hostまたは使い捨てVMへ配置します。
 詳細は[セキュリティモデルと制約](../SECURITY.md)を参照してください。
 
 ## 2. OSとrootless Dockerの準備
@@ -86,10 +87,10 @@ controllerが不足する場合は、
 [開発環境のcgroupによる制限の確認](./DEVELOPMENT.md#cgroupによる制限の確認)に従い、
 systemd側でcontrollerをdelegateしてから本番運用を開始してください。
 
-backendは起動時にdaemonのcgroup構成と、各sandboxに反映されたCPU、
+runnerは起動時にdaemonのcgroup構成と、各sandboxに反映されたCPU、
 メモリ、PID数の上限を検査します。
 検査に失敗したsandboxは破棄され、初期poolを作成できない場合は
-backendが起動しません。
+runnerが起動しません。
 
 ## 3. アプリケーションの配置
 
@@ -113,10 +114,11 @@ cp .env.example .env
 chmod 600 .env
 id -u
 printf '%s\n' "${XDG_RUNTIME_DIR}/docker.sock"
-openssl rand -hex 32
+openssl rand -hex 32  # DB password用
+openssl rand -hex 32  # runner認証用
 ```
 
-生成したランダム値をDBパスワードに使い、`.env`を編集します。
+用途ごとに異なるランダム値を使い、`.env`を編集します。
 以下は本番で上書きが必要な値の例です。
 `example.com`、UID、パスワード、証明書のパスは実環境に合わせてください。
 
@@ -125,6 +127,7 @@ POSTGRES_PASSWORD=十分に長いランダム値
 DATABASE_URL=postgresql://soj_user:十分に長いランダム値@db:5432/soj_db
 
 DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
+RUNNER_SHARED_SECRET=runner認証用の64文字のランダム16進数
 
 HTTPS_BIND_ADDRESS=127.0.0.1
 HTTPS_PORT=8443
@@ -140,8 +143,9 @@ REACT_APP_SOJ_URL=https://example.com
 - `POSTGRES_PASSWORD`と`DATABASE_URL`内のパスワードを一致させる
 - URLの予約文字を含むパスワードは`DATABASE_URL`側でpercent-encodingする
 - `.env`をGitへ追加しない
+- `RUNNER_SHARED_SECRET`にはDBパスワードとは異なる値を使用する
 - `REACT_APP_*`はfrontendのJavaScriptへ埋め込まれる公開値なので、秘密情報を設定しない
-- `DOCKER_SOCKET_PATH`はデプロイユーザー自身のrootless socketを指定する
+- `DOCKER_SOCKET_PATH`はrunnerへmountするデプロイユーザー自身のrootless socketを指定する
 - `SERVER_URL`はCORSの許可originなので、公開URLのschemeとhostを正確に指定し、末尾に`/`を付けない
 - 実行ログの保持値を変更する場合は、どちらも1以上の整数にする
 
@@ -254,7 +258,7 @@ docker pull theoldmoon0602/shellgeibot
 ./deploy/rootless-compose.sh build --pull
 ./deploy/rootless-compose.sh up -d --remove-orphans
 ./deploy/rootless-compose.sh ps
-./deploy/rootless-compose.sh logs --tail=100 db backend frontend
+./deploy/rootless-compose.sh logs --tail=100 db runner backend frontend
 ```
 
 起動後、ローカルと公開経路の両方を確認します。
@@ -285,7 +289,7 @@ git log -1 --oneline
 ./deploy/rootless-compose.sh build --pull
 ./deploy/rootless-compose.sh up -d --remove-orphans
 ./deploy/rootless-compose.sh ps
-./deploy/rootless-compose.sh logs --tail=100 db backend frontend
+./deploy/rootless-compose.sh logs --tail=100 db runner backend frontend
 ```
 
 `REACT_APP_*`はbuild時に埋め込まれます。これらを変更した場合はfrontendの再buildが必要です。
@@ -305,13 +309,15 @@ DBを以前の状態へ戻す場合は、事前に取得したバックアップ
 ```sh
 ./deploy/rootless-compose.sh ps
 ./deploy/rootless-compose.sh logs --tail=200 backend
-./deploy/rootless-compose.sh logs -f frontend backend
+./deploy/rootless-compose.sh logs --tail=200 runner
+./deploy/rootless-compose.sh logs -f frontend backend runner
 ./deploy/rootless-compose.sh restart backend
+./deploy/rootless-compose.sh restart runner
 ./deploy/rootless-compose.sh down
 ./deploy/rootless-compose.sh up -d
 ```
 
-ComposeのDB、backend、frontendにはDockerログのrotationが設定されています。
+ComposeのDB、runner、backend、frontendにはDockerログのrotationが設定されています。
 現在の上限値は、
 [SECURITY.mdの「実行ログとDockerログ」](../SECURITY.md#実行ログとdockerログ)を参照してください。
 
@@ -319,7 +325,7 @@ ComposeのDB、backend、frontendにはDockerログのrotationが設定されて
 
 ```sh
 docker inspect --format '{{json .HostConfig.LogConfig}}' \
-  soj-db soj-backend soj-frontend
+  soj-db soj-runner soj-backend soj-frontend
 ```
 
 rootless daemon自体を確認します。
@@ -342,6 +348,7 @@ docker system df
 - DB volumeを配置するfilesystemのquotaと容量アラート
 - CPU、メモリ、PID、ロードアベレージ
 - backendの5xx、timeout、拒否数、応答時間
+- runnerの認証失敗、429、5xx、再起動、sandbox削除失敗
 - rootless Docker user serviceの稼働状態
 - sandboxコンテナ数と削除失敗
 - TLS証明書の有効期限と更新hookの成功
@@ -357,7 +364,7 @@ PostgreSQLの整合性が保証される方法でバックアップしてくだ�
 
 ## 12. 運用上の制約
 
-- 同時実行数とbackendの開始頻度はプロセス単位です。
+- 同時実行数とrunnerの開始頻度はrunnerプロセス単位です。
   frontend nginxの全体開始頻度はfrontend instance単位です。
   workerやreplicaを増やす前に、共有された受付制御が必要です。
 - sandboxイメージはtag参照です。更新時は全問題回帰テストを行い、digest固定、署名検証、SBOM、脆弱性スキャンを導入してください。

@@ -120,11 +120,7 @@ def test_shell_api_applies_retention_in_the_log_transaction(
             _add_log(db, now - timedelta(seconds=offset))
         db.commit()
 
-        class AllowStart:
-            def try_acquire(self) -> bool:
-                return True
-
-        async def run_with_timeout(_shellgei: str, _problem_id: str) -> list[str]:
+        async def run(_shellgei: str, _problem_id: str) -> list[str]:
             return ["test", ""]
 
         def judge(_output: str, _image: str, _problem_id: str) -> str:
@@ -139,17 +135,12 @@ def test_shell_api_applies_retention_in_the_log_transaction(
             )
 
         monkeypatch.setattr(
-            api_shellgei.docker_client,
-            "run_with_timeout",
-            run_with_timeout,
+            api_shellgei.runner_client,
+            "run",
+            run,
         )
         monkeypatch.setattr(api_shellgei.shellgei_judge, "judge", judge)
         monkeypatch.setattr(api_shellgei, "prune_execution_logs", prune)
-        monkeypatch.setattr(
-            api_shellgei,
-            "sandbox_start_rate_limiter",
-            AllowStart(),
-        )
         yaml_dir = tmp_path / "problems" / "yaml_data"
         yaml_dir.mkdir(parents=True)
         (yaml_dir / "STANDARD-00000001.yaml").touch()
@@ -175,7 +166,7 @@ def test_shell_api_applies_retention_in_the_log_transaction(
         assert len(retained_ids) == 1
 
 
-def test_backend_startup_prunes_before_initializing_sandbox_pool(
+def test_backend_startup_validates_runner_and_prunes_logs(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     events: list[str] = []
@@ -192,9 +183,12 @@ def test_backend_startup_prunes_before_initializing_sandbox_pool(
         def __exit__(self, *_args: object) -> None:
             events.append("session_exit")
 
-    class FakeDockerClient:
+    class FakeRunnerClient:
+        def validate_configuration(self) -> None:
+            events.append("runner_validate")
+
         def close(self) -> None:
-            events.append("client_close")
+            events.append("runner_close")
 
     monkeypatch.setattr(
         backend_main.Base.metadata,
@@ -207,21 +201,7 @@ def test_backend_startup_prunes_before_initializing_sandbox_pool(
         "prune_execution_logs",
         lambda _db: events.append("prune"),
     )
-    monkeypatch.setattr(
-        backend_main.manager,
-        "initialize_pool",
-        lambda: events.append("pool_initialize"),
-    )
-    monkeypatch.setattr(
-        backend_main.manager,
-        "shutdown_pool",
-        lambda: events.append("pool_shutdown"),
-    )
-    monkeypatch.setattr(
-        backend_main.api_shellgei,
-        "docker_client",
-        FakeDockerClient(),
-    )
+    monkeypatch.setattr(backend_main, "runner_client", FakeRunnerClient())
 
     async def run_lifespan() -> None:
         async with backend_main.lifespan(backend_main.app):
@@ -230,15 +210,14 @@ def test_backend_startup_prunes_before_initializing_sandbox_pool(
     asyncio.run(run_lifespan())
 
     assert events == [
+        "runner_validate",
         "create_all",
         "session_enter",
         "prune",
         "commit",
         "session_exit",
-        "pool_initialize",
         "serving",
-        "pool_shutdown",
-        "client_close",
+        "runner_close",
     ]
 
 

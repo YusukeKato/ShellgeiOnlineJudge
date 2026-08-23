@@ -1,11 +1,10 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any
-
 import pytest
+from fastapi import HTTPException
 
-import api.api_shellgei as api_shellgei
+import runner_main
 from models.model_shellgei import ShellgeiData
 from scripts.admission_control import (
     DEFAULT_SANDBOX_START_BURST,
@@ -79,7 +78,7 @@ def test_start_rate_limiter_rejects_invalid_configuration(
         SandboxStartRateLimiter(rate_per_second=rate_per_second, burst=burst)
 
 
-def test_shell_api_rejects_rate_limited_request_before_database_or_docker(
+def test_runner_rejects_rate_limited_request_before_docker(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -87,20 +86,16 @@ def test_shell_api_rejects_rate_limited_request_before_database_or_docker(
         def try_acquire(self) -> bool:
             return False
 
-    class UnusedDatabase:
-        def __getattr__(self, name: str) -> Any:
-            raise AssertionError(f"database must not be used: {name}")
-
     async def unexpected_execution(*_args: object) -> list[str]:
         raise AssertionError("Docker execution must not start")
 
     monkeypatch.setattr(
-        api_shellgei,
+        runner_main,
         "sandbox_start_rate_limiter",
         RejectAllStarts(),
     )
     monkeypatch.setattr(
-        api_shellgei.docker_client,
+        runner_main.docker_client,
         "run_with_timeout",
         unexpected_execution,
     )
@@ -108,22 +103,20 @@ def test_shell_api_rejects_rate_limited_request_before_database_or_docker(
     yaml_dir.mkdir(parents=True)
     (yaml_dir / "STANDARD-00000001.yaml").touch()
     monkeypatch.setattr(
-        api_shellgei,
+        runner_main,
         "__file__",
-        str(tmp_path / "api" / "api_shellgei.py"),
+        str(tmp_path / "runner_main.py"),
     )
 
-    response = asyncio.run(
-        api_shellgei.post_shellgei(
-            ShellgeiData(
-                shellgei="printf test",
-                problem_id="STANDARD-00000001",
-            ),
-            UnusedDatabase(),  # type: ignore[arg-type]
+    with pytest.raises(HTTPException) as exc_info:
+        asyncio.run(
+            runner_main.execute_shellgei(
+                ShellgeiData(
+                    shellgei="printf test",
+                    problem_id="STANDARD-00000001",
+                )
+            )
         )
-    )
 
-    assert response.output == "Error: server is busy."
-    assert response.id == "-1"
-    assert response.image == ""
-    assert response.judge == "4"
+    assert exc_info.value.status_code == 429
+    assert exc_info.value.detail == "Runner is busy"

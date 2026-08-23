@@ -3,25 +3,23 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api import api_shellgei  # type: ignore
 from contextlib import asynccontextmanager
-from scripts.container_manager import manager
 from scripts.database import Base, SessionLocal, engine
 from scripts.execution_log_retention import prune_execution_logs
+from scripts.runner_client import runner_client
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    runner_client.validate_configuration()
     # テーブルが存在しない場合は作成する
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
         prune_execution_logs(db)
         db.commit()
-    # アプリ起動時にプールを作る
-    manager.initialize_pool()
     try:
         yield
     finally:
-        manager.shutdown_pool()
-        api_shellgei.docker_client.close()
+        runner_client.close()
 
 
 app = FastAPI(lifespan=lifespan)

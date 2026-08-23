@@ -91,7 +91,7 @@ docker info
 次の処理もこの条件を検証し、rootful daemonへの接続を拒否します。
 
 - Compose起動用wrapper
-- backendの起動処理
+- runnerの起動処理
 
 毎回設定する場合は、利用中のshellの設定ファイルへ次の行を追加できます。
 
@@ -137,7 +137,7 @@ sudo systemctl daemon-reload
 systemctl --user restart docker
 ```
 
-backendは起動時にcgroup v2とsystemd driverを確認し、
+runnerは起動時にcgroup v2とsystemd driverを確認し、
 各sandboxへCPU、メモリ、PID数の上限が実際に反映されたことも検査します。
 条件を満たさない場合はsandboxを破棄して起動に失敗するため、
 起動エラーが発生した場合は上記のdaemon設定とcontroller delegationを確認してください。
@@ -177,6 +177,7 @@ POSTGRES_PASSWORD=開発専用のパスワード
 DATABASE_URL=postgresql://soj_user:開発専用のパスワード@db:5432/soj_db
 
 DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
+RUNNER_SHARED_SECRET=64文字のランダム16進数
 SERVER_URL=https://localhost:8443
 REACT_APP_SOJ_URL=https://localhost:8443
 ```
@@ -184,6 +185,8 @@ REACT_APP_SOJ_URL=https://localhost:8443
 環境変数には次の条件があります。
 
 - `POSTGRES_PASSWORD`と`DATABASE_URL`内のパスワードを一致させる
+- `RUNNER_SHARED_SECRET`には`openssl rand -hex 32`で生成した値を設定する
+- runnerとbackendへ同じ`RUNNER_SHARED_SECRET`が渡される
 - URLの予約文字を含むパスワードは、`DATABASE_URL`側でpercent-encodingする
 - TLS証明書の配置を変える場合は、`TLS_CERTIFICATE_PATH`と
   `TLS_PRIVATE_KEY_PATH`を合わせる
@@ -270,8 +273,8 @@ docker pull theoldmoon0602/shellgeibot
 起動ログを確認します。
 
 ```sh
-./deploy/rootless-compose.sh logs --tail=100 db backend frontend
-./deploy/rootless-compose.sh logs -f backend
+./deploy/rootless-compose.sh logs --tail=100 db runner backend frontend
+./deploy/rootless-compose.sh logs -f runner backend
 ```
 
 APIの疎通を確認します。
@@ -296,6 +299,7 @@ frontend nginxの現在の受付制御とDockerログの上限は、
 
 ```sh
 ./deploy/rootless-compose.sh restart backend
+./deploy/rootless-compose.sh restart runner
 ./deploy/rootless-compose.sh stop
 ./deploy/rootless-compose.sh start
 ./deploy/rootless-compose.sh down
@@ -316,7 +320,7 @@ printf '%s\n' "${XDG_RUNTIME_DIR}/docker.sock"
 docker info --format '{{json .SecurityOptions}}'
 ```
 
-### backendがsandboxイメージを見つけられない
+### runnerがsandboxイメージを見つけられない
 
 rootfulとrootlessのイメージは共有されません。rootless socketを指定した同じshellでpullしてください。
 

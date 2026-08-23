@@ -7,14 +7,12 @@ from sqlalchemy.orm import Session
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
 from models.model_db import ExecutionLog
 from scripts.database import get_db
-from scripts.admission_control import sandbox_start_rate_limiter
 from scripts.execution_log_retention import prune_execution_logs
 from scripts.input_validation import ProblemId
-from scripts.run_shellgei import SandboxBusyError, ShellgeiDockerClient
+from scripts.runner_client import RunnerBusyError, RunnerUnavailableError, runner_client
 from scripts.judge import ShellgeiJudge
 
 router = APIRouter()
-docker_client = ShellgeiDockerClient()
 shellgei_judge = ShellgeiJudge()
 
 
@@ -30,9 +28,12 @@ async def post_shellgei(
     if not yaml_path.is_file():
         raise HTTPException(status_code=404, detail="Problem not found")
 
-    # Reject before DB or Docker work. The lock-protected token bucket prevents
-    # concurrent requests from passing the start-rate check together.
-    if not sandbox_start_rate_limiter.try_acquire():
+    # シェル芸の実行
+    shellgei_str = shellgei_data.shellgei
+    problem_id_str = shellgei_data.problem_id
+    try:
+        output, image = await runner_client.run(shellgei_str, problem_id_str)
+    except RunnerBusyError:
         return ShellgeiResultResponse(
             output="Error: server is busy.",
             id="-1",
@@ -40,17 +41,9 @@ async def post_shellgei(
             image="",
             judge="4",
         )
-
-    # シェル芸の実行
-    shellgei_str = shellgei_data.shellgei
-    problem_id_str = shellgei_data.problem_id
-    try:
-        output, image = await docker_client.run_with_timeout(
-            shellgei_str, problem_id_str
-        )
-    except SandboxBusyError:
+    except RunnerUnavailableError:
         return ShellgeiResultResponse(
-            output="Error: server is busy.",
+            output="Error: runner is unavailable.",
             id="-1",
             date=f"{japan_date.strftime('%Y-%m-%d %H:%M:%S')}",
             image="",

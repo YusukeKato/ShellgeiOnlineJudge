@@ -14,7 +14,7 @@
 
 - 接続先Docker daemonがrootlessであることを確認する
 - 検証後に`docker compose`を実行する
-- rootless socketのパスをbackendのmount設定へ渡す
+- rootless socketのパスを内部runnerのmount設定へ渡す
 
 実行コマンドは、開発環境または本番運用の文書を参照してください。
 

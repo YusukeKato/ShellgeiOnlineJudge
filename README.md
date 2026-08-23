@@ -3,7 +3,7 @@
 SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-judge.com/
 
 シェル芸オンラインジャッジはシェル芸で問題を解いて遊ぶウェブアプリです。
-ブラウザから入力されたコマンドをbackendがrootless Dockerのsandboxで実行し、
+ブラウザから入力されたコマンドを専用runnerがrootless Dockerのsandboxで実行し、
 出力、画像、判定結果をfrontendへ返します。
 
 ## 謝辞

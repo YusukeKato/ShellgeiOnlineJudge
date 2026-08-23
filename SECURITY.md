@@ -18,17 +18,27 @@ sandboxコンテナ内で実行するサービスです。
 ```text
 frontend（nginx）
     -> backend（FastAPI）
-        -> rootless Docker socket
-            -> sandboxコンテナ
         -> PostgreSQL
+        -> 認証付きrunner API（内部network）
+            -> rootless Docker socket
+                -> sandboxコンテナ
 ```
 
-backendはrootless Docker daemonを操作する権限を持ちます。
+backendにはDocker socketをmountしません。
+Docker操作は、ホストへportを公開しないrunnerだけが行います。
 sandboxコンテナにはDocker socketをマウントしません。
+
+backendからrunnerへ送るfieldは次の2つだけです。
+
+- shell command
+- problem ID
+
+runner APIは共有secretで認証し、イメージ名、mount、capability、device、
+privileged modeなどのDocker optionを受け付けません。
 
 ## sandboxコンテナの設定
 
-1つのbackendプロセスは、起動時に3個のsandboxコンテナを準備します。
+1つのrunnerプロセスは、起動時に3個のsandboxコンテナを準備します。
 管理対象数の上限も3個です。
 
 管理対象には次のコンテナを含みます。
@@ -92,28 +102,28 @@ escapeを防ぐ保証にはなりません。
 シェルコマンドの既定実行時間は10秒です。
 stdoutやstderrを出さない処理も独立したwatchdogの対象になり、期限到達時はコンテナを停止します。
 
-1つのbackendプロセスが同時に実行するsandbox処理は最大3件です。
+1つのrunnerプロセスが同時に実行するsandbox処理は最大3件です。
 
 - 上限到達時のリクエストはqueueへ追加しない
 - APIはbusy応答を返す
 - asyncio timeout後もworker threadが動作している場合は実行枠を保持する
 - worker threadの終了後に実行枠を解放する
 
-sandbox実行の開始頻度には、backendプロセスごとに次の制限を適用します。
+sandbox実行の開始頻度には、runnerプロセスごとに次の制限を適用します。
 
 - 平均1件/秒
 - 起動直後または未使用時の即時実行は最大3件
 - lockで保護したtoken bucketを使用する
 - tokenがないrequestはDB操作やDocker操作の前にbusy応答を返す
 
-これらの上限はbackendプロセス単位です。
+これらの上限はrunnerプロセス単位です。
 複数workerまたは複数replicaでは上限が共有されず、プロセス数に応じて
-合計実行数、コンテナ数、backendの許容開始頻度が増えます。
+合計実行数、コンテナ数、runnerの許容開始頻度が増えます。
 
 ## stdout、stderr、画像
 
 stdoutとstderrは結合されたstreamとして読み込みます。
-backendメモリに保持する量は、APIが返す最大文字数の4倍までです。
+runnerメモリに保持する量は、APIが返す最大文字数の4倍までです。
 
 上限超過時は次の処理を行います。
 
@@ -128,9 +138,9 @@ watchdogが有効な間に、次のいずれかを固定コマンドで読み取
 - `/media/output.jpg`
 
 読み取りにはread-only root filesystem上の`/usr/bin/head`を使用し、
-最大750,001 bytesをDocker execのstreamとしてbackendへ返します。
+最大750,001 bytesをDocker execのstreamとしてrunnerへ返します。
 
-backendも750,001 bytesを上限とするbufferへ読み込み、
+runnerも750,001 bytesを上限とするbufferへ読み込み、
 750,000 bytesを超えた画像を破棄します。
 
 画像をwritable root layerへ退避せず、Docker archive APIも使用しません。
@@ -138,13 +148,13 @@ backendも750,001 bytesを上限とするbufferへ読み込み、
 
 ## リクエストごとのデータ分離
 
-次のファイルは、リクエストごとのtar archiveとしてbackendメモリ上に生成します。
+次のファイルは、リクエストごとのtar archiveとしてrunnerメモリ上に生成します。
 
 - ユーザーが入力したシェルスクリプト
 - 問題の入力ファイル
 
 リクエスト間で共有するホスト側一時ファイルは使用しません。
-archiveはbackendでBase64へencodeし、Docker execの一時的な環境変数として渡します。
+archiveはrunnerでBase64へencodeし、Docker execの一時的な環境変数として渡します。
 sandbox内の固定コマンドがBase64をdecodeし、read-only root filesystem上の
 `base64`と`tar`を使用して`/work`へ展開します。
 利用者の入力内容を展開コマンドへ連結しません。
@@ -186,7 +196,7 @@ shell commandの改行、空白、記号、通常のUnicode文字は、
 - 出力超過
 - 実行準備失敗
 
-FastAPIのgraceful shutdownでは、次の終了処理を行います。
+runnerのgraceful shutdownでは、次の終了処理を行います。
 
 - 管理対象コンテナの削除
 - Docker clientのclose
@@ -194,12 +204,12 @@ FastAPIのgraceful shutdownでは、次の終了処理を行います。
 
 次の場合はコンテナが残存する可能性があります。
 
-- backendの`SIGKILL`または異常終了
+- runnerの`SIGKILL`または異常終了
 - ホスト停止またはkernel障害
 - Docker daemon停止・応答不能
 - Docker APIによるkillまたはremoveの失敗
 
-起動時に以前のbackendプロセスが残したコンテナをlabelから検出・回収する処理はありません。
+起動時に以前のrunnerプロセスが残したコンテナをlabelから検出・回収する処理はありません。
 残存コンテナ数と削除失敗をホスト側で監視する必要があります。
 
 Docker clientのHTTP timeoutは15秒です。
@@ -229,7 +239,7 @@ DBの実行ログは、次の両方を満たす範囲だけ保持します。
 古いログは、backend起動時と新しい実行ログの保存時に削除します。
 新しいログの保存と件数による削除は、同じDB transaction内で処理します。
 
-Composeで起動するDB、backend、frontendのDockerログには、
+Composeで起動するDB、runner、backend、frontendのDockerログには、
 すべて`local` logging driverを使用します。
 各serviceのログは10 MiB、3ファイルまでにrotationします。
 
@@ -247,12 +257,12 @@ Compose操作には`deploy/rootless-compose.sh`を使用します。
 - rootful Docker daemon
 - TCPのDocker endpoint
 
-backendも起動時にDocker daemonの`SecurityOptions`を検査します。
+runnerも起動時にDocker daemonの`SecurityOptions`を検査します。
 `name=rootless`がなければ起動に失敗します。
 同時にcgroup v2とsystemd cgroup driverを必須とし、作成した各sandbox内で
 メモリ512 MiB、PID数50、CPU 0.5 coreの実値を検査します。
 いずれかの制限が反映されていないsandboxは直ちに破棄し、
-初期poolを満たせない場合はbackendの起動に失敗します。
+初期poolを満たせない場合はrunnerの起動に失敗します。
 開発環境と本番環境のどちらもrootless Dockerが必要です。
 
 Docker build contextから次を除外します。
@@ -265,10 +275,17 @@ Docker build contextから次を除外します。
 frontendのbuildへ渡す環境変数は、ブラウザへ公開される`REACT_APP_*`だけです。
 `REACT_APP_*`へ秘密情報を設定してはいけません。
 
-## Docker socketの権限
+## runnerとDocker socketの権限
 
-backendにはrootless Docker socketをmountします。
-backendの実行権限が意図しない形で利用された場合、
+rootless Docker socketは、外部HTTP requestを処理しないrunnerだけにmountします。
+backendとrunnerは専用の内部Docker networkで接続し、runnerのportはホスト、
+frontend、DBへ公開しません。
+
+runner APIの共有secretは32文字以上の安全なランダム値を使用します。
+runnerは認証、入力schema、登録済みproblem ID、開始頻度、同時実行数を検査してから
+sandbox処理を開始します。
+
+runnerの実行権限が意図しない形で利用された場合、
 rootless daemonの権限で次のリソースを操作できる状態になります。
 
 - daemonが管理する全コンテナ
@@ -277,19 +294,21 @@ rootless daemonの権限で次のリソースを操作できる状態になり�
 - Docker network
 - daemonユーザーが読み書きできるホストファイル
 
-同じdaemonで動作するDBとfrontendも同じ影響範囲に含まれます。
+同じdaemonで動作するDB、backend、frontendも同じ影響範囲に含まれます。
 rootless socketはホストroot相当のrootful socketより権限が限定されます。
-ただし、Web backendとDocker実行基盤の間の独立したセキュリティ境界にはなりません。
+Web backendが意図しない動作をした場合でも、任意のDocker APIを直接操作できず、
+固定schemaのrunner APIを通じた制限付きsandbox実行だけが可能です。
 
-Web APIとDocker実行基盤を分離する場合に必要な構成は次のとおりです。
+Compose構成より影響範囲を小さくする場合は、runnerを専用Docker hostまたは
+使い捨てVMへ配置します。
 
 ```text
 Web API（Docker socketなし）
-    -> 認証され、固定スキーマだけを受け付けるrunner API
+    -> 認証され、固定schemaだけを受け付けるrunner API
         -> 専用Dockerホストまたは使い捨てVM
 ```
 
-runner APIは、Web APIから次の値を受け付けてはいけません。
+現在のrunner APIは、Web APIから次の値を受け付けません。
 
 - イメージ名
 - mount
@@ -314,7 +333,7 @@ APIには、直接接続元のIP addressをkeyとして次の制限を適用し�
 | その他の`/api` | 20 requests/second | 40 | 20 |
 
 frontend全体の`burst=2`は、通常の1requestと合わせて最大3requestを即時に処理します。
-これはbackendの3つのsandbox実行枠と合わせた値です。
+これはrunnerの3つのsandbox実行枠と合わせた値です。
 
 nginxのrateまたは同時request数を超えた場合は429を返します。
 burstはqueueで待機させず、上限内のrequestを即時に処理します。
@@ -385,4 +404,4 @@ sandboxイメージとbase imageはtagで参照しており、digestを固定し
 - 起動時の残存sandbox検出・回収
 - 判定値の正規化と画像比較処理の修正
 - イメージのdigest固定、SBOM、署名検証、脆弱性scan
-- Web APIとrunnerの分離
+- runnerを別hostまたは使い捨てVMへ配置する追加隔離

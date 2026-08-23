@@ -9,15 +9,53 @@ services:
     image: postgres:15-alpine
     container_name: soj-db
     restart: always
-    env_file:
-      - ${ENV_FILE_PATH:-.env}
     environment:
       - TZ=Asia/Tokyo
+      - POSTGRES_USER=${POSTGRES_USER:?Set POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:?Set POSTGRES_DB}
     volumes:
       - db_data:/var/lib/postgresql/data  # DBデータの永続化用ボリュームを設定
     ports:
       - "127.0.0.1:5432:5432"
     logging: *service-logging
+    networks:
+      - backend_db
+
+  runner:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: soj-runner
+    restart: always
+    command: ["uvicorn", "runner_main:app", "--host", "0.0.0.0", "--port", "8001"]
+    volumes:
+      # Docker socketは外部HTTPを処理しないrunnerだけにマウントする。
+      - ${DOCKER_SOCKET_PATH:?Set DOCKER_SOCKET_PATH to the rootless Docker socket}:/run/docker.sock
+    environment:
+      - TZ=Asia/Tokyo
+      - DOCKER_HOST=unix:///run/docker.sock
+      - RUNNER_SHARED_SECRET=${RUNNER_SHARED_SECRET:?Set RUNNER_SHARED_SECRET to a random value}
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16M,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/internal/health').read()"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    logging: *service-logging
+    networks:
+      - backend_runner
 
   backend:
     build:
@@ -25,17 +63,23 @@ services:
       dockerfile: backend/Dockerfile
     container_name: soj-backend
     restart: always
-    env_file:
-      - ${ENV_FILE_PATH:-.env}
-    volumes:
-      # rootless Docker socketのみをマウントする。未設定ならfail closed。
-      - ${DOCKER_SOCKET_PATH:?Set DOCKER_SOCKET_PATH to the rootless Docker socket}:/run/docker.sock
     environment:
       - TZ=Asia/Tokyo
-      - DOCKER_HOST=unix:///run/docker.sock
+      - DATABASE_URL=${DATABASE_URL:?Set DATABASE_URL}
+      - SERVER_URL=${SERVER_URL:-https://shellgei-online-judge.com}
+      - EXECUTION_LOG_RETENTION_DAYS=${EXECUTION_LOG_RETENTION_DAYS:-365}
+      - EXECUTION_LOG_MAX_ROWS=${EXECUTION_LOG_MAX_ROWS:-10000}
+      - RUNNER_SHARED_SECRET=${RUNNER_SHARED_SECRET:?Set RUNNER_SHARED_SECRET to a random value}
     depends_on:
-      - db
+      db:
+        condition: service_started
+      runner:
+        condition: service_healthy
     logging: *service-logging
+    networks:
+      - frontend_backend
+      - backend_db
+      - backend_runner
 
   frontend:
     build:
@@ -63,6 +107,15 @@ services:
     depends_on:
       - backend
     logging: *service-logging
+    networks:
+      - frontend_backend
 
 volumes:
   db_data: # DB永続化用ボリューム
+
+networks:
+  frontend_backend:
+  backend_db:
+    internal: true
+  backend_runner:
+    internal: true

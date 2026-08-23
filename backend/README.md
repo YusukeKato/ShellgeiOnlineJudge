@@ -1,14 +1,15 @@
 # SHELLGEI ONLINE JUDGE: backend
 
-`backend` directoryには、FastAPIによるWeb APIと、
+`backend` directoryには、FastAPIによる公開Web API、内部runner API、
 問題の判定、実行ログの保存、sandboxコンテナの管理を行うPythonコードがあります。
 
 ## 主な構成
 
 - `main.py`: API endpointとapplication起動・終了処理
+- `runner_main.py`: 認証付き内部runnerとsandbox poolの起動・終了処理
 - `api/`: API endpoint
 - `models/`: APIの入出力と実行ログのmodel
-- `scripts/`: Docker実行、判定、入力検証、DB接続とログ保持処理
+- `scripts/`: runner通信、Docker実行、判定、入力検証、DB接続とログ保持処理
 - `tests/`: 単体・API・Docker統合テスト
 
 ## 開発とテスト
