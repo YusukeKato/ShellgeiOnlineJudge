@@ -49,6 +49,7 @@ def test_real_container_has_required_baseline_isolation() -> None:
         assert host_config["PidsLimit"] == 50
         assert host_config["CapDrop"] == ["ALL"]
         assert "no-new-privileges:true" in host_config["SecurityOpt"]
+        assert host_config["LogConfig"] == {"Type": "none", "Config": {}}
         assert host_config["Tmpfs"] == SANDBOX_TMPFS
         assert {
             ulimit["Name"]: (ulimit["Soft"], ulimit["Hard"])
@@ -94,6 +95,9 @@ def test_real_container_has_required_baseline_isolation() -> None:
                 'test "$(readlink /work/ShellGeiData)" = /ShellGeiData; '
                 'test "$PWD" = /work; '
                 'test "$HOME" = /tmp/home; '
+                'test "$(readlink /proc/1/fd/0)" = /dev/null; '
+                'test "$(readlink /proc/1/fd/1)" = /dev/null; '
+                'test "$(readlink /proc/1/fd/2)" = /dev/null; '
                 'test "$(ulimit -n)" = 256; '
                 'test "$(ulimit -c)" = 0',
             ],

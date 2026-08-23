@@ -274,6 +274,7 @@ def test_shutdown_removes_warm_containers_and_closes_client() -> None:
         assert options["nano_cpus"] == 500_000_000
         assert options["cap_drop"] == ["ALL"]
         assert options["security_opt"] == ["no-new-privileges:true"]
+        assert dict(options["log_config"]) == {"Type": "none", "Config": {}}
         assert options["pids_limit"] == 50
         assert options["tmpfs"] == SANDBOX_TMPFS
         assert [dict(ulimit) for ulimit in options["ulimits"]] == [
@@ -282,6 +283,9 @@ def test_shutdown_removes_warm_containers_and_closes_client() -> None:
             {"Name": "core", "Soft": 0, "Hard": 0},
         ]
         assert options["labels"] == {"com.shellgei-online-judge.sandbox": "true"}
+        assert SANDBOX_INIT_COMMAND.endswith(
+            "exec sleep infinity </dev/null >/dev/null 2>&1"
+        )
 
 
 def test_pool_initialization_fails_closed_when_container_creation_fails() -> None:

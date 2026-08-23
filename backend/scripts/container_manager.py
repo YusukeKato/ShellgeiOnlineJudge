@@ -21,7 +21,7 @@ SANDBOX_INIT_COMMAND = (
     f"umask 077; mkdir -p {SANDBOX_HOME_DIRECTORY}; "
     f"ln -s /media {SANDBOX_WORK_DIRECTORY}/media; "
     f"ln -s /ShellGeiData {SANDBOX_WORK_DIRECTORY}/ShellGeiData; "
-    "exec sleep infinity"
+    "exec sleep infinity </dev/null >/dev/null 2>&1"
 )
 SANDBOX_TMPFS = {
     "/work": "rw,exec,nosuid,nodev,size=64M,nr_inodes=4096,mode=0700",
@@ -110,6 +110,7 @@ class ContainerManager:
             "pids_limit": SANDBOX_PIDS_LIMIT,
             "cap_drop": ["ALL"],
             "security_opt": ["no-new-privileges:true"],
+            "log_config": docker.types.LogConfig(type="none"),
             "tmpfs": dict(SANDBOX_TMPFS),
             "ulimits": [
                 docker.types.Ulimit(name="fsize", soft=50000000, hard=50000000),

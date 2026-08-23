@@ -226,6 +226,14 @@ Docker clientのHTTP timeoutは15秒です。
 
 ## 実行ログとDockerログ
 
+動的に生成するsandboxコンテナは、Docker logging driverを`none`に固定します。
+sandboxの待機PID 1はstdin、stdout、stderrを`/dev/null`へ接続します。
+利用者コマンドのstdoutとstderrはDocker execのstreamからだけ取得し、
+backendへ返す出力量の上限を適用します。
+
+この構成により、sandboxのPID 1を経由した出力をDocker container logへ
+保存しません。
+
 DBの実行ログは、次の両方を満たす範囲だけ保持します。
 
 - 作成から365日以内

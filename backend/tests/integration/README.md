@@ -26,6 +26,8 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - 接続先daemonがrootlessであること
 - cgroup v2によるCPU・メモリ・PID制限が実際に反映されていること
 - 基本的なDocker隔離設定
+- 動的sandboxのlogging driverが`none`であること
+- sandboxの待機PID 1のstdin、stdout、stderrが`/dev/null`であること
 - root filesystemがread-onlyであること
 - 通常ファイルの書き込み先が、容量・inode制限付きの
   `/work`、`/tmp`、`/media`、`/dev`に限定されていること

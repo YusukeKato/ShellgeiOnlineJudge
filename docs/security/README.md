@@ -35,10 +35,10 @@ git diff 7cab18e08dc1d18cdf43f44985037d375e7c0607..HEAD
 ## Current security status
 
 - Criticalとして確定した未解決課題はありません。
-- Highが4件Openです。
+- Highが3件Openです。
 - インターネット公開前のblocking issueがあります。
-- 最優先は、動的sandboxのDockerログ経由で
-  出力上限を迂回できる問題です。
+- 最優先は、runner異常終了やDocker失敗時に
+  期限のないorphan sandboxが残り得る問題です。
 - read-only root、tmpfs容量・inode、CPU、memory、swap、PID、
   capability、network、IPC、timeout等の主要sandbox制限は実装され、
   現在のrootless開発環境で実効値を確認しています。
@@ -47,9 +47,9 @@ git diff 7cab18e08dc1d18cdf43f44985037d375e7c0607..HEAD
 - 本番の外側proxy、kernel、LSM、filesystem quota、監視、backup等は
   repositoryだけでは確認できません。
 
-Open Highの実装は、今回使用したCodex環境のセキュリティ制約により保留しました。
+残るOpen Highの実装は、今回の変更範囲には含めません。
 問題が解消したという意味ではありません。
-人間または必要な権限を持つ安全な開発環境で対応してください。
+別の小さな変更単位として、成立条件を再確認してから対応してください。
 
 ## Issue tracker
 
@@ -63,10 +63,6 @@ Statusは次の意味で使用します。
 
 ### Open / Partially resolved / Deferred
 
-- `SOJ-001` — High / P0 / Open
-  - 概要: 動的sandboxのPID 1ログへ書くとrunnerの出力上限を迂回できる
-  - 関連: `backend/scripts/container_manager.py`、`backend/scripts/run_shellgei.py`
-  - 次: sandbox loggingを無効化し、PID 1のstdioとnegative testを修正
 - `SOJ-002` — High / P0 / Open
   - 概要: runner異常終了やDocker create/start失敗時に、
     期限のないorphanが残り得る
@@ -157,10 +153,10 @@ Statusは次の意味で使用します。
 
 現在の未解決trackerは次の内訳です。
 
-- Open: 14件
+- Open: 13件
 - Partially resolved: 1件
 - Deferred: 6件
-- Severity: High 4件、Medium 13件、Low 4件
+- Severity: High 3件、Medium 13件、Low 4件
 
 ## Resolved issues
 
@@ -179,53 +175,14 @@ Statusは次の意味で使用します。
 | RES-008 | DB実行ログ件数・期間とCompose service logを制限 | `ac42f29` | retention unit・PostgreSQL integration test |
 | RES-009 | sandbox開始頻度とcgroup実効値をfail-closedで検証 | `fd02020`、`d0efe75` | admission、container manager、Docker baseline test |
 | RES-010 | Docker socketを公開backendから内部runnerへ分離 | `7cab18e` | `test_runner_boundary.py`、Compose静的test |
+| RES-011 | 動的sandboxのDockerログを無効化し、待機PID 1のstdioを`/dev/null`へ分離 | この変更 | container manager unit、Docker baseline test |
 
-RES-003、RES-007、RES-008、RES-009は、記載した範囲では解決済みです。
-異常終了orphan、動的sandboxログ、可変image等の残存経路は、
+RES-003、RES-007、RES-008、RES-009、RES-011は、
+記載した範囲では解決済みです。
+異常終了orphan、可変image等の残存経路は、
 別のOpen issueとして追跡しています。
 
 ## Open issue details
-
-### SOJ-001: 動的sandboxのDockerログ経由出力上限迂回
-
-問題:
-
-- `ShellgeiDockerClient`が読むDocker execのstdout/stderrは約4 KiBに制限されています。
-- sandbox作成時の`log_config`は未指定です。
-- commandがsandbox PID 1のstdout/stderrへ書くと、exec streamを通らず
-  Docker logging driverへ流れます。
-- 開発環境では、無制限の`json-file`を継承することを数byteのmarkerで確認しました。
-
-重要性:
-
-- 匿名のshell commandからDocker daemon側のdisk、I/O、CPUを消費できます。
-- timeoutは実行時間を制限しますが、短時間の大量ログを防ぎません。
-- Composeのservice log rotationは、SDKで動的生成するsandboxへ適用されません。
-
-現在の防御:
-
-- 10秒timeout、CPU制限、同時実行3件、開始頻度1件/秒
-- 使用済みcontainerの削除
-
-不足と次の対応:
-
-- sandboxのlogging driverを`none`へ固定する
-- PID 1のstdioを不要なsinkへ接続する
-- 実際のcontainer inspectと小さいmarkerで、container logへ残らないtestを追加する
-- timeout、stdout/stderr、cleanup、全問題回帰を再実行する
-
-想定変更範囲:
-
-- `backend/scripts/container_manager.py`
-- `backend/tests/test_container_manager.py`
-- `backend/tests/integration/test_docker_executor.py`
-- `SECURITY.md`
-- `backend/tests/integration/README.md`
-
-依存関係:
-
-- SOJ-002のlifecycle cleanupと同じcontainer作成・削除境界に関係します。
-- 差分を小さく保てる場合は先に独立修正して構いません。
 
 ### SOJ-002: runner crashとDocker失敗時のorphan
 
@@ -339,7 +296,7 @@ Deferredは不要という意味ではありません。
   - 現在の制限値は`SECURITY.md`を正本とします。
 - Development environment verified:
   - retention unit・PostgreSQL integration testを実行しました。
-  - 動的sandbox logにはSOJ-001が残っています。
+  - 動的sandboxのlogging driver `none`とPID 1のstdio分離を検証しました。
 - Production verification required:
   - VM、Docker data、DB volumeの容量・inode quotaとalert
   - PostgreSQL WAL、autovacuum、backup、restore test
@@ -364,7 +321,7 @@ Deferredは不要という意味ではありません。
 - `backend/tests/test_input_validation.py`
   - problem ID、path traversal、command長、NUL、extra JSON field
 - `backend/tests/test_container_manager.py`
-  - hard cap、rootless/cgroup fail-closed、cleanup failure
+  - hard cap、rootless/cgroup fail-closed、sandbox log無効化、cleanup failure
 - `backend/tests/test_run_shellgei.py`
   - timeout、出力上限、実行slot、background cleanup
 - `backend/tests/test_runner_boundary.py`
@@ -372,7 +329,7 @@ Deferredは不要という意味ではありません。
 - `backend/tests/test_nginx_config.py`
   - nginx directiveの静的確認
 - `backend/tests/integration/test_docker_executor.py`
-  - 実containerのfilesystem、resource、isolation、timeout、画像、状態分離
+  - 実containerのfilesystem、resource、logging、isolation、timeout、画像、状態分離
 - `backend/tests/integration/test_postgres_retention.py`
   - 実PostgreSQLの期間・件数制限
 - `backend/tests/integration/test_full_problem_regression.py`
@@ -383,7 +340,6 @@ Deferredは不要という意味ではありません。
 
 ### 不足しているtest
 
-- SOJ-001のsandbox logging negative test
 - crash、startup reconciliation、create/start曖昧失敗、shutdown race
 - 実Composeのfrontend -> backend -> runner -> Docker -> DB E2E
 - 実nginxのmethod別rate token、Host、redirect、security header
@@ -402,7 +358,6 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  SOJ-001: sandbox logging経由の出力上限迂回を修正
   SOJ-002: crash/orphan lifecycleを修正
     ↓
 Then
@@ -413,9 +368,8 @@ Later
   judge、artifact、権限分離、E2E、browser、CI、運用基盤を改善
 ```
 
-Highの修正は今回保留しています。
-安全な実装権限を持つ環境で、1項目ずつ、または密接に関連する小さな単位で
-差分をレビューして進めてください。
+残るHighは今回の変更範囲には含めません。
+1項目ずつ、または密接に関連する小さな単位で差分をレビューして進めてください。
 
 ## 作業再開手順
 
