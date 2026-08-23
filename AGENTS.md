@@ -7,6 +7,7 @@
 
 - `README.md`: プロジェクト概要と文書索引
 - `SECURITY.md`: セキュリティモデル、保証範囲、既知の制約
+- `docs/security/README.md`: 現在のセキュリティ課題、対応状況、作業再開地点
 - `docs/DEVELOPMENT.md`: 開発環境、テスト、ローカル起動
 - `docs/PRODUCTION.md`: 本番構成、デプロイ、更新、運用
 - `backend/tests/integration/README.md`: Docker統合テストの内容と実行条件
