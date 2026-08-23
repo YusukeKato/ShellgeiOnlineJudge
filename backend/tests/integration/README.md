@@ -1,5 +1,7 @@
 # Docker統合テスト
 
+この文書は、Docker統合テストの実行条件、コマンド、検証範囲の正本です。
+
 通常のbackendテストでは、`docker` markerが付いたテストを除外します。
 Docker統合テストは実際のsandboxコンテナを生成・削除するため、
 隔離されたrootless Docker環境でのみ実行してください。
@@ -36,7 +38,7 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - 実行中コンテナからの上限付き画像取得
 - workerの回復
 
-全92問の回帰テストには、追加の明示指定が必要です。
+現在登録されている全問題の回帰テストには、追加の明示指定が必要です。
 
 ```sh
 SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_FULL_REGRESSION=1 \

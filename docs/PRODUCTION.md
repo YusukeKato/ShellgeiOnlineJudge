@@ -1,6 +1,8 @@
 # 本番環境の構築・デプロイ・運用
 
 この文書は、Docker Compose構成をrootless Dockerで本番運用するための手順です。
+本番固有の構成、デプロイ、更新、ロールバック、監視手順は、
+この文書を正本とします。
 
 ShellgeiOnlineJudgeは、インターネットから任意のシェルコマンドを受け付けます。
 一般的なWebアプリより、実行基盤とデータへ及ぶ影響範囲が広いサービスです。
@@ -13,8 +15,8 @@ ShellgeiOnlineJudgeは、インターネットから任意のシェルコマン�
 
 > 次の防御は構成されていません。
 >
-> - nginxのリクエスト・接続制限
-> - 複数プロセスで共有する受付制御
+> - 複数プロセスや複数hostで共有する受付制御
+> - 外側proxyでの実際のclient単位のリクエスト・接続制限
 > - Web APIとDocker操作の分離
 >
 > この文書は起動・運用方法を示すもので、
@@ -54,64 +56,19 @@ backendはrootless Docker socketを使用します。
 - DB、backend、frontend以外の重要なコンテナを同じdaemonで動かさない
 - VMやDBを別の信頼境界としてバックアップする
 
-本番の信頼境界として、Docker socketをWeb APIから外す必要があります。
-Docker操作は、専用ホストまたは使い捨てVM上のrunner APIへ分離します。
+現在のCompose構成では、Docker socketとWeb APIは独立した信頼境界に
+分離されていません。影響範囲をさらに限定するには、Docker操作を専用hostまたは
+使い捨てVM上のrunner APIへ分離します。
 詳細は[セキュリティモデルと制約](../SECURITY.md)を参照してください。
 
 ## 2. OSとrootless Dockerの準備
 
-専用VMには次のソフトウェアが必要です。
+必要なソフトウェアとrootless Dockerの導入手順は、
+開発環境の[「1. 前提環境」](./DEVELOPMENT.md#1-前提環境)と
+[「2. rootless Dockerの設定」](./DEVELOPMENT.md#2-rootless-dockerの設定)を正本とします。
 
-- セキュリティ更新が提供されているLinux
-- Git
-- Python 3.10以上
-- Poetry
-- OpenSSL
-- Docker Engine
-- Docker Compose plugin
-
-Ubuntu系で基本ツールとPoetryを導入する例は次のとおりです。
-
-```sh
-sudo apt-get update
-sudo apt-get install -y git curl python3 python3-venv pipx openssl uidmap
-pipx ensurepath
-pipx install poetry
-```
-
-`pipx ensurepath`の後は、いったんログインし直すか、新しいshellを開いてください。
-
-Docker Engine本体とCompose pluginは、
-[Docker公式のUbuntu向け手順](https://docs.docker.com/engine/install/ubuntu/)に従い、
-公式apt repositoryから導入します。
-
-rootless用のスクリプトがない場合は、
-同じrepositoryから次のパッケージも導入します。
-
-```sh
-sudo apt-get install -y docker-ce-rootless-extras
-```
-
-rootful Dockerを使用しないホストでは、rootless daemonの導入前にsystem daemonを無効化します。
-
-```sh
-sudo systemctl disable --now docker.service docker.socket
-```
-
-専用のデプロイユーザーで、`sudo`を付けずにrootless daemonを設定します。
-
-```sh
-dockerd-rootless-setuptool.sh check
-dockerd-rootless-setuptool.sh install
-systemctl --user enable --now docker
-sudo loginctl enable-linger "$(whoami)"
-export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
-docker context use rootless
-docker info
-```
-
-`docker info`の`Security Options`に`rootless`が含まれることを確認します。
-また、リソース制限に必要なcgroupを確認します。
+本番では、専用の非特権OSユーザーでrootless daemonを起動し、
+次の値を本番反映前に確認します。
 
 ```sh
 docker info --format '{{json .SecurityOptions}}'
@@ -126,11 +83,8 @@ cat "/sys/fs/cgroup/user.slice/user-$(id -u).slice/user@$(id -u).service/cgroup.
 - controller一覧に`cpu`、`memory`、`pids`が含まれる
 
 controllerが不足する場合は、
-[Docker公式rootless modeのTips](https://docs.docker.com/engine/security/rootless/tips/#limiting-resources)に従い、
+[開発環境のcgroupによる制限の確認](./DEVELOPMENT.md#cgroupによる制限の確認)に従い、
 systemd側でcontrollerをdelegateしてから本番運用を開始してください。
-
-rootless Docker全体の前提条件は、
-[Docker公式rootless mode手順](https://docs.docker.com/engine/security/rootless/)を参照してください。
 
 ## 3. アプリケーションの配置
 
@@ -146,6 +100,9 @@ poetry install
 
 ## 4. 本番用の環境変数
 
+環境変数の一覧と既定値は[`.env.example`](../.env.example)を正本とします。
+サンプルをコピーし、本番固有の値を上書きします。
+
 ```sh
 cp .env.example .env
 chmod 600 .env
@@ -154,12 +111,12 @@ printf '%s\n' "${XDG_RUNTIME_DIR}/docker.sock"
 openssl rand -hex 32
 ```
 
-生成したランダム値をDBパスワードに使い、`.env`を編集します。以下は構造の例であり、`example.com`、UID、パスワード、表示情報は実環境に合わせて変更してください。
+生成したランダム値をDBパスワードに使い、`.env`を編集します。
+以下は本番で上書きが必要な値の例です。
+`example.com`、UID、パスワード、証明書のパスは実環境に合わせてください。
 
 ```dotenv
-POSTGRES_USER=soj_user
 POSTGRES_PASSWORD=十分に長いランダム値
-POSTGRES_DB=soj_db
 DATABASE_URL=postgresql://soj_user:十分に長いランダム値@db:5432/soj_db
 
 DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
@@ -170,8 +127,6 @@ TLS_CERTIFICATE_PATH=/home/soj/certificates/fullchain.pem
 TLS_PRIVATE_KEY_PATH=/home/soj/certificates/privkey.pem
 
 SERVER_URL=https://example.com
-EXECUTION_LOG_RETENTION_DAYS=365
-EXECUTION_LOG_MAX_ROWS=10000
 REACT_APP_SOJ_URL=https://example.com
 ```
 
@@ -183,11 +138,12 @@ REACT_APP_SOJ_URL=https://example.com
 - `REACT_APP_*`はfrontendのJavaScriptへ埋め込まれる公開値なので、秘密情報を設定しない
 - `DOCKER_SOCKET_PATH`はデプロイユーザー自身のrootless socketを指定する
 - `SERVER_URL`はCORSの許可originなので、公開URLのschemeとhostを正確に指定し、末尾に`/`を付けない
-- 実行ログは365日以内かつ最新10,000件以内だけを保持する
-- retention値を変更する場合は、どちらも1以上の整数にする
+- 実行ログの保持値を変更する場合は、どちらも1以上の整数にする
 
 retention値を小さくした場合、backendの起動時に新しい上限を超えるログを削除します。
 削除したログはDBバックアップなしでは復元できません。
+既定の保持期間と最大件数は、
+[SECURITY.mdの「実行ログとDockerログ」](../SECURITY.md#実行ログとdockerログ)を参照してください。
 
 ## 5. TLS証明書と公開ポート
 
@@ -201,24 +157,17 @@ Composeは、既定で`127.0.0.1:8443`だけに公開します。
 - ホスト側reverse proxy
 
 終端後は`https://127.0.0.1:8443`へ転送します。
-Compose内のfrontend nginxにも、次の基準値を設定しています。
-
-- request bodyは最大16 KiB
-- shell実行APIは直接接続元ごとに5 requests/second、burst 5
-- shell実行APIは直接接続元ごとに同時5 requests
-- その他のAPIは直接接続元ごとに20 requests/second、burst 40
-- その他のAPIは直接接続元ごとに同時20 requests
-- rateまたは同時request数の超過時は429
-- backendへの接続とrequest送信間隔は5秒
-- backendからのresponse受信間隔は30秒
+Compose内のfrontend nginxが適用する現在の制限値は、
+[SECURITY.mdの「ネットワークとHTTPの制約」](../SECURITY.md#ネットワークとhttpの制約)を
+正本とします。
 
 ホスト側reverse proxy経由では、frontend nginxから見た接続元がproxyに集約されます。
 実際のclient単位で、外側の層にも次を設定してください。
 
-- request bodyは16 KiB以下
+- frontend nginxの上限以下のrequest body
 - 接続数とリクエスト頻度
 - burst
-- upstream timeoutはfrontend nginxの30秒より長くする（例: 35秒）
+- upstream timeoutはfrontend nginxの現在値より長くする
 - 429、413、5xxの記録と監視
 
 外側proxyは、受信した`X-Forwarded-For`を無条件に引き継がず、
@@ -282,19 +231,9 @@ install -d -m 700 /home/soj/certificates
 
 本番と同じrootless構成のstagingまたは専用CI runnerで実行します。
 
-```sh
-poetry install
-poetry run ruff check .
-poetry run ruff format --check .
-poetry run mypy .
-poetry run pytest -m "not docker"
-
-export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
-docker pull theoldmoon0602/shellgeibot
-SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
-SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_FULL_REGRESSION=1 \
-  poetry run pytest -m full_regression
-```
+- Pythonとfrontendの検査は、[開発環境の「6. テスト」](./DEVELOPMENT.md#6-テスト)を実行する
+- Docker統合テストと全問題の回帰テストは、
+  [Docker統合テスト](../backend/tests/integration/README.md)に従って実行する
 
 本番ホスト上でfork bomb、ディスク枯渇、daemon停止、大量コンテナ生成など、極端な負荷条件を扱う耐性試験を実行してはいけません。
 これらは使い捨てVMでのみ実施します。
@@ -333,14 +272,10 @@ git status --short
 git log -1 --oneline
 ```
 
-作業ツリーがcleanであることを確認して、検証済みのtagまたはcommitへ更新します。その後、テストを通してから再デプロイします。
+作業ツリーがcleanであることを確認して、検証済みのtagまたはcommitへ更新します。
+その後、「6. 本番反映前の検証」を通してから再デプロイします。
 
 ```sh
-poetry install
-poetry run ruff check .
-poetry run ruff format --check .
-poetry run mypy .
-poetry run pytest -m "not docker"
 ./deploy/rootless-compose.sh config --quiet
 ./deploy/rootless-compose.sh build --pull
 ./deploy/rootless-compose.sh up -d --remove-orphans
@@ -371,8 +306,9 @@ DBを以前の状態へ戻す場合は、事前に取得したバックアップ
 ./deploy/rootless-compose.sh up -d
 ```
 
-ComposeのDB、backend、frontendは、Dockerの`local` logging driverを使用します。
-ログは各service 10 MiB、3ファイルまでにrotationします。
+ComposeのDB、backend、frontendにはDockerログのrotationが設定されています。
+現在の上限値は、
+[SECURITY.mdの「実行ログとDockerログ」](../SECURITY.md#実行ログとdockerログ)を参照してください。
 
 適用状態は次のコマンドで確認できます。
 

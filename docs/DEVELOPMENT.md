@@ -1,6 +1,7 @@
 # 開発環境の構築・テスト・起動
 
 この文書は、開発用PCでShellgeiOnlineJudgeをテストし、Docker Composeで起動するまでの手順を説明します。
+ローカル開発環境とDockerを使用しない検査手順は、この文書を正本とします。
 
 このサービスは、インターネット経由で入力された任意のシェルコマンドを実行します。
 
@@ -153,7 +154,9 @@ poetry run pytest --version
 
 ## 4. 開発用の環境変数
 
-サンプルをコピーします。`.env`はGit管理対象外であり、Docker build contextからも除外されます。
+環境変数の一覧と既定値は[`.env.example`](../.env.example)を正本とします。
+サンプルをコピーします。`.env`はGit管理対象外であり、
+Docker build contextからも除外されます。
 
 ```sh
 cp .env.example .env
@@ -161,24 +164,15 @@ id -u
 printf '%s\n' "${XDG_RUNTIME_DIR}/docker.sock"
 ```
 
-`.env`では、少なくとも次の値を開発環境に合わせます。`1000`は実際のUIDへ置き換えてください。
+`.env`では、少なくとも次の値を開発環境に合わせます。
+`1000`は実際のUIDへ置き換えてください。
 
 ```dotenv
-POSTGRES_USER=soj_user
 POSTGRES_PASSWORD=開発専用のパスワード
-POSTGRES_DB=soj_db
 DATABASE_URL=postgresql://soj_user:開発専用のパスワード@db:5432/soj_db
 
 DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
-
-HTTPS_BIND_ADDRESS=127.0.0.1
-HTTPS_PORT=8443
-TLS_CERTIFICATE_PATH=./deploy/tls/fullchain.pem
-TLS_PRIVATE_KEY_PATH=./deploy/tls/privkey.pem
-
 SERVER_URL=https://localhost:8443
-EXECUTION_LOG_RETENTION_DAYS=365
-EXECUTION_LOG_MAX_ROWS=10000
 REACT_APP_SOJ_URL=https://localhost:8443
 ```
 
@@ -186,8 +180,11 @@ REACT_APP_SOJ_URL=https://localhost:8443
 
 - `POSTGRES_PASSWORD`と`DATABASE_URL`内のパスワードを一致させる
 - URLの予約文字を含むパスワードは、`DATABASE_URL`側でpercent-encodingする
-- 実行ログは365日以内かつ最新10,000件以内だけを保持する
-- retention値を変更する場合は、どちらも1以上の整数にする
+- TLS証明書の配置を変える場合は、`TLS_CERTIFICATE_PATH`と
+  `TLS_PRIVATE_KEY_PATH`を合わせる
+
+実行ログの保持仕様は、
+[SECURITY.mdの「実行ログとDockerログ」](../SECURITY.md#実行ログとdockerログ)を参照してください。
 
 ## 5. 開発用TLS証明書
 
@@ -220,22 +217,9 @@ poetry run pytest -m "not docker"
 
 ### Docker統合テスト
 
-実際にsandboxコンテナを生成・削除します。rootless daemonを明示したうえで実行してください。
-
-```sh
-export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
-docker pull theoldmoon0602/shellgeibot
-SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
-```
-
-全問題の正解コマンドを実行する回帰テストは、追加のフラグを必要とします。
-
-```sh
-SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_FULL_REGRESSION=1 \
-  poetry run pytest -m full_regression
-```
-
-テスト内容の詳細は[Docker統合テスト](../backend/tests/integration/README.md)を参照してください。
+実行条件、必要なイメージ、コマンド、検証内容は、
+[Docker統合テスト](../backend/tests/integration/README.md)を正本とします。
+このテストは実際にsandboxコンテナを生成・削除します。
 
 次のような極端な負荷条件を扱う耐性試験は、
 日常利用の開発PCや本番ホストで実行しないでください。
@@ -297,18 +281,9 @@ frontend nginxの設定を検査します。
 ./deploy/rootless-compose.sh exec frontend nginx -t
 ```
 
-frontend nginxは、APIへ次の受付制御を適用します。
-
-- request bodyは最大16 KiB
-- shell実行APIは接続元IPごとに5 requests/second、burst 5
-- shell実行APIは接続元IPごとに同時5 requests
-- その他のAPIは接続元IPごとに20 requests/second、burst 40
-- その他のAPIは接続元IPごとに同時20 requests
-- rateまたは同時request数の超過時は429
-- backendからのresponse受信間隔は最大30秒
-
-DB、backend、frontendのDockerログは、`local` logging driverで
-各service 10 MiB、3ファイルまでにrotationします。
+frontend nginxの現在の受付制御とDockerログの上限は、
+[SECURITY.mdの「ネットワークとHTTPの制約」](../SECURITY.md#ネットワークとhttpの制約)と
+[「実行ログとDockerログ」](../SECURITY.md#実行ログとdockerログ)を参照してください。
 
 ブラウザでは`https://localhost:8443`を開きます。
 

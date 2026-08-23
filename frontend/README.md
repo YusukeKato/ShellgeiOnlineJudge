@@ -1,30 +1,22 @@
 # SHELLGEI ONLINE JUDGE: frontend
-This repository is the webapp frontend for SHELLGEI ONLINE JUDGE.
 
-## Environment
-- React
-- TypeScript
+`frontend` directoryには、ReactとTypeScriptによるブラウザ向けUIがあります。
+本番用buildは、同じserviceに含まれるnginxから配信します。
 
-## Install
+## 主な構成
 
-Node.js 22とYarnを使用します。
-環境構築全体は[開発環境の構築・テスト・起動](../docs/DEVELOPMENT.md)を参照してください。
+- `src/`: React application
+- `public/`: 静的ファイル
+- `nginx/`: 静的ファイルの配信とAPI proxyの設定
+- `Dockerfile`: Node.js 22でbuildし、nginxで配信するmulti-stage build
 
-```sh
-cd frontend
-yarn install --frozen-lockfile
-```
+## 開発とテスト
 
-## build
-
-```sh
-yarn format:check
-yarn lint
-CI=true yarn test --watchAll=false
-yarn build
-```
+Node.js、Yarn、静的検査、テスト、buildの手順は、
+[開発環境の構築・テスト・起動](../docs/DEVELOPMENT.md)を参照してください。
 
 ## 参考
+
 下記記事を参考にさせていただきました。
 
 - nodejs and npm: https://qiita.com/nouernet/items/d6ad4d5f4f08857644de

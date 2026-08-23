@@ -1,7 +1,7 @@
-# デプロイ関連文書
+# デプロイ補助スクリプト
 
-開発環境と本番環境のどちらでもrootless Dockerを使用します。
-通常ユーザーを`docker`グループへ追加する必要はありません。
+このディレクトリにある補助スクリプトの用途を説明します。
+環境構築、テスト、本番運用の手順は、次の文書を正本とします。
 
 - [開発環境の構築・テスト・起動](../docs/DEVELOPMENT.md)
 - [本番環境の構築・デプロイ・運用](../docs/PRODUCTION.md)
@@ -16,11 +16,7 @@
 - 検証後に`docker compose`を実行する
 - rootless socketのパスをbackendのmount設定へ渡す
 
-```sh
-./deploy/rootless-compose.sh config --quiet
-./deploy/rootless-compose.sh up -d --build
-./deploy/rootless-compose.sh ps
-```
+実行コマンドは、開発環境または本番運用の文書を参照してください。
 
 `test.py`は、起動済みサービスに対して問題データの正解・不正解を実行する
 end-to-end確認スクリプトです。
@@ -31,7 +27,16 @@ end-to-end確認スクリプトです。
 - 本番サービスや共有環境では実行しない
 - 自動テストには、pytestの明示的に有効化する回帰テストを使用する
 
+起動済みのローカル環境を対象に手動で実行する場合は、
+リポジトリのルートで次を実行します。
+
 ```sh
-SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_FULL_REGRESSION=1 \
-  poetry run pytest -m full_regression
+REQUESTS_CA_BUNDLE=deploy/tls/fullchain.pem \
+  SERVER_URL=https://localhost:8443 \
+  poetry run python deploy/test.py
 ```
+
+`REQUESTS_CA_BUNDLE`には、起動中のfrontendが使用する開発用証明書を指定します。
+
+自動回帰テストの実行条件とコマンドは、
+[Docker統合テスト](../backend/tests/integration/README.md)を参照してください。

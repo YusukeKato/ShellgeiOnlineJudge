@@ -10,6 +10,8 @@
 - `docs/DEVELOPMENT.md`: 開発環境、テスト、ローカル起動
 - `docs/PRODUCTION.md`: 本番構成、デプロイ、更新、運用
 - `backend/tests/integration/README.md`: Docker統合テストの内容と実行条件
+- `problems/README.md`: 問題データの構成とフィールド仕様
+- `UPDATE_HISTORY.md`: リリースとメンテナンスの履歴
 
 ## サービスの前提
 
@@ -57,6 +59,7 @@ fork bomb、ディスク枯渇、大量コンテナ生成、Docker daemon停止�
 - 本番構成、デプロイ、運用: `docs/PRODUCTION.md`
 - sandbox、Docker socket、制限、既知のリスク: `SECURITY.md`
 - Docker統合テストの条件や内容: `backend/tests/integration/README.md`
+- 問題データの構成やfield: `problems/README.md`
 - プロジェクト全体の文書索引: `README.md`
 - backendまたはfrontend固有の手順: 各ディレクトリの`README.md`
 
