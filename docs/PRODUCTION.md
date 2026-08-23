@@ -170,6 +170,8 @@ TLS_CERTIFICATE_PATH=/home/soj/certificates/fullchain.pem
 TLS_PRIVATE_KEY_PATH=/home/soj/certificates/privkey.pem
 
 SERVER_URL=https://example.com
+EXECUTION_LOG_RETENTION_DAYS=365
+EXECUTION_LOG_MAX_ROWS=10000
 REACT_APP_SOJ_URL=https://example.com
 ```
 
@@ -181,6 +183,11 @@ REACT_APP_SOJ_URL=https://example.com
 - `REACT_APP_*`はfrontendのJavaScriptへ埋め込まれる公開値なので、秘密情報を設定しない
 - `DOCKER_SOCKET_PATH`はデプロイユーザー自身のrootless socketを指定する
 - `SERVER_URL`はCORSの許可originなので、公開URLのschemeとhostを正確に指定し、末尾に`/`を付けない
+- 実行ログは365日以内かつ最新10,000件以内だけを保持する
+- retention値を変更する場合は、どちらも1以上の整数にする
+
+retention値を小さくした場合、backendの起動時に新しい上限を超えるログを削除します。
+削除したログはDBバックアップなしでは復元できません。
 
 ## 5. TLS証明書と公開ポート
 
@@ -364,6 +371,16 @@ DBを以前の状態へ戻す場合は、事前に取得したバックアップ
 ./deploy/rootless-compose.sh up -d
 ```
 
+ComposeのDB、backend、frontendは、Dockerの`local` logging driverを使用します。
+ログは各service 10 MiB、3ファイルまでにrotationします。
+
+適用状態は次のコマンドで確認できます。
+
+```sh
+docker inspect --format '{{json .HostConfig.LogConfig}}' \
+  soj-db soj-backend soj-frontend
+```
+
 rootless daemon自体を確認します。
 
 ```sh
@@ -381,13 +398,14 @@ docker system df
 - PostgreSQLの定期バックアップと、別ホストへの保管
 - バックアップからの復元訓練
 - VM、Docker領域、DB volumeのディスク使用量とinode使用量
+- DB volumeを配置するfilesystemのquotaと容量アラート
 - CPU、メモリ、PID、ロードアベレージ
 - backendの5xx、timeout、拒否数、応答時間
 - rootless Docker user serviceの稼働状態
 - sandboxコンテナ数と削除失敗
 - TLS証明書の有効期限と更新hookの成功
 - OS、Docker、Python/npm依存関係、base imageのセキュリティ更新
-- ログの保存期間、rotation、機密情報の混入
+- 実行ログのretention件数・期間と、Dockerログへの機密情報混入
 
 rootless Dockerのデータは通常、
 デプロイユーザーの`~/.local/share/docker`配下にあります。

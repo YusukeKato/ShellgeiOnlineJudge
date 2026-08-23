@@ -177,6 +177,8 @@ TLS_CERTIFICATE_PATH=./deploy/tls/fullchain.pem
 TLS_PRIVATE_KEY_PATH=./deploy/tls/privkey.pem
 
 SERVER_URL=https://localhost:8443
+EXECUTION_LOG_RETENTION_DAYS=365
+EXECUTION_LOG_MAX_ROWS=10000
 REACT_APP_SOJ_URL=https://localhost:8443
 ```
 
@@ -184,6 +186,8 @@ REACT_APP_SOJ_URL=https://localhost:8443
 
 - `POSTGRES_PASSWORD`と`DATABASE_URL`内のパスワードを一致させる
 - URLの予約文字を含むパスワードは、`DATABASE_URL`側でpercent-encodingする
+- 実行ログは365日以内かつ最新10,000件以内だけを保持する
+- retention値を変更する場合は、どちらも1以上の整数にする
 
 ## 5. 開発用TLS証明書
 
@@ -302,6 +306,9 @@ frontend nginxは、APIへ次の受付制御を適用します。
 - その他のAPIは接続元IPごとに同時20 requests
 - rateまたは同時request数の超過時は429
 - backendからのresponse受信間隔は最大30秒
+
+DB、backend、frontendのDockerログは、`local` logging driverで
+各service 10 MiB、3ファイルまでにrotationします。
 
 ブラウザでは`https://localhost:8443`を開きます。
 

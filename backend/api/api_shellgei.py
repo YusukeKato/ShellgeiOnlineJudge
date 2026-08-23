@@ -8,6 +8,7 @@ from sqlalchemy import desc
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
 from models.model_db import ExecutionLog
 from scripts.database import get_db
+from scripts.execution_log_retention import prune_execution_logs
 from scripts.input_validation import ProblemId
 from scripts.run_shellgei import SandboxBusyError, ShellgeiDockerClient
 from scripts.judge import ShellgeiJudge
@@ -70,6 +71,7 @@ async def post_shellgei(
         judge=judge,
     )
     db.add(new_log)
+    prune_execution_logs(db)
     db.commit()
     db.refresh(new_log)  # 保存して自動採番されたIDを取得
 

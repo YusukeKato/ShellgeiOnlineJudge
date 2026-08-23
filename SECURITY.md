@@ -199,6 +199,32 @@ Docker clientのHTTP timeoutは15秒です。
 - ThreadPoolExecutorのworker数
 - sandbox実行slot数
 
+## 実行ログとDockerログ
+
+DBの実行ログは、次の両方を満たす範囲だけ保持します。
+
+- 作成から365日以内
+- 最新10,000件以内
+
+保持期間と最大件数は、次の環境変数で変更できます。
+
+- `EXECUTION_LOG_RETENTION_DAYS`
+- `EXECUTION_LOG_MAX_ROWS`
+
+どちらも1以上の整数が必要です。
+不正な値が設定されている場合、backendは起動しません。
+
+古いログは、backend起動時と新しい実行ログの保存時に削除します。
+新しいログの保存と件数による削除は、同じDB transaction内で処理します。
+
+Composeで起動するDB、backend、frontendのDockerログには、
+すべて`local` logging driverを使用します。
+各serviceのログは10 MiB、3ファイルまでにrotationします。
+
+これらは、ExecutionLogとDocker container logの無期限な累積を防ぐ制御です。
+PostgreSQL volume全体のfilesystem quotaにはなりません。
+DB volumeは専用filesystemまたはquotaで制限し、容量を監視してください。
+
 ## rootless Dockerの強制
 
 Compose操作には`deploy/rootless-compose.sh`を使用します。

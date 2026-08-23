@@ -5,6 +5,13 @@ Docker統合テストは実際のsandboxコンテナを生成・削除するた�
 隔離されたrootless Docker環境でのみ実行してください。
 本番ホストや共有CI runnerでは実行しないでください。
 
+次のイメージを、rootless daemonへ事前にpullしてください。
+
+```sh
+docker pull theoldmoon0602/shellgeibot
+docker pull postgres:15-alpine
+```
+
 リポジトリのルートから、rootless socketを指定して実行します。
 
 ```sh
@@ -23,6 +30,7 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - 多数の小ファイルと複数の大きなファイルがtmpfs上限を超えられないこと
 - working directory、HOME、一時ファイル、入力ファイル、画像問題が動作すること
 - 使用済みcontainerの書き込み状態が次のrequestへ残らないこと
+- 一時PostgreSQL上で実行ログの期間・件数上限が適用されること
 - 無出力コマンドのタイムアウト
 - コンテナ削除
 - 実行中コンテナからの上限付き画像取得
@@ -34,8 +42,6 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_FULL_REGRESSION=1 \
   poetry run pytest -m full_regression
 ```
-
-`theoldmoon0602/shellgeibot` イメージを、rootless daemonへ事前にpullしてください。
 
 下記のテストは含めません。
 
