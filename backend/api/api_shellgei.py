@@ -2,12 +2,12 @@ import pytz
 import yaml
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
 from models.model_db import ExecutionLog
 from scripts.database import get_db
+from scripts.admission_control import sandbox_start_rate_limiter
 from scripts.execution_log_retention import prune_execution_logs
 from scripts.input_validation import ProblemId
 from scripts.run_shellgei import SandboxBusyError, ShellgeiDockerClient
@@ -16,9 +16,6 @@ from scripts.judge import ShellgeiJudge
 router = APIRouter()
 docker_client = ShellgeiDockerClient()
 shellgei_judge = ShellgeiJudge()
-
-# 実行間隔の制限 [s]
-TIME_LIMIT_SECONDS = 0.1
 
 
 @router.post("/shellgei")
@@ -33,18 +30,16 @@ async def post_shellgei(
     if not yaml_path.is_file():
         raise HTTPException(status_code=404, detail="Problem not found")
 
-    # DBから最新の実行ログを取得して実行間隔をチェック
-    latest_log = db.query(ExecutionLog).order_by(desc(ExecutionLog.created_at)).first()
-    if latest_log:
-        time_diff = (datetime.now(timezone.utc) - latest_log.created_at).total_seconds()
-        if time_diff < TIME_LIMIT_SECONDS:
-            return ShellgeiResultResponse(
-                output="Error: server is busy.",
-                id="-1",
-                date=f"{japan_date.strftime('%Y-%m-%d %H:%M:%S')}",
-                image="",
-                judge="4",
-            )
+    # Reject before DB or Docker work. The lock-protected token bucket prevents
+    # concurrent requests from passing the start-rate check together.
+    if not sandbox_start_rate_limiter.try_acquire():
+        return ShellgeiResultResponse(
+            output="Error: server is busy.",
+            id="-1",
+            date=f"{japan_date.strftime('%Y-%m-%d %H:%M:%S')}",
+            image="",
+            judge="4",
+        )
 
     # シェル芸の実行
     shellgei_str = shellgei_data.shellgei

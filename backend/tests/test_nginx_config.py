@@ -37,10 +37,14 @@ def test_nginx_limits_api_rate_and_concurrent_connections() -> None:
         in directives
     )
     assert (
+        "limit_req_zone $server_name zone=shellgei_global:1m rate=1r/s;" in directives
+    )
+    assert (
         "limit_conn_zone $binary_remote_addr "
         "zone=api_connections_per_client:10m;" in directives
     )
     assert "limit_req zone=shellgei_per_client burst=5 nodelay;" in directives
+    assert "limit_req zone=shellgei_global burst=2 nodelay;" in directives
     assert "limit_conn api_connections_per_client 5;" in directives
     assert "limit_req zone=api_per_client burst=40 nodelay;" in directives
     assert "limit_conn api_connections_per_client 20;" in directives

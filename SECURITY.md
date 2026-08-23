@@ -99,8 +99,16 @@ stdoutやstderrを出さない処理も独立したwatchdogの対象になり、
 - asyncio timeout後もworker threadが動作している場合は実行枠を保持する
 - worker threadの終了後に実行枠を解放する
 
+sandbox実行の開始頻度には、backendプロセスごとに次の制限を適用します。
+
+- 平均1件/秒
+- 起動直後または未使用時の即時実行は最大3件
+- lockで保護したtoken bucketを使用する
+- tokenがないrequestはDB操作やDocker操作の前にbusy応答を返す
+
 これらの上限はbackendプロセス単位です。
-複数workerまたは複数replicaでは上限が共有されず、プロセス数に応じて合計実行数とコンテナ数が増えます。
+複数workerまたは複数replicaでは上限が共有されず、プロセス数に応じて
+合計実行数、コンテナ数、backendの許容開始頻度が増えます。
 
 ## stdout、stderr、画像
 
@@ -298,10 +306,17 @@ APIには、直接接続元のIP addressをkeyとして次の制限を適用し�
 | 対象 | 平均request数 | 即時処理するburst | 同時request数 |
 | --- | ---: | ---: | ---: |
 | `/api/shellgei` | 5 requests/second | 5 | 5 |
+| `/api/shellgei`のfrontend全体 | 1 request/second | 2 | - |
 | その他の`/api` | 20 requests/second | 40 | 20 |
 
-rateまたは同時request数を超えた場合は429を返します。
+frontend全体の`burst=2`は、通常の1requestと合わせて最大3requestを即時に処理します。
+これはbackendの3つのsandbox実行枠と合わせた値です。
+
+nginxのrateまたは同時request数を超えた場合は429を返します。
 burstはqueueで待機させず、上限内のrequestを即時に処理します。
+
+frontend全体の制限は1つのfrontend nginx内で共有されます。
+複数のfrontend replicaまたは複数host間では共有されません。
 
 接続とproxyには次のtimeoutを適用します。
 
@@ -362,7 +377,7 @@ sandboxイメージとbase imageはtagで参照しており、digestを固定し
 - sandbox内の非rootユーザー化
 - rootless環境で利用可能なseccomp・LSMによる追加制約
 - 外側proxyで実際のclient単位に共有するrate・connection制限
-- 複数worker・複数hostで共有する受付制御
+- 複数frontend replica・複数hostで共有する受付制御
 - 起動時の残存sandbox検出・回収
 - 判定値の正規化と画像比較処理の修正
 - イメージのdigest固定、SBOM、署名検証、脆弱性scan

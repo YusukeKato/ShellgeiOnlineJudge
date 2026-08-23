@@ -120,12 +120,9 @@ def test_shell_api_applies_retention_in_the_log_transaction(
             _add_log(db, now - timedelta(seconds=offset))
         db.commit()
 
-        class NoLatestLog:
-            def order_by(self, *_args: object) -> "NoLatestLog":
-                return self
-
-            def first(self) -> None:
-                return None
+        class AllowStart:
+            def try_acquire(self) -> bool:
+                return True
 
         async def run_with_timeout(_shellgei: str, _problem_id: str) -> list[str]:
             return ["test", ""]
@@ -148,7 +145,11 @@ def test_shell_api_applies_retention_in_the_log_transaction(
         )
         monkeypatch.setattr(api_shellgei.shellgei_judge, "judge", judge)
         monkeypatch.setattr(api_shellgei, "prune_execution_logs", prune)
-        monkeypatch.setattr(db, "query", lambda *_args: NoLatestLog())
+        monkeypatch.setattr(
+            api_shellgei,
+            "sandbox_start_rate_limiter",
+            AllowStart(),
+        )
         yaml_dir = tmp_path / "problems" / "yaml_data"
         yaml_dir.mkdir(parents=True)
         (yaml_dir / "STANDARD-00000001.yaml").touch()

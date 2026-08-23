@@ -15,7 +15,7 @@ ShellgeiOnlineJudgeは、インターネットから任意のシェルコマン�
 
 > 次の防御は構成されていません。
 >
-> - 複数プロセスや複数hostで共有する受付制御
+> - 複数frontend replicaや複数hostで共有する受付制御
 > - 外側proxyでの実際のclient単位のリクエスト・接続制限
 > - Web APIとDocker操作の分離
 >
@@ -352,7 +352,9 @@ PostgreSQLの整合性が保証される方法でバックアップしてくだ�
 
 ## 12. 運用上の制約
 
-- 同時実行数とコンテナ数の上限はbackendプロセス単位です。backend workerやreplicaを増やす前に、共有された受付制御が必要です。
+- 同時実行数とbackendの開始頻度はプロセス単位です。
+  frontend nginxの全体開始頻度はfrontend instance単位です。
+  workerやreplicaを増やす前に、共有された受付制御が必要です。
 - sandboxイメージはtag参照です。更新時は全問題回帰テストを行い、digest固定、署名検証、SBOM、脆弱性スキャンを導入してください。
 - Composeだけでは、DDoS、分散リクエスト、ホストディスク枯渇を完全には防げません。外側のロードバランサー、firewall、監視、容量制限も必要です。
 - rootless Dockerはcontainer escapeの影響を軽減しますが、任意コマンド実行サービスの完全な隔離境界ではありません。
