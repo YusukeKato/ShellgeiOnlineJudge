@@ -17,9 +17,15 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - 接続先daemonがrootlessであること
 - cgroup v2によるCPU・メモリ・PID制限が実際に反映されていること
 - 基本的なDocker隔離設定
+- root filesystemがread-onlyであること
+- 通常ファイルの書き込み先が、容量・inode制限付きの
+  `/work`、`/tmp`、`/media`、`/dev`に限定されていること
+- 多数の小ファイルと複数の大きなファイルがtmpfs上限を超えられないこと
+- working directory、HOME、一時ファイル、入力ファイル、画像問題が動作すること
+- 使用済みcontainerの書き込み状態が次のrequestへ残らないこと
 - 無出力コマンドのタイムアウト
 - コンテナ削除
-- 停止済みコンテナからの画像取得
+- 実行中コンテナからの上限付き画像取得
 - workerの回復
 
 全92問の回帰テストには、追加の明示指定が必要です。

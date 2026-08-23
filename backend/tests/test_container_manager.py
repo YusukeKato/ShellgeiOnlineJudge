@@ -7,6 +7,10 @@ from scripts.container_manager import (
     ContainerCapacityError,
     ContainerManager,
     RootlessDockerRequiredError,
+    SANDBOX_HOME_DIRECTORY,
+    SANDBOX_INIT_COMMAND,
+    SANDBOX_TMPFS,
+    SANDBOX_WORK_DIRECTORY,
 )
 
 
@@ -173,6 +177,13 @@ def test_shutdown_removes_warm_containers_and_closes_client() -> None:
     assert all(container.remove_calls == 1 for container in client.containers.created)
     assert client.closed is True
     for options in client.containers.run_kwargs:
+        assert options["command"] == ["/bin/sh", "-c", SANDBOX_INIT_COMMAND]
+        assert options["read_only"] is True
+        assert options["working_dir"] == SANDBOX_WORK_DIRECTORY
+        assert options["environment"] == {
+            "HOME": SANDBOX_HOME_DIRECTORY,
+            "TMPDIR": "/tmp",
+        }
         assert options["network_mode"] == "none"
         assert options["ipc_mode"] == "none"
         assert options["mem_limit"] == "512m"
@@ -181,7 +192,12 @@ def test_shutdown_removes_warm_containers_and_closes_client() -> None:
         assert options["cap_drop"] == ["ALL"]
         assert options["security_opt"] == ["no-new-privileges:true"]
         assert options["pids_limit"] == 50
-        assert options["tmpfs"] == {"/media": "size=100M"}
+        assert options["tmpfs"] == SANDBOX_TMPFS
+        assert [dict(ulimit) for ulimit in options["ulimits"]] == [
+            {"Name": "fsize", "Soft": 50_000_000, "Hard": 50_000_000},
+            {"Name": "nofile", "Soft": 256, "Hard": 256},
+            {"Name": "core", "Soft": 0, "Hard": 0},
+        ]
         assert options["labels"] == {"com.shellgei-online-judge.sandbox": "true"}
 
 

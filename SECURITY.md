@@ -46,15 +46,36 @@ sandboxコンテナには次の設定を適用します。
 - PID上限50
 - 全Linux capabilityをdrop
 - `no-new-privileges`
-- `/media`を100 MiBのtmpfsとしてmount
+- root filesystemをread-onlyでmount
+- `/work`を64 MiB、inode上限4,096のtmpfsとしてmount
+- `/tmp`を32 MiB、inode上限4,096のtmpfsとしてmount
+- `/media`を100 MiB、inode上限1,024のtmpfsとしてmount
+- `/dev`を64 MiB、inode上限1,024のtmpfsとしてmount
+- `/work`と`/tmp`は生成したscriptや一時実行ファイルとの互換性のため実行可能
+- `/media`と`/dev`は`noexec`
+- すべてのtmpfsは`nosuid,nodev`
 - file size ulimitを50 MBに設定
+- 1processあたりのfile descriptor上限を256に設定
+- core dumpを無効化
 - 管理用label `com.shellgei-online-judge.sandbox=true`
 
 sandbox内のコマンドはコンテナ内rootとして動きます。
 
+通常のcommandと問題入力は`/work`に配置します。
+working directoryも`/work`です。
+`HOME`は`/tmp/home`、`TMPDIR`は`/tmp`です。
+
+既存の画像問題が使用する相対パス`media/output.jpg`は、
+`/work/media`から`/media`へのsymlinkで維持します。
+問題用の既存データを相対パスで参照するcommandのため、
+`/work/ShellGeiData`からread-only root上の`/ShellGeiData`へのsymlinkも提供します。
+
+任意の通常ファイルを書き込める場所は、上記4つのtmpfsに限定します。
+tmpfsの容量合計は1コンテナあたり260 MiBで、使用量は512 MiBのmemory cgroupにも計上されます。
+容量またはinode上限へ達した書き込みは、コンテナ内で`ENOSPC`になります。
+
 次の制御は設定していません。
 
-- read-only root filesystem
 - 独自のseccomp policy
 - 独自のAppArmor policy
 - 独自のSELinux policy
@@ -89,19 +110,19 @@ backendメモリに保持する量は、APIが返す最大文字数の4倍まで
 - 画像を保持しない
 
 出力画像は最大750,000 bytesです。
-watchdogが有効な間に、次のいずれかをコンテナの書き込み可能layerへ退避します。
+watchdogが有効な間に、次のいずれかを固定コマンドで読み取ります。
 
 - `/media/output.gif`
 - `/media/output.jpg`
 
-退避量は最大750,001 bytesです。
-コンテナ停止後に退避ファイルを読み、次の各段階で上限を検査します。
+読み取りにはread-only root filesystem上の`/usr/bin/head`を使用し、
+最大750,001 bytesをDocker execのstreamとしてbackendへ返します。
 
-- Dockerが返すfile size metadata
-- Docker archive全体の転送量
-- archiveから展開した画像データ
+backendも750,001 bytesを上限とするbufferへ読み込み、
+750,000 bytesを超えた画像を破棄します。
 
-上限超過または形式に不備があるarchiveは、画像なしの結果として扱います。
+画像をwritable root layerへ退避せず、Docker archive APIも使用しません。
+上限超過または読み取り失敗は、画像なしの結果として扱います。
 
 ## リクエストごとのデータ分離
 
@@ -111,7 +132,10 @@ watchdogが有効な間に、次のいずれかをコンテナの書き込み可
 - 問題の入力ファイル
 
 リクエスト間で共有するホスト側一時ファイルは使用しません。
-archiveは貸し出されたsandboxコンテナへ直接転送します。
+archiveはbackendでBase64へencodeし、Docker execの一時的な環境変数として渡します。
+sandbox内の固定コマンドがBase64をdecodeし、read-only root filesystem上の
+`base64`と`tar`を使用して`/work`へ展開します。
+利用者の入力内容を展開コマンドへ連結しません。
 
 problem IDには、ファイルパスへ使用する前に次の検証を適用します。
 
@@ -306,7 +330,6 @@ sandboxイメージとbase imageはtagで参照しており、digestを固定し
 ## 必要な追加対策
 
 - sandbox内の非rootユーザー化
-- read-only root filesystemと容量制限付き書き込み領域
 - rootless環境で利用可能なseccomp・LSMによる追加制約
 - 外側proxyで実際のclient単位に共有するrate・connection制限
 - 複数worker・複数hostで共有する受付制御

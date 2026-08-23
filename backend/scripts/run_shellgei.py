@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
 import base64
-import io
-import tarfile
 import threading
 from collections.abc import Iterable
 from typing import Any
@@ -10,7 +8,7 @@ from typing import Any
 import yaml
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from scripts.container_manager import manager
+from scripts.container_manager import SANDBOX_WORK_DIRECTORY, manager
 from scripts.execution_archive import build_execution_archive
 from scripts.input_validation import validate_problem_id
 from scripts.sandbox_limits import BoundedByteBuffer
@@ -20,17 +18,18 @@ DEFAULT_EXECUTION_TIMEOUT_SECONDS = 10
 DEFAULT_OUTPUT_LIMIT_CHARS = 1000
 MAX_UTF8_BYTES_PER_CHAR = 4
 MAX_IMAGE_BYTES = 750_000
-MAX_IMAGE_ARCHIVE_BYTES = MAX_IMAGE_BYTES + 65_536
 DOCKER_OPERATION_GRACE_SECONDS: float = 15.0
-OUTPUT_IMAGE_SNAPSHOT_PATH = "/.shellgei-output-image"
-OUTPUT_IMAGE_SNAPSHOT_COMMAND = (
-    "set -eu; "
-    f"rm -f -- {OUTPUT_IMAGE_SNAPSHOT_PATH}; "
+EXECUTION_ARCHIVE_ENVIRONMENT = "SOJ_EXECUTION_ARCHIVE"
+EXECUTION_ARCHIVE_EXTRACT_COMMAND = (
+    "set -eu; umask 077; "
+    f'printf "%s" "${EXECUTION_ARCHIVE_ENVIRONMENT}" | /usr/bin/base64 -d | '
+    "/usr/bin/tar -x -f - --no-same-owner --no-same-permissions"
+)
+OUTPUT_IMAGE_READ_COMMAND = (
     "if [ -f /media/output.gif ]; then source=/media/output.gif; "
     "elif [ -f /media/output.jpg ]; then source=/media/output.jpg; "
     "else exit 0; fi; "
-    f'/usr/bin/head -c {MAX_IMAGE_BYTES + 1} -- "$source" '
-    f"> {OUTPUT_IMAGE_SNAPSHOT_PATH}"
+    f'exec /usr/bin/head -c {MAX_IMAGE_BYTES + 1} -- "$source"'
 )
 
 
@@ -109,65 +108,24 @@ class ShellgeiDockerClient:
             return decoded[:limit_chars] + "..."
         return decoded
 
-    @staticmethod
-    def _archive_payload(archive_stream: Any, expected_name: str) -> bytes | None:
-        archive_bytes = bytearray()
-        chunks = (
-            (archive_stream,) if isinstance(archive_stream, bytes) else archive_stream
-        )
-        for chunk in chunks:
-            if len(archive_bytes) + len(chunk) > MAX_IMAGE_ARCHIVE_BYTES:
-                return None
-            archive_bytes.extend(chunk)
-
-        with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r:*") as archive:
-            for member in archive.getmembers():
-                if Path(member.name).name != expected_name or not member.isfile():
-                    continue
-                extracted = archive.extractfile(member)
-                if extracted is None:
-                    return None
-                payload = extracted.read(MAX_IMAGE_BYTES + 1)
-                if len(payload) > MAX_IMAGE_BYTES:
-                    return None
-                return payload
-        return None
-
-    def _read_image_file(self, container: Any, path: str) -> tuple[bool, str]:
-        try:
-            archive_stream, stat = container.get_archive(path)
-        except Exception:
-            return False, ""
-
-        try:
-            size = int(stat.get("size", MAX_IMAGE_BYTES + 1))
-        except (TypeError, ValueError):
-            return True, ""
-        if size > MAX_IMAGE_BYTES:
-            return True, ""
-
-        try:
-            payload = self._archive_payload(archive_stream, Path(path).name)
-        except (tarfile.TarError, OSError):
-            return True, ""
-        if payload is None:
-            return True, ""
-        return True, base64.b64encode(payload).decode("ascii")
-
-    @staticmethod
-    def _snapshot_output_image(container: Any) -> None:
-        # Docker's archive API cannot read files through a tmpfs mount. Copy at
-        # most one byte over the accepted limit into the container layer while
-        # the execution watchdog is still active, then inspect it after stop.
-        container.exec_run(
-            ["/bin/sh", "-c", OUTPUT_IMAGE_SNAPSHOT_COMMAND],
-            stdout=False,
-            stderr=False,
-        )
-
     def _read_output_image(self, container: Any) -> str:
-        _, image = self._read_image_file(container, OUTPUT_IMAGE_SNAPSHOT_PATH)
-        return image
+        image = BoundedByteBuffer(MAX_IMAGE_BYTES + 1)
+        try:
+            image_stream = container.exec_run(
+                ["/bin/sh", "-c", OUTPUT_IMAGE_READ_COMMAND],
+                stdout=True,
+                stderr=False,
+                stream=True,
+            )
+            for chunk in self._stream_chunks(image_stream.output):
+                if chunk and not image.append(chunk):
+                    return ""
+        except Exception:
+            return ""
+        payload = image.to_bytes()
+        if not payload or len(payload) > MAX_IMAGE_BYTES:
+            return ""
+        return base64.b64encode(payload).decode("ascii")
 
     def exec_shellgei(
         self, shellgei: str, problem_id: str, timeout: float, limit_str: int
@@ -194,7 +152,18 @@ class ShellgeiDockerClient:
                     p_data = yaml.safe_load(yf)
                 input_str = p_data.get("input", "")
             execution_archive = build_execution_archive(shellgei, input_str)
-            container.put_archive(path="/", data=execution_archive)
+            encoded_archive = base64.b64encode(execution_archive.getvalue()).decode(
+                "ascii"
+            )
+            setup_result = container.exec_run(
+                ["/bin/sh", "-c", EXECUTION_ARCHIVE_EXTRACT_COMMAND],
+                environment={EXECUTION_ARCHIVE_ENVIRONMENT: encoded_archive},
+                stdout=False,
+                stderr=True,
+                workdir=SANDBOX_WORK_DIRECTORY,
+            )
+            if setup_result.exit_code != 0:
+                raise RuntimeError("failed to prepare sandbox files")
             watchdog = _ExecutionWatchdog(container)
             timeout_timer = threading.Timer(
                 timeout, watchdog.terminate, args=("timeout",)
@@ -203,21 +172,26 @@ class ShellgeiDockerClient:
             timeout_timer.start()
 
             output = BoundedByteBuffer(limit_str * MAX_UTF8_BYTES_PER_CHAR)
+            output_image = ""
             execution_error: Exception | None = None
             try:
-                container.exec_run("convert -size 200x200 xc:white media/output.jpg")
+                container.exec_run(
+                    ["convert", "-size", "200x200", "xc:white", "/media/output.jpg"],
+                    workdir=SANDBOX_WORK_DIRECTORY,
+                )
                 if watchdog.reason is None:
                     exec_stream = container.exec_run(
-                        "bash z.bash",
+                        ["bash", "z.bash"],
                         demux=False,
                         stream=True,
+                        workdir=SANDBOX_WORK_DIRECTORY,
                     )
                     for chunk in self._stream_chunks(exec_stream.output):
                         if chunk and not output.append(chunk):
                             watchdog.terminate("output_limit")
                             break
                 if watchdog.reason is None:
-                    self._snapshot_output_image(container)
+                    output_image = self._read_output_image(container)
             except Exception as exc:
                 execution_error = exc
             finally:
@@ -240,7 +214,7 @@ class ShellgeiDockerClient:
             )
             if reason is not None or execution_error is not None:
                 return [output_utf8, ""]
-            return [output_utf8, self._read_output_image(container)]
+            return [output_utf8, output_image]
         except Exception as e:
             return [f"Error during execution: {e}", ""]
 

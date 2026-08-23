@@ -12,6 +12,20 @@ DEFAULT_IMAGE_ID = "theoldmoon0602/shellgeibot"
 DEFAULT_POOL_SIZE = 3
 DOCKER_API_TIMEOUT_SECONDS = 15
 MANAGED_LABEL = "com.shellgei-online-judge.sandbox"
+SANDBOX_WORK_DIRECTORY = "/work"
+SANDBOX_HOME_DIRECTORY = "/tmp/home"
+SANDBOX_INIT_COMMAND = (
+    f"umask 077; mkdir -p {SANDBOX_HOME_DIRECTORY}; "
+    f"ln -s /media {SANDBOX_WORK_DIRECTORY}/media; "
+    f"ln -s /ShellGeiData {SANDBOX_WORK_DIRECTORY}/ShellGeiData; "
+    "exec sleep infinity"
+)
+SANDBOX_TMPFS = {
+    "/work": "rw,exec,nosuid,nodev,size=64M,nr_inodes=4096,mode=0700",
+    "/tmp": "rw,exec,nosuid,nodev,size=32M,nr_inodes=4096,mode=1777",
+    "/media": "rw,noexec,nosuid,nodev,size=100M,nr_inodes=1024,mode=0755",
+    "/dev": "rw,noexec,nosuid,nodev,size=64M,nr_inodes=1024,mode=0755",
+}
 
 
 class ContainerCapacityError(RuntimeError):
@@ -65,7 +79,13 @@ class ContainerManager:
     def _container_options(self) -> dict[str, Any]:
         return {
             "detach": True,
-            "command": "sleep infinity",
+            "command": ["/bin/sh", "-c", SANDBOX_INIT_COMMAND],
+            "read_only": True,
+            "working_dir": SANDBOX_WORK_DIRECTORY,
+            "environment": {
+                "HOME": SANDBOX_HOME_DIRECTORY,
+                "TMPDIR": "/tmp",
+            },
             "ipc_mode": "none",
             "network_mode": "none",
             "mem_limit": "512m",
@@ -74,9 +94,11 @@ class ContainerManager:
             "pids_limit": 50,
             "cap_drop": ["ALL"],
             "security_opt": ["no-new-privileges:true"],
-            "tmpfs": {"/media": "size=100M"},
+            "tmpfs": dict(SANDBOX_TMPFS),
             "ulimits": [
-                docker.types.Ulimit(name="fsize", soft=50000000, hard=50000000)
+                docker.types.Ulimit(name="fsize", soft=50000000, hard=50000000),
+                docker.types.Ulimit(name="nofile", soft=256, hard=256),
+                docker.types.Ulimit(name="core", soft=0, hard=0),
             ],
             "labels": {MANAGED_LABEL: "true"},
         }
