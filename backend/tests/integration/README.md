@@ -36,6 +36,6 @@ SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_FULL_REGRESSION=1 \
 - fork bomb
 - ホストディスク枯渇
 - Docker daemon停止
-- 大量コンテナ生成などの攻撃試験
+- 大量コンテナ生成など、極端な負荷条件を扱う耐性試験
 
 これらはホスト側watchdogを備え、スナップショットから復元できる使い捨てVMでのみ実行してください。

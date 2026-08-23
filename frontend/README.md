@@ -7,30 +7,21 @@ This repository is the webapp frontend for SHELLGEI ONLINE JUDGE.
 
 ## Install
 
-```sh
-sudo apt update && sudo upgrade -y
-sudo apt install -y nodejs npm
-sudo npm install n -g
-sudo n stable
-sudo apt purge -y nodejs npm
-sudo apt autoremove -y
-sudo npm install --global yarn
-yarn global add create-react-app
-# Amazon Linuxの場合はaptではなくdnfを使用
-```
+Node.js 22とYarnを使用します。
+環境構築全体は[開発環境の構築・テスト・起動](../docs/DEVELOPMENT.md)を参照してください。
 
 ```sh
-cd /path/to/frontend/
-yarn install
+cd frontend
+yarn install --frozen-lockfile
 ```
 
 ## build
 
 ```sh
-yarn format
+yarn format:check
 yarn lint
+CI=true yarn test --watchAll=false
 yarn build
-yarn test
 ```
 
 ## 参考

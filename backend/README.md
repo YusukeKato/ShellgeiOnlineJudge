@@ -7,27 +7,23 @@ This repository is the webapp backend for SHELLGEI ONLINE JUDGE.
 - nginx
 
 ## setup
-```sh
-sudo apt install python3-venv
-python3 -m venv ~/venv
-source ~/venv/bin/activate
-```
+
+Poetry、rootless Docker、環境変数を含む手順は、[開発環境の構築・テスト・起動](../docs/DEVELOPMENT.md)を参照してください。
 
 ```sh
-/path/to/ShellgeiOnlineJudge/
 poetry install
-# poetryのインストールが必要かも
-# pip install poetry
-# sudo apt install python3-poetry
 ```
 
 ## check
 
 ```sh
-ruff format /backend/
-ruff check /backend/
-mypy /backend/
+poetry run ruff format --check .
+poetry run ruff check .
+poetry run mypy .
+poetry run pytest -m "not docker"
 ```
+
+実際のsandboxコンテナを使用するテストは、[Docker統合テスト](./tests/integration/README.md)を参照してください。
 
 ## 参考
 下記記事を参考にさせていただきました。
