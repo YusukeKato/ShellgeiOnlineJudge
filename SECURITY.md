@@ -388,6 +388,12 @@ nginxの16 KiB制限は、その前段でrequest bodyを拒否します。
 frontend nginxは、受信した`X-Forwarded-For`をbackendへ引き継ぎません。
 backendへは、frontend nginxへ直接接続したIP addressだけを渡します。
 
+問題一覧はbackend起動時にYAMLを1回だけ読み込み、
+検証・JSON化した不変のsnapshotから応答します。
+問題データがない場合、YAMLが不正な場合、または一覧に必要な
+ID・タイトルが不正な場合はbackendを起動しません。
+`/api/problems`にはETagと`Cache-Control: public, max-age=300`を付与します。
+
 ホスト側reverse proxyまたはload balancerを使用する場合、
 frontend nginxから見た接続元はそのproxyになります。
 この場合、frontend nginxのrate・connection制限はproxy単位で集約されます。

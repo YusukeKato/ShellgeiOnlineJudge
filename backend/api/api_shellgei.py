@@ -1,7 +1,9 @@
 import pytz
-import yaml
 from pathlib import Path
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
+
+import yaml
+from fastapi import APIRouter, Depends, Header, HTTPException, Response
 from datetime import datetime
 from sqlalchemy.orm import Session
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
@@ -9,6 +11,10 @@ from models.model_db import ExecutionLog
 from scripts.database import get_db
 from scripts.execution_log_retention import prune_execution_logs
 from scripts.input_validation import ProblemId
+from scripts.problem_catalog import (
+    PROBLEM_LIST_CACHE_CONTROL,
+    get_problem_catalog,
+)
 from scripts.runner_client import RunnerBusyError, RunnerUnavailableError, runner_client
 from scripts.judge import ShellgeiJudge
 
@@ -73,25 +79,26 @@ async def post_shellgei(
 
 
 @router.get("/problems")
-async def get_problems_list():
-    base_dir = Path(__file__).resolve().parent.parent
-    yaml_dir = base_dir / "problems" / "yaml_data"
-    problems = []
-    if yaml_dir.exists():
-        for yaml_path in sorted(yaml_dir.glob("*.yaml")):
-            with open(yaml_path, "r", encoding="utf-8") as f:
-                data = yaml.safe_load(f)
-                # ファイル名のプレフィックスからカテゴリを判定
-                category = yaml_path.stem.split("-")[0]
-                problems.append(
-                    {
-                        "id": yaml_path.stem,
-                        "category": category,
-                        "title_ja": data.get("title_ja", ""),
-                        "title_en": data.get("title_en", ""),
-                    }
-                )
-    return problems
+async def get_problems_list(
+    if_none_match: Annotated[
+        str | None,
+        Header(alias="If-None-Match"),
+    ] = None,
+) -> Response:
+    catalog = get_problem_catalog()
+    headers = {
+        "Cache-Control": PROBLEM_LIST_CACHE_CONTROL,
+        "ETag": catalog.etag,
+    }
+    if if_none_match is not None and catalog.etag in {
+        value.strip() for value in if_none_match.split(",")
+    }:
+        return Response(status_code=304, headers=headers)
+    return Response(
+        content=catalog.response_body,
+        media_type="application/json",
+        headers=headers,
+    )
 
 
 @router.get("/problems/{problem_id}")

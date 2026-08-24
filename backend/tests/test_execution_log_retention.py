@@ -201,6 +201,11 @@ def test_backend_startup_validates_runner_and_prunes_logs(
         "prune_execution_logs",
         lambda _db: events.append("prune"),
     )
+    monkeypatch.setattr(
+        backend_main,
+        "load_problem_catalog",
+        lambda: events.append("catalog_load"),
+    )
     monkeypatch.setattr(backend_main, "runner_client", FakeRunnerClient())
 
     async def run_lifespan() -> None:
@@ -211,6 +216,7 @@ def test_backend_startup_validates_runner_and_prunes_logs(
 
     assert events == [
         "runner_validate",
+        "catalog_load",
         "create_all",
         "session_enter",
         "prune",

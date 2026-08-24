@@ -18,8 +18,8 @@
 
 - 最終確認日: 2026-08-24
 - branch: `main`
-- 確認対象commit: `41d31c8b78b27818d4079aa3d359cd43b0ed2937`
-- commit subject: `fix: disable sandbox container logs`
+- 確認対象commit: `71dad03c7ef00054f003df6d27bf634087fce0f8`
+- commit subject: `fix: reconcile orphaned sandbox containers`
 - 今回の変更開始時のworktree: clean
 - 対象: repository、rootless Docker開発環境、保存済みimage
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
@@ -29,15 +29,15 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 41d31c8b78b27818d4079aa3d359cd43b0ed2937..HEAD
+git diff 71dad03c7ef00054f003df6d27bf634087fce0f8..HEAD
 ```
 
 ## Current security status
 
 - Criticalとして確定した未解決課題はありません。
-- Highが2件Openです。
+- Highが1件Openです。
 - インターネット公開前のblocking issueがあります。
-- 最優先は、問題一覧の同期parseとnginx受付制御のDoS経路です。
+- 最優先は、nginx受付制御のDoS経路です。
 - runner異常終了後のsandboxは再起動時に回収します。
   Docker daemon単独の有効期限はないため、SOJ-002を部分解決として追跡します。
 - read-only root、tmpfs容量・inode、CPU、memory、swap、PID、
@@ -69,10 +69,6 @@ Statusは次の意味で使用します。
     daemon単独のsandbox有効期限はない
   - 関連: `backend/scripts/container_manager.py`、`backend/runner_main.py`
   - 次: runner再起動・回収失敗の監視と、独立した期限強制の要否を判断
-- `SOJ-003` — High / P1 / Open
-  - 概要: `/api/problems`が毎回92 YAMLを同期parseしevent loopを飽和できる
-  - 関連: `backend/api/api_shellgei.py`
-  - 次: 起動時cacheとHTTP cacheを追加
 - `SOJ-004` — High / P1 / Open
   - 概要: nginx全体実行tokenを不正requestで消費し、正規実行を妨害できる
   - 関連: `frontend/nginx/default.conf`、`backend/scripts/admission_control.py`
@@ -154,10 +150,10 @@ Statusは次の意味で使用します。
 
 現在の未解決trackerは次の内訳です。
 
-- Open: 12件
+- Open: 11件
 - Partially resolved: 2件
 - Deferred: 6件
-- Severity: High 2件、Medium 14件、Low 4件
+- Severity: High 1件、Medium 14件、Low 4件
 
 ## Resolved issues
 
@@ -177,9 +173,10 @@ Statusは次の意味で使用します。
 | RES-009 | sandbox開始頻度とcgroup実効値をfail-closedで検証 | `fd02020`、`d0efe75` | admission、container manager、Docker baseline test |
 | RES-010 | Docker socketを公開backendから内部runnerへ分離 | `7cab18e` | `test_runner_boundary.py`、Compose静的test |
 | RES-011 | 動的sandboxのDockerログを無効化し、待機PID 1のstdioを`/dev/null`へ分離 | `41d31c8` | container manager unit、Docker baseline test |
-| RES-012 | owner単位の起動時回収、create/start失敗追跡、shutdown競合防止を実装 | この変更 | container manager unit、Docker restart test |
+| RES-012 | owner単位の起動時回収、create/start失敗追跡、shutdown競合防止を実装 | `71dad03` | container manager unit、Docker restart test |
+| RES-013 | 問題一覧を起動時に検証・JSON化し、HTTP cacheを追加 | この変更 | problem catalog unit、backend startup test |
 
-RES-003、RES-007、RES-008、RES-009、RES-011、RES-012は、
+RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013は、
 記載した範囲では解決済みです。
 daemon単独のsandbox有効期限、可変image等の残存経路は、
 別のtracker issueとして追跡しています。
@@ -222,21 +219,15 @@ daemon単独のsandbox有効期限、可変image等の残存経路は、
 
 残存リスクを踏まえ、SOJ-002はMedium、P1、Partially resolvedとします。
 
-### SOJ-003 / SOJ-004: 公開受付とevent loopのDoS
+### SOJ-004: 公開受付のDoS
 
-SOJ-003では、問題一覧requestごとに全YAMLを同期open・parseします。
-`async def` handler内で実行するため、単一Uvicorn event loopを直接占有します。
-起動時にimmutable metadataをloadし、必要ならETagやproxy cacheを追加してください。
-
-SOJ-004では、nginxのfrontend全体1件/秒のtokenが、method、JSON、problem IDの
+nginxのfrontend全体1件/秒のtokenが、method、JSON、problem IDの
 検証前に消費されます。安価な不正requestでも正規実行を妨げられます。
 runner側は検証後に開始頻度を制限しているため、Docker開始の正本はrunnerとし、
 nginxと外側proxyはHTTP受付資源を保護する別の上限として再設計してください。
 
 必要なtest:
 
-- 問題一覧がrequestごとにfilesystemを再読込しないこと
-- 問題data不正時のfail-closed startup
 - 実nginxでGET、OPTIONS、不正JSON、未知IDの後も正常requestが処理されること
 - 正常なDocker開始頻度は平均1件/秒、burst 3を越えないこと
 - 複数送信元と外側proxyを含む受付制御
@@ -362,7 +353,7 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  SOJ-003 / SOJ-004: 公開受付とevent loopのDoSを修正
+  SOJ-004: 公開受付のDoSを修正
     ↓
 Then
   SOJ-007 / SOJ-008 / SOJ-010: runner通信・DB・redirectを修正
