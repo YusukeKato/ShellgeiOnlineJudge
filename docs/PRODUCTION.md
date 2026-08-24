@@ -490,33 +490,155 @@ rm -f -- "${SOJ_SMOKE_RESPONSE}"
 
 ## 8. 更新デプロイ
 
-更新前にDBのバックアップを取得し、対象commitを確認します。
+更新は専用ユーザーで実行します。
+[「10. 日常運用コマンド」](#10-日常運用コマンド)の環境変数と
+作業directoryを設定してから、以下を実行してください。
+
+### 更新前の確認
+
+DBデータを保持する場合は、更新前に整合性のあるbackupを取得します。
+作業ツリーがcleanであることと、現在のcommitを確認します。
+
+```sh
+git status --short
+git log -1 --oneline
+
+SOJ_PREVIOUS_COMMIT="$(git rev-parse HEAD)"
+printf 'previous commit: %s\n' "${SOJ_PREVIOUS_COMMIT}"
+```
+
+`git status --short`に出力がある場合は、内容を確認するまで更新しないでください。
+表示したcommit IDは、shell sessionの外側にある運用記録へ残します。
+
+remoteの変更を取得し、取り込むcommitと差分を確認します。
 
 ```sh
 git fetch --tags origin
-git status --short
-git log -1 --oneline
+
+SOJ_TARGET_COMMIT="$(git rev-parse origin/main)"
+printf 'target commit: %s\n' "${SOJ_TARGET_COMMIT}"
+
+git log --oneline HEAD.."${SOJ_TARGET_COMMIT}"
+git diff --stat HEAD.."${SOJ_TARGET_COMMIT}"
+git diff --name-status HEAD.."${SOJ_TARGET_COMMIT}"
 ```
 
-作業ツリーがcleanであることを確認して、検証済みのtagまたはcommitへ更新します。
-その後、「6. 本番反映前の検証」を通してから再デプロイします。
+特に、環境変数、Compose、本番手順、セキュリティ上の前提への変更を確認します。
+
+```sh
+git diff HEAD.."${SOJ_TARGET_COMMIT}" -- \
+  .env.example \
+  docker-compose.yml \
+  docs/PRODUCTION.md \
+  SECURITY.md
+```
+
+`.env.example`に必須変数が追加・変更されている場合は、
+Git管理外の本番`.env`にも反映します。
+host側reverse proxy、firewall、証明書更新処理への指示がある場合は、
+Composeとは別に適用計画を作成してください。
+
+### Gitの更新
+
+検証したtarget commitをfast-forwardで取り込みます。
+確認後にremoteが更新されても、別のcommitを意図せず取り込まない手順です。
+
+```sh
+git merge --ff-only "${SOJ_TARGET_COMMIT}"
+git log -1 --oneline
+git status --short
+```
+
+release tagやcommitを固定して運用する場合は、`origin/main`を自動的に
+取り込まず、検証済みの対象を明示してcheckoutしてください。
+
+### 再デプロイ要否の判断
+
+更新前後のファイル一覧を確認します。
+
+```sh
+git diff --name-status "${SOJ_PREVIOUS_COMMIT}"..HEAD
+```
+
+変更内容ごとの対応は次のとおりです。
+
+| 変更 | 必要な対応 |
+| --- | --- |
+| Markdownなど文書だけ | Gitの更新だけ。Composeのbuild・再起動は不要 |
+| backend、runner、frontend、問題データ | 設定検査、build、`up -d`、動作確認 |
+| Dockerfile、Compose、依存関係 | 設定・環境変数を確認し、build、`up -d`、動作確認 |
+| `REACT_APP_*` | frontendへbuild時に埋め込まれるため再buildが必要 |
+| host側nginx、firewall、証明書運用 | リポジトリ外の設定へ別途反映 |
+
+判断できない場合は、再デプロイが必要な変更として扱います。
+
+### Composeへの反映
+
+「6. 本番反映前の検証」を完了したcommitを使用します。
+まず、rootless daemonと本番`.env`を含むCompose設定を検査します。
 
 ```sh
 ./deploy/rootless-compose.sh config --quiet
+printf 'compose config exit=%s\n' "$?"
+```
+
+終了statusが`0`の場合だけ、buildして反映します。
+
+```sh
 ./deploy/rootless-compose.sh build --pull
 ./deploy/rootless-compose.sh up -d --remove-orphans
 ./deploy/rootless-compose.sh ps
 ./deploy/rootless-compose.sh logs --tail=100 db runner backend frontend
 ```
 
-`REACT_APP_*`はbuild時に埋め込まれます。これらを変更した場合はfrontendの再buildが必要です。
+単一host構成では、containerの再作成中に短時間の応答断が発生する可能性があります。
+更新のために`down`を先に実行する必要はありません。
+
+### 反映後の確認
+
+次を確認します。
+
+- DB、backend、frontendがrunningになる
+- runnerがhealthyになる
+- 起動loop、runner認証失敗、sandbox作成失敗がない
+- 公開URLの`GET /api`が成功する
+- ブラウザから問題一覧を取得できる
+- 安全なcommandを1回実行できる
+
+HTTPとsandbox実行の確認方法は、
+[「7. 初回デプロイ」](#7-初回デプロイ)と同じです。
 
 ## 9. ロールバック
 
-障害時は、DB schemaやデータ形式の互換性を確認したうえで、
-直前に検証済みだったtagまたはcommitをcheckoutし、同じbuild・`up -d`手順を実行します。
+障害時は、更新前に記録したcommit IDを使います。
+DB schema、データ形式、`.env`の後方互換性を先に確認してください。
+
+main branch自体を書き換えず、直前のcommitをdetached HEADで一時的に展開します。
+
+```sh
+git status --short
+git switch --detach "${SOJ_PREVIOUS_COMMIT}"
+
+./deploy/rootless-compose.sh config --quiet
+./deploy/rootless-compose.sh build
+./deploy/rootless-compose.sh up -d --remove-orphans
+./deploy/rootless-compose.sh ps
+./deploy/rootless-compose.sh logs --tail=100 db runner backend frontend
+```
+
+shellを開き直して変数が失われた場合は、記録したcommit IDを
+`${SOJ_PREVIOUS_COMMIT}`の代わりに直接指定します。
 
 DBを以前の状態へ戻す場合は、事前に取得したバックアップから復元します。
+Git管理外の`.env`とhost側設定も、必要に応じて個別に戻します。
+
+修正版を再び反映する際は、mainへ戻ってからfast-forwardで更新します。
+
+```sh
+git switch main
+```
+
+その後、「8. 更新デプロイ」の更新前確認から繰り返します。
 
 `docker compose down -v`はロールバック操作ではありません。
 名前付きvolumeを削除してDBデータを失うため、本番運用では実行しないでください。
