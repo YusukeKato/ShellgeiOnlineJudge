@@ -13,7 +13,7 @@ ShellgeiOnlineJudgeは、インターネットから任意のシェルコマン�
 - 専用の非特権OSユーザー
 - rootless Docker
 
-> 次の防御は構成されていません。
+> リポジトリ内のComposeには、次の防御は構成されていません。
 >
 > - 複数frontend replicaや複数hostで共有する受付制御
 > - 外側proxyでの実際のclient単位のリクエスト・接続制限
@@ -92,6 +92,105 @@ runnerは起動時にdaemonのcgroup構成と、各sandboxに反映されたCPU�
 検査に失敗したsandboxは破棄され、初期poolを作成できない場合は
 runnerが起動しません。
 
+### Amazon Linux 2023での構成例
+
+Amazon Linux 2023では、cgroup v2を使用していることを最初に確認します。
+
+```sh
+cat /etc/os-release
+stat -fc %T /sys/fs/cgroup
+```
+
+`stat`の結果は`cgroup2fs`である必要があります。
+Docker CEのpackage repositoryを構成済みの場合、rootless用の追加packageは
+次の名前で導入できます。
+
+```sh
+sudo dnf install -y docker-ce-rootless-extras
+command -v dockerd-rootless-setuptool.sh
+command -v newuidmap
+command -v newgidmap
+```
+
+サービス専用ユーザーを作成します。
+以下では例として`soj`を使用します。
+
+```sh
+sudo useradd --create-home --shell /bin/bash soj
+id soj
+sudo grep '^soj:' /etc/subuid /etc/subgid
+```
+
+専用ユーザーには、少なくとも65,536個のsubordinate UIDとGIDが必要です。
+自動で割り当てられなかった場合は、既存範囲と重複しない値を管理者が
+割り当ててください。
+
+専用ユーザーを`docker`、`wheel`、`sudo`などの管理用groupへ追加しないでください。
+
+rootless Dockerからresource controllerを利用できるよう、
+`/etc/systemd/system/user@.service.d/delegate.conf`を次の内容で作成します。
+
+```ini
+[Service]
+Delegate=cpu cpuset io memory pids
+```
+
+設定を反映し、ログインしていない状態でもuser serviceを起動できるようにします。
+
+```sh
+sudo systemctl daemon-reload
+sudo loginctl enable-linger soj
+
+SOJ_UID="$(id -u soj)"
+sudo systemctl start "user@${SOJ_UID}.service"
+```
+
+rootless daemonのsetupと確認は、実効ユーザーを明示して行います。
+
+```sh
+SOJ_UID="$(id -u soj)"
+SOJ_RUNTIME_DIR="/run/user/${SOJ_UID}"
+
+sudo -iu soj env \
+  XDG_RUNTIME_DIR="${SOJ_RUNTIME_DIR}" \
+  DBUS_SESSION_BUS_ADDRESS="unix:path=${SOJ_RUNTIME_DIR}/bus" \
+  dockerd-rootless-setuptool.sh install
+
+sudo -iu soj env \
+  XDG_RUNTIME_DIR="${SOJ_RUNTIME_DIR}" \
+  DBUS_SESSION_BUS_ADDRESS="unix:path=${SOJ_RUNTIME_DIR}/bus" \
+  systemctl --user enable --now docker
+```
+
+```sh
+SOJ_DOCKER_HOST="unix://${SOJ_RUNTIME_DIR}/docker.sock"
+
+sudo -iu soj env \
+  XDG_RUNTIME_DIR="${SOJ_RUNTIME_DIR}" \
+  DOCKER_HOST="${SOJ_DOCKER_HOST}" \
+  docker info --format '{{json .SecurityOptions}}'
+
+sudo -iu soj env \
+  XDG_RUNTIME_DIR="${SOJ_RUNTIME_DIR}" \
+  DOCKER_HOST="${SOJ_DOCKER_HOST}" \
+  docker info \
+    --format 'Driver={{.CgroupDriver}} Version={{.CgroupVersion}} Storage={{.Driver}}'
+```
+
+`SecurityOptions`に`name=rootless`があり、cgroup driverが`systemd`、
+cgroup versionが`2`であることを確認します。
+
+同じホストにrootful daemonが残っている場合は、移行完了後にsystem側だけを
+停止・maskします。user scopeのrootless `docker.service`には影響しません。
+
+```sh
+sudo systemctl disable --now docker.service docker.socket containerd.service
+sudo systemctl mask docker.service docker.socket containerd.service
+```
+
+rootless daemonはsystem packageの`dockerd`と`containerd`のbinaryを使用します。
+system serviceを停止しても、Docker関連package自体は削除しないでください。
+
 ## 3. アプリケーションの配置
 
 デプロイユーザーでリポジトリを配置します。
@@ -99,8 +198,11 @@ runnerが起動しません。
 ```sh
 git clone https://github.com/YusukeKato/ShellgeiOnlineJudge.git
 cd ShellgeiOnlineJudge
-poetry install
 ```
+
+Composeでbuild・起動するだけなら、ホストへのPoetry導入は不要です。
+ホスト上でPythonの静的検査や単体テストを実行する場合に限り、
+開発文書に従ってPoetryと依存関係を導入します。
 
 運用では、検証済みのrelease tagまたはcommitを明示的に選んでください。未検証のブランチ先端を自動的に本番反映しないでください。
 
@@ -199,6 +301,33 @@ Layer 7 proxyには次を設定します。
 - upstream TLS検証
 - WebSocketを使用する場合のupgrade header
 
+単一hostの小規模構成では、次の値を外側nginxの初期値として使用できます。
+実際のtrafficとhost容量を監視し、必要に応じて調整してください。
+
+- 通常request: clientごとに平均20件/秒、burst 40
+- 通常request: host全体で平均100件/秒、burst 200
+- `/api/shellgei`: clientごとに平均1件/秒、burst 3
+- `/api/shellgei`: host全体で平均10件/秒、burst 10
+- 同時接続: clientごとに20、host全体で200
+- `/api/shellgei`の処理中接続: clientごとに3
+- rate・connection limitの拒否status: 429
+
+複数host構成では、この値はhost間で共有されません。
+load balancerやWAFなど、全hostで共有される受付制御を別途使用してください。
+
+host側reverse proxy、firewall、証明書更新schedulerはComposeの管理外です。
+実際に適用している設定を、秘密鍵や`.env`とは分離して、
+アクセス制御されたInfrastructure as Codeまたは構成backupで管理してください。
+
+SELinuxをEnforcingにするhostでは、reverse proxyからloopback上のupstreamへ
+接続できることを確認します。Red Hat系の標準nginx policyを使用する場合は、
+次のbooleanが必要になることがあります。
+
+```sh
+getsebool httpd_can_network_connect
+sudo setsebool -P httpd_can_network_connect 1
+```
+
 単純なTCP pass-throughを使う方法もあります。
 
 ### 限定的な代替: rootless Dockerから443を公開する
@@ -210,15 +339,22 @@ Compose内nginxは実client単位のrate・connection limitを持ちません。
 rootlesskitへ非特権ポート未満をbindする権限を与える方法は、
 権限追加の影響を確認したうえで使用してください。
 
-[Docker公式rootless modeのTips](https://docs.docker.com/engine/security/rootless/tips/#exposing-privileged-ports)を参照し、
+[Docker公式rootless modeのTips][rootless-privileged-ports]を参照し、
 設定後に`.env`を次のように変更します。
+
+[rootless-privileged-ports]: https://docs.docker.com/engine/security/rootless/tips/#exposing-privileged-ports
 
 ```dotenv
 HTTPS_BIND_ADDRESS=0.0.0.0
 HTTPS_PORT=443
 ```
 
-いずれの構成でも、firewallでは必要な公開ポートだけを許可してください。PostgreSQLの5432番と内部用8443番をインターネットへ公開しないでください。
+いずれの構成でも、firewallでは必要な公開ポートだけを許可してください。
+
+- 443番は公開HTTPSに使用する
+- 80番はCertbot standaloneなど、選択した証明書更新方式で必要な場合だけ許可する
+- 22番は管理元のIP addressへ限定する
+- PostgreSQLの5432番と内部用8443番はインターネットへ公開しない
 
 ### 証明書ファイル
 
@@ -246,6 +382,32 @@ install -d -m 700 /home/soj/certificates
 
 証明書更新hookでは、コピーが完全に終わってからreloadするようにしてください。
 
+Dockerで単一ファイルをbind mountしている場合、host側でrenameしてinodeを
+置き換えると、起動中containerが古いinodeを参照し続けることがあります。
+更新用ファイルを検証した後、bind mount先の既存ファイルへcopyしてから
+frontendをreloadしてください。
+
+更新hookでは、少なくとも次の順序を守ります。
+
+1. 更新された証明書と秘密鍵を一時ファイルへcopyする
+2. 両方をparseでき、公開鍵が一致することを確認する
+3. `/home/soj/certificates`の既存ファイルへcopyする
+4. 証明書を`644`、秘密鍵を`600`、所有者を専用ユーザーにする
+5. host側とfrontend側の`nginx -t`を実行する
+6. frontend、host側の順にnginxをreloadする
+
+Certbotのdeploy hookを使用する場合は、通常、
+`/etc/letsencrypt/renewal-hooks/deploy/`へroot所有・mode `755`で配置します。
+cronとsystemd timerの両方から`certbot renew`を実行せず、どちらか一方だけを
+有効にしてください。
+
+standalone authenticatorは更新時に80番を使用します。
+host側reverse proxyが80番をlistenする構成では、そのまま併用できません。
+webrootなどへ変更するか、更新時の安全な停止・再開方法を別途設計してください。
+
+本番証明書を上書きしないため、`certbot renew --dry-run`へ
+`--run-deploy-hooks`を付けないでください。
+
 ## 6. 本番反映前の検証
 
 本番と同じrootless構成のstagingまたは専用CI runnerで実行します。
@@ -262,6 +424,7 @@ install -d -m 700 /home/soj/certificates
 デプロイユーザーのshellで実行します。
 
 ```sh
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
 docker pull theoldmoon0602/shellgeibot
 ./deploy/rootless-compose.sh config --quiet
@@ -280,6 +443,50 @@ curl --fail --show-error --silent https://example.com/api
 
 `--insecure`はlocalhost向け内部確認で、証明書名が公開ドメインと一致しない場合に限って使用します。
 公開URLの確認では使用しないでください。
+
+`GET /api`はHTTP経路の確認だけです。
+runner、sandbox、DB保存まで確認するには、安全なcommandを1回実行します。
+
+```sh
+SOJ_SMOKE_RESPONSE="$(mktemp)"
+
+curl --fail --show-error --silent \
+  --output "${SOJ_SMOKE_RESPONSE}" \
+  --header 'Content-Type: application/json' \
+  --data '{"shellgei":"printf smoke-ok","problem_id":"STANDARD-00000001"}' \
+  https://example.com/api/shellgei
+
+python3 -c '
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as response_file:
+    response = json.load(response_file)
+assert response["output"] == "smoke-ok"
+print("sandbox smoke test: ok")
+' "${SOJ_SMOKE_RESPONSE}"
+
+rm -f -- "${SOJ_SMOKE_RESPONSE}"
+```
+
+外側proxyを使用する場合は、公開前に次も非破壊的に確認します。
+
+- 16 KiBを超えるrequest bodyが413になる
+- client単位のburstを超えるrequestが429になる
+- 413、429、5xxが運用ログへ記録される
+- 8443番と5432番が外部interfaceでlistenしていない
+- 受信した`X-Forwarded-For`をclient識別へ無条件に使用していない
+
+### OS再起動後の確認
+
+初回デプロイではOSを再起動し、次を確認してください。
+
+- host側reverse proxyと証明書更新schedulerが自動起動する
+- `loginctl show-user <専用ユーザー> -p Linger`が`Linger=yes`になる
+- rootless `docker.service`がuser scopeで自動起動する
+- Composeの4 servicesが再起動し、runnerがhealthyになる
+- rootful `docker.service`と`docker.socket`は起動しない
+- 公開URLからAPIとcommand実行を利用できる
 
 ## 8. 更新デプロイ
 
@@ -315,6 +522,18 @@ DBを以前の状態へ戻す場合は、事前に取得したバックアップ
 名前付きvolumeを削除してDBデータを失うため、本番運用では実行しないでください。
 
 ## 10. 日常運用コマンド
+
+管理ユーザーから操作する場合は、まず専用ユーザーのshellへ移動して
+rootless socketを明示します。
+
+```sh
+sudo -iu soj
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
+cd /home/soj/ShellgeiOnlineJudge
+```
+
+ユーザー名と配置先は実環境に合わせてください。
 
 ```sh
 ./deploy/rootless-compose.sh ps
@@ -362,6 +581,8 @@ docker system df
 - rootless Docker user serviceの稼働状態
 - owner別のsandboxコンテナ数、起動時回収、削除失敗
 - TLS証明書の有効期限と更新hookの成功
+- 証明書更新cronまたはsystemd timerの稼働状態とdry-runの定期確認
+- 外側proxyの413、429、5xxとrate・connection limitの発動状況
 - OS、Docker、Python/npm依存関係、base imageのセキュリティ更新
 - 実行ログのretention件数・期間と、Dockerログへの機密情報混入
 
@@ -380,3 +601,27 @@ PostgreSQLの整合性が保証される方法でバックアップしてくだ�
 - sandboxイメージはtag参照です。更新時は全問題回帰テストを行い、digest固定、署名検証、SBOM、脆弱性スキャンを導入してください。
 - Composeだけでは、DDoS、分散リクエスト、ホストディスク枯渇を完全には防げません。外側のロードバランサー、firewall、監視、容量制限も必要です。
 - rootless Dockerはcontainer escapeの影響を軽減しますが、任意コマンド実行サービスの完全な隔離境界ではありません。
+
+## 13. rootful環境から移行した後の撤去
+
+rootful Dockerから移行する場合は、新しいrootless環境が正常に起動し、
+公開経路とOS再起動後の自動復旧を確認するまで旧データを削除しないでください。
+
+rootlessとrootfulの標準的な保存先は異なります。
+
+- rootless: 専用ユーザーの`~/.local/share/docker`
+- rootful: `/var/lib/docker`と`/var/lib/containerd`
+
+削除前に、次を確認します。
+
+- `docker info`でrootless側の`DockerRootDir`を確認する
+- system scopeのdocker、socket、containerdがinactiveかつmaskedである
+- root権限のdockerd、containerd、containerd-shimが残っていない
+- `/var/lib/docker`と`/var/lib/containerd`配下にmountが残っていない
+- 削除対象に必要なDB、volume、imageがない
+
+rootful側の保存先を削除しても、Dockerのsystem packageは削除しないでください。
+rootless daemonが同じbinaryを使用します。
+
+旧リポジトリに`.env`、証明書のcopy、その他の秘密情報が残っている場合は、
+新環境の動作確認後に旧配置も削除します。
