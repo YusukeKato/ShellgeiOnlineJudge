@@ -25,31 +25,14 @@ def test_nginx_bounds_request_size_and_connection_lifetime() -> None:
     assert "keepalive_requests 100;" in directives
 
 
-def test_nginx_limits_api_rate_and_concurrent_connections() -> None:
+def test_nginx_delegates_client_admission_control_to_the_outer_proxy() -> None:
+    config = NGINX_CONFIG.read_text(encoding="utf-8")
     directives = _active_directives()
 
-    assert (
-        "limit_req_zone $binary_remote_addr zone=api_per_client:10m rate=20r/s;"
-        in directives
-    )
-    assert (
-        "limit_req_zone $binary_remote_addr zone=shellgei_per_client:10m rate=5r/s;"
-        in directives
-    )
-    assert (
-        "limit_req_zone $server_name zone=shellgei_global:1m rate=1r/s;" in directives
-    )
-    assert (
-        "limit_conn_zone $binary_remote_addr "
-        "zone=api_connections_per_client:10m;" in directives
-    )
-    assert "limit_req zone=shellgei_per_client burst=5 nodelay;" in directives
-    assert "limit_req zone=shellgei_global burst=2 nodelay;" in directives
-    assert "limit_conn api_connections_per_client 5;" in directives
-    assert "limit_req zone=api_per_client burst=40 nodelay;" in directives
-    assert "limit_conn api_connections_per_client 20;" in directives
-    assert "limit_req_status 429;" in directives
-    assert "limit_conn_status 429;" in directives
+    assert "limit_req_zone" not in config
+    assert "limit_conn_zone" not in config
+    assert not any(directive.startswith("limit_req ") for directive in directives)
+    assert not any(directive.startswith("limit_conn ") for directive in directives)
 
 
 def test_nginx_bounds_backend_proxy_operations() -> None:

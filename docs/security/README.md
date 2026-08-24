@@ -18,8 +18,8 @@
 
 - 最終確認日: 2026-08-24
 - branch: `main`
-- 確認対象commit: `71dad03c7ef00054f003df6d27bf634087fce0f8`
-- commit subject: `fix: reconcile orphaned sandbox containers`
+- 確認対象commit: `0d49505e0b9df2978255031e178ecc77dba30140`
+- commit subject: `fix: cache problem catalog at startup`
 - 今回の変更開始時のworktree: clean
 - 対象: repository、rootless Docker開発環境、保存済みimage
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
@@ -29,15 +29,16 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 71dad03c7ef00054f003df6d27bf634087fce0f8..HEAD
+git diff 0d49505e0b9df2978255031e178ecc77dba30140..HEAD
 ```
 
 ## Current security status
 
 - Criticalとして確定した未解決課題はありません。
-- Highが1件Openです。
-- インターネット公開前のblocking issueがあります。
-- 最優先は、nginx受付制御のDoS経路です。
+- Highとして確定したOpen課題はありません。
+- repository内のHigh blocking issueは解決しています。
+- インターネット公開には、外側proxyまたはWAFの
+  実client単位の受付制御を別途確認する必要があります。
 - runner異常終了後のsandboxは再起動時に回収します。
   Docker daemon単独の有効期限はないため、SOJ-002を部分解決として追跡します。
 - read-only root、tmpfs容量・inode、CPU、memory、swap、PID、
@@ -47,10 +48,6 @@ git diff 71dad03c7ef00054f003df6d27bf634087fce0f8..HEAD
   ただし、runnerと他serviceは同じrootless daemonとVMを共有しています。
 - 本番の外側proxy、kernel、LSM、filesystem quota、監視、backup等は
   repositoryだけでは確認できません。
-
-残るOpen Highの実装は、今回の変更範囲には含めません。
-問題が解消したという意味ではありません。
-別の小さな変更単位として、成立条件を再確認してから対応してください。
 
 ## Issue tracker
 
@@ -69,10 +66,6 @@ Statusは次の意味で使用します。
     daemon単独のsandbox有効期限はない
   - 関連: `backend/scripts/container_manager.py`、`backend/runner_main.py`
   - 次: runner再起動・回収失敗の監視と、独立した期限強制の要否を判断
-- `SOJ-004` — High / P1 / Open
-  - 概要: nginx全体実行tokenを不正requestで消費し、正規実行を妨害できる
-  - 関連: `frontend/nginx/default.conf`、`backend/scripts/admission_control.py`
-  - 次: runnerを開始頻度の正本とし、外側受付制御を再設計
 - `SOJ-005` — Medium / P1 / Open
   - 概要: sandbox、base、DB imageが可変tagで、
     検証済みartifactを保証しない
@@ -150,10 +143,10 @@ Statusは次の意味で使用します。
 
 現在の未解決trackerは次の内訳です。
 
-- Open: 11件
+- Open: 10件
 - Partially resolved: 2件
 - Deferred: 6件
-- Severity: High 1件、Medium 14件、Low 4件
+- Severity: High 0件、Medium 14件、Low 4件
 
 ## Resolved issues
 
@@ -174,9 +167,11 @@ Statusは次の意味で使用します。
 | RES-010 | Docker socketを公開backendから内部runnerへ分離 | `7cab18e` | `test_runner_boundary.py`、Compose静的test |
 | RES-011 | 動的sandboxのDockerログを無効化し、待機PID 1のstdioを`/dev/null`へ分離 | `41d31c8` | container manager unit、Docker baseline test |
 | RES-012 | owner単位の起動時回収、create/start失敗追跡、shutdown競合防止を実装 | `71dad03` | container manager unit、Docker restart test |
-| RES-013 | 問題一覧を起動時に検証・JSON化し、HTTP cacheを追加 | この変更 | problem catalog unit、backend startup test |
+| RES-013 | 問題一覧を起動時に検証・JSON化し、HTTP cacheを追加 | `0d49505` | problem catalog unit、backend startup test |
+| RES-014 | nginxの共有実行開始枠を廃止し、検証後のrunnerを開始頻度の正本に限定 | この変更 | nginx静的test、実nginx integration test |
 
-RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013は、
+RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
+RES-014は、
 記載した範囲では解決済みです。
 daemon単独のsandbox有効期限、可変image等の残存経路は、
 別のtracker issueとして追跡しています。
@@ -219,19 +214,6 @@ daemon単独のsandbox有効期限、可変image等の残存経路は、
 
 残存リスクを踏まえ、SOJ-002はMedium、P1、Partially resolvedとします。
 
-### SOJ-004: 公開受付のDoS
-
-nginxのfrontend全体1件/秒のtokenが、method、JSON、problem IDの
-検証前に消費されます。安価な不正requestでも正規実行を妨げられます。
-runner側は検証後に開始頻度を制限しているため、Docker開始の正本はrunnerとし、
-nginxと外側proxyはHTTP受付資源を保護する別の上限として再設計してください。
-
-必要なtest:
-
-- 実nginxでGET、OPTIONS、不正JSON、未知IDの後も正常requestが処理されること
-- 正常なDocker開始頻度は平均1件/秒、burst 3を越えないこと
-- 複数送信元と外側proxyを含む受付制御
-
 ## Deferred issues
 
 ### Architecture変更が必要
@@ -264,7 +246,8 @@ Deferredは不要という意味ではありません。
   - Compose frontendは既定で`127.0.0.1:8443`だけに公開します。
   - 内部nginxはTLS 1.2/1.3、body・connection・proxy timeoutを設定します。
 - Development environment verified:
-  - repositoryのnginx設定testと過去のlocal smoke testがあります。
+  - repositoryのnginx設定testとlocal smoke testがあります。
+  - rootless Docker上の実nginxで、共有実行開始枠がないことを確認しています。
 - Production verification required:
   - 公開443のTLS設定、証明書更新、HSTS、Host allowlist
   - upstream証明書検証、実client単位rate/connection limit、XFF trust
@@ -321,6 +304,9 @@ Deferredは不要という意味ではありません。
   - secret、固定schema、response上限、backend/runner分離
 - `backend/tests/test_nginx_config.py`
   - nginx directiveの静的確認
+- `backend/tests/integration/test_nginx_admission.py`
+  - 実nginxで、非実行requestと正常requestが
+    共有のsandbox開始枠を消費しないこと
 - `backend/tests/integration/test_docker_executor.py`
   - 実containerの起動時回収、filesystem、resource、logging、
     isolation、timeout、画像、状態分離
@@ -337,7 +323,7 @@ Deferredは不要という意味ではありません。
 - 実runner processの強制終了とCompose自動再起動を含むE2E
 - Docker create応答timeoutとdaemon停止を使うfailure test
 - 実Composeのfrontend -> backend -> runner -> Docker -> DB E2E
-- 実nginxのmethod別rate token、Host、redirect、security header
+- 実nginxのHost、redirect、security header
 - DB停止、lock、timeout、commit失敗、NUL、rollback後の回復
 - judge collision、画像全byte比較
 - backend/runnerのrevision・problem manifest不一致
@@ -353,17 +339,15 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  SOJ-004: 公開受付のDoSを修正
-    ↓
-Then
   SOJ-007 / SOJ-008 / SOJ-010: runner通信・DB・redirectを修正
     ↓
 Later
   judge、artifact、権限分離、E2E、browser、CI、運用基盤を改善
 ```
 
-残るHighは今回の変更範囲には含めません。
-1項目ずつ、または密接に関連する小さな単位で差分をレビューして進めてください。
+Highとして確定したOpen課題はありません。
+以降はMedium以下を1項目ずつ、または密接に関連する
+小さな単位で差分をレビューして進めてください。
 
 ## 作業再開手順
 

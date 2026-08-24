@@ -72,3 +72,11 @@ def test_runner_secret_is_only_given_to_backend_and_runner() -> None:
         not value.startswith("DATABASE_URL=")
         for value in services["runner"]["environment"]
     )
+
+
+def test_frontend_defaults_to_loopback_for_outer_admission_control() -> None:
+    compose = yaml.safe_load(COMPOSE_FILE.read_text(encoding="utf-8"))
+
+    assert compose["services"]["frontend"]["ports"] == [
+        "${HTTPS_BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-8443}:443"
+    ]

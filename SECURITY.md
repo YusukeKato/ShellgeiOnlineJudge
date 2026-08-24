@@ -355,22 +355,17 @@ Web API（Docker socketなし）
 frontend nginxは、すべてのrequest bodyを16 KiB以下に制限します。
 FastAPIへ転送する前にrequest body全体をbufferingします。
 
-APIには、直接接続元のIP addressをkeyとして次の制限を適用します。
+Compose内のfrontend nginxは、IP addressをkeyとするrate limitと
+connection limitを適用しません。
+rootless Dockerのport forwardingやホスト側reverse proxyを経由すると、
+frontend nginxから見た送信元が中間componentへ集約されるためです。
+ここでIP単位の共有枠を適用すると、不正JSONや未登録problemなどの
+sandboxを起動しないrequestも、正常requestと同じ枠を消費します。
 
-| 対象 | 平均request数 | 即時処理するburst | 同時request数 |
-| --- | ---: | ---: | ---: |
-| `/api/shellgei` | 5 requests/second | 5 | 5 |
-| `/api/shellgei`のfrontend全体 | 1 request/second | 2 | - |
-| その他の`/api` | 20 requests/second | 40 | 20 |
-
-frontend全体の`burst=2`は、通常の1requestと合わせて最大3requestを即時に処理します。
-これはrunnerの3つのsandbox実行枠と合わせた値です。
-
-nginxのrateまたは同時request数を超えた場合は429を返します。
-burstはqueueで待機させず、上限内のrequestを即時に処理します。
-
-frontend全体の制限は1つのfrontend nginx内で共有されます。
-複数のfrontend replicaまたは複数host間では共有されません。
+Docker開始頻度の正本はrunnerのtoken bucketです。
+runnerは認証、JSON schema、problem ID、登録済みproblemを検証した後に、
+平均1件/秒、burst 3の開始制限を適用します。
+同時sandbox実行数は3件のままです。
 
 接続とproxyには次のtimeoutを適用します。
 
@@ -394,10 +389,10 @@ backendへは、frontend nginxへ直接接続したIP addressだけを渡しま�
 ID・タイトルが不正な場合はbackendを起動しません。
 `/api/problems`にはETagと`Cache-Control: public, max-age=300`を付与します。
 
-ホスト側reverse proxyまたはload balancerを使用する場合、
-frontend nginxから見た接続元はそのproxyになります。
-この場合、frontend nginxのrate・connection制限はproxy単位で集約されます。
-実際のclient単位の受付制御は外側proxyで行ってください。
+実際のclient単位のrequest頻度、burst、同時接続数は、
+接続元を確認できるホスト側reverse proxy、load balancer、
+またはWAFで制限します。
+外側の受付制御は、インターネット公開時の必須構成です。
 
 アプリケーションの実行slotだけでは、次の対象を十分に保護できません。
 
@@ -407,7 +402,7 @@ frontend nginxから見た接続元はそのproxyになります。
 - Docker daemon
 - ホストOS
 
-インターネット公開時は、外側の層で受付制御を行う必要があります。
+インターネット公開時は、外側の層で受付制御を行ってください。
 
 - load balancer
 - reverse proxy

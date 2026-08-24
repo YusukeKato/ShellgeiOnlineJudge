@@ -291,7 +291,7 @@ frontend nginxの設定を検査します。
 ./deploy/rootless-compose.sh exec frontend nginx -t
 ```
 
-frontend nginxの現在の受付制御とDockerログの上限は、
+frontend nginxの現在のHTTP制約とDockerログの上限は、
 [SECURITY.mdの「ネットワークとHTTPの制約」](../SECURITY.md#ネットワークとhttpの制約)と
 [「実行ログとDockerログ」](../SECURITY.md#実行ログとdockerログ)を参照してください。
 

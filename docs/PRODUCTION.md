@@ -168,16 +168,20 @@ Composeは、既定で`127.0.0.1:8443`だけに公開します。
 - ホスト側reverse proxy
 
 終端後は`https://127.0.0.1:8443`へ転送します。
-Compose内のfrontend nginxが適用する現在の制限値は、
+Compose内のfrontend nginxが適用するbody・timeout制限は、
 [SECURITY.mdの「ネットワークとHTTPの制約」](../SECURITY.md#ネットワークとhttpの制約)を
 正本とします。
 
-ホスト側reverse proxy経由では、frontend nginxから見た接続元がproxyに集約されます。
-実際のclient単位で、外側の層にも次を設定してください。
+ホスト側reverse proxy経由では、frontend nginxから見た接続元が
+proxyに集約されます。
+そのためCompose内nginxはIP単位のrate・connection limitを適用しません。
+実際のclient単位で、外側の層に次を必ず設定してください。
 
-- frontend nginxの上限以下のrequest body
+- request bodyは16 KiB以下
 - 接続数とリクエスト頻度
 - burst
+- `/api/shellgei`とその他のpathを分けた制限
+- host全体の同時接続・request上限
 - upstream timeoutはfrontend nginxの現在値より長くする
 - 429、413、5xxの記録と監視
 
@@ -197,7 +201,11 @@ Layer 7 proxyには次を設定します。
 
 単純なTCP pass-throughを使う方法もあります。
 
-### 代替: rootless Dockerから443を直接公開する
+### 限定的な代替: rootless Dockerから443を公開する
+
+Compose内nginxは実client単位のrate・connection limitを持ちません。
+そのため、外側のload balancer、WAF、または同等の受付制御なしに
+この方法でインターネット公開しないでください。
 
 rootlesskitへ非特権ポート未満をbindする権限を与える方法は、
 権限追加の影響を確認したうえで使用してください。
@@ -367,8 +375,8 @@ PostgreSQLの整合性が保証される方法でバックアップしてくだ�
 ## 12. 運用上の制約
 
 - 同時実行数とrunnerの開始頻度はrunnerプロセス単位です。
-  frontend nginxの全体開始頻度はfrontend instance単位です。
-  workerやreplicaを増やす前に、共有された受付制御が必要です。
+  runnerのreplicaを増やすと合計上限も増えるため、現在は1 instanceに限定します。
+  複数frontendまたは複数hostでは、外側の共有された受付制御が必要です。
 - sandboxイメージはtag参照です。更新時は全問題回帰テストを行い、digest固定、署名検証、SBOM、脆弱性スキャンを導入してください。
 - Composeだけでは、DDoS、分散リクエスト、ホストディスク枯渇を完全には防げません。外側のロードバランサー、firewall、監視、容量制限も必要です。
 - rootless Dockerはcontainer escapeの影響を軽減しますが、任意コマンド実行サービスの完全な隔離境界ではありません。
