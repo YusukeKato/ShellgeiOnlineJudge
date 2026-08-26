@@ -46,9 +46,19 @@ def test_nginx_bounds_backend_proxy_operations() -> None:
     assert "proxy_read_timeout 30s;" in directives
 
 
-def test_nginx_does_not_forward_an_unverified_x_forwarded_for_chain() -> None:
+def test_nginx_replaces_host_and_strips_untrusted_forwarding_headers() -> None:
     config = NGINX_CONFIG.read_text(encoding="utf-8")
     directives = _active_directives()
 
-    assert "proxy_set_header X-Forwarded-For $remote_addr;" in directives
+    assert "proxy_set_header Host $proxy_host;" in directives
+    assert "proxy_set_header Host $host;" not in directives
+    for header in (
+        "Forwarded",
+        "X-Forwarded-For",
+        "X-Forwarded-Host",
+        "X-Forwarded-Port",
+        "X-Forwarded-Proto",
+        "X-Real-IP",
+    ):
+        assert f'proxy_set_header {header} "";' in directives
     assert "$proxy_add_x_forwarded_for" not in config

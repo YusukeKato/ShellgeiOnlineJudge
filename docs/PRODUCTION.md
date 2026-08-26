@@ -289,8 +289,11 @@ proxyに集約されます。
 
 外側proxyは、受信した`X-Forwarded-For`を無条件に引き継がず、
 直接接続元から確認したclient IPを基に制限してください。
-frontend nginxも受信した`X-Forwarded-For`を破棄し、
-自身への直接接続元だけをbackendへ渡します。
+frontend nginxからbackendへのHost・forwarded headerの扱いは、
+[SECURITY.mdの「ネットワークとHTTPの制約」](../SECURITY.md#ネットワークとhttpの制約)を
+正本とします。
+外側proxyでは公開hostのallowlistを適用し、受信したforwarded headerを
+無条件に信頼せず、直接接続元から確認したclient情報を受付制御に使用してください。
 
 Compose内のfrontendもTLSを要求します。
 内部転送先はHTTPではなくHTTPSです。

@@ -22,4 +22,4 @@ COPY problems/ ./backend/problems/
 WORKDIR /app/backend
 
 # uvicornサーバーの起動
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--no-proxy-headers"]

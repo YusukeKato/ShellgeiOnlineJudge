@@ -6,6 +6,7 @@ import ssl
 import subprocess
 import time
 import uuid
+from email.message import Message
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -66,14 +67,22 @@ def _generate_test_certificate(directory: Path) -> tuple[Path, Path]:
     return certificate, private_key
 
 
-def _request_status(url: str, request: Request, context: ssl.SSLContext) -> int:
+def _request_result(
+    url: str,
+    request: Request,
+    context: ssl.SSLContext,
+) -> tuple[int, Message]:
     try:
         with urlopen(request, context=context, timeout=2) as response:
-            return response.status
+            return response.status, response.headers
     except HTTPError as exc:
-        return exc.code
+        return exc.code, exc.headers
     except URLError as exc:
         raise AssertionError(f"nginx request failed: {exc}") from exc
+
+
+def _request_status(url: str, request: Request, context: ssl.SSLContext) -> int:
+    return _request_result(url, request, context)[0]
 
 
 def test_non_executing_requests_do_not_consume_a_shared_nginx_start_budget(
@@ -82,7 +91,20 @@ def test_non_executing_requests_do_not_consume_a_shared_nginx_start_budget(
     certificate, private_key = _generate_test_certificate(tmp_path)
     backend_config = tmp_path / "backend.conf"
     backend_config.write_text(
-        "server { listen 8000; location / { return 204; } }\n",
+        """server {
+    listen 8000;
+    location / {
+        add_header X-SOJ-Upstream-Host $http_host always;
+        add_header X-SOJ-Upstream-Forwarded $http_forwarded always;
+        add_header X-SOJ-Upstream-X-Forwarded-For $http_x_forwarded_for always;
+        add_header X-SOJ-Upstream-X-Forwarded-Host $http_x_forwarded_host always;
+        add_header X-SOJ-Upstream-X-Forwarded-Port $http_x_forwarded_port always;
+        add_header X-SOJ-Upstream-X-Forwarded-Proto $http_x_forwarded_proto always;
+        add_header X-SOJ-Upstream-X-Real-IP $http_x_real_ip always;
+        return 204;
+    }
+}
+""",
         encoding="utf-8",
     )
 
@@ -149,6 +171,35 @@ def test_non_executing_requests_do_not_consume_a_shared_nginx_start_budget(
                     )
                 time.sleep(0.05)
         assert status == 204
+
+        boundary_status, boundary_headers = _request_result(
+            url,
+            Request(
+                url,
+                method="GET",
+                headers={
+                    "Host": "attacker.invalid",
+                    "Forwarded": "host=attacker.invalid;proto=http",
+                    "X-Forwarded-For": "198.51.100.10",
+                    "X-Forwarded-Host": "attacker.invalid",
+                    "X-Forwarded-Port": "80",
+                    "X-Forwarded-Proto": "http",
+                    "X-Real-IP": "198.51.100.10",
+                },
+            ),
+            context,
+        )
+        assert boundary_status == 204
+        assert boundary_headers["X-SOJ-Upstream-Host"] == "backend:8000"
+        for header in (
+            "X-SOJ-Upstream-Forwarded",
+            "X-SOJ-Upstream-X-Forwarded-For",
+            "X-SOJ-Upstream-X-Forwarded-Host",
+            "X-SOJ-Upstream-X-Forwarded-Port",
+            "X-SOJ-Upstream-X-Forwarded-Proto",
+            "X-SOJ-Upstream-X-Real-IP",
+        ):
+            assert header not in boundary_headers
 
         requests = [
             Request(url, method="GET"),

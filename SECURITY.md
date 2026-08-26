@@ -383,7 +383,11 @@ FastAPIは、JSONをparseした後のshell commandとproblem IDを検証しま�
 nginxの16 KiB制限は、その前段でrequest bodyを拒否します。
 
 frontend nginxは、受信した`X-Forwarded-For`をbackendへ引き継ぎません。
-backendへは、frontend nginxへ直接接続したIP addressだけを渡します。
+`Forwarded`、`X-Forwarded-*`、`X-Real-IP`をbackendへ転送せず、
+backend向けのHostもclient指定値ではなく内部upstream名へ置き換えます。
+backendのUvicornはproxy headerを解釈せず、FastAPIはHostを
+`backend`、`localhost`、`127.0.0.1`に限定します。
+API pathの末尾slashが一致しないrequestはredirectせず404で拒否します。
 
 問題一覧はbackend起動時にYAMLを1回だけ読み込み、
 検証・JSON化した不変のsnapshotから応答します。

@@ -43,6 +43,8 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - workerの回復
 - 実nginxで、sandboxを開始しないrequestが
   正常requestと共有の実行開始枠を消費しないこと
+- 実nginxで、client指定のHostを内部upstream名へ置き換え、
+  `Forwarded`、`X-Forwarded-*`、`X-Real-IP`をbackendへ転送しないこと
 
 現在登録されている全問題の回帰テストには、追加の明示指定が必要です。
 

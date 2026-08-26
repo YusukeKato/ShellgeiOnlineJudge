@@ -83,10 +83,6 @@ Statusは次の意味で使用します。
   - 概要: 文字列置換と画像先頭除外により判定衝突が起きる
   - 関連: `backend/scripts/judge.py`
   - 次: 比較方法を修正し、全問題回帰を実行
-- `SOJ-010` — Medium / P1 / Open
-  - 概要: trailing slash redirectがHTTP schemeと任意Hostを反映し得る
-  - 関連: `backend/main.py`、`frontend/nginx/default.conf`
-  - 次: redirect無効化、Host・proxy trustを明示
 - `SOJ-011` — Medium / P2 / Deferred
   - 概要: backend containerとDB runtime roleの権限が大きい
   - 関連: `backend/Dockerfile`、`docker-compose.yml`
@@ -139,10 +135,10 @@ Statusは次の意味で使用します。
 
 現在の未解決trackerは次の内訳です。
 
-- Open: 9件
+- Open: 8件
 - Partially resolved: 2件
 - Deferred: 6件
-- Severity: High 0件、Medium 13件、Low 4件
+- Severity: High 0件、Medium 12件、Low 4件
 
 ## Resolved issues
 
@@ -166,9 +162,10 @@ Statusは次の意味で使用します。
 | RES-013 | 問題一覧を起動時に検証・JSON化し、HTTP cacheを追加 | `0d49505` | problem catalog unit、backend startup test |
 | RES-014 | nginxの共有実行開始枠を廃止し、検証後のrunnerを開始頻度の正本に限定 | この変更 | nginx静的test、実nginx integration test |
 | RES-015 | backendからprivate runnerへのHTTP通信で環境proxyの継承を明示的に無効化 | `74a1a74` | runner boundary test、基本Python検査 |
+| RES-016 | slash自動redirectを無効化し、backendのHostとforwarded headerの信頼境界を固定 | この変更 | ASGI boundary test、nginx静的test、基本Python検査 |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
-RES-014、RES-015は、
+RES-014、RES-015、RES-016は、
 記載した範囲では解決済みです。
 daemon単独のsandbox有効期限、可変image等の残存経路は、
 別のtracker issueとして追跡しています。
@@ -320,7 +317,7 @@ Deferredは不要という意味ではありません。
 - 実runner processの強制終了とCompose自動再起動を含むE2E
 - Docker create応答timeoutとdaemon停止を使うfailure test
 - 実Composeのfrontend -> backend -> runner -> Docker -> DB E2E
-- 実nginxのHost、redirect、security header
+- 外側proxyを含むpublic Host allowlistとsecurity header
 - DB停止、lock、timeout、commit失敗、NUL、rollback後の回復
 - judge collision、画像全byte比較
 - backend/runnerのrevision・problem manifest不一致
@@ -336,7 +333,7 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  SOJ-008 / SOJ-010: DB・redirectを修正
+  SOJ-008: DB保存境界を修正
     ↓
 Later
   judge、artifact、権限分離、E2E、browser、CI、運用基盤を改善
