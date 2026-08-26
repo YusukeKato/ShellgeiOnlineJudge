@@ -162,7 +162,7 @@ Statusは次の意味で使用します。
 | RES-013 | 問題一覧を起動時に検証・JSON化し、HTTP cacheを追加 | `0d49505` | problem catalog unit、backend startup test |
 | RES-014 | nginxの共有実行開始枠を廃止し、検証後のrunnerを開始頻度の正本に限定 | この変更 | nginx静的test、実nginx integration test |
 | RES-015 | backendからprivate runnerへのHTTP通信で環境proxyの継承を明示的に無効化 | `74a1a74` | runner boundary test、基本Python検査 |
-| RES-016 | slash自動redirectを無効化し、backendのHostとforwarded headerの信頼境界を固定 | この変更 | ASGI boundary test、nginx静的test、基本Python検査 |
+| RES-016 | slash自動redirectを無効化し、backendのHostとforwarded headerの信頼境界を固定 | `6061ebc` | ASGI boundary test、nginx静的test、基本Python検査 |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
 RES-014、RES-015、RES-016は、

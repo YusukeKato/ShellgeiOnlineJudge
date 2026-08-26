@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 25
 - Pending (`Ready` + `Planned`): 25
 - In Progress: 0
-- Review: 1
-- Completed: 1
+- Review: 0
+- Completed: 2
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -154,7 +154,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | ID | Priority | Status | Phase | Title | Dependencies | Completion commit |
 | --- | --- | --- | --- | --- | --- | --- |
 | R3-001 | P1 | Completed | A | Disable proxy inheritance for private runner client | - | `74a1a74` |
-| R3-002 | P1 | Review | A | Make Host, redirect, and proxy trust explicit | R3-001 | - |
+| R3-002 | P1 | Completed | A | Make Host, redirect, and proxy trust explicit | R3-001 | `6061ebc` |
 | R3-003 | P1 | Planned | A | Make execution-log persistence non-blocking and failure-safe | - | - |
 | R3-004 | P1 | Planned | A | Align supported Python versions and concurrency behavior | - | - |
 | R3-005 | P0 | Planned | A | Characterize legacy problem, judge, and frontend behavior | - | - |
@@ -200,14 +200,14 @@ They are planning aids, not acceptance criteria.
 
 ### R3-002: Make Host, redirect, and proxy trust explicit
 
-- Priority / Status: P1 / `Review`
+- Priority / Status: P1 / `Completed`
 - Goal: trailing-slash redirect、Host、forwarded headerの信頼境界を明示し、外側proxy配下でも安全なURLを生成する
 - Main files/components: `backend/main.py`、`frontend/nginx/default.conf`、public API test、運用文書
 - Dependencies: R3-001
 - Risk: Medium。既存URL、reverse proxy、health checkとの互換性を確認する
 - Expected tests: ASGI redirect/Host test、nginx静的test、可能なら実nginx integration test
 - Size: S
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `6061ebc9c4f186b9ea35e886eb8c2fcc9fc52f8f` / date 2026-08-26 / slash redirects disabled and the backend Host and forwarded-header trust boundary fixed
 
 ### R3-003: Make execution-log persistence non-blocking and failure-safe
 
@@ -595,4 +595,5 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-08-25 | Initial v3.0.0 refactoring roadmap recorded at baseline `991ef334f2785cce81a2e33206ec1f00f3487c9b` | - |
 | 2026-08-26 | R3-001 implementation and planned tests completed; moved to `Review` | `74a1a74` |
 | 2026-08-26 | R3-001 approved and recorded as `Completed` | `74a1a74` |
-| 2026-08-26 | R3-002 implementation and planned tests completed; moved to `Review` | - |
+| 2026-08-26 | R3-002 implementation and planned tests completed; moved to `Review` | `6061ebc` |
+| 2026-08-26 | R3-002 approved and recorded as `Completed` | `6061ebc` |
