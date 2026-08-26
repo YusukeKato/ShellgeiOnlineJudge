@@ -227,6 +227,7 @@ openssl rand -hex 32  # runner認証用
 ```dotenv
 POSTGRES_PASSWORD=十分に長いランダム値
 DATABASE_URL=postgresql://soj_user:十分に長いランダム値@db:5432/soj_db
+DATABASE_OPERATION_TIMEOUT_SECONDS=5
 
 DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
 SANDBOX_OWNER_ID=shellgei-online-judge-production
@@ -245,6 +246,8 @@ REACT_APP_SOJ_URL=https://example.com
 
 - `POSTGRES_PASSWORD`と`DATABASE_URL`内のパスワードを一致させる
 - URLの予約文字を含むパスワードは`DATABASE_URL`側でpercent-encodingする
+- `DATABASE_OPERATION_TIMEOUT_SECONDS`は1以上の整数にする。既定の5秒は
+  connection pool待ち、DB接続、statement、lockへそれぞれ適用する
 - `.env`をGitへ追加しない
 - `RUNNER_SHARED_SECRET`にはDBパスワードとは異なる値を使用する
 - `REACT_APP_*`はfrontendのJavaScriptへ埋め込まれる公開値なので、秘密情報を設定しない

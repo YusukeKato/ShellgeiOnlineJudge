@@ -270,6 +270,17 @@ DBの実行ログは、次の両方を満たす範囲だけ保持します。
 古いログは、backend起動時と新しい実行ログの保存時に削除します。
 新しいログの保存と件数による削除は、同じDB transaction内で処理します。
 
+実行ログへ保存できないNUL文字は、保存時だけUnicode置換文字`U+FFFD`へ
+置き換えます。利用者へ返す実行結果は変更しません。
+実行ログの追加、retention、commit、rollback、closeはrequestのevent loop外の
+worker threadで処理し、commitを含む処理に失敗した場合はrollbackしてsessionを閉じます。
+保存に失敗しても実行・判定結果は返し、保存IDは`-1`とします。
+
+PostgreSQLの接続待ち、connection pool待ち、statement、lockには、
+`DATABASE_OPERATION_TIMEOUT_SECONDS`の上限を適用します。既定値は5秒で、
+1以上の整数が必要です。この値は各処理の上限であり、保存処理全体に対する
+単一のdeadlineではありません。
+
 Composeで起動するDB、runner、backend、frontendのDockerログには、
 すべて`local` logging driverを使用します。
 各serviceのログは10 MiB、3ファイルまでにrotationします。

@@ -1,7 +1,6 @@
 import asyncio
 import json
 from pathlib import Path
-from typing import Any
 from urllib.error import HTTPError
 from urllib.request import ProxyHandler, Request
 from email.message import Message
@@ -327,12 +326,11 @@ def test_public_api_maps_runner_failure_without_database_work(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    class UnusedDatabase:
-        def __getattr__(self, name: str) -> Any:
-            raise AssertionError(f"database must not be used: {name}")
-
     async def unavailable(*_args: object) -> list[str]:
         raise RunnerUnavailableError("unavailable")
+
+    async def unused_persistence(*_args: object) -> int:
+        raise AssertionError("runner failure must not reach database persistence")
 
     yaml_dir = tmp_path / "problems" / "yaml_data"
     yaml_dir.mkdir(parents=True)
@@ -343,11 +341,15 @@ def test_public_api_maps_runner_failure_without_database_work(
         str(tmp_path / "api" / "api_shellgei.py"),
     )
     monkeypatch.setattr(api_shellgei.runner_client, "run", unavailable)
+    monkeypatch.setattr(
+        api_shellgei,
+        "persist_execution_log_async",
+        unused_persistence,
+    )
 
     response = asyncio.run(
         api_shellgei.post_shellgei(
-            ShellgeiData(shellgei="true", problem_id="STANDARD-00000001"),
-            UnusedDatabase(),  # type: ignore[arg-type]
+            ShellgeiData(shellgei="true", problem_id="STANDARD-00000001")
         )
     )
 
@@ -361,12 +363,11 @@ def test_public_api_preserves_busy_response_for_runner_capacity(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    class UnusedDatabase:
-        def __getattr__(self, name: str) -> Any:
-            raise AssertionError(f"database must not be used: {name}")
-
     async def busy(*_args: object) -> list[str]:
         raise RunnerBusyError("busy")
+
+    async def unused_persistence(*_args: object) -> int:
+        raise AssertionError("busy response must not reach database persistence")
 
     yaml_dir = tmp_path / "problems" / "yaml_data"
     yaml_dir.mkdir(parents=True)
@@ -377,11 +378,15 @@ def test_public_api_preserves_busy_response_for_runner_capacity(
         str(tmp_path / "api" / "api_shellgei.py"),
     )
     monkeypatch.setattr(api_shellgei.runner_client, "run", busy)
+    monkeypatch.setattr(
+        api_shellgei,
+        "persist_execution_log_async",
+        unused_persistence,
+    )
 
     response = asyncio.run(
         api_shellgei.post_shellgei(
-            ShellgeiData(shellgei="true", problem_id="STANDARD-00000001"),
-            UnusedDatabase(),  # type: ignore[arg-type]
+            ShellgeiData(shellgei="true", problem_id="STANDARD-00000001")
         )
     )
 

@@ -6,12 +6,16 @@ from typing import Any
 
 import docker
 import pytest
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from models.model_db import ExecutionLog
+from scripts.execution_log_persistence import (
+    ExecutionLogPersistenceError,
+    persist_execution_log,
+)
 from scripts.execution_log_retention import prune_execution_logs
 
 
@@ -78,6 +82,7 @@ def test_postgres_enforces_execution_log_age_and_row_limits() -> None:
     client = docker.from_env()
     container = None
     database_engine = None
+    timeout_engine = None
     try:
         assert "name=rootless" in client.info()["SecurityOptions"]
         try:
@@ -107,10 +112,11 @@ def test_postgres_enforces_execution_log_age_and_row_limits() -> None:
         )
         _wait_for_postgres(container)
         port = _published_postgres_port(container)
-        database_engine = create_engine(
+        database_url = (
             f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
             f"@127.0.0.1:{port}/{POSTGRES_DATABASE}"
         )
+        database_engine = create_engine(database_url)
         _wait_for_database_connection(database_engine)
         ExecutionLog.__table__.create(database_engine)
 
@@ -144,7 +150,60 @@ def test_postgres_enforces_execution_log_age_and_row_limits() -> None:
             ).all()
             assert deleted == 2
             assert retained_outputs == ["2", "3", "4"]
+
+        timeout_engine = create_engine(
+            database_url,
+            connect_args={"options": "-c lock_timeout=200"},
+        )
+        timeout_session_factory = sessionmaker(bind=timeout_engine)
+        nul_log_id = persist_execution_log(
+            "STANDARD-00000001",
+            "printf nul",
+            "before\x00after",
+            "1",
+            session_factory=timeout_session_factory,
+        )
+        with Session(database_engine) as db:
+            assert (
+                db.scalar(
+                    select(ExecutionLog.output).where(ExecutionLog.id == nul_log_id)
+                )
+                == "before\N{REPLACEMENT CHARACTER}after"
+            )
+
+        with Session(database_engine) as lock_session:
+            lock_session.execute(
+                text("LOCK TABLE execution_logs IN ACCESS EXCLUSIVE MODE")
+            )
+            with pytest.raises(ExecutionLogPersistenceError):
+                persist_execution_log(
+                    "STANDARD-00000001",
+                    "printf blocked",
+                    "blocked",
+                    "1",
+                    session_factory=timeout_session_factory,
+                )
+            lock_session.rollback()
+
+        recovered_log_id = persist_execution_log(
+            "STANDARD-00000001",
+            "printf recovered",
+            "recovered",
+            "1",
+            session_factory=timeout_session_factory,
+        )
+        with Session(database_engine) as db:
+            assert (
+                db.scalar(
+                    select(ExecutionLog.output).where(
+                        ExecutionLog.id == recovered_log_id
+                    )
+                )
+                == "recovered"
+            )
     finally:
+        if timeout_engine is not None:
+            timeout_engine.dispose()
         if database_engine is not None:
             database_engine.dispose()
         if container is not None:

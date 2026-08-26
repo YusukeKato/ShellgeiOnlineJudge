@@ -80,3 +80,12 @@ def test_frontend_defaults_to_loopback_for_outer_admission_control() -> None:
     assert compose["services"]["frontend"]["ports"] == [
         "${HTTPS_BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-8443}:443"
     ]
+
+
+def test_backend_database_operations_have_a_bounded_default() -> None:
+    compose = yaml.safe_load(COMPOSE_FILE.read_text(encoding="utf-8"))
+
+    assert (
+        "DATABASE_OPERATION_TIMEOUT_SECONDS=${DATABASE_OPERATION_TIMEOUT_SECONDS:-5}"
+        in compose["services"]["backend"]["environment"]
+    )

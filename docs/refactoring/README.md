@@ -23,10 +23,10 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 27
 - Ready: 0
-- Planned: 25
-- Pending (`Ready` + `Planned`): 25
+- Planned: 24
+- Pending (`Ready` + `Planned`): 24
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 2
 - Blocked: 0
 - Deferred: 0
@@ -155,7 +155,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | --- | --- | --- | --- | --- | --- | --- |
 | R3-001 | P1 | Completed | A | Disable proxy inheritance for private runner client | - | `74a1a74` |
 | R3-002 | P1 | Completed | A | Make Host, redirect, and proxy trust explicit | R3-001 | `6061ebc` |
-| R3-003 | P1 | Planned | A | Make execution-log persistence non-blocking and failure-safe | - | - |
+| R3-003 | P1 | Review | A | Make execution-log persistence non-blocking and failure-safe | - | - |
 | R3-004 | P1 | Planned | A | Align supported Python versions and concurrency behavior | - | - |
 | R3-005 | P0 | Planned | A | Characterize legacy problem, judge, and frontend behavior | - | - |
 | R3-006 | P0 | Planned | B | Introduce v3 problem schema and migration tooling | R3-005 | - |
@@ -211,7 +211,7 @@ They are planning aids, not acceptance criteria.
 
 ### R3-003: Make execution-log persistence non-blocking and failure-safe
 
-- Priority / Status: P1 / `Planned`
+- Priority / Status: P1 / `Review`
 - Goal: NUL等の保存不能値、DB stall、commit失敗がevent loop停止やrollback漏れを起こさない境界を先に整える
 - Main files/components: `backend/api/api_shellgei.py`、`backend/scripts/database.py`、retention処理、DB test
 - Dependencies: なし
@@ -597,3 +597,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-08-26 | R3-001 approved and recorded as `Completed` | `74a1a74` |
 | 2026-08-26 | R3-002 implementation and planned tests completed; moved to `Review` | `6061ebc` |
 | 2026-08-26 | R3-002 approved and recorded as `Completed` | `6061ebc` |
+| 2026-08-26 | R3-003 implementation and planned tests completed; moved to `Review` | - |

@@ -104,16 +104,11 @@ def test_shellgei_data_rejects_extra_json_fields() -> None:
         )
 
 
-class _UnusedDatabase:
-    def query(self, *_args: Any, **_kwargs: Any) -> Any:
-        raise AssertionError("the database must not be queried for an unknown problem")
-
-
 def test_unknown_problem_is_rejected_before_database_or_sandbox_work() -> None:
     data = ShellgeiData(shellgei="true", problem_id="MISSING-00000001")
 
     with pytest.raises(HTTPException) as exc_info:
-        asyncio.run(post_shellgei(data, _UnusedDatabase()))  # type: ignore[arg-type]
+        asyncio.run(post_shellgei(data))
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "Problem not found"

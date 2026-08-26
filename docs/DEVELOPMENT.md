@@ -175,6 +175,7 @@ printf '%s\n' "${XDG_RUNTIME_DIR}/docker.sock"
 ```dotenv
 POSTGRES_PASSWORD=開発専用のパスワード
 DATABASE_URL=postgresql://soj_user:開発専用のパスワード@db:5432/soj_db
+DATABASE_OPERATION_TIMEOUT_SECONDS=5
 
 DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
 SANDBOX_OWNER_ID=shellgei-online-judge-development
@@ -186,6 +187,7 @@ REACT_APP_SOJ_URL=https://localhost:8443
 環境変数には次の条件があります。
 
 - `POSTGRES_PASSWORD`と`DATABASE_URL`内のパスワードを一致させる
+- `DATABASE_OPERATION_TIMEOUT_SECONDS`は1以上の整数にする
 - `RUNNER_SHARED_SECRET`には`openssl rand -hex 32`で生成した値を設定する
 - runnerとbackendへ同じ`RUNNER_SHARED_SECRET`が渡される
 - `SANDBOX_OWNER_ID`は同じDocker daemon上の他環境と重複させない

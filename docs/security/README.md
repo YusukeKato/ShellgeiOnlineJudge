@@ -75,10 +75,6 @@ Statusは次の意味で使用します。
   - 概要: runner侵害時の影響が同一daemon上のDB、frontend、TLS鍵へ及ぶ
   - 関連: `docker-compose.yml`
   - 次: runner専用hostまたは使い捨てVMへ分離
-- `SOJ-008` — Medium / P1 / Open
-  - 概要: NUL出力とDB stallで500またはevent loop停止が起き得る
-  - 関連: `backend/api/api_shellgei.py`、`backend/scripts/database.py`
-  - 次: 保存用正規化、timeout、rollback、同期DB処理分離を実装
 - `SOJ-009` — Medium / P2 / Open
   - 概要: 文字列置換と画像先頭除外により判定衝突が起きる
   - 関連: `backend/scripts/judge.py`
@@ -135,10 +131,10 @@ Statusは次の意味で使用します。
 
 現在の未解決trackerは次の内訳です。
 
-- Open: 8件
+- Open: 7件
 - Partially resolved: 2件
 - Deferred: 6件
-- Severity: High 0件、Medium 12件、Low 4件
+- Severity: High 0件、Medium 11件、Low 4件
 
 ## Resolved issues
 
@@ -163,9 +159,10 @@ Statusは次の意味で使用します。
 | RES-014 | nginxの共有実行開始枠を廃止し、検証後のrunnerを開始頻度の正本に限定 | この変更 | nginx静的test、実nginx integration test |
 | RES-015 | backendからprivate runnerへのHTTP通信で環境proxyの継承を明示的に無効化 | `74a1a74` | runner boundary test、基本Python検査 |
 | RES-016 | slash自動redirectを無効化し、backendのHostとforwarded headerの信頼境界を固定 | `6061ebc` | ASGI boundary test、nginx静的test、基本Python検査 |
+| RES-017 | 実行ログ保存をevent loop外へ分離し、NUL正規化、DB timeout、rollbackと失敗後の回復を実装 | この変更 | persistence unit、PostgreSQL lock failure/recovery integration test |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
-RES-014、RES-015、RES-016は、
+RES-014、RES-015、RES-016、RES-017は、
 記載した範囲では解決済みです。
 daemon単独のsandbox有効期限、可変image等の残存経路は、
 別のtracker issueとして追跡しています。
@@ -333,7 +330,7 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  SOJ-008: DB保存境界を修正
+  SOJ-014 / R3-004: Python対応versionと並行実行挙動を整合
     ↓
 Later
   judge、artifact、権限分離、E2E、browser、CI、運用基盤を改善

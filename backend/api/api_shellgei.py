@@ -1,15 +1,16 @@
+import logging
 import pytz
 from pathlib import Path
 from typing import Annotated
 
 import yaml
-from fastapi import APIRouter, Depends, Header, HTTPException, Response
+from fastapi import APIRouter, Header, HTTPException, Response
 from datetime import datetime
-from sqlalchemy.orm import Session
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
-from models.model_db import ExecutionLog
-from scripts.database import get_db
-from scripts.execution_log_retention import prune_execution_logs
+from scripts.execution_log_persistence import (
+    ExecutionLogPersistenceError,
+    persist_execution_log_async,
+)
 from scripts.input_validation import ProblemId
 from scripts.problem_catalog import (
     PROBLEM_LIST_CACHE_CONTROL,
@@ -20,12 +21,11 @@ from scripts.judge import ShellgeiJudge
 
 router = APIRouter()
 shellgei_judge = ShellgeiJudge()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/shellgei")
-async def post_shellgei(
-    shellgei_data: ShellgeiData, db: Session = Depends(get_db)
-) -> ShellgeiResultResponse:
+async def post_shellgei(shellgei_data: ShellgeiData) -> ShellgeiResultResponse:
     japan_timezone = pytz.timezone("Asia/Tokyo")
     japan_date = datetime.now(japan_timezone)
 
@@ -57,21 +57,20 @@ async def post_shellgei(
         )
     judge: str = shellgei_judge.judge(output, image, problem_id_str)
 
-    # DBに実行結果を保存
-    new_log = ExecutionLog(
-        problem_id=problem_id_str,
-        shellgei=shellgei_str,
-        output=output[:1000],  # 出力を1000文字に制限
-        judge=judge,
-    )
-    db.add(new_log)
-    prune_execution_logs(db)
-    db.commit()
-    db.refresh(new_log)  # 保存して自動採番されたIDを取得
+    try:
+        log_id = await persist_execution_log_async(
+            problem_id_str,
+            shellgei_str,
+            output,
+            judge,
+        )
+    except ExecutionLogPersistenceError:
+        logger.warning("Execution log persistence unavailable")
+        log_id = -1
 
     return ShellgeiResultResponse(
         output=output,
-        id=str(new_log.id),  # DBで自動採番されたIDを返す
+        id=str(log_id),
         date=f"{japan_date.strftime('%Y-%m-%d %H:%M:%S')}",
         image=image,
         judge=judge,
