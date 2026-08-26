@@ -75,10 +75,6 @@ Statusは次の意味で使用します。
   - 概要: runner侵害時の影響が同一daemon上のDB、frontend、TLS鍵へ及ぶ
   - 関連: `docker-compose.yml`
   - 次: runner専用hostまたは使い捨てVMへ分離
-- `SOJ-007` — Medium / P1 / Open
-  - 概要: backendのrunner HTTP clientがproxy環境変数を継承し得る
-  - 関連: `backend/scripts/runner_client.py`
-  - 次: proxyを明示的に無効化し、内部通信testを追加
 - `SOJ-008` — Medium / P1 / Open
   - 概要: NUL出力とDB stallで500またはevent loop停止が起き得る
   - 関連: `backend/api/api_shellgei.py`、`backend/scripts/database.py`
@@ -143,10 +139,10 @@ Statusは次の意味で使用します。
 
 現在の未解決trackerは次の内訳です。
 
-- Open: 10件
+- Open: 9件
 - Partially resolved: 2件
 - Deferred: 6件
-- Severity: High 0件、Medium 14件、Low 4件
+- Severity: High 0件、Medium 13件、Low 4件
 
 ## Resolved issues
 
@@ -169,9 +165,10 @@ Statusは次の意味で使用します。
 | RES-012 | owner単位の起動時回収、create/start失敗追跡、shutdown競合防止を実装 | `71dad03` | container manager unit、Docker restart test |
 | RES-013 | 問題一覧を起動時に検証・JSON化し、HTTP cacheを追加 | `0d49505` | problem catalog unit、backend startup test |
 | RES-014 | nginxの共有実行開始枠を廃止し、検証後のrunnerを開始頻度の正本に限定 | この変更 | nginx静的test、実nginx integration test |
+| RES-015 | backendからprivate runnerへのHTTP通信で環境proxyの継承を明示的に無効化 | この変更 | runner boundary test、基本Python検査 |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
-RES-014は、
+RES-014、RES-015は、
 記載した範囲では解決済みです。
 daemon単独のsandbox有効期限、可変image等の残存経路は、
 別のtracker issueとして追跡しています。
@@ -339,7 +336,7 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  SOJ-007 / SOJ-008 / SOJ-010: runner通信・DB・redirectを修正
+  SOJ-008 / SOJ-010: DB・redirectを修正
     ↓
 Later
   judge、artifact、権限分離、E2E、browser、CI、運用基盤を改善

@@ -3,7 +3,7 @@ import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from urllib.error import HTTPError
-from urllib.request import Request, urlopen
+from urllib.request import ProxyHandler, Request, build_opener
 
 from models.model_shellgei import ShellgeiData
 from scripts.runner_protocol import (
@@ -34,13 +34,13 @@ class RunnerClient:
     def __init__(self) -> None:
         self.executor = ThreadPoolExecutor(max_workers=RUNNER_CLIENT_CAPACITY)
         self._slots = threading.BoundedSemaphore(RUNNER_CLIENT_CAPACITY)
+        self._opener = build_opener(ProxyHandler({}))
 
     @staticmethod
     def validate_configuration() -> None:
         get_runner_shared_secret()
 
-    @staticmethod
-    def _execute_sync(shellgei: str, problem_id: str) -> list[str]:
+    def _execute_sync(self, shellgei: str, problem_id: str) -> list[str]:
         secret = get_runner_shared_secret()
         payload = ShellgeiData(shellgei=shellgei, problem_id=problem_id)
         request = Request(
@@ -53,7 +53,10 @@ class RunnerClient:
             method="POST",
         )
         try:
-            with urlopen(request, timeout=RUNNER_REQUEST_TIMEOUT_SECONDS) as response:
+            with self._opener.open(
+                request,
+                timeout=RUNNER_REQUEST_TIMEOUT_SECONDS,
+            ) as response:
                 response_body = response.read(RUNNER_RESPONSE_LIMIT_BYTES + 1)
                 if len(response_body) > RUNNER_RESPONSE_LIMIT_BYTES:
                     raise RunnerUnavailableError("runner response exceeded the limit")

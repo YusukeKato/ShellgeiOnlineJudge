@@ -311,6 +311,8 @@ frontendのbuildへ渡す環境変数は、ブラウザへ公開される`REACT_
 rootless Docker socketは、外部HTTP requestを処理しないrunnerだけにmountします。
 backendとrunnerは専用の内部Docker networkで接続し、runnerのportはホスト、
 frontend、DBへ公開しません。
+backendのrunner HTTP clientはproxyを明示的に無効化し、
+`HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY`等の環境変数を使用しません。
 
 runner APIの共有secretは32文字以上の安全なランダム値を使用します。
 runnerは認証、入力schema、登録済みproblem ID、開始頻度、同時実行数を検査してから

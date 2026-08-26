@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError
-from urllib.request import Request
+from urllib.request import ProxyHandler, Request
 from email.message import Message
 
 import pytest
@@ -204,8 +204,8 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
         return FakeResponse(b'{"output":"ok","image":""}')
 
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
-    monkeypatch.setattr(runner_client_module, "urlopen", fake_urlopen)
     client = RunnerClient()
+    monkeypatch.setattr(client._opener, "open", fake_urlopen)
     try:
         result = asyncio.run(client.run("printf ok", "STANDARD-00000001"))
     finally:
@@ -224,6 +224,49 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
     }
 
 
+def test_backend_runner_client_disables_environment_proxies(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    configured_handlers: list[object] = []
+    captured_requests: list[Request] = []
+
+    class FakeOpener:
+        def open(self, request: Request, timeout: int) -> FakeResponse:
+            assert timeout == runner_client_module.RUNNER_REQUEST_TIMEOUT_SECONDS
+            captured_requests.append(request)
+            return FakeResponse(b'{"output":"direct","image":""}')
+
+    def fake_build_opener(*handlers: object) -> FakeOpener:
+        configured_handlers.extend(handlers)
+        return FakeOpener()
+
+    proxy_url = "http://attacker.invalid:8080"
+    for variable in ("HTTP_PROXY", "http_proxy", "HTTPS_PROXY", "https_proxy"):
+        monkeypatch.setenv(variable, proxy_url)
+    monkeypatch.setenv("ALL_PROXY", proxy_url)
+    monkeypatch.setenv("all_proxy", proxy_url)
+    monkeypatch.setenv("NO_PROXY", "")
+    monkeypatch.setenv("no_proxy", "")
+    monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
+    monkeypatch.setattr(runner_client_module, "build_opener", fake_build_opener)
+
+    client = RunnerClient()
+    try:
+        result = asyncio.run(client.run("true", "STANDARD-00000001"))
+    finally:
+        client.close()
+
+    assert result == ["direct", ""]
+    assert len(configured_handlers) == 1
+    proxy_handler = configured_handlers[0]
+    assert isinstance(proxy_handler, ProxyHandler)
+    assert not hasattr(proxy_handler, "http_open")
+    assert not hasattr(proxy_handler, "https_open")
+    assert not hasattr(proxy_handler, "all_open")
+    assert len(captured_requests) == 1
+    assert captured_requests[0].full_url == f"{RUNNER_BASE_URL}{RUNNER_EXECUTE_PATH}"
+
+
 def test_backend_runner_client_maps_busy_without_accepting_error_body(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -231,8 +274,8 @@ def test_backend_runner_client_maps_busy_without_accepting_error_body(
         raise HTTPError(request.full_url, 429, "busy", Message(), None)
 
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
-    monkeypatch.setattr(runner_client_module, "urlopen", fake_urlopen)
     client = RunnerClient()
+    monkeypatch.setattr(client._opener, "open", fake_urlopen)
     try:
         with pytest.raises(RunnerBusyError):
             asyncio.run(client.run("true", "STANDARD-00000001"))
@@ -249,12 +292,12 @@ def test_backend_runner_client_rejects_invalid_responses(
     payload: bytes,
 ) -> None:
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
+    client = RunnerClient()
     monkeypatch.setattr(
-        runner_client_module,
-        "urlopen",
+        client._opener,
+        "open",
         lambda *_args, **_kwargs: FakeResponse(payload),
     )
-    client = RunnerClient()
     try:
         with pytest.raises(RunnerUnavailableError):
             asyncio.run(client.run("true", "STANDARD-00000001"))
@@ -267,12 +310,12 @@ def test_backend_runner_client_rejects_oversized_response(
 ) -> None:
     oversized = b"x" * (runner_client_module.RUNNER_RESPONSE_LIMIT_BYTES + 1)
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
+    client = RunnerClient()
     monkeypatch.setattr(
-        runner_client_module,
-        "urlopen",
+        client._opener,
+        "open",
         lambda *_args, **_kwargs: FakeResponse(oversized),
     )
-    client = RunnerClient()
     try:
         with pytest.raises(RunnerUnavailableError):
             asyncio.run(client.run("true", "STANDARD-00000001"))
