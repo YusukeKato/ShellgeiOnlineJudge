@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 26
 - Pending (`Ready` + `Planned`): 26
 - In Progress: 0
-- Review: 1
-- Completed: 0
+- Review: 0
+- Completed: 1
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -153,7 +153,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 
 | ID | Priority | Status | Phase | Title | Dependencies | Completion commit |
 | --- | --- | --- | --- | --- | --- | --- |
-| R3-001 | P1 | Review | A | Disable proxy inheritance for private runner client | - | - |
+| R3-001 | P1 | Completed | A | Disable proxy inheritance for private runner client | - | `74a1a74` |
 | R3-002 | P1 | Planned | A | Make Host, redirect, and proxy trust explicit | R3-001 | - |
 | R3-003 | P1 | Planned | A | Make execution-log persistence non-blocking and failure-safe | - | - |
 | R3-004 | P1 | Planned | A | Align supported Python versions and concurrency behavior | - | - |
@@ -189,14 +189,14 @@ They are planning aids, not acceptance criteria.
 
 ### R3-001: Disable proxy inheritance for private runner client
 
-- Priority / Status: P1 / `Review`
+- Priority / Status: P1 / `Completed`
 - Goal: private runnerへの固定内部HTTP通信が`HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY`等を継承しないようにし、credentialとrequestの外部proxy送信を防ぐ
 - Main files/components: `backend/scripts/runner_client.py`、`backend/tests/test_runner_boundary.py`、security tracker
 - Dependencies: なし
 - Risk: Low。内部clientに限定するが、timeout、Bearer認証、response size上限を維持する必要がある
 - Expected tests: proxy環境変数を設定した境界test、runner client既存test、ruff、format、mypy、non-Docker pytest
 - Size: XS
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `74a1a7474a02ab833f176be337b6ae5461252a4d` / date 2026-08-26 / environment proxy inheritance disabled without changing the runner request contract
 
 ### R3-002: Make Host, redirect, and proxy trust explicit
 
@@ -593,4 +593,5 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | Date | Change | Commit |
 | --- | --- | --- |
 | 2026-08-25 | Initial v3.0.0 refactoring roadmap recorded at baseline `991ef334f2785cce81a2e33206ec1f00f3487c9b` | - |
-| 2026-08-26 | R3-001 implementation and planned tests completed; moved to `Review` | - |
+| 2026-08-26 | R3-001 implementation and planned tests completed; moved to `Review` | `74a1a74` |
+| 2026-08-26 | R3-001 approved and recorded as `Completed` | `74a1a74` |
