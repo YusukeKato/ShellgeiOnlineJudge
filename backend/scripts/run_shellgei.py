@@ -8,6 +8,7 @@ from typing import Any
 import yaml
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from scripts.async_thread import wait_for_thread_future
 from scripts.container_manager import SANDBOX_WORK_DIRECTORY, manager
 from scripts.execution_archive import build_execution_archive
 from scripts.input_validation import validate_problem_id
@@ -235,11 +236,9 @@ class ShellgeiDockerClient:
         if not self._execution_slots.acquire(blocking=False):
             raise SandboxBusyError("sandbox execution capacity reached")
 
-        loop = asyncio.get_running_loop()
         release_when_done = False
         try:
-            future = loop.run_in_executor(
-                self.executor,
+            future = self.executor.submit(
                 self.exec_shellgei,
                 shellgei,
                 problem_id,
@@ -247,11 +246,11 @@ class ShellgeiDockerClient:
                 limit_str,
             )
             try:
-                return await asyncio.wait_for(
-                    asyncio.shield(future),
+                return await wait_for_thread_future(
+                    future,
                     timeout=timeout + DOCKER_OPERATION_GRACE_SECONDS,
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # A running thread cannot be cancelled. Keep its capacity reserved
                 # until the watchdog-driven cleanup has actually returned.
                 future.add_done_callback(lambda _: self._execution_slots.release())

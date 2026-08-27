@@ -20,7 +20,7 @@ rootless Docker自体も完全なsandboxではありません。
 
 - Linux（systemdとcgroup v2を利用できる環境）
 - Git
-- Python 3.10以上（コンテナ内の実行環境はPython 3.12）
+- Python 3.12、3.13、3.14（production containerはPython 3.12）
 - Poetry
 - Docker Engine、Docker Compose plugin、rootless Docker
 - OpenSSL（開発用TLS証明書の生成に使用）
@@ -175,7 +175,6 @@ printf '%s\n' "${XDG_RUNTIME_DIR}/docker.sock"
 ```dotenv
 POSTGRES_PASSWORD=開発専用のパスワード
 DATABASE_URL=postgresql://soj_user:開発専用のパスワード@db:5432/soj_db
-DATABASE_OPERATION_TIMEOUT_SECONDS=5
 
 DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
 SANDBOX_OWNER_ID=shellgei-online-judge-development
@@ -184,7 +183,9 @@ SERVER_URL=https://localhost:8443
 REACT_APP_SOJ_URL=https://localhost:8443
 ```
 
-環境変数には次の条件があります。
+### 共通する環境変数の条件
+
+開発環境と本番環境に共通する環境変数の条件は次のとおりです。
 
 - `POSTGRES_PASSWORD`と`DATABASE_URL`内のパスワードを一致させる
 - `DATABASE_OPERATION_TIMEOUT_SECONDS`は1以上の整数にする
@@ -226,6 +227,9 @@ poetry run ruff format --check .
 poetry run mypy .
 poetry run pytest -m "not docker"
 ```
+
+CIは、[前提環境](#1-前提環境)に記載したすべてのPython versionで
+同じ検査を実行します。
 
 ### Docker統合テスト
 

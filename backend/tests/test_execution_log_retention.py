@@ -254,12 +254,10 @@ def test_async_execution_log_persistence_does_not_block_the_event_loop() -> None
             raise AssertionError("execution log worker did not finish")
         assert await persistence == 1
 
-    loop = asyncio.new_event_loop()
     try:
-        loop.run_until_complete(scenario())
+        asyncio.run(scenario())
     finally:
         release.set()
-        loop.close()
 
 
 def test_shell_api_returns_result_when_log_persistence_fails(
@@ -341,6 +339,11 @@ def test_backend_startup_validates_runner_and_prunes_logs(
         "load_problem_catalog",
         lambda: events.append("catalog_load"),
     )
+    monkeypatch.setattr(
+        backend_main,
+        "close_execution_log_persistence",
+        lambda: events.append("log_persistence_close"),
+    )
     monkeypatch.setattr(backend_main, "runner_client", FakeRunnerClient())
 
     async def run_lifespan() -> None:
@@ -359,6 +362,7 @@ def test_backend_startup_validates_runner_and_prunes_logs(
         "session_exit",
         "serving",
         "runner_close",
+        "log_persistence_close",
     ]
 
 

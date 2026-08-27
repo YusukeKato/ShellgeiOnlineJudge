@@ -23,10 +23,10 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 27
 - Ready: 0
-- Planned: 24
-- Pending (`Ready` + `Planned`): 24
+- Planned: 23
+- Pending (`Ready` + `Planned`): 23
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 3
 - Blocked: 0
 - Deferred: 0
@@ -156,7 +156,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-001 | P1 | Completed | A | Disable proxy inheritance for private runner client | - | `74a1a74` |
 | R3-002 | P1 | Completed | A | Make Host, redirect, and proxy trust explicit | R3-001 | `6061ebc` |
 | R3-003 | P1 | Completed | A | Make execution-log persistence non-blocking and failure-safe | - | `3843e37` |
-| R3-004 | P1 | Planned | A | Align supported Python versions and concurrency behavior | - | - |
+| R3-004 | P1 | Review | A | Align supported Python versions and concurrency behavior | - | - |
 | R3-005 | P0 | Planned | A | Characterize legacy problem, judge, and frontend behavior | - | - |
 | R3-006 | P0 | Planned | B | Introduce v3 problem schema and migration tooling | R3-005 | - |
 | R3-007 | P0 | Planned | B | Migrate all problem definitions to schema v3 | R3-006 | - |
@@ -222,7 +222,7 @@ They are planning aids, not acceptance criteria.
 
 ### R3-004: Align supported Python versions and concurrency behavior
 
-- Priority / Status: P1 / `Planned`
+- Priority / Status: P1 / `Review`
 - Goal: 宣言するPython対応範囲、CI、production imageを一致させ、Python 3.14で確認されたtimeout/concurrency差異を解消または明示的に対象外とする
 - Main files/components: `pyproject.toml`、CI workflow、`backend/scripts/run_shellgei.py`、関連test、開発文書
 - Dependencies: なし
@@ -599,3 +599,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-08-26 | R3-002 approved and recorded as `Completed` | `6061ebc` |
 | 2026-08-26 | R3-003 implementation and planned tests completed; moved to `Review` | - |
 | 2026-08-26 | R3-003 approved and recorded as `Completed` | `3843e37` |
+| 2026-08-27 | R3-004 implementation and planned tests completed; moved to `Review` | - |

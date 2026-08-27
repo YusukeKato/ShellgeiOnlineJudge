@@ -244,6 +244,11 @@ Docker clientのHTTP timeoutは15秒です。
 - ThreadPoolExecutorのworker数
 - sandbox実行slot数
 
+対応するPythonは3.12、3.13、3.14です。thread上のDocker実行、内部runner通信、
+実行ログ保存の完了は、event loopのexecutor完了通知だけに依存せず、
+上限付きの短い間隔でthread futureの状態を確認します。
+requestのcancelや外側timeout後も、実際のworker終了までは実行slotを解放しません。
+
 ## 実行ログとDockerログ
 
 動的に生成するsandboxコンテナは、Docker logging driverを`none`に固定します。

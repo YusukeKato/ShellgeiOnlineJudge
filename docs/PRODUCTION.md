@@ -68,8 +68,8 @@ runnerの実行権限が意図しない形で利用された場合、
 開発環境の[「1. 前提環境」](./DEVELOPMENT.md#1-前提環境)と
 [「2. rootless Dockerの設定」](./DEVELOPMENT.md#2-rootless-dockerの設定)を正本とします。
 
-本番では、専用の非特権OSユーザーでrootless daemonを起動し、
-次の値を本番反映前に確認します。
+本番では、専用の非特権OSユーザーでrootless daemonを起動します。
+本番反映前の確認コマンドは次のとおりです。
 
 ```sh
 docker info --format '{{json .SecurityOptions}}'
@@ -77,15 +77,9 @@ docker info --format 'CgroupDriver={{.CgroupDriver}} CgroupVersion={{.CgroupVers
 cat "/sys/fs/cgroup/user.slice/user-$(id -u).slice/user@$(id -u).service/cgroup.controllers"
 ```
 
-次の条件が必要です。
-
-- Dockerがcgroup v2を使用している
-- cgroup driverがsystemdである
-- controller一覧に`cpu`、`memory`、`pids`が含まれる
-
-controllerが不足する場合は、
-[開発環境のcgroupによる制限の確認](./DEVELOPMENT.md#cgroupによる制限の確認)に従い、
-systemd側でcontrollerをdelegateしてから本番運用を開始してください。
+出力の判定基準とcontrollerが不足する場合の設定は、
+[開発環境のcgroupによる制限の確認](./DEVELOPMENT.md#cgroupによる制限の確認)を
+参照してください。
 
 runnerは起動時にdaemonのcgroup構成と、各sandboxに反映されたCPU、
 メモリ、PID数の上限を検査します。
@@ -203,13 +197,15 @@ cd ShellgeiOnlineJudge
 Composeでbuild・起動するだけなら、ホストへのPoetry導入は不要です。
 ホスト上でPythonの静的検査や単体テストを実行する場合に限り、
 開発文書に従ってPoetryと依存関係を導入します。
+Pythonの対応範囲とproduction imageの基準versionは、
+[開発環境の前提環境](./DEVELOPMENT.md#1-前提環境)を参照してください。
 
 運用では、検証済みのrelease tagまたはcommitを明示的に選んでください。未検証のブランチ先端を自動的に本番反映しないでください。
 
 ## 4. 本番用の環境変数
 
-環境変数の一覧と既定値は[`.env.example`](../.env.example)を正本とします。
-サンプルをコピーし、本番固有の値を上書きします。
+本番用の設定も[`.env.example`](../.env.example)を起点とし、
+次のようにサンプルをコピーして本番固有の値を上書きします。
 
 ```sh
 cp .env.example .env
@@ -227,7 +223,6 @@ openssl rand -hex 32  # runner認証用
 ```dotenv
 POSTGRES_PASSWORD=十分に長いランダム値
 DATABASE_URL=postgresql://soj_user:十分に長いランダム値@db:5432/soj_db
-DATABASE_OPERATION_TIMEOUT_SECONDS=5
 
 DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
 SANDBOX_OWNER_ID=shellgei-online-judge-production
@@ -242,23 +237,20 @@ SERVER_URL=https://example.com
 REACT_APP_SOJ_URL=https://example.com
 ```
 
-注意点は次のとおりです。
+開発・本番に共通する値の整合条件は、
+[共通する環境変数の条件](./DEVELOPMENT.md#共通する環境変数の条件)を参照してください。
+本番固有の注意点は次のとおりです。
 
-- `POSTGRES_PASSWORD`と`DATABASE_URL`内のパスワードを一致させる
-- URLの予約文字を含むパスワードは`DATABASE_URL`側でpercent-encodingする
-- `DATABASE_OPERATION_TIMEOUT_SECONDS`は1以上の整数にする。既定の5秒は
-  connection pool待ち、DB接続、statement、lockへそれぞれ適用する
 - `.env`をGitへ追加しない
 - `RUNNER_SHARED_SECRET`にはDBパスワードとは異なる値を使用する
 - `REACT_APP_*`はfrontendのJavaScriptへ埋め込まれる公開値なので、秘密情報を設定しない
 - `DOCKER_SOCKET_PATH`はrunnerへmountするデプロイユーザー自身のrootless socketを指定する
-- `SANDBOX_OWNER_ID`は同じDocker daemon上の他環境と重複させない
 - `SERVER_URL`はCORSの許可originなので、公開URLのschemeとhostを正確に指定し、末尾に`/`を付けない
 - 実行ログの保持値を変更する場合は、どちらも1以上の整数にする
 
 retention値を小さくした場合、backendの起動時に新しい上限を超えるログを削除します。
 削除したログはDBバックアップなしでは復元できません。
-既定の保持期間と最大件数は、
+既定値、DB timeout、保存失敗時の挙動は、
 [SECURITY.mdの「実行ログとDockerログ」](../SECURITY.md#実行ログとdockerログ)を参照してください。
 
 ## 5. TLS証明書と公開ポート

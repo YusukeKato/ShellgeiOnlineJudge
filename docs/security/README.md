@@ -93,10 +93,6 @@ Statusは次の意味で使用します。
     version一致検証がない
   - 関連: `docker-compose.yml`、`backend/tests/test_runner_boundary.py`
   - 次: protocol/data digest確認とrootless E2Eを追加
-- `SOJ-014` — Medium / P2 / Open
-  - 概要: 対応範囲のPython 3.14でtimeout/concurrency testが失敗する
-  - 関連: `backend/scripts/run_shellgei.py`、`pyproject.toml`
-  - 次: 実装とruntime差を切り分け、CI matrixかPython上限を決定
 - `SOJ-015` — Medium / P1 / Open
   - 概要: cgroup検査とmount前提が、可変sandbox image内の
     tool・metadataを信頼する
@@ -131,10 +127,10 @@ Statusは次の意味で使用します。
 
 現在の未解決trackerは次の内訳です。
 
-- Open: 7件
+- Open: 6件
 - Partially resolved: 2件
 - Deferred: 6件
-- Severity: High 0件、Medium 11件、Low 4件
+- Severity: High 0件、Medium 10件、Low 4件
 
 ## Resolved issues
 
@@ -160,9 +156,10 @@ Statusは次の意味で使用します。
 | RES-015 | backendからprivate runnerへのHTTP通信で環境proxyの継承を明示的に無効化 | `74a1a74` | runner boundary test、基本Python検査 |
 | RES-016 | slash自動redirectを無効化し、backendのHostとforwarded headerの信頼境界を固定 | `6061ebc` | ASGI boundary test、nginx静的test、基本Python検査 |
 | RES-017 | 実行ログ保存をevent loop外へ分離し、NUL正規化、DB timeout、rollbackと失敗後の回復を実装 | `3843e37` | persistence unit、PostgreSQL lock failure/recovery integration test |
+| RES-018 | Python 3.12--3.14のruntime matrixを固定し、thread future完了確認をversion間で一貫させた | この変更 | runtime matrix、timeout/concurrency、3.12--3.14 non-Docker test |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
-RES-014、RES-015、RES-016、RES-017は、
+RES-014、RES-015、RES-016、RES-017、RES-018は、
 記載した範囲では解決済みです。
 daemon単独のsandbox有効期限、可変image等の残存経路は、
 別のtracker issueとして追跡しています。
@@ -330,7 +327,7 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  SOJ-014 / R3-004: Python対応versionと並行実行挙動を整合
+  R3-005: 既存problem、judge、frontend behaviorを回帰基準として固定
     ↓
 Later
   judge、artifact、権限分離、E2E、browser、CI、運用基盤を改善

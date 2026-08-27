@@ -6,6 +6,7 @@ from urllib.error import HTTPError
 from urllib.request import ProxyHandler, Request, build_opener
 
 from models.model_shellgei import ShellgeiData
+from scripts.async_thread import wait_for_thread_future
 from scripts.runner_protocol import (
     RUNNER_EXECUTE_PATH,
     RunnerConfigurationError,
@@ -79,17 +80,15 @@ class RunnerClient:
         if not self._slots.acquire(blocking=False):
             raise RunnerBusyError("runner client capacity reached")
 
-        loop = asyncio.get_running_loop()
         release_when_done = False
         try:
-            future = loop.run_in_executor(
-                self.executor,
+            future = self.executor.submit(
                 self._execute_sync,
                 shellgei,
                 problem_id,
             )
             try:
-                return await asyncio.shield(future)
+                return await wait_for_thread_future(future)
             except asyncio.CancelledError:
                 future.add_done_callback(lambda _: self._slots.release())
                 release_when_done = True

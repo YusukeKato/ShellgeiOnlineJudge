@@ -6,6 +6,7 @@ from api import api_shellgei  # type: ignore
 from contextlib import asynccontextmanager
 from scripts.database import Base, SessionLocal, engine
 from scripts.execution_log_retention import prune_execution_logs
+from scripts.execution_log_persistence import close_execution_log_persistence
 from scripts.problem_catalog import load_problem_catalog
 from scripts.runner_client import runner_client
 
@@ -23,6 +24,7 @@ async def lifespan(app: FastAPI):
         yield
     finally:
         runner_client.close()
+        close_execution_log_persistence()
 
 
 app = FastAPI(lifespan=lifespan, redirect_slashes=False)
