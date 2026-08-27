@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 22
 - Pending (`Ready` + `Planned`): 22
 - In Progress: 0
-- Review: 1
-- Completed: 4
+- Review: 0
+- Completed: 5
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -157,7 +157,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-002 | P1 | Completed | A | Make Host, redirect, and proxy trust explicit | R3-001 | `6061ebc` |
 | R3-003 | P1 | Completed | A | Make execution-log persistence non-blocking and failure-safe | - | `3843e37` |
 | R3-004 | P1 | Completed | A | Align supported Python versions and concurrency behavior | - | `9510c1f` |
-| R3-005 | P0 | Review | A | Characterize legacy problem, judge, and frontend behavior | - | - |
+| R3-005 | P0 | Completed | A | Characterize legacy problem, judge, and frontend behavior | - | `79ca954` |
 | R3-006 | P0 | Planned | B | Introduce v3 problem schema and migration tooling | R3-005 | - |
 | R3-007 | P0 | Planned | B | Migrate all problem definitions to schema v3 | R3-006 | - |
 | R3-008 | P0 | Planned | B | Introduce immutable ProblemRepo and manifest digest | R3-007 | - |
@@ -233,14 +233,14 @@ They are planning aids, not acceptance criteria.
 
 ### R3-005: Characterize legacy problem, judge, and frontend behavior
 
-- Priority / Status: P0 / `Review`
+- Priority / Status: P0 / `Completed`
 - Goal: 意図した互換性と修正対象を区別できるよう、現行problem、judge、API/frontend表示のcharacterizationを実装前の回帰基準として固定する
 - Main files/components: backend judge/problem test、frontend API/UI test、92問のsemantic manifest、[v3移行前のbehavior baseline](./legacy-behavior.md)
 - Dependencies: なし
 - Risk: Low。production behaviorは変えないが、誤判定を期待値として固定しないよう「既知の不具合」を明示する
 - Expected tests: judge truth table、problem corpus検査、frontend mock response、既存non-Docker test
 - Size: M
-- Completion: commit `-` / date `-` / note `implementation and planned tests complete; awaiting review`
+- Completion: commit `79ca954` / date 2026-08-28 / legacy problem corpus, judge behavior, frontend API/display behavior, and known defects characterized
 
 ## Phase B — Domain / Problem / Judge
 
@@ -602,3 +602,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-08-27 | R3-004 implementation and planned tests completed; moved to `Review` | - |
 | 2026-08-27 | R3-004 approved and recorded as `Completed` | `9510c1f` |
 | 2026-08-27 | R3-005 characterization and planned tests completed; moved to `Review` | - |
+| 2026-08-28 | R3-005 approved and recorded as `Completed` | `79ca954` |

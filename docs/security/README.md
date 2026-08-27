@@ -328,8 +328,6 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  R3-005: behavior baselineをreviewし、commitする
-    ↓
   R3-006: versioned problem schemaとmigration toolingを導入
     ↓
 Later
