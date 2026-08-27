@@ -20,6 +20,7 @@ SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-j
 | [セキュリティ](./SECURITY.md) | 開発者・運用者 | 現在のセキュリティモデル、sandbox制限、既知の制約 |
 | [セキュリティ課題](./docs/security/README.md) | 開発者・運用者 | 現在の課題、対応状況、優先順位、作業再開手順 |
 | [v3.0.0リファクタリング計画](./docs/refactoring/README.md) | 開発者 | v3の設計方針、作業unit、優先順位、進捗、完了commit |
+| [v3移行前のbehavior baseline](./docs/refactoring/legacy-behavior.md) | 開発者 | v2系で維持する挙動と、v3で修正する既知不具合 |
 | [Docker統合テスト](./backend/tests/integration/README.md) | 開発者 | Dockerテストの実行条件、コマンド、検証範囲 |
 | [問題データ](./problems/README.md) | 問題作成者 | YAMLと正解画像の仕様 |
 | [backend](./backend/README.md) / [frontend](./frontend/README.md) | 開発者 | 各componentの責務と主な配置 |

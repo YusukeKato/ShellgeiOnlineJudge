@@ -1,0 +1,742 @@
+{
+  "manifest_version": 1,
+  "problem_count": 92,
+  "problems": [
+    {
+      "id": "IMAGE-00000001",
+      "category": "IMAGE",
+      "has_input": false,
+      "expected_output_kind": "empty",
+      "definition_sha256": "a584080dc1c606947dd10bc8878c01bc8a2c629a86b1eab41d975b54eb649317",
+      "answer_image_sha256": "54281ea96b82ef0ed38eeab41d9faffb09c52b0c744e98b1a8c3da385510cb86"
+    },
+    {
+      "id": "IMAGE-00000002",
+      "category": "IMAGE",
+      "has_input": false,
+      "expected_output_kind": "empty",
+      "definition_sha256": "99fe586b14a41fbb6e4106010fb9a736e925b833d22aba8e14193765077bf75f",
+      "answer_image_sha256": "b7a24bec7f41e4579ec85fc5d25275249657b042cb8250177d1924d713075b07"
+    },
+    {
+      "id": "IMAGE-00000003",
+      "category": "IMAGE",
+      "has_input": false,
+      "expected_output_kind": "empty",
+      "definition_sha256": "11b0851e239866641e2752f54582afef47f9548e472f7d0d5408915883ecc399",
+      "answer_image_sha256": "70e0da43d87787014da7ce4e339335d0f3ab90d89f594ec50b16c14ea98ada45"
+    },
+    {
+      "id": "IMAGE-00000004",
+      "category": "IMAGE",
+      "has_input": false,
+      "expected_output_kind": "empty",
+      "definition_sha256": "1a6db870bac859f9d3add51a60e408dad21f515d106af8e72f7c2df2d116e993",
+      "answer_image_sha256": "b18ff825ade42a31b8dfea6a717a1fee7105218f287eb98ac182f21bdc8e664e"
+    },
+    {
+      "id": "IMAGE-00000005",
+      "category": "IMAGE",
+      "has_input": false,
+      "expected_output_kind": "empty",
+      "definition_sha256": "a15575282ac02a1b2d183658f5be64daa37fa077f0b3769165fec8709fe276a7",
+      "answer_image_sha256": "ee475343d891512d1399262d36c0863a8879a11d69a071f88384f21861ea4fb4"
+    },
+    {
+      "id": "PRACTICE-awk-01",
+      "category": "PRACTICE",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "e79b945050ff58be5461d7c31d538da4cbfa6e90adb8364b9ccb6a8c083f29eb",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-awk-02",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "e44438715000c4784d2a5a41c166bc13dc886bc5a050c9e2c324b384d47226f7",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-awk-03",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "aa974f2247af02b52a595bd1c3a04a6ffaf49f6e42c73b1766bdd470284186ba",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-awk-04",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "a6f05f964276e60e249e89241ca8787b2147dc09856c2e3cf43140dcfd04a40e",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-awk-05",
+      "category": "PRACTICE",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "dd19ca9b6b93e601697d10a3199794c1755a81c394c14d0f07d8e6216193fc49",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-awk-06",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "87e60fcbd24a88248208fd5517a157b82e364b944cf65a9d6a35177b4c82ba19",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-awk-07",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "a2ade6de3f3812cdaae64beeec96da5ff756f27c08efc5ec2cfe5617345b6168",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-awk-08",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "87fc4bebdfa063b5b80f1367681b297478d0d744693dbfe867bbe687619e46cd",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-cat-01",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "28276f3221c2686c5d555e877f3851c21d85c0c34f6b83e9c26de78269fe1ef8",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-cat-02",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "205d8e2c5979632cfeeaf27b151ef9556fab7e559fbb9f053033f007b88dab99",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-cat-03",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "5961cf6f66b8d6d2630af3b4c3b649bc3e830784225d22d40e25d3bc8511f899",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-cat-04",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "f88077598698ed2843f0d15eca69023f3bb74189a4723b2518a4715cbf75f214",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-echo-01",
+      "category": "PRACTICE",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "5f8e93f84e83cf5f10a0892fcf91565d70b46749a1d79abdd1dc2c67744f9a58",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-echo-02",
+      "category": "PRACTICE",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "e120f952b25d21c2ef456a087e03e0341df8a156521cdd02a3290deea9acbd4c",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-echo-03",
+      "category": "PRACTICE",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "06059d57c71ed18f3807e4540cc4b914bf1bf5d82e87b8f7c166aaafdb5ccd03",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-find-01",
+      "category": "PRACTICE",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "8e6a3a71f2476050a1d2b5eff2483c27e2c760ffb867d1b74c6858d8dd858bd2",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-find-02",
+      "category": "PRACTICE",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "fe60abd12c4efab0c2a51091720880a09a3ab0a32621039f03ec2cc549025459",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-find-03",
+      "category": "PRACTICE",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "4408e57bcca54f6f0054b9f70526d093a9d4525f102340edc1713c13e2144c25",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-grep-01",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "02ec2aeb9d984a645cb979f9478c99db1b583a70515bc9d1980d3e3f477827e4",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-grep-02",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "d3ba3e00b0990300fc9c3b96f5f9ff29a9aab47231e8deaaf045df0aabd66b72",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-grep-03",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "ae81bb8d8424715d0caaa4ff9834801d0063c3df1bcc92b9dd609a48de218e80",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-grep-04",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "bad0370f42b4d43a64d5cb9babe9ab6393e2bb76811e16c54f50dce84522717a",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-sed-01",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "494d9082db1f12a58631e927de2251665bd49fa9def62f0beacfe43b677656ac",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-sed-02",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "2b8019e349412c174bc7473de1eff562c0cbd777e876a8a1377319f11a80164c",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-sed-03",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "0e5f9afb5e315be6ed01341691dacd6380870dbd4ce48b78bd41e3c3a2f0b8c5",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-sed-04",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "e275b7d35abbb3414650eea3736c85ec705c558383812d2c417d1d580f349e73",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-sed-05",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "fca3e9f83db9d62109eec1c52871e3f7a46b84ff4e62be828b80ca75536afff9",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-sed-06",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "8c7c8d1b5ace729b4469e6290d1440996e634a051465f70a6b54ac1881b4fc9d",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-sort-01",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "648bf091da01c02f9b137c2af5719d82d60324dc43a431cf29f04a63c550fdcb",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-sort-02",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "986d7610d14eead89a10c8b38cee93dab824f54ae88b3335b13ed6291c5f41f0",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-sort-03",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "ae7daa0141346ff579179d9168e607f2ac0c02ddeefa37ba106019cc049b18a0",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-uniq-01",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "ce70fa0338048e86f30b1e80c067e00e41242d506907e2f751ff2383ead2ccf5",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-uniq-02",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "bc0f6b090be41fb73ac93a7cf67837cf3ef6d7f878c347c18d267a561cc57eb0",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-wc-01",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "ee1852780568a9a56f004782263b656bb1d13aeb629bcc6a440bae7cf3e8054d",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-wc-02",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "f3ee547dd1bacd37888524a90052b6067d3c59ce6301ac841a2b6e0ed5a29739",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "PRACTICE-wc-03",
+      "category": "PRACTICE",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "e6b7fb38b0918530373ae18db6a7ff10ba195515d05712d64d7824445b19e611",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000001",
+      "category": "STANDARD",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "a6482ac5bf1b80d5e7ed758781485ca0164bc4c8afea5e61c969c309d3923175",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000002",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "2aeda8be5a883a5d91f5b83b98f3c82ea0fc810e874af6940321880fbf799435",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000003",
+      "category": "STANDARD",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "a0c3c7a3df2f1579fb87f3ab3eeae594091ba7bf8815b60ab529f501d3cfc054",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000004",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "f1c900905ffa9ea9fb6b4afa170c86d8c19a11932d0d676110f4d55053967656",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000005",
+      "category": "STANDARD",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "630256162b449bb6fb4856c67d51eb9afa04a7552b858a2757a8c6e26cd3ca43",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000006",
+      "category": "STANDARD",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "693a345247cc3552a9b316828f2f7a5fb899fb43fa93e61d11579a2871f3e24d",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000007",
+      "category": "STANDARD",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "e6eb35ea9af0898a6c4428c26b6d0dee1ee5cd161f3cda7dd1852c641eb38f25",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000008",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "fd6e0683be1db9cc79f3b49cfff55638ebd6df31d766b34225f19f289e83edd3",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000009",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "c8337269541cbe6b77e6150f5eed8ddbdf89594edeed18421a789be5d5d5cfbd",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000010",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "32f9bdfb6a08ca2ccac2152838646c441b72cc3db48dd5e77b55015e68a3e73d",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000011",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "4480d52f2e7f757d5eec373293a40c7bd4c706aece437f3616b9dfad37f31486",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000012",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "243fcaffebb086988600830f1f81dee4f9382bdf50453c258a7a0c8e19059942",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000013",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "4674cf0f86a5483e9b07a61f450c5faabd016e2a1c46d57b2095b0d7fdd46ba0",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000014",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "45da0d177336fb98532630626088f30b8d26fb1bc3c28b1816937a8c3ab5a5cf",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000015",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "6c840a9cae6577580221c920d9a52fd6a298f2b8cb2d9d7f7c7c86ba7128dd96",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000016",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "eb8208656b55d0109179b2011f26808cc466d9766dc9aaa6dad9525f594db49f",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000017",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "256251f16a98088f83ccef78f9c67d891ef65ea3c81e70fc5d6101d21b59c437",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000018",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "5556ef306830928582a939cae273f4d405867523b2ab3a38480bbe2fa54896bd",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000019",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "d3a134d9743a447f628d6c3b8221ea8d630ddcbdc9d9e619b7f05a2e2d2dc309",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000020",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "69e81fab5b30e8ee85a795aa5ca38e05664e8151f4ec45d2bfca8f84a37c2549",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000021",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "7109db988c2fe0717e552ed9ac93fe2cbe8d42748e7717da008f20b4be5b3d45",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000022",
+      "category": "STANDARD",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "2adffe15835ea218a64b6331122caa317894bf55905d77536fb1cf93d1ac3aaa",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000023",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "d9cc31334462a042ba601560579686166cb7c3ff86441b726dd396ef01adf73f",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000024",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "6dc2b70c1b2de2eaa1e1e579b451821d36336cfacf79e6f5ba12616cf2b210ad",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000025",
+      "category": "STANDARD",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "fd387953f7479e4e35a80d6c7e09c9bac575a2e0d5c0310ed49eafd78f98e231",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000026",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "60ab68c1daf7259270b1cfdadc5cfd6a6ea8fb012edf23a9fc2c73acea24235e",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000027",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "0c3f9bba14699defcc5ffb39ef2f54d89e113af79d5890d420a15a6c4179e474",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000028",
+      "category": "STANDARD",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "cbaac776e406e9d72929d32374855a9959f7f924b2bfe54c457d190948cecb06",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000029",
+      "category": "STANDARD",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "392ef5245549a6fd9d5ec9559d8dc38bc10700bcb39d7a3999284b257b3cd752",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000030",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "4d599facd746dded827ea1f89b3ff05df993ce5b7de0721e39588422ff210922",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000031",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "d681c3c5b4c9b8145bfbaada615ac460f7abf42c4679de3b3cea4118957dad50",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000032",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "27761793274c0153edf2ef55fafdf9c2243cf6ce51450ebf58f456f920f3dc5d",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000033",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "879243f340fda338b2e315a164db2980216ab99c1706e5394cf4ec99b7c876c7",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000034",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "160ab3c136f12a831ddc58462f870972b2cd1dedb164624a4345467777a71dea",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000035",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "d653d1b1c14915b41cf6a08495e91a0e0ef9d9c6a230965ed6e5cfeb9f631ac7",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000036",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "86ee88be6518fa78a93ad7749f51dac0ece045d5e2b47398e9c703cfd80b6578",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000037",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "7de7802988c5b6ee6f0f2405826436d07d1977ed6b1184dc5332a05eb9ef6870",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000038",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "bbec44a9caaf55b0d4278e82ce1737574ff2fcb65dc9ac82e59aa0d8a00ef82e",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000039",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "7c0f151dd9c6e85895f61afa0edbd5499d94d239ea92e3587539ab3ddfe7be3d",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000040",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "d0a16619d5757878d2c3288b183a3c5a98c19be536f07e07ecc13100061fc714",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000041",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "f2e7a50969989f86c3e526e1b04cbd6f6c59d24386ed683dae5e0e8507fce6e0",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000042",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "d1d1d7da241132ee1450c08e409f03ae16aee496734fda1ffca0b60e3bf1765b",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000043",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "efebc770206910ba0163e9cfa5d997daa7aa07b2fc0a69dbe8ea8a7d17f1722a",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000044",
+      "category": "STANDARD",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "1be8b7200521bba7a67a1dc6afddfbe95563a4d4f8c8694c6222686d0a52e93f",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000045",
+      "category": "STANDARD",
+      "has_input": false,
+      "expected_output_kind": "text",
+      "definition_sha256": "d8fe9a4c0ba8b20a68263dc26d827749115ff407f94bf6448bd692eb74bfba26",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000046",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "cf752e092652d27c9786f506235494efc285ca05c5855f004d00af03151c0ce0",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000047",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "a06fc7582aef9288b80231a0ed5ca1cd65a407073d70d010a70ce3ae88704939",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000048",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "4232223b2fc315a96b181772be323baca1777fbea7df90c42d079cb5f8f163ad",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000049",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "e69feac1251cd50416ce7d732bd97a76744e24a0bf7c9f458f8a0e8c88503380",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000050",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "005c92e3c19dce445edeca153832c6c85ebd133ef1179b9984754cffd84569f7",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "id": "STANDARD-00000051",
+      "category": "STANDARD",
+      "has_input": true,
+      "expected_output_kind": "text",
+      "definition_sha256": "0a4f65eb106f787ba30da2d7559b2d557a6c7da9cb66c4ffca5520f8b1019aa1",
+      "answer_image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    }
+  ]
+}

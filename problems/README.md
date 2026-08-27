@@ -6,6 +6,7 @@
 
 - `yaml_data/`: 1問に1つのYAMLファイル
 - `image/`: 1問に1つの正解JPEG画像
+- `semantic_manifest.json`: v3移行前の全問題definitionと正解画像のsemantic baseline
 
 YAMLとJPEGは、`STANDARD-00000001.yaml`と
 `STANDARD-00000001.jpg`のように同じファイル名にします。
@@ -40,3 +41,8 @@ Dockerを使用しないbackendテストで検査します。
 
 実際の正解コマンドをsandboxで実行する方法は、
 [Docker統合テスト](../backend/tests/integration/README.md)を参照してください。
+
+`semantic_manifest.json`は、YAMLをkey順でcanonical JSON化したSHA-256、
+正解画像のSHA-256、入力有無、期待出力種別を92問すべてについて保持します。
+問題データやschemaを移行する場合は、意図した変更を除いてこのbaselineと
+同じ意味が保たれることをbackend testで確認してください。

@@ -78,7 +78,8 @@ Statusは次の意味で使用します。
 - `SOJ-009` — Medium / P2 / Open
   - 概要: 文字列置換と画像先頭除外により判定衝突が起きる
   - 関連: `backend/scripts/judge.py`
-  - 次: 比較方法を修正し、全問題回帰を実行
+  - 次: [legacy behavior baseline](../refactoring/legacy-behavior.md)の既知不具合を
+    R3-010、R3-011で修正し、全問題回帰を実行
 - `SOJ-011` — Medium / P2 / Deferred
   - 概要: backend containerとDB runtime roleの権限が大きい
   - 関連: `backend/Dockerfile`、`docker-compose.yml`
@@ -327,7 +328,9 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  R3-005: 既存problem、judge、frontend behaviorを回帰基準として固定
+  R3-005: behavior baselineをreviewし、commitする
+    ↓
+  R3-006: versioned problem schemaとmigration toolingを導入
     ↓
 Later
   judge、artifact、権限分離、E2E、browser、CI、運用基盤を改善
