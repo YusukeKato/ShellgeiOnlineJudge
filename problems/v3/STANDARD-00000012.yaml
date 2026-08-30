@@ -1,0 +1,24 @@
+schema_version: 3
+id: STANDARD-00000012
+category: STANDARD
+title:
+  ja: ビットの反転
+  en: Bit Reversal
+statement:
+  ja: |
+    0は1に、1は0に、反転させてください。
+  en: |
+    Invert 0 to 1 and 1 to 0.
+reference_solution: cat input.txt | tr 01 10
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      010100110011000111000111000011110000111100000111110000011111
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    101011001100111000111000111100001111000011111000001111100000

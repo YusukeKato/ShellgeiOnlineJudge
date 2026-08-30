@@ -1,0 +1,33 @@
+schema_version: 3
+id: PRACTICE-awk-04
+category: PRACTICE
+title:
+  ja: awk 4
+  en: awk 4
+statement:
+  ja: |
+    練習：awk
+    awkコマンドで入力ファイル"input.txt"の行数をカウントしてください。
+  en: |
+    Exercise: awk
+    Count the number of lines in the input file "input.txt".
+reference_solution: cat input.txt | awk 'BEGIN{cnt=0}{cnt+=1}END{print cnt}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      test test
+      text 1 2 3
+      apple apple apple
+      one two one one
+      point
+      html css
+      python
+      SHELLGEI ONLINE JUDGE
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    8

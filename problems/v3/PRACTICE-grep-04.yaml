@@ -1,0 +1,34 @@
+schema_version: 3
+id: PRACTICE-grep-04
+category: PRACTICE
+title:
+  ja: grep 4
+  en: grep 4
+statement:
+  ja: |
+    練習：grep
+    grepコマンドで入力ファイル"input.txt"から拡張子".jpg"が付いたjpgファイルの行だけを出力してください。
+  en: |
+    Exercise: grep
+    Output only the lines from the input file "input.txt" with the extension ".jpg".
+reference_solution: cat input.txt | grep ".jpg$"
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      file_01.jpg
+      file.jpg.png
+      file10.txt
+      test_01.png
+      test_02.jpg
+      test_05.cpp
+      test_11.jpg.jpg
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    file_01.jpg
+    test_02.jpg
+    test_11.jpg.jpg

@@ -1,0 +1,26 @@
+schema_version: 3
+id: STANDARD-00000040
+category: STANDARD
+title:
+  ja: 文字カウント2
+  en: Character Count 2
+statement:
+  ja: |
+    入力の文字列において、aとbとcがそれぞれ何文字あるか数えてください。
+  en: |
+    Output the number of characters for a, b, and c.
+reference_solution: cat input.txt | sed 's/\([a-z]\)/\1\n/g' | sort | uniq -c | awk 'NR>1{print $2,$1}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      abcabababcccbbaaaca
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    a 8
+    b 6
+    c 5

@@ -1,0 +1,36 @@
+schema_version: 3
+id: STANDARD-00000010
+category: STANDARD
+title:
+  ja: 虫食い日記
+  en: Incomplete Diary
+statement:
+  ja: |
+    日記が虫食い状態になっているので、正しい文章に修正してください。
+    虫が食った空欄には、順番に「川」「魚」「新幹線」「富士山」が入ります。
+  en: |
+    Correct the diary.
+    Fill in the blanks with "川", "魚", "新幹線", and "富士山" in that order.
+reference_solution: cat input.txt | sed -e '2 s/は　に/は川に/' | sed 's/ん　が/ん魚が/;s/は　に/は新幹線に/;s/、　が/、富士山が/'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      2023/05/03　火曜日　晴れ
+      今日は　に遊びに出かけました。
+      たくさん　が釣れました。
+      帰りは　に乗りました。
+      途中、　が見えました。
+      楽しかったです。
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    2023/05/03　火曜日　晴れ
+    今日は川に遊びに出かけました。
+    たくさん魚が釣れました。
+    帰りは新幹線に乗りました。
+    途中、富士山が見えました。
+    楽しかったです。

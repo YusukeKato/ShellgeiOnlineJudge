@@ -1,0 +1,25 @@
+schema_version: 3
+id: IMAGE-00000002
+category: IMAGE
+title:
+  ja: 横線
+  en: Horizontal Line
+statement:
+  ja: |
+    大きさ200x200[px]の赤色の画像の真ん中に50[px]の横線を引いてください。
+    画像はmedia/output.jpgとして作成してください。
+  en: |
+    Draw a 50[px] horizontal line down the middle of the red 200x200[px] image.
+    Output image as media/output.jpg.
+reference_solution: convert -size 200x200 xc:#FF0000 jpg:- | convert - -stroke "#000000" -strokewidth 50 -draw "line 0,100 200,100" media/output.jpg
+execution:
+  stdin: ''
+  fixtures: []
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: image
+  artifact:
+    path: media/output.jpg
+    media_type: image/jpeg
+    max_bytes: 750000

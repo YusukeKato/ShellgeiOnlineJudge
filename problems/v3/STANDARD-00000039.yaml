@@ -1,0 +1,24 @@
+schema_version: 3
+id: STANDARD-00000039
+category: STANDARD
+title:
+  ja: 重複削除
+  en: Remove Duplicates
+statement:
+  ja: |
+    入力の文字列から重複している文字だけを削除してください。
+  en: |
+    Delete only duplicate characters from the input string.
+reference_solution: cat input.txt | sed 's/\([a-z]\)/\1\n/g' | uniq -u | tr -d '\n'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      aabcccddeefggggg
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    bf

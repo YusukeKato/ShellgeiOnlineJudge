@@ -1,0 +1,42 @@
+schema_version: 3
+id: PRACTICE-sort-02
+category: PRACTICE
+title:
+  ja: sort 2
+  en: sort 2
+statement:
+  ja: |
+    練習：sort
+    sortコマンドで入力ファイル"input.txt"の数値を降順に並び替えてください。
+  en: "Exercise: sort \nSort the values in the input file \"input.txt\" in descending order.\n"
+reference_solution: cat input.txt | sort -r
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      8
+      4
+      1
+      5
+      2
+      3
+      9
+      6
+      0
+      7
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    9
+    8
+    7
+    6
+    5
+    4
+    3
+    2
+    1
+    0

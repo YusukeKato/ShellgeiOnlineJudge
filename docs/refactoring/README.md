@@ -23,10 +23,10 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 27
 - Ready: 0
-- Planned: 21
-- Pending (`Ready` + `Planned`): 21
+- Planned: 20
+- Pending (`Ready` + `Planned`): 20
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 6
 - Blocked: 0
 - Deferred: 0
@@ -159,7 +159,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-004 | P1 | Completed | A | Align supported Python versions and concurrency behavior | - | `9510c1f` |
 | R3-005 | P0 | Completed | A | Characterize legacy problem, judge, and frontend behavior | - | `79ca954` |
 | R3-006 | P0 | Completed | B | Introduce v3 problem schema and migration tooling | R3-005 | `e710670` |
-| R3-007 | P0 | Planned | B | Migrate all problem definitions to schema v3 | R3-006 | - |
+| R3-007 | P0 | Review | B | Migrate all problem definitions to schema v3 | R3-006 | - |
 | R3-008 | P0 | Planned | B | Introduce immutable ProblemRepo and manifest digest | R3-007 | - |
 | R3-009 | P0 | Planned | B | Introduce typed runner execution protocol | R3-005 | - |
 | R3-010 | P0 | Planned | B | Extract pure text judge and typed JudgeResult | R3-006, R3-009 | - |
@@ -257,14 +257,14 @@ They are planning aids, not acceptance criteria.
 
 ### R3-007: Migrate all problem definitions to schema v3
 
-- Priority / Status: P0 / `Planned`
+- Priority / Status: P0 / `Review`
 - Goal: 全92問をv3 schemaへ機械的に移行し、text/image judge、fixture、入力を明示する
-- Main files/components: `problems/*.yml`、必要なfixture/manifest、problem migration検査
+- Main files/components: `problems/v3/*.yaml`、fixture、problem migration検査、全問題Docker回帰
 - Dependencies: R3-006、reference solution公開方針のreview gate
 - Risk: Medium。差分量が大きく、問題文や正解データの意図しない変更を見落としやすい
 - Expected tests: 全problem schema検証、移行前後semantic manifest、代表実行、全問題回帰
 - Size: L
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `-` / date `-` / note `implementation and planned tests complete; awaiting review`
 
 ### R3-008: Introduce immutable ProblemRepo and manifest digest
 
@@ -517,7 +517,7 @@ They are planning aids, not acceptance criteria.
 | runnerを専用hostまたは使い捨てVMへ分離するか | Open | R3-023の最終設計、またはv3 release scope確定 | - | - |
 | runner process外の独立reaperを導入するか | Open | R3-024のrecovery acceptance確定 | - | - |
 | Analytics / Google Fontsを維持するか、CSPをどう設定するか | Open | R3-021 | - | - |
-| reference solutionをpublic frontend/API artifactに含めるか | Open | R3-007 | - | - |
+| reference solutionをpublic frontend/API artifactに含めるか | Decided | R3-007 | 現行どおりpublic problem detail APIで公開する | 既存APIは`answer`をすでに公開しているためR3-016以前の互換性を維持し、v3では`reference_solution`として保持する。2026-08-30決定、関連commit未作成 |
 | execution logの利用目的、保持期間、privacy、backup方針 | Open | R3-014 | - | - |
 | imageをbyte exact、canonicalized、pixel比較のどれで判定するか | Open | R3-011 | - | - |
 
@@ -605,3 +605,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-08-28 | R3-005 approved and recorded as `Completed` | `79ca954` |
 | 2026-08-30 | R3-006 schema, migration tooling, and planned tests completed; moved to `Review` | - |
 | 2026-08-30 | R3-006 approved and recorded as `Completed` | `e710670` |
+| 2026-08-30 | R3-007 all-problem migration and planned tests completed; moved to `Review` | - |

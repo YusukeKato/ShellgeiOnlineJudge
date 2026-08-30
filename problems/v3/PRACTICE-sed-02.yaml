@@ -1,0 +1,26 @@
+schema_version: 3
+id: PRACTICE-sed-02
+category: PRACTICE
+title:
+  ja: sed 2
+  en: sed 2
+statement:
+  ja: |
+    練習：sed
+    sedコマンドで入力ファイル"input.txt"の"XXX"を"SHELLGEI"に、"YYY"を"ONLINE"に置換してください。
+  en: |
+    Exercise: sed
+    Replace "XXX" with "SHELLGEI", and replace "YYY" with "ONLINE" in the input file "input.txt".
+reference_solution: cat input.txt | sed "s/XXX/SHELLGEI/;s/YYY/ONLINE/"
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      XXX YYY JUDGE
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    SHELLGEI ONLINE JUDGE

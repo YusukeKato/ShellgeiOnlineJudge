@@ -1,0 +1,34 @@
+schema_version: 3
+id: STANDARD-00000038
+category: STANDARD
+title:
+  ja: 割り算判定
+  en: Division
+statement:
+  ja: |
+    1列目の値が2列目の値で割り切れるかどうか判定してください。
+  en: |
+    Judge if the value in the first column is divisible by the value in the second column.
+reference_solution: cat input.txt | awk '{if($1%$2==0){print "Yes"}else{print "No"}}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      100 10
+      99 11
+      1001 2
+      59 3
+      57 3
+      1 999
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    Yes
+    Yes
+    No
+    No
+    Yes
+    No

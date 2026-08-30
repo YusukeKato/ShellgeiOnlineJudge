@@ -1,0 +1,23 @@
+schema_version: 3
+id: STANDARD-00000007
+category: STANDARD
+title:
+  ja: 円周率100桁
+  en: Pi to 100 Digits
+statement:
+  ja: |
+    円周率を小数点以下100桁まで求めてください。
+    101桁目以降は切り捨ててください。
+  en: |
+    Find pi to 100 decimal places.
+    Round down after the 101th digit.
+reference_solution: echo "scale=101; 4*a(1)" | bc -l | tr -d '\n' | tr -d '\\' | cut -c 1-102
+execution:
+  stdin: ''
+  fixtures: []
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679

@@ -1,0 +1,25 @@
+schema_version: 3
+id: STANDARD-00000034
+category: STANDARD
+title:
+  ja: xの5乗
+  en: x to the 5th Power
+statement:
+  ja: |
+    xを5乗すると1099511627776になります。
+    xを求めてください。
+  en: |
+    When x^5 = 1099511627776, Find x.
+reference_solution: cat input.txt | factor | xargs -n1 | awk 'NR>1' | xargs | awk '{for(i=1;i<=NF/5;i++){print $i}}' | awk 'BEGIN{a=1}{a=a*$1}END{print a}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      1099511627776
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    256

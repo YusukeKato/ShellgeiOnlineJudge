@@ -1,0 +1,27 @@
+schema_version: 3
+id: IMAGE-00000005
+category: IMAGE
+title:
+  ja: 四角の並び
+  en: Square Pattern
+statement:
+  ja: |
+    200x200[px]の赤色の画像に10[px]間隔で四角を描いてください。
+    端は5[px]あけてください。
+    画像はmedia/output.jpgとして作成してください。
+  en: |
+    Draw squares at 10[px] intervals on a red 200x200[px] image.
+    Leave 5[px] space at the edges.
+    Output image as media/output.jpg.
+reference_solution: convert -size 200x200 xc:#FF0000 media/output.jpg; for i in {0..9};do for j in {0..9};do convert media/output.jpg -draw "rectangle $((i*20+5)),$((j*20+5)) $((i*20+15)),$((j*20+15))" media/output.jpg; done; done
+execution:
+  stdin: ''
+  fixtures: []
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: image
+  artifact:
+    path: media/output.jpg
+    media_type: image/jpeg
+    max_bytes: 750000

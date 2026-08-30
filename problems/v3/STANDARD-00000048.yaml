@@ -1,0 +1,24 @@
+schema_version: 3
+id: STANDARD-00000048
+category: STANDARD
+title:
+  ja: 文字列の圧縮
+  en: String Compression
+statement:
+  ja: |
+    文字列の中で連続している文字を個数に置き換えてください。
+  en: |
+    Replace consecutive identical characters in the string with their counts.
+reference_solution: cat input.txt | tr -d '\n' | sed 's/\([a-z]\)/\1\n/g' | uniq -c | awk '{print $2,$1}' | tr -d ' ' | tr -d '\n'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      aaabbcccccdeeeefghhiijjjkkkkkk
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    a3b2c5d1e4f1g1h2i2j3k6

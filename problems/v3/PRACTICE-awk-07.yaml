@@ -1,0 +1,32 @@
+schema_version: 3
+id: PRACTICE-awk-07
+category: PRACTICE
+title:
+  ja: awk 7
+  en: awk 7
+statement:
+  ja: |
+    練習：awk
+    awkコマンドで入力ファイル"input.txt"の2行目と3行目を入れ替えて出力してください。
+  en: |
+    Exercise: awk
+    Swap the second and third lines of the input file "input.txt".
+reference_solution: cat input.txt | awk 'NR==2{a=$0}NR==3{print $0;print a}NR!=2&&NR!=3{print $0}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      aaaaa bbbbb ccccc
+      ddddd eeeee fffff ggggg hhhhh
+      iiiii jjjjj kkkkk lllll mmmmm
+      nnnnn ooooo ppppp
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    aaaaa bbbbb ccccc
+    iiiii jjjjj kkkkk lllll mmmmm
+    ddddd eeeee fffff ggggg hhhhh
+    nnnnn ooooo ppppp

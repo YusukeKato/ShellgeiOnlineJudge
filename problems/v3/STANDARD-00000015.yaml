@@ -1,0 +1,44 @@
+schema_version: 3
+id: STANDARD-00000015
+category: STANDARD
+title:
+  ja: 素数判定
+  en: Prime Number
+statement:
+  ja: |
+    素数の場合は"YES"、素数ではない場合は"NO"を出力してください。
+  en: |
+    Output "YES" if the number is prime, "NO" if the number is not prime.
+reference_solution: cat input.txt | factor | awk '{if(NF==2){print "YES"}else{print "NO"}}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      2
+      7
+      57
+      97
+      401
+      407
+      2635
+      7727
+      102611
+      102613
+      200560490131
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    YES
+    YES
+    NO
+    YES
+    YES
+    NO
+    NO
+    YES
+    YES
+    NO
+    YES

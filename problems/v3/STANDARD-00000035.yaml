@@ -1,0 +1,37 @@
+schema_version: 3
+id: STANDARD-00000035
+category: STANDARD
+title:
+  ja: 文字列の複製
+  en: Copy Strings
+statement:
+  ja: |
+    各行を二行に複製して出力してください。
+  en: |
+    Duplicate each line into two lines of output.
+reference_solution: cat input.txt | awk '{print $1,$1}' | xargs -n1
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      shellgei
+      apple
+      switch
+      book
+      tomato
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    shellgei
+    shellgei
+    apple
+    apple
+    switch
+    switch
+    book
+    book
+    tomato
+    tomato

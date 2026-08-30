@@ -1,0 +1,24 @@
+schema_version: 3
+id: STANDARD-00000013
+category: STANDARD
+title:
+  ja: アルファベットの調査
+  en: Alphabet Investigation
+statement:
+  ja: |
+    26種類のアルファベットのうち、足りないものを出力してください。
+  en: |
+    Please output the missing alphabets.
+reference_solution: echo {a..z} | tr $(cat input.txt) '                         ' | awk '{print $1}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      qwertyuiopasdfhjklzxcvbnm
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    g

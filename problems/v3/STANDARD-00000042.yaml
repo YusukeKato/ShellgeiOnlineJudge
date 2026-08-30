@@ -1,0 +1,29 @@
+schema_version: 3
+id: STANDARD-00000042
+category: STANDARD
+title:
+  ja: 魔法陣5x5
+  en: Magic Square 5x5
+statement:
+  ja: |
+    xを求めて魔法陣を完成させてください。
+    参考 : https://ja.wikipedia.org/wiki/%E9%AD%94%E6%96%B9%E9%99%A3
+  en: |
+    Complete the magic square.
+    Reference: https://ja.wikipedia.org/wiki/%E9%AD%94%E6%96%B9%E9%99%A3
+reference_solution: cat input.txt | awk 'NR==1{a=$1+$2+$3+$4+$5}NR==3{x=a-$1-$2-$4-$5;print $1,$2,x,$4,$5}NR!=3{print $0}' | sed '3 s/\( [0-9] \)/ \1/g;3 s/\( [0-9]$\)/ \1/g'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      11 24  7 20  3
+       4 12 25  8 16
+      17  5  x 21  9
+      10 18  1 14 22
+      23  6 19  2 15
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: "11 24  7 20  3\n 4 12 25  8 16\n17  5 13 21  9\n10 18  1 14 22\n23  6 19  2 15 \n"

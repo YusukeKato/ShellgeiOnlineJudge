@@ -1,0 +1,30 @@
+schema_version: 3
+id: PRACTICE-wc-02
+category: PRACTICE
+title:
+  ja: wc 2
+  en: wc 2
+statement:
+  ja: |
+    練習：wc
+    wcコマンドで入力ファイル"input.txt"の単語数を出力してください。
+  en: |
+    Exercise: wc
+    Output the number of words in the input file "input.txt".
+reference_solution: cat input.txt | wc -w
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      apple train
+      tomato
+      SHELL ONLINE JUDGE
+      test text think
+      good nice
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    11

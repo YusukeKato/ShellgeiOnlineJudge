@@ -1,0 +1,47 @@
+schema_version: 3
+id: STANDARD-00000046
+category: STANDARD
+title:
+  ja: 単位行列の生成
+  en: Identity Matrix Generation
+statement:
+  ja: |
+    入力Nに対してNxNの単位行列を出力してください。
+  en: |
+    Output an N x N identity matrix, when given an input N.
+reference_solution: cat input.txt | awk '{for(i=0;i<$1;i++){for(j=0;j<$1;j++){if(i==j){printf("1")}else{printf("0")}}printf("\n")}}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      3
+      5
+      2
+      4
+      6
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    100
+    010
+    001
+    10000
+    01000
+    00100
+    00010
+    00001
+    10
+    01
+    1000
+    0100
+    0010
+    0001
+    100000
+    010000
+    001000
+    000100
+    000010
+    000001

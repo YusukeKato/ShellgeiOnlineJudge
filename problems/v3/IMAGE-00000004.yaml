@@ -1,0 +1,25 @@
+schema_version: 3
+id: IMAGE-00000004
+category: IMAGE
+title:
+  ja: 市松模様
+  en: Checkered Pattern
+statement:
+  ja: |
+    200x200[px]の画像に赤色と黒色で市松模様を描いてください。
+    画像はmedia/output.jpgとして作成してください。
+  en: |
+    Draw a checkered pattern in black on a red 200x200[px] image.
+    Output image as media/output.jpg.
+reference_solution: convert -size 200x200 xc:#FF0000 jpg:- | convert - -draw "rectangle 0,0 100,100" - | convert - -draw "rectangle 100,100, 200, 200" media/output.jpg
+execution:
+  stdin: ''
+  fixtures: []
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: image
+  artifact:
+    path: media/output.jpg
+    media_type: image/jpeg
+    max_bytes: 750000

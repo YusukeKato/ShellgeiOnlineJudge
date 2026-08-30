@@ -1,0 +1,23 @@
+schema_version: 3
+id: PRACTICE-awk-01
+category: PRACTICE
+title:
+  ja: awk 1
+  en: awk 1
+statement:
+  ja: |
+    練習：awk
+    awkコマンドで文字列"SHELLGEI ONLINE JUDGE"を出力してください。
+  en: |
+    Exercise: awk
+    Output the string "SHELLGEI ONLINE JUDGE".
+reference_solution: echo | awk '{print "SHELLGEI ONLINE JUDGE"}'
+execution:
+  stdin: ''
+  fixtures: []
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    SHELLGEI ONLINE JUDGE

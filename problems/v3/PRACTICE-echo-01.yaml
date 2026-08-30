@@ -1,0 +1,23 @@
+schema_version: 3
+id: PRACTICE-echo-01
+category: PRACTICE
+title:
+  ja: echo 1
+  en: echo 1
+statement:
+  ja: |
+    練習：echo
+    echoコマンドで文字列"SHELLGEI ONLINE JUDGE"を出力してください。
+  en: |
+    Exercise: echo
+    Output the string "SHELLGEI ONLINE JUDGE".
+reference_solution: echo "SHELLGEI ONLINE JUDGE"
+execution:
+  stdin: ''
+  fixtures: []
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    SHELLGEI ONLINE JUDGE

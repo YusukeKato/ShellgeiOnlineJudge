@@ -1,0 +1,40 @@
+schema_version: 3
+id: PRACTICE-awk-06
+category: PRACTICE
+title:
+  ja: awk 6
+  en: awk 6
+statement:
+  ja: |
+    練習：awk
+    awkコマンドで入力ファイル"input.txt"の各行が偶数か奇数か判定してください。
+  en: |
+    Exercise: awk
+    Determine whether each line of the input file "input.txt" is even or odd.
+reference_solution: cat input.txt | awk '{if($0%2==0){print "EVEN"}else{print "ODD"}}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      1
+      2
+      5
+      9
+      12
+      77
+      88
+      100
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    ODD
+    EVEN
+    ODD
+    ODD
+    EVEN
+    ODD
+    EVEN
+    EVEN

@@ -1,0 +1,33 @@
+schema_version: 3
+id: PRACTICE-uniq-01
+category: PRACTICE
+title:
+  ja: uniq 1
+  en: uniq 1
+statement:
+  ja: |
+    練習：uniq, sort
+    uniqコマンドで入力ファイル"input.txt"の重複行を除いて出力してください。
+  en: |
+    Exercise: uniq, sort
+    Output the input file "input.txt" without duplicate lines.
+reference_solution: cat input.txt | sort | uniq
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      SHELL
+      ONLINE
+      SHELL
+      SHELL
+      JUDGE
+      ONLINE
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    JUDGE
+    ONLINE
+    SHELL

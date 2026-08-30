@@ -1,0 +1,33 @@
+schema_version: 3
+id: STANDARD-00000005
+category: STANDARD
+title:
+  ja: フィボナッチ数列
+  en: Fibonacci Sequence
+statement:
+  ja: |
+    Fibonacci: F(0) = 0, F(1) = 1, F(n+2) = F(n) + F(n+1)
+    F(0)からF(10)まで出力してください。
+  en: |
+    Fibonacci: F(0) = 0, F(1) = 1, F(n+2) = F(n) + F(n+1)
+    Output from F(0) to F(10).
+reference_solution: seq 9 | awk 'BEGIN{a=0;b=1;print a;print b}{c=a+b;print c;a=b;b=c}'
+execution:
+  stdin: ''
+  fixtures: []
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    0
+    1
+    1
+    2
+    3
+    5
+    8
+    13
+    21
+    34
+    55

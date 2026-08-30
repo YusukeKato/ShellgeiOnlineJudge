@@ -1,0 +1,25 @@
+schema_version: 3
+id: STANDARD-00000028
+category: STANDARD
+title:
+  ja: 模様の描画1
+  en: Pattern Drawing 1
+statement:
+  ja: |
+    次の想定出力のような模様を描いてください。
+  en: |
+    Output the same pattern as the expected output.
+reference_solution: echo | awk '{for(i=0;i<5;i++){for(j=0;j<5;j++){if(i==0||i==4||j==0||j==4){printf("3")}else if((i==1||i==3||j==1||j==3)){printf("2")}else{printf("1")}};printf("\n")}}'
+execution:
+  stdin: ''
+  fixtures: []
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    33333
+    32223
+    32123
+    32223
+    33333

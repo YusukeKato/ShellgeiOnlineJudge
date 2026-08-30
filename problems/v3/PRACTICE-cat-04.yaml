@@ -1,0 +1,35 @@
+schema_version: 3
+id: PRACTICE-cat-04
+category: PRACTICE
+title:
+  ja: cat 4
+  en: cat 4
+statement:
+  ja: |
+    練習：cat
+    catコマンドで入力ファイル"input.txt"と"/ShellGeiData/vol.65/input"を連結して出力してください。
+    使用データ : https://github.com/ryuichiueda/ShellGeiData/blob/master/vol.65/input
+  en: |
+    Exercise: cat
+    Concatenate and output the input file "input.txt" and "/ShellGeiData/vol.65/input".
+    data: https://github.com/ryuichiueda/ShellGeiData/blob/master/vol.65/input
+reference_solution: cat input.txt  /ShellGeiData/vol.65/input
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      SHELLGEI
+      ONLINE
+      JUDGE
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    SHELLGEI
+    ONLINE
+    JUDGE
+    a bb ccc dddd
+    eeee fff gg
+    h ii

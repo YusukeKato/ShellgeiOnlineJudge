@@ -1,0 +1,33 @@
+schema_version: 3
+id: PRACTICE-uniq-02
+category: PRACTICE
+title:
+  ja: uniq 2
+  en: uniq 2
+statement:
+  ja: |
+    練習：uniq, sort
+    uniqコマンドで入力ファイル"input.txt"の各行の個数を出力してください。
+  en: |
+    Exercise: uniq, sort
+    Output the number of pieces in each line of the input file "input.txt".
+reference_solution: cat input.txt | sort | uniq -c
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      SHELL
+      ONLINE
+      SHELL
+      SHELL
+      JUDGE
+      ONLINE
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |2
+          1 JUDGE
+          2 ONLINE
+          3 SHELL

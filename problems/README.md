@@ -6,7 +6,7 @@
 
 - `yaml_data/`: 1問に1つのYAMLファイル
 - `image/`: 1問に1つの正解JPEG画像
-- `v3/`: schema v3へ移行した問題定義。R3-006では代表3問だけを保持
+- `v3/`: schema v3へ移行・検証済みの全92問
 - `semantic_manifest.json`: v3移行前の全問題definitionと正解画像のsemantic baseline
 
 YAMLとJPEGは、`STANDARD-00000001.yaml`と
@@ -52,7 +52,7 @@ schema v3の実行可能な型定義は
 | `schema_version` | 固定値`3` |
 | `id` / `category` | problem IDと`STANDARD`、`PRACTICE`、`IMAGE`の分類 |
 | `title` / `statement` | `ja`と`en`を持つ日英metadata |
-| `reference_solution` | 既存`answer`から移行する参照解答。公開方法は後続unitで決定 |
+| `reference_solution` | 既存`answer`から移行した参照解答。現行どおりpublic problem detail APIで公開する |
 | `execution.stdin` | commandへ渡す標準入力。legacy移行では空文字列 |
 | `execution.fixtures` | sandboxへ配置する相対pathとUTF-8 text。legacy `input`は`input.txt`へ移行 |
 | `execution.exit_code` | `ignore`または終了code 0を要求する`zero` |
@@ -76,20 +76,18 @@ schema v3の実行可能な型定義は
 fixtureとartifactのpathはabsolute path、`..`、`.`、空segment、backslash、
 NULを許可しません。同一fixture pathの重複も拒否します。
 
-現在のpilotは、入力なしtext、`input.txt` fixture付きtext、画像problemを代表する
-次の3問です。
-
-- `STANDARD-00000001`
-- `PRACTICE-awk-02`
-- `IMAGE-00000001`
+`v3/`にはSTANDARD 51問、PRACTICE 36問、IMAGE 5問を移行済みです。
+全fileについてlegacyからの決定的な再生成結果と、問題文、入出力、参照解答、
+judge種別、fixtureの意味が一致することをbackend testで確認します。
 
 legacy YAMLを1問移行する場合はbackend directoryから実行します。
 
 ```sh
 cd backend
+migration_output_dir="$(mktemp -d)"
 poetry run python -m scripts.problem_migration \
   ../problems/yaml_data/STANDARD-00000001.yaml \
-  ../problems/v3/STANDARD-00000001.yaml
+  "${migration_output_dir}/STANDARD-00000001.yaml"
 ```
 
 出力先はproblem IDと同名の`.yaml`に限定し、既存fileは上書きしません。
@@ -101,7 +99,7 @@ poetry run python -m scripts.problem_migration \
 ## 検査
 
 legacyの必須field、YAMLとJPEGの対応、problem IDに加え、schema v3の型、
-制約、pilot移行結果はDockerを使用しないbackendテストで検査します。
+制約、全92問の移行結果はDockerを使用しないbackendテストで検査します。
 
 実際の正解コマンドをsandboxで実行する方法は、
 [Docker統合テスト](../backend/tests/integration/README.md)を参照してください。

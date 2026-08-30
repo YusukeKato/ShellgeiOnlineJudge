@@ -1,0 +1,33 @@
+schema_version: 3
+id: STANDARD-00000037
+category: STANDARD
+title:
+  ja: 数字の抽出
+  en: Extract Numbers
+statement:
+  ja: |
+    入力の中から数字だけを抽出してください。
+  en: |
+    Extract only the numbers from the input.
+reference_solution: cat input.txt | sed 's/[^0-9]/ /g' | awk '{for(i=1;i<=NF;i++){print $i}}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      今日は2023年10月1日です。
+      公園を散歩中に犬を3匹見かけました。
+      空には雲は5つ、太陽は2つありました。
+      夜になると月が4つ出てきてちょっと怖かったです。
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    2023
+    10
+    1
+    3
+    5
+    2
+    4

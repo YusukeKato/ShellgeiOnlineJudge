@@ -1,0 +1,29 @@
+schema_version: 3
+id: STANDARD-00000018
+category: STANDARD
+title:
+  ja: 二分探索
+  en: Binary Search
+statement:
+  ja: |
+    1 <= N <= 100のとき、Nが何か当ててください。
+  en: |
+    Given 1 <= N <= 100, find N.
+reference_solution: cat input.txt | awk 'BEGIN{a=1;b=100}{if($2==">"){if(a<$3){a=$3}}else{if(b>$3){b=$3}}}END{for(i=1;i<=100;i++){if(i>a&&i<b){print i}}}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      N > 50
+      N < 75
+      N > 62
+      N < 68
+      N > 65
+      N > 66
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    67

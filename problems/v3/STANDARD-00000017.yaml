@@ -1,0 +1,42 @@
+schema_version: 3
+id: STANDARD-00000017
+category: STANDARD
+title:
+  ja: ソート1
+  en: Sort 1
+statement:
+  ja: |
+    sortコマンドを使用せずに昇順にソートしてください。
+  en: |
+    Sort in ascending order without using the sort command.
+reference_solution: cat input.txt | awk 'BEGIN{a=0}{b[a]=$1;a+=1}END{for(i=0;i<length(b);i++){for(j=i+1;j<length(b);j++){if(b[i]>b[j]){c=b[i];b[i]=b[j];b[j]=c}}};for(k=0;k<length(b);k++){print b[k]}}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      8
+      99
+      12
+      7
+      1024
+      999
+      1
+      5
+      10
+      1000
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    1
+    5
+    7
+    8
+    10
+    12
+    99
+    999
+    1000
+    1024

@@ -1,0 +1,26 @@
+schema_version: 3
+id: STANDARD-00000002
+category: STANDARD
+title:
+  ja: 入力テスト
+  en: Input Test
+statement:
+  ja: |
+    入力の文字列をそのまま出力してください。
+    ex: cat input.txt
+  en: |
+    Output the input string as is.
+    ex: cat input.txt
+reference_solution: cat input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      SHELLGEI
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    SHELLGEI

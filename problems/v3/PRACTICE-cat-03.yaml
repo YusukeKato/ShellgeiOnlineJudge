@@ -1,0 +1,30 @@
+schema_version: 3
+id: PRACTICE-cat-03
+category: PRACTICE
+title:
+  ja: cat 3
+  en: cat 3
+statement:
+  ja: |
+    練習：cat
+    catコマンドで入力ファイル"input.txt"の各行の末尾に'$'を付けて出力してください。
+  en: |
+    Exercise: cat
+    Output the input file "input.txt" with '$' appended to the end.
+reference_solution: cat -e input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      SHELLGEI
+      ONLINE
+      JUDGE
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    SHELLGEI$
+    ONLINE$
+    JUDGE$

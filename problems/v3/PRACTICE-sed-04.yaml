@@ -1,0 +1,35 @@
+schema_version: 3
+id: PRACTICE-sed-04
+category: PRACTICE
+title:
+  ja: sed 4
+  en: sed 4
+statement:
+  ja: |
+    練習：sed、正規表現
+    sedコマンドで入力ファイル"input.txt"の数字の行だけを削除してください。
+  en: |
+    Exercise: sed, Regular Expression
+    Delete only lines containing numbers in the input file "input.txt".
+reference_solution: cat input.txt | sed "/[0-9]/d"
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      29383846
+      SHELLGEI
+      001122
+      777
+      ONLINE
+      029433112
+      73429999
+      JUDGE
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    SHELLGEI
+    ONLINE
+    JUDGE

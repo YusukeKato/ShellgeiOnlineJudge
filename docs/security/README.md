@@ -328,7 +328,9 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  R3-007: review gateを解決し、全92問をschema v3へ移行
+  R3-007: 全92問のschema v3移行をreviewし、commitする
+    ↓
+  R3-008: immutable ProblemRepoとmanifest digestを導入
     ↓
 Later
   judge、artifact、権限分離、E2E、browser、CI、運用基盤を改善

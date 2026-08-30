@@ -1,0 +1,26 @@
+schema_version: 3
+id: PRACTICE-wc-03
+category: PRACTICE
+title:
+  ja: wc 3
+  en: wc 3
+statement:
+  ja: |
+    練習：wc
+    wcコマンドで入力ファイル"input.txt"の文字数を出力してください（改行を含む）。
+  en: |
+    Exercise: wc
+    Output the number of characters in the input file "input.txt"(Including line breaks).
+reference_solution: cat input.txt | wc -m
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      abcdeあいうえお
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    11

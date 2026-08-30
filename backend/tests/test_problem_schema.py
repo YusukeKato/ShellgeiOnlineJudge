@@ -24,11 +24,7 @@ from scripts.problem_schema import (
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 LEGACY_DIRECTORY = REPOSITORY_ROOT / "problems" / "yaml_data"
 V3_DIRECTORY = REPOSITORY_ROOT / "problems" / "v3"
-PILOT_PROBLEM_IDS = (
-    "STANDARD-00000001",
-    "PRACTICE-awk-02",
-    "IMAGE-00000001",
-)
+V3_PROBLEM_IDS = tuple(path.stem for path in sorted(LEGACY_DIRECTORY.glob("*.yaml")))
 
 
 def _valid_text_data() -> dict[str, object]:
@@ -210,14 +206,50 @@ def test_schema_rejects_oversized_definition_before_yaml_parsing() -> None:
         parse_problem_definition(oversized)
 
 
-@pytest.mark.parametrize("problem_id", PILOT_PROBLEM_IDS)
-def test_pilot_files_equal_deterministic_legacy_migration(problem_id: str) -> None:
-    # 代表3問のv3 YAMLがlegacyデータからの決定的な移行結果と一致することを確認する。
-    migrated = migrate_legacy_file(LEGACY_DIRECTORY / f"{problem_id}.yaml")
-    pilot_path = V3_DIRECTORY / f"{problem_id}.yaml"
+def test_v3_and_legacy_problem_id_sets_match() -> None:
+    # legacyとv3に同じ92問が1件ずつ存在し、欠落や余分な問題がないことを確認する。
+    v3_problem_ids = tuple(path.stem for path in sorted(V3_DIRECTORY.glob("*.yaml")))
 
-    assert load_problem_definition(pilot_path) == migrated
-    assert pilot_path.read_text(encoding="utf-8") == dump_problem_definition(migrated)
+    assert len(V3_PROBLEM_IDS) == 92
+    assert v3_problem_ids == V3_PROBLEM_IDS
+
+
+@pytest.mark.parametrize("problem_id", V3_PROBLEM_IDS)
+def test_all_v3_files_equal_deterministic_legacy_migration(problem_id: str) -> None:
+    # 各v3 YAMLが対応するlegacyデータからの決定的な移行結果と一致することを確認する。
+    migrated = migrate_legacy_file(LEGACY_DIRECTORY / f"{problem_id}.yaml")
+    v3_path = V3_DIRECTORY / f"{problem_id}.yaml"
+
+    assert load_problem_definition(v3_path) == migrated
+    assert v3_path.read_text(encoding="utf-8") == dump_problem_definition(migrated)
+
+
+@pytest.mark.parametrize("problem_id", V3_PROBLEM_IDS)
+def test_all_v3_definitions_preserve_legacy_problem_semantics(problem_id: str) -> None:
+    # 全fieldをlegacy値と照合し、構造変更で問題文・入出力・解答の意味が変わらないことを確認する。
+    legacy = yaml.safe_load(
+        (LEGACY_DIRECTORY / f"{problem_id}.yaml").read_text(encoding="utf-8")
+    )
+    definition = load_problem_definition(V3_DIRECTORY / f"{problem_id}.yaml")
+    fixture_input = (
+        definition.execution.fixtures[0].content
+        if definition.execution.fixtures
+        else ""
+    )
+    expected_output = (
+        definition.judge.expected_output if definition.judge.type == "text" else ""
+    )
+
+    assert definition.id == legacy["id"]
+    assert definition.category == problem_id.split("-", maxsplit=1)[0]
+    assert definition.title.ja == legacy["title_ja"]
+    assert definition.title.en == legacy["title_en"]
+    assert definition.statement.ja == legacy["statement_ja"]
+    assert definition.statement.en == legacy["statement_en"]
+    assert definition.reference_solution == legacy["answer"]
+    assert definition.execution.stdin == ""
+    assert fixture_input == legacy["input"]
+    assert expected_output == legacy["expected_output"]
 
 
 def test_migration_preserves_legacy_input_as_an_isolated_fixture() -> None:

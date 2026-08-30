@@ -1,0 +1,36 @@
+schema_version: 3
+id: STANDARD-00000043
+category: STANDARD
+title:
+  ja: 文字列の複製2
+  en: Copy Strings 2
+statement:
+  ja: |
+    入力の各行の文字列の末尾にそれぞれ".png"と".jpg"を加えてスペース区切りで出力してください。
+  en: |
+    Add '.png' and '.jpg' to the end of each line of the input string, and output them separated by a space.
+reference_solution: cat input.txt | awk '{print $1".png",$1".jpg"}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      shellgei
+      online
+      judge
+      apple
+      20240825_01
+      20240825_02
+      20240825_03
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    shellgei.png shellgei.jpg
+    online.png online.jpg
+    judge.png judge.jpg
+    apple.png apple.jpg
+    20240825_01.png 20240825_01.jpg
+    20240825_02.png 20240825_02.jpg
+    20240825_03.png 20240825_03.jpg

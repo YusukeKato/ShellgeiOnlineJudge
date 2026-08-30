@@ -1,0 +1,26 @@
+schema_version: 3
+id: STANDARD-00000032
+category: STANDARD
+title:
+  ja: 最小公倍数
+  en: Least Common Multiple
+statement:
+  ja: |
+    最小公倍数を求めてください。
+  en: |
+    Find the least common multiple.
+reference_solution: cat input.txt | xargs | awk '{a=$1;for(i=100;i>=1;i--){for(j=100;j>=1;j--){for(k=100;k>=1;k--){if($1*i==$2*j&&$2*j==$3*k){a=$1*i}}}};print a}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      256
+      512
+      1024
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    1024

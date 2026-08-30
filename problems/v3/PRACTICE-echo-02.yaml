@@ -1,0 +1,28 @@
+schema_version: 3
+id: PRACTICE-echo-02
+category: PRACTICE
+title:
+  ja: echo 2
+  en: echo 2
+statement:
+  ja: |
+    練習：echo
+    echoコマンドで改行を含む文字列を出力してください。
+  en: |
+    Exercise: echo
+    Output a string containing newlines with echo.
+reference_solution: |-
+  echo -e "SHELLGEI
+  ONLINE
+  JUDGE"
+execution:
+  stdin: ''
+  fixtures: []
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    SHELLGEI
+    ONLINE
+    JUDGE

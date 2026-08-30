@@ -3,8 +3,7 @@ import os
 from pathlib import Path
 
 import pytest
-import yaml
-
+from scripts.problem_schema import load_problem_definition
 from scripts.container_manager import ContainerManager
 from scripts.judge import ShellgeiJudge
 from scripts.run_shellgei import ShellgeiDockerClient
@@ -21,10 +20,11 @@ pytestmark = [
 ]
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
-YAML_DIR = REPOSITORY_ROOT / "problems" / "yaml_data"
+V3_DIRECTORY = REPOSITORY_ROOT / "problems" / "v3"
 
 
 def test_all_problem_answers_in_real_sandboxes() -> None:
+    # 全v3問題の参照解答を実sandboxで実行し、legacy judgeで正解になることを確認する。
     manager = ContainerManager(pool_size=1)
     client = ShellgeiDockerClient(container_manager=manager, max_concurrent=1)
     client.base_dir = REPOSITORY_ROOT
@@ -32,11 +32,11 @@ def test_all_problem_answers_in_real_sandboxes() -> None:
     judge.base_dir = REPOSITORY_ROOT
     manager.initialize_pool()
     try:
-        for yaml_path in sorted(YAML_DIR.glob("*.yaml")):
-            data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+        for yaml_path in sorted(V3_DIRECTORY.glob("*.yaml")):
+            definition = load_problem_definition(yaml_path)
             output, image = asyncio.run(
                 client.run_with_timeout(
-                    data["answer"],
+                    definition.reference_solution,
                     yaml_path.stem,
                 )
             )
