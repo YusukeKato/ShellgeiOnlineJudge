@@ -20,12 +20,27 @@ from scripts.runner_client import (
 )
 from scripts.runner_protocol import (
     RUNNER_EXECUTE_PATH,
+    RUNNER_PROTOCOL_VERSION,
+    ExecutionResult,
     RunnerConfigurationError,
+    RunnerExecutionRequest,
     get_runner_shared_secret,
 )
 
 
 VALID_SECRET = "a" * 64
+
+
+def _runner_request(
+    shellgei: str = "true",
+    problem_id: str = "STANDARD-00000001",
+) -> RunnerExecutionRequest:
+    """入力command・problem IDから、現行versionの内部runner requestを返す。"""
+    return RunnerExecutionRequest(
+        protocol_version=RUNNER_PROTOCOL_VERSION,
+        shellgei=shellgei,
+        problem_id=problem_id,
+    )
 
 
 class FakeResponse:
@@ -115,14 +130,17 @@ def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
 
     result = asyncio.run(
         runner_main.execute_shellgei(
-            ShellgeiData(
+            _runner_request(
                 shellgei="printf output",
                 problem_id="STANDARD-00000001",
             )
         )
     )
 
-    assert result.model_dump() == {"output": "output", "image": "image"}
+    assert result.model_dump() == {
+        "protocol_version": 1,
+        "result": {"output": "output", "image": "image"},
+    }
     assert calls == [("printf output", "STANDARD-00000001")]
 
 
@@ -158,7 +176,7 @@ def test_runner_rejects_unknown_problem_before_admission_or_docker(
     with pytest.raises(HTTPException) as exc_info:
         asyncio.run(
             runner_main.execute_shellgei(
-                ShellgeiData(
+                _runner_request(
                     shellgei="true",
                     problem_id="MISSING-00000001",
                 )
@@ -264,17 +282,19 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
         """入力requestとtimeoutを記録し、固定runner responseを返す。"""
         assert timeout == runner_client_module.RUNNER_REQUEST_TIMEOUT_SECONDS
         captured.append(request)
-        return FakeResponse(b'{"output":"ok","image":""}')
+        return FakeResponse(
+            b'{"protocol_version":1,"result":{"output":"ok","image":""}}'
+        )
 
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
     client = RunnerClient()
     monkeypatch.setattr(client._opener, "open", fake_urlopen)
     try:
-        result = asyncio.run(client.run("printf ok", "STANDARD-00000001"))
+        result = asyncio.run(client.execute("printf ok", "STANDARD-00000001"))
     finally:
         client.close()
 
-    assert result == ["ok", ""]
+    assert result == ExecutionResult(output="ok", image="")
     assert len(captured) == 1
     request = captured[0]
     assert request.full_url == f"{RUNNER_BASE_URL}{RUNNER_EXECUTE_PATH}"
@@ -284,6 +304,7 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
     assert json.loads(request.data) == {
         "shellgei": "printf ok",
         "problem_id": "STANDARD-00000001",
+        "protocol_version": 1,
     }
 
 
@@ -299,7 +320,9 @@ def test_backend_runner_client_disables_environment_proxies(
             """入力requestとtimeoutを記録し、直接接続の固定responseを返す。"""
             assert timeout == runner_client_module.RUNNER_REQUEST_TIMEOUT_SECONDS
             captured_requests.append(request)
-            return FakeResponse(b'{"output":"direct","image":""}')
+            return FakeResponse(
+                b'{"protocol_version":1,"result":{"output":"direct","image":""}}'
+            )
 
     def fake_build_opener(*handlers: object) -> FakeOpener:
         """入力handler群を記録し、観測用の模擬openerを返す。"""
@@ -318,11 +341,11 @@ def test_backend_runner_client_disables_environment_proxies(
 
     client = RunnerClient()
     try:
-        result = asyncio.run(client.run("true", "STANDARD-00000001"))
+        result = asyncio.run(client.execute("true", "STANDARD-00000001"))
     finally:
         client.close()
 
-    assert result == ["direct", ""]
+    assert result == ExecutionResult(output="direct", image="")
     assert len(configured_handlers) == 1
     proxy_handler = configured_handlers[0]
     assert isinstance(proxy_handler, ProxyHandler)
@@ -346,14 +369,20 @@ def test_backend_runner_client_maps_busy_without_accepting_error_body(
     monkeypatch.setattr(client._opener, "open", fake_urlopen)
     try:
         with pytest.raises(RunnerBusyError):
-            asyncio.run(client.run("true", "STANDARD-00000001"))
+            asyncio.run(client.execute("true", "STANDARD-00000001"))
     finally:
         client.close()
 
 
 @pytest.mark.parametrize(
     "payload",
-    [b"not-json", b'{"output":"ok","image":"","extra":"value"}'],
+    [
+        b"not-json",
+        b'{"output":"ok","image":""}',
+        b'{"protocol_version":2,"result":{"output":"ok","image":""}}',
+        b'{"protocol_version":1,"result":{"output":"ok","image":""},"extra":"value"}',
+        b'{"protocol_version":1,"result":{"output":"ok","image":"","extra":"value"}}',
+    ],
 )
 def test_backend_runner_client_rejects_invalid_responses(
     monkeypatch: pytest.MonkeyPatch,
@@ -369,7 +398,7 @@ def test_backend_runner_client_rejects_invalid_responses(
     )
     try:
         with pytest.raises(RunnerUnavailableError):
-            asyncio.run(client.run("true", "STANDARD-00000001"))
+            asyncio.run(client.execute("true", "STANDARD-00000001"))
     finally:
         client.close()
 
@@ -388,7 +417,7 @@ def test_backend_runner_client_rejects_oversized_response(
     )
     try:
         with pytest.raises(RunnerUnavailableError):
-            asyncio.run(client.run("true", "STANDARD-00000001"))
+            asyncio.run(client.execute("true", "STANDARD-00000001"))
     finally:
         client.close()
 
@@ -397,7 +426,7 @@ def test_public_api_maps_runner_failure_without_database_work(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # runner停止をpublic error responseへ変換し、DB保存を行わないことを確認する。
-    async def unavailable(*_args: object) -> list[str]:
+    async def unavailable(*_args: object) -> ExecutionResult:
         """runner停止を再現するRunnerUnavailableErrorを送出する。"""
         raise RunnerUnavailableError("unavailable")
 
@@ -410,7 +439,7 @@ def test_public_api_maps_runner_failure_without_database_work(
         "get_problem_repository",
         lambda: SimpleNamespace(get=lambda _problem_id: object()),
     )
-    monkeypatch.setattr(api_shellgei.runner_client, "run", unavailable)
+    monkeypatch.setattr(api_shellgei.runner_gateway, "execute", unavailable)
     monkeypatch.setattr(
         api_shellgei,
         "persist_execution_log_async",
@@ -433,7 +462,7 @@ def test_public_api_preserves_busy_response_for_runner_capacity(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # runner混雑を既存public responseへ変換し、DB保存を行わないことを確認する。
-    async def busy(*_args: object) -> list[str]:
+    async def busy(*_args: object) -> ExecutionResult:
         """runner混雑を再現するRunnerBusyErrorを送出する。"""
         raise RunnerBusyError("busy")
 
@@ -446,7 +475,7 @@ def test_public_api_preserves_busy_response_for_runner_capacity(
         "get_problem_repository",
         lambda: SimpleNamespace(get=lambda _problem_id: object()),
     )
-    monkeypatch.setattr(api_shellgei.runner_client, "run", busy)
+    monkeypatch.setattr(api_shellgei.runner_gateway, "execute", busy)
     monkeypatch.setattr(
         api_shellgei,
         "persist_execution_log_async",

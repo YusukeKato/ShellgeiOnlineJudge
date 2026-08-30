@@ -14,7 +14,11 @@ from scripts.input_validation import ProblemId
 from scripts.judge import ShellgeiJudge
 from scripts.problem_catalog import PROBLEM_LIST_CACHE_CONTROL
 from scripts.problem_repository import get_problem_repository
-from scripts.runner_client import RunnerBusyError, RunnerUnavailableError, runner_client
+from scripts.runner_client import (
+    RunnerBusyError,
+    RunnerUnavailableError,
+    runner_gateway,
+)
 
 router = APIRouter()
 shellgei_judge = ShellgeiJudge()
@@ -38,7 +42,7 @@ async def post_shellgei(shellgei_data: ShellgeiData) -> ShellgeiResultResponse:
     shellgei_str = shellgei_data.shellgei
     problem_id_str = shellgei_data.problem_id
     try:
-        output, image = await runner_client.run(shellgei_str, problem_id_str)
+        execution = await runner_gateway.execute(shellgei_str, problem_id_str)
     except RunnerBusyError:
         return ShellgeiResultResponse(
             output="Error: server is busy.",
@@ -55,6 +59,8 @@ async def post_shellgei(shellgei_data: ShellgeiData) -> ShellgeiResultResponse:
             image="",
             judge="4",
         )
+    output = execution.output
+    image = execution.image
     judge: str = shellgei_judge.judge(output, image, problem_id_str)
 
     try:

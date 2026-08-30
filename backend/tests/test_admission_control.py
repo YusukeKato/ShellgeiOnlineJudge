@@ -6,12 +6,12 @@ import pytest
 from fastapi import HTTPException
 
 import runner_main
-from models.model_shellgei import ShellgeiData
 from scripts.admission_control import (
     DEFAULT_SANDBOX_START_BURST,
     DEFAULT_SANDBOX_START_RATE_PER_SECOND,
     SandboxStartRateLimiter,
 )
+from scripts.runner_protocol import RUNNER_PROTOCOL_VERSION, RunnerExecutionRequest
 
 
 def test_start_rate_limiter_defaults_match_the_production_policy() -> None:
@@ -116,7 +116,8 @@ def test_runner_rejects_rate_limited_request_before_docker(
     with pytest.raises(HTTPException) as exc_info:
         asyncio.run(
             runner_main.execute_shellgei(
-                ShellgeiData(
+                RunnerExecutionRequest(
+                    protocol_version=RUNNER_PROTOCOL_VERSION,
                     shellgei="printf test",
                     problem_id="STANDARD-00000001",
                 )

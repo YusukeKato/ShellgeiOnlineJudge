@@ -57,8 +57,10 @@ runnerの実行権限が意図しない形で利用された場合、
 - DB、runner、backend、frontend以外の重要なコンテナを同じdaemonで動かさない
 - VMやDBを別の信頼境界としてバックアップする
 
-現在のCompose構成では、Web APIとDocker操作を固定schemaの内部runner APIで
-分離しています。影響範囲をさらに限定するには、runnerとsandbox用daemonを
+現在のCompose構成では、Web APIとDocker操作をversion付き固定schemaの
+内部runner APIで分離しています。protocolの正本は
+[backend文書](../backend/README.md#内部runner-protocol)を参照してください。
+影響範囲をさらに限定するには、runnerとsandbox用daemonを
 専用hostまたは使い捨てVMへ配置します。
 詳細は[セキュリティモデルと制約](../SECURITY.md)を参照してください。
 

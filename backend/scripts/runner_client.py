@@ -5,12 +5,15 @@ from concurrent.futures import ThreadPoolExecutor
 from urllib.error import HTTPError
 from urllib.request import ProxyHandler, Request, build_opener
 
-from models.model_shellgei import ShellgeiData
 from scripts.async_thread import wait_for_thread_future
 from scripts.runner_protocol import (
     RUNNER_EXECUTE_PATH,
+    RUNNER_PROTOCOL_VERSION,
+    ExecutionResult,
     RunnerConfigurationError,
+    RunnerExecutionRequest,
     RunnerExecutionResponse,
+    RunnerGateway,
     get_runner_shared_secret,
 )
 
@@ -33,17 +36,28 @@ class RunnerBusyError(RuntimeError):
 
 class RunnerClient:
     def __init__(self) -> None:
+        """固定容量のHTTP workerとproxyを使用しないprivate openerを初期化する。"""
         self.executor = ThreadPoolExecutor(max_workers=RUNNER_CLIENT_CAPACITY)
         self._slots = threading.BoundedSemaphore(RUNNER_CLIENT_CAPACITY)
         self._opener = build_opener(ProxyHandler({}))
 
     @staticmethod
     def validate_configuration() -> None:
+        """runner共有secretを起動前に検証し、返値なしで設定不備を通知する。"""
         get_runner_shared_secret()
 
-    def _execute_sync(self, shellgei: str, problem_id: str) -> list[str]:
+    def _execute_sync(self, shellgei: str, problem_id: str) -> ExecutionResult:
+        """入力command・IDをversion付きHTTP requestで送り、typed結果を返す。
+
+        認証、通信、status、response byte上限、JSON schemaの異常はrunner用例外へ
+        変換し、HTTP worker threadから呼び出せる同期処理として実行する。
+        """
         secret = get_runner_shared_secret()
-        payload = ShellgeiData(shellgei=shellgei, problem_id=problem_id)
+        payload = RunnerExecutionRequest(
+            protocol_version=RUNNER_PROTOCOL_VERSION,
+            shellgei=shellgei,
+            problem_id=problem_id,
+        )
         request = Request(
             f"{RUNNER_BASE_URL}{RUNNER_EXECUTE_PATH}",
             data=payload.model_dump_json().encode("utf-8"),
@@ -71,12 +85,17 @@ class RunnerClient:
             raise RunnerUnavailableError("runner request failed") from exc
 
         try:
-            result = RunnerExecutionResponse.model_validate_json(response_body)
+            response = RunnerExecutionResponse.model_validate_json(response_body)
         except ValueError as exc:
             raise RunnerUnavailableError("runner returned an invalid response") from exc
-        return [result.output, result.image]
+        return response.result
 
-    async def run(self, shellgei: str, problem_id: str) -> list[str]:
+    async def execute(self, shellgei: str, problem_id: str) -> ExecutionResult:
+        """空きworkerがあればprivate runnerを呼び、typed実行結果を非同期で返す。
+
+        入力はcommandとproblem ID。client容量超過、設定不備、runner通信失敗は
+        対応する例外を送出し、cancel時もthread完了までslotを保持する。
+        """
         if not self._slots.acquire(blocking=False):
             raise RunnerBusyError("runner client capacity reached")
 
@@ -103,7 +122,9 @@ class RunnerClient:
                 self._slots.release()
 
     def close(self) -> None:
+        """新規runner requestを停止し、実行中HTTP workerを待ってexecutorを閉じる。"""
         self.executor.shutdown(wait=True, cancel_futures=True)
 
 
 runner_client = RunnerClient()
+runner_gateway: RunnerGateway = runner_client

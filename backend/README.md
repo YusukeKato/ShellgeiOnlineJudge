@@ -25,6 +25,19 @@
 problem schema、manifest revision、移行・更新手順は、
 [問題データ](../problems/README.md)を参照してください。
 
+## 内部runner protocol
+
+backendからrunnerへの実行境界は、`scripts/runner_protocol.py`の
+`RunnerGateway`、`RunnerExecutionRequest`、`RunnerExecutionResponse`、
+`ExecutionResult`を正本とします。requestとresponseは`protocol_version: 1`を必須とし、
+未知version、未知field、欠落field、文字列・画像上限超過を拒否します。
+
+requestは`protocol_version`、`shellgei`、`problem_id`、responseは
+`protocol_version`と、`output`・`image`を持つ`result`で構成します。
+これは外部公開APIではなく、backendとrunnerを同時に更新する内部protocolです。
+exit code、stderr、timeout、artifact等の追加実行情報は、後続のstructured execution
+outcomeで`ExecutionResult`へ追加します。
+
 ## 参考
 
 下記記事を参考にさせていただきました。

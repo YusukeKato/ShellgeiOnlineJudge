@@ -27,6 +27,7 @@ from scripts.execution_log_persistence import (
     persist_execution_log,
     persist_execution_log_async,
 )
+from scripts.runner_protocol import ExecutionResult
 
 
 def _database_session() -> Session:
@@ -284,9 +285,9 @@ def test_shell_api_returns_result_when_log_persistence_fails(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # DB保存に失敗しても実行・判定結果をid=-1で利用者へ返すことを確認する。
-    async def run(_shellgei: str, _problem_id: str) -> list[str]:
+    async def execute(_shellgei: str, _problem_id: str) -> ExecutionResult:
         """入力commandとIDを使用せず、runnerの固定成功結果を返す。"""
-        return ["test", ""]
+        return ExecutionResult(output="test", image="")
 
     def judge(_output: str, _image: str, _problem_id: str) -> str:
         """入力結果を使用せず、固定の正解判定codeを返す。"""
@@ -296,7 +297,7 @@ def test_shell_api_returns_result_when_log_persistence_fails(
         """DB worker停止を再現するExecutionLogPersistenceErrorを送出する。"""
         raise ExecutionLogPersistenceError("unavailable")
 
-    monkeypatch.setattr(api_shellgei.runner_client, "run", run)
+    monkeypatch.setattr(api_shellgei.runner_gateway, "execute", execute)
     monkeypatch.setattr(api_shellgei.shellgei_judge, "judge", judge)
     monkeypatch.setattr(api_shellgei, "persist_execution_log_async", unavailable)
     monkeypatch.setattr(

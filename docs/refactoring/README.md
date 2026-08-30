@@ -23,10 +23,10 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 27
 - Ready: 0
-- Planned: 19
-- Pending (`Ready` + `Planned`): 19
+- Planned: 18
+- Pending (`Ready` + `Planned`): 18
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 8
 - Blocked: 0
 - Deferred: 0
@@ -161,7 +161,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-006 | P0 | Completed | B | Introduce v3 problem schema and migration tooling | R3-005 | `e710670` |
 | R3-007 | P0 | Completed | B | Migrate all problem definitions to schema v3 | R3-006 | `4d25fa8` |
 | R3-008 | P0 | Completed | B | Introduce immutable ProblemRepo and manifest digest | R3-007 | `6360c34` |
-| R3-009 | P0 | Planned | B | Introduce typed runner execution protocol | R3-005 | - |
+| R3-009 | P0 | Review | B | Introduce typed runner execution protocol | R3-005 | - |
 | R3-010 | P0 | Planned | B | Extract pure text judge and typed JudgeResult | R3-006, R3-009 | - |
 | R3-011 | P0 | Planned | B | Separate and correct image judging | R3-007, R3-009 | - |
 | R3-012 | P1 | Planned | C | Separate sandbox preparation, execution, capture, and cleanup | R3-009 | - |
@@ -279,7 +279,7 @@ They are planning aids, not acceptance criteria.
 
 ### R3-009: Introduce typed runner execution protocol
 
-- Priority / Status: P0 / `Planned`
+- Priority / Status: P0 / `Review`
 - Goal: runner応答を`[output, image]`やmagic stringからtyped `ExecutionResult`へ移行できる内部protocolを定義する
 - Main files/components: runner request/response model、`RunnerGateway`、runner endpoint、protocol test
 - Dependencies: R3-005

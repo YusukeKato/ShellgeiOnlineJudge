@@ -290,7 +290,9 @@ Deferredは不要という意味ではありません。
 - `backend/tests/test_run_shellgei.py`
   - timeout、出力上限、実行slot、background cleanup
 - `backend/tests/test_runner_boundary.py`
-  - secret、固定schema、response上限、backend/runner分離
+  - secret、version付き固定schema、response上限、backend/runner分離
+- `backend/tests/test_runner_protocol.py`
+  - request/response JSON往復、未知version・field、result不変性・上限
 - `backend/tests/test_problem_repository.py`
   - 起動時schema・画像・manifest検証、不変lookup、revision再計算
 - `backend/tests/test_nginx_config.py`

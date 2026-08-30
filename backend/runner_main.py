@@ -4,7 +4,6 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, Header, HTTPException
 
-from models.model_shellgei import ShellgeiData
 from scripts.admission_control import sandbox_start_rate_limiter
 from scripts.container_manager import manager
 from scripts.problem_repository import get_problem_repository, load_problem_repository
@@ -12,6 +11,9 @@ from scripts.run_shellgei import SandboxBusyError, ShellgeiDockerClient
 from scripts.runner_protocol import (
     RUNNER_EXECUTE_PATH,
     RUNNER_HEALTH_PATH,
+    RUNNER_PROTOCOL_VERSION,
+    ExecutionResult,
+    RunnerExecutionRequest,
     RunnerExecutionResponse,
     get_runner_shared_secret,
 )
@@ -66,7 +68,9 @@ async def health() -> dict[str, str]:
     response_model=RunnerExecutionResponse,
     dependencies=[Depends(require_runner_authentication)],
 )
-async def execute_shellgei(shellgei_data: ShellgeiData) -> RunnerExecutionResponse:
+async def execute_shellgei(
+    shellgei_data: RunnerExecutionRequest,
+) -> RunnerExecutionResponse:
     """登録済み問題のcommand実行をsandboxへ委譲し、文字列・画像結果を返す。
 
     入力は検証済みcommandとproblem ID。未登録問題は404、開始rateまたは実行枠の
@@ -84,4 +88,7 @@ async def execute_shellgei(shellgei_data: ShellgeiData) -> RunnerExecutionRespon
         )
     except SandboxBusyError as exc:
         raise HTTPException(status_code=429, detail="Runner is busy") from exc
-    return RunnerExecutionResponse(output=output, image=image)
+    return RunnerExecutionResponse(
+        protocol_version=RUNNER_PROTOCOL_VERSION,
+        result=ExecutionResult(output=output, image=image),
+    )

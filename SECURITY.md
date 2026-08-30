@@ -331,8 +331,9 @@ backendのrunner HTTP clientはproxyを明示的に無効化し、
 `HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY`等の環境変数を使用しません。
 
 runner APIの共有secretは32文字以上の安全なランダム値を使用します。
-runnerは認証、入力schema、登録済みproblem ID、開始頻度、同時実行数を検査してから
-sandbox処理を開始します。
+runnerは認証、version付き入力schema、登録済みproblem ID、開始頻度、
+同時実行数を検査してからsandbox処理を開始します。backendはrunner responseの
+version、schema、byte上限を検証し、未知versionや追加fieldをfail-closedで拒否します。
 
 runnerの実行権限が意図しない形で利用された場合、
 rootless daemonの権限で次のリソースを操作できる状態になります。
@@ -346,14 +347,14 @@ rootless daemonの権限で次のリソースを操作できる状態になり�
 同じdaemonで動作するDB、backend、frontendも同じ影響範囲に含まれます。
 rootless socketはホストroot相当のrootful socketより権限が限定されます。
 Web backendが意図しない動作をした場合でも、任意のDocker APIを直接操作できず、
-固定schemaのrunner APIを通じた制限付きsandbox実行だけが可能です。
+version付き固定schemaのrunner APIを通じた制限付きsandbox実行だけが可能です。
 
 Compose構成より影響範囲を小さくする場合は、runnerを専用Docker hostまたは
 使い捨てVMへ配置します。
 
 ```text
 Web API（Docker socketなし）
-    -> 認証され、固定schemaだけを受け付けるrunner API
+    -> 認証され、version付き固定schemaだけを受け付けるrunner API
         -> 専用Dockerホストまたは使い捨てVM
 ```
 
