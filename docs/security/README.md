@@ -328,8 +328,6 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  R3-007: 全92問のschema v3移行をreviewし、commitする
-    ↓
   R3-008: immutable ProblemRepoとmanifest digestを導入
     ↓
 Later
