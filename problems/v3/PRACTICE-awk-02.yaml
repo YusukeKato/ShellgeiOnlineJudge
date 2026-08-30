@@ -1,0 +1,38 @@
+schema_version: 3
+id: PRACTICE-awk-02
+category: PRACTICE
+title:
+  ja: awk 2
+  en: awk 2
+statement:
+  ja: |
+    練習：awk
+    awkコマンドで入力ファイル"input.txt"の2列目だけを出力してください。
+  en: |
+    Exercise: awk
+    Output only the second column of the input file "input.txt".
+reference_solution: cat input.txt | awk '{print $2}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      aaaaa bbbbb ccccc
+      ddddd eeeee fffff ggggg hhhhh
+      iiiii jjjjj kkkkk lllll mmmmm
+      nnnnn ooooo ppppp
+      qqqqq rrrrr
+      sssss ttttt uuuuu vvvvv
+      wwwww xxxxx yyyyy zzzzz
+  exit_code: ignore
+  stderr: merge
+judge:
+  type: text
+  expected_output: |
+    bbbbb
+    eeeee
+    jjjjj
+    ooooo
+    rrrrr
+    ttttt
+    xxxxx
