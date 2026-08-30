@@ -332,11 +332,11 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  R3-009: typed runner execution protocolを導入
+  R3-010: pure text judgeとtyped JudgeResultを導入
     ↓
 Later
-  revision照合、judge、artifact、権限分離、E2E、browser、CI、
-  運用基盤を改善
+  image judge、revision照合、artifact、権限分離、E2E、browser、
+  CI、運用基盤を改善
 ```
 
 Highとして確定したOpen課題はありません。

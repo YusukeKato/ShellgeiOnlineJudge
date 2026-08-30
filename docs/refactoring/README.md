@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 18
 - Pending (`Ready` + `Planned`): 18
 - In Progress: 0
-- Review: 1
-- Completed: 8
+- Review: 0
+- Completed: 9
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -161,7 +161,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-006 | P0 | Completed | B | Introduce v3 problem schema and migration tooling | R3-005 | `e710670` |
 | R3-007 | P0 | Completed | B | Migrate all problem definitions to schema v3 | R3-006 | `4d25fa8` |
 | R3-008 | P0 | Completed | B | Introduce immutable ProblemRepo and manifest digest | R3-007 | `6360c34` |
-| R3-009 | P0 | Review | B | Introduce typed runner execution protocol | R3-005 | - |
+| R3-009 | P0 | Completed | B | Introduce typed runner execution protocol | R3-005 | `62dadf6` |
 | R3-010 | P0 | Planned | B | Extract pure text judge and typed JudgeResult | R3-006, R3-009 | - |
 | R3-011 | P0 | Planned | B | Separate and correct image judging | R3-007, R3-009 | - |
 | R3-012 | P1 | Planned | C | Separate sandbox preparation, execution, capture, and cleanup | R3-009 | - |
@@ -279,14 +279,14 @@ They are planning aids, not acceptance criteria.
 
 ### R3-009: Introduce typed runner execution protocol
 
-- Priority / Status: P0 / `Review`
+- Priority / Status: P0 / `Completed`
 - Goal: runner応答を`[output, image]`やmagic stringからtyped `ExecutionResult`へ移行できる内部protocolを定義する
 - Main files/components: runner request/response model、`RunnerGateway`、runner endpoint、protocol test
 - Dependencies: R3-005
 - Risk: Medium。public backendとrunnerを同時に移行し、size limitと認証を維持する必要がある
 - Expected tests: serialization、unknown field/version、response size、timeout/unavailable、互換移行境界
 - Size: M
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `62dadf6` / date 2026-08-30 / versioned strict request/response models, typed ExecutionResult, and RunnerGateway introduced without changing the public API
 
 ### R3-010: Extract pure text judge and typed JudgeResult
 
