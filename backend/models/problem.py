@@ -1,12 +1,13 @@
 from pathlib import PurePosixPath
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from scripts.input_validation import ProblemId
 
 
-PROBLEM_SCHEMA_VERSION = 3
+PROBLEM_SCHEMA_VERSION: Final = 3
+PROBLEM_MANIFEST_VERSION: Final = 1
 MAX_PROBLEM_TEXT_BYTES = 256_000
 MAX_REFERENCE_SOLUTION_BYTES = 64_000
 MAX_STDIN_BYTES = 1_000_000
@@ -74,7 +75,12 @@ class FixtureDefinition(StrictProblemModel):
     @classmethod
     def validate_path(cls, value: str) -> str:
         """入力されたfixture pathを検証し、安全なら同じ相対pathを返す。"""
-        return _validate_relative_path(value, field="fixture path")
+        validated = _validate_relative_path(value, field="fixture path")
+        if validated == "z.bash":
+            raise ValueError(
+                "fixture path z.bash is reserved for the submitted command"
+            )
+        return validated
 
     @field_validator("content")
     @classmethod
@@ -195,3 +201,12 @@ class ProblemDefinitionV3(StrictProblemModel):
         if self.category != "IMAGE" and self.judge.type != "text":
             raise ValueError("non-IMAGE problems must use the text judge")
         return self
+
+
+class ProblemManifestV1(StrictProblemModel):
+    """問題数とdata revisionを保持する、version 1の不変manifest model。"""
+
+    manifest_version: Literal[1]
+    problem_schema_version: Literal[3]
+    problem_count: int = Field(gt=0)
+    revision: str = Field(pattern=r"^[0-9a-f]{64}$")

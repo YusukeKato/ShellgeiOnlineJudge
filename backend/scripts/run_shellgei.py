@@ -3,15 +3,14 @@ import asyncio
 import base64
 import threading
 from collections.abc import Iterable
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-import yaml
-from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 from scripts.async_thread import wait_for_thread_future
 from scripts.container_manager import SANDBOX_WORK_DIRECTORY, manager
 from scripts.execution_archive import build_execution_archive
 from scripts.input_validation import validate_problem_id
+from scripts.problem_repository import ProblemRepository, get_problem_repository
 from scripts.sandbox_limits import BoundedByteBuffer
 
 
@@ -40,6 +39,7 @@ class SandboxBusyError(RuntimeError):
 
 class _ExecutionWatchdog:
     def __init__(self, container: Any) -> None:
+        """監視対象containerを受け取り、未終了・理由なしの状態を初期化する。"""
         self.container = container
         self._lock = threading.Lock()
         self._finished = False
@@ -47,6 +47,11 @@ class _ExecutionWatchdog:
         self.termination_error: Exception | None = None
 
     def terminate(self, reason: str) -> bool:
+        """入力理由を最初の終了理由として記録してcontainerをkillし、実行有無を返す。
+
+        既に終了済みまたは別の終了処理が開始済みならFalseを返す。kill失敗は
+        termination_errorへ保持し、cleanup側で結果へ反映できるようにする。
+        """
         with self._lock:
             if self._finished or self._reason is not None:
                 return False
@@ -58,12 +63,14 @@ class _ExecutionWatchdog:
         return True
 
     def finish(self) -> str | None:
+        """監視を終了済みに変更し、timeout等の終了理由またはNoneを返す。"""
         with self._lock:
             self._finished = True
             return self._reason
 
     @property
     def reason(self) -> str | None:
+        """lockで保護された現在の終了理由を返し、未終了ならNoneを返す。"""
         with self._lock:
             return self._reason
 
@@ -73,17 +80,24 @@ class ShellgeiDockerClient:
         self,
         container_manager: Any = manager,
         max_concurrent: int | None = None,
+        problem_repository: ProblemRepository | None = None,
     ) -> None:
+        """container manager・並行数・任意の問題repositoryで実行clientを初期化する。"""
         self.manager = container_manager
         capacity = max_concurrent or container_manager.pool_size
         if capacity < 1:
             raise ValueError("max_concurrent must be at least 1")
         self.executor = ThreadPoolExecutor(max_workers=capacity)
         self._execution_slots = threading.BoundedSemaphore(capacity)
-        self.base_dir = Path(__file__).resolve().parent.parent
+        self.problem_repository = problem_repository
+
+    def _repository(self) -> ProblemRepository:
+        """注入済みrepositoryを返し、未指定なら起動時にloadしたrepositoryを返す。"""
+        return self.problem_repository or get_problem_repository()
 
     @staticmethod
     def _stream_chunks(output: Any) -> Iterable[bytes]:
+        """Docker SDKのbytesまたはbyte iterator出力を一様な反復可能objectで返す。"""
         if isinstance(output, bytes):
             return (output,)
         return output
@@ -95,6 +109,7 @@ class ShellgeiDockerClient:
         reason: str | None,
         execution_error: Exception | None,
     ) -> str:
+        """収集済み出力と終了理由から、既存API用の表示文字列を生成して返す。"""
         decoded = output.to_bytes().decode("utf-8", errors="ignore")
         if reason == "timeout":
             suffix = "\n[Timed out]"
@@ -110,6 +125,7 @@ class ShellgeiDockerClient:
         return decoded
 
     def _read_output_image(self, container: Any) -> str:
+        """sandboxの出力画像を上限内で読込み、base64文字列または空文字列を返す。"""
         image = BoundedByteBuffer(MAX_IMAGE_BYTES + 1)
         try:
             image_stream = container.exec_run(
@@ -131,10 +147,14 @@ class ShellgeiDockerClient:
     def exec_shellgei(
         self, shellgei: str, problem_id: str, timeout: float, limit_str: int
     ) -> list[str]:
+        """指定問題のfixtureとcommandをsandboxで同期実行し、文字列・画像を返す。"""
         try:
             validate_problem_id(problem_id)
         except ValueError:
             return ["Error: invalid problem ID.", ""]
+        record = self._repository().get(problem_id)
+        if record is None:
+            return ["Error: problem not found.", ""]
 
         container = None
         container_stopped = False
@@ -146,13 +166,7 @@ class ShellgeiDockerClient:
         try:
             # Build all request-specific files in memory. Host-side shared temporary
             # files would allow concurrent requests to overwrite each other's data.
-            yaml_path = self.base_dir / "problems" / "yaml_data" / f"{problem_id}.yaml"
-            input_str = ""
-            if yaml_path.exists():
-                with open(yaml_path, "r", encoding="utf-8") as yf:
-                    p_data = yaml.safe_load(yf)
-                input_str = p_data.get("input", "")
-            execution_archive = build_execution_archive(shellgei, input_str)
+            execution_archive = build_execution_archive(shellgei, record.fixtures)
             encoded_archive = base64.b64encode(execution_archive.getvalue()).decode(
                 "ascii"
             )
@@ -233,6 +247,7 @@ class ShellgeiDockerClient:
         timeout: float = DEFAULT_EXECUTION_TIMEOUT_SECONDS,
         limit_str: int = DEFAULT_OUTPUT_LIMIT_CHARS,
     ) -> list[str]:
+        """空き枠があればsandbox実行をthreadへ委譲し、timeout込みの結果を返す。"""
         if not self._execution_slots.acquire(blocking=False):
             raise SandboxBusyError("sandbox execution capacity reached")
 
@@ -267,4 +282,5 @@ class ShellgeiDockerClient:
                 self._execution_slots.release()
 
     def close(self) -> None:
+        """新規thread投入を止め、実行中taskの完了を待ってexecutorを閉じる。"""
         self.executor.shutdown(wait=True, cancel_futures=True)

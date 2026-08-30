@@ -10,7 +10,8 @@
 - `api/`: API endpoint
 - `models/`: APIの入出力、実行ログ、versioned problem schemaのmodel
 - `scripts/`: runner通信、Docker実行、判定、problem schema読込・移行、
-  入力検証、DB接続とrollback-safeな実行ログ保存・保持処理
+  起動時検証済みの不変problem repository、入力検証、DB接続とrollback-safeな
+  実行ログ保存・保持処理
 - `tests/`: 単体・API・Docker統合テスト
 
 ## 開発とテスト
@@ -21,7 +22,8 @@
 実際のsandboxコンテナを使用するテストは、
 [Docker統合テスト](./tests/integration/README.md)を参照してください。
 
-problem schemaと移行手順は、[問題データ](../problems/README.md)を参照してください。
+problem schema、manifest revision、移行・更新手順は、
+[問題データ](../problems/README.md)を参照してください。
 
 ## 参考
 

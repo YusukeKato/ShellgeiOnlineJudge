@@ -49,8 +49,9 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 
 現在登録されている全問題の回帰テストには、追加の明示指定が必要です。
 この回帰ではschema v3の全92問から`reference_solution`を読み、実sandboxで実行します。
-R3-008で読込先を切り替えるまでは、runnerとlegacy judgeが使用するfixtureと期待値は
-従来の`yaml_data/`から取得するため、non-Docker testでv3とのsemantic一致も検証します。
+runnerとjudgeには起動時検証済みの同じ不変problem repositoryを注入し、fixture、
+期待出力、正解画像がrequestごとのfile再読込なしで利用される経路を検証します。
+legacy `yaml_data/`とのsemantic一致はnon-Docker testで別途検証します。
 
 ```sh
 SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_FULL_REGRESSION=1 \

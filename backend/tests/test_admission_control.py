@@ -1,6 +1,7 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
+from types import SimpleNamespace
+
 import pytest
 from fastapi import HTTPException
 
@@ -14,6 +15,7 @@ from scripts.admission_control import (
 
 
 def test_start_rate_limiter_defaults_match_the_production_policy() -> None:
+    # 既定の開始rateとburstがproduction policyの定数と一致することを確認する。
     limiter = SandboxStartRateLimiter()
 
     assert limiter.rate_per_second == DEFAULT_SANDBOX_START_RATE_PER_SECOND == 1.0
@@ -21,6 +23,7 @@ def test_start_rate_limiter_defaults_match_the_production_policy() -> None:
 
 
 def test_start_rate_limiter_allows_burst_then_refills_at_fixed_rate() -> None:
+    # burst分を即時許可し、経過時間に応じて固定rateでtokenが補充されることを確認する。
     now = [100.0]
     limiter = SandboxStartRateLimiter(
         rate_per_second=1.0,
@@ -39,6 +42,7 @@ def test_start_rate_limiter_allows_burst_then_refills_at_fixed_rate() -> None:
 
 
 def test_start_rate_limiter_never_refills_beyond_burst_capacity() -> None:
+    # 長時間経過しても保持token数がburst上限を超えないことを確認する。
     now = [0.0]
     limiter = SandboxStartRateLimiter(
         rate_per_second=1.0,
@@ -53,6 +57,7 @@ def test_start_rate_limiter_never_refills_beyond_burst_capacity() -> None:
 
 
 def test_start_rate_limiter_is_atomic_for_concurrent_requests() -> None:
+    # 並行requestでも許可数がburstを超えず、token取得がatomicであることを確認する。
     limiter = SandboxStartRateLimiter(
         rate_per_second=1.0,
         burst=3,
@@ -74,19 +79,22 @@ def test_start_rate_limiter_rejects_invalid_configuration(
     rate_per_second: float,
     burst: int,
 ) -> None:
+    # 非正値・非有限rateや0件burstを不正な設定として拒否することを確認する。
     with pytest.raises(ValueError):
         SandboxStartRateLimiter(rate_per_second=rate_per_second, burst=burst)
 
 
 def test_runner_rejects_rate_limited_request_before_docker(
     monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
 ) -> None:
+    # rate制限対象requestをDocker実行前に429として拒否することを確認する。
     class RejectAllStarts:
         def try_acquire(self) -> bool:
+            """開始tokenを常に拒否し、rate制限状態をFalseで返す。"""
             return False
 
     async def unexpected_execution(*_args: object) -> list[str]:
+        """Dockerへ到達した場合にtestを失敗させ、通常の返値は生成しない。"""
         raise AssertionError("Docker execution must not start")
 
     monkeypatch.setattr(
@@ -99,13 +107,10 @@ def test_runner_rejects_rate_limited_request_before_docker(
         "run_with_timeout",
         unexpected_execution,
     )
-    yaml_dir = tmp_path / "problems" / "yaml_data"
-    yaml_dir.mkdir(parents=True)
-    (yaml_dir / "STANDARD-00000001.yaml").touch()
     monkeypatch.setattr(
         runner_main,
-        "__file__",
-        str(tmp_path / "runner_main.py"),
+        "get_problem_repository",
+        lambda: SimpleNamespace(get=lambda _problem_id: object()),
     )
 
     with pytest.raises(HTTPException) as exc_info:

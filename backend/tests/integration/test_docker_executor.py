@@ -5,7 +5,6 @@ from pathlib import Path
 
 import docker
 import pytest
-import yaml
 
 from scripts.container_manager import (
     INSTANCE_LABEL,
@@ -17,6 +16,7 @@ from scripts.container_manager import (
     ContainerManager,
 )
 from scripts.run_shellgei import ShellgeiDockerClient
+from scripts.problem_repository import build_problem_repository
 
 
 pytestmark = [
@@ -28,9 +28,15 @@ pytestmark = [
 ]
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+PROBLEM_REPOSITORY = build_problem_repository(
+    REPOSITORY_ROOT / "problems/v3",
+    REPOSITORY_ROOT / "problems/image",
+    REPOSITORY_ROOT / "problems/v3/manifest.json",
+)
 
 
 def test_runner_restart_reconciles_owned_sandbox_containers() -> None:
+    # runner再起動時に同じownerの旧sandboxを回収し、新しいpoolだけが残ることを確認する。
     owner_id = f"integration-{uuid.uuid4().hex}"
     old_manager = ContainerManager(pool_size=1, owner_id=owner_id)
     new_manager = ContainerManager(pool_size=1, owner_id=owner_id)
@@ -57,6 +63,7 @@ def test_runner_restart_reconciles_owned_sandbox_containers() -> None:
 
 
 def test_real_container_has_required_baseline_isolation() -> None:
+    # 実containerのrootless接続、resource制限、mount、権限、network分離を確認する。
     manager = ContainerManager(pool_size=1)
     manager.initialize_pool()
     try:
@@ -162,6 +169,7 @@ def test_real_container_has_required_baseline_isolation() -> None:
 
 
 def test_real_writable_area_rejects_capacity_and_inode_exhaustion() -> None:
+    # 書込可能領域の容量・inode上限と、container再利用時の状態消去を確認する。
     manager = ContainerManager(pool_size=1)
     manager.initialize_pool()
     try:
@@ -208,16 +216,16 @@ def test_real_writable_area_rejects_capacity_and_inode_exhaustion() -> None:
 
 
 def test_real_workdir_home_input_image_and_request_isolation() -> None:
+    # v3 fixture、HOME、画像出力が動作し、request間で作業fileが共有されないことを確認する。
     manager = ContainerManager(pool_size=1)
-    client = ShellgeiDockerClient(container_manager=manager, max_concurrent=1)
-    client.base_dir = REPOSITORY_ROOT
+    client = ShellgeiDockerClient(
+        container_manager=manager,
+        max_concurrent=1,
+        problem_repository=PROBLEM_REPOSITORY,
+    )
     manager.initialize_pool()
     try:
-        input_data = yaml.safe_load(
-            (REPOSITORY_ROOT / "problems/yaml_data/PRACTICE-awk-02.yaml").read_text(
-                encoding="utf-8"
-            )
-        )["input"]
+        input_data = PROBLEM_REPOSITORY.require("PRACTICE-awk-02").input_text
         with_input = asyncio.run(
             client.run_with_timeout(
                 'set -eu; test "$PWD" = /work; test "$HOME" = /tmp/home; '
@@ -235,11 +243,9 @@ def test_real_workdir_home_input_image_and_request_isolation() -> None:
                 timeout=5,
             )
         )
-        image_command = yaml.safe_load(
-            (REPOSITORY_ROOT / "problems/yaml_data/IMAGE-00000001.yaml").read_text(
-                encoding="utf-8"
-            )
-        )["answer"]
+        image_command = PROBLEM_REPOSITORY.require(
+            "IMAGE-00000001"
+        ).definition.reference_solution
         image_result = asyncio.run(
             client.run_with_timeout(image_command, "IMAGE-00000001", timeout=5)
         )
@@ -255,9 +261,13 @@ def test_real_workdir_home_input_image_and_request_isolation() -> None:
 
 
 def test_real_silent_timeout_cleans_up_and_worker_recovers() -> None:
+    # 無出力commandのtimeout後にcontainerを破棄し、次の実行へ回復できることを確認する。
     manager = ContainerManager(pool_size=1)
-    client = ShellgeiDockerClient(container_manager=manager, max_concurrent=1)
-    client.base_dir = REPOSITORY_ROOT
+    client = ShellgeiDockerClient(
+        container_manager=manager,
+        max_concurrent=1,
+        problem_repository=PROBLEM_REPOSITORY,
+    )
     manager.initialize_pool()
     try:
         timed_out = asyncio.run(

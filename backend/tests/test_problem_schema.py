@@ -114,7 +114,14 @@ def test_schema_rejects_duplicate_yaml_keys() -> None:
 
 @pytest.mark.parametrize(
     "path",
-    ["../secret", "/absolute", "nested//file", "./file", "windows\\file"],
+    [
+        "../secret",
+        "/absolute",
+        "nested//file",
+        "./file",
+        "windows\\file",
+        "z.bash",
+    ],
 )
 def test_schema_rejects_unsafe_fixture_paths(path: str) -> None:
     # fixtureがsandbox内の相対pathから逸脱する表現を拒否することを確認する。

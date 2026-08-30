@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 import re
-import yaml
-import base64
-from pathlib import Path
 
 from scripts.input_validation import validate_problem_id
+from scripts.problem_repository import ProblemRepository, get_problem_repository
 
 
 class ShellgeiJudge:
-    def __init__(self):
-        self.base_dir = Path(__file__).resolve().parent.parent
+    def __init__(self, problem_repository: ProblemRepository | None = None) -> None:
+        """任意の検証済みrepositoryを受け取り、未指定ならprocess globalを遅延参照する。"""
+        self.problem_repository = problem_repository
+
+    def _repository(self) -> ProblemRepository:
+        """注入済みrepositoryを返し、未指定なら起動時にloadしたrepositoryを返す。"""
+        return self.problem_repository or get_problem_repository()
 
     def str_replace(self, s: str) -> str:
+        """比較対象文字列の空白と記号を既存判定用tokenへ置換して返す。"""
         s = s.replace("\r", "")
         s = s.replace(" ", "SPACE")
         s = s.replace("\n", "NEWLINE")
@@ -21,34 +25,18 @@ class ShellgeiJudge:
         return s
 
     def judge(self, output_str: str, output_image: str, problem_id: str) -> str:
+        """出力文字列・画像を指定問題の正解と比較し、既存の判定codeを返す。"""
         try:
             validate_problem_id(problem_id)
         except ValueError:
             return "Error: invalid problem ID."
+        record = self._repository().get(problem_id)
+        if record is None:
+            return "Error: answer yaml file not found."
         if len(output_str) == 0:
             output_str = "NULL"
-        # 問題データのファイルパス
-        yaml_path = self.base_dir / "problems" / "yaml_data" / f"{problem_id}.yaml"
-        answer_image_path = self.base_dir / "problems" / "image" / f"{problem_id}.jpg"
-        # 答えの文字列の取得
-        try:
-            with open(yaml_path, "r", encoding="utf-8") as file:
-                data = yaml.safe_load(file)
-                answer_str = data.get("expected_output", "")
-                if answer_str == "":
-                    answer_str = "NULL"
-        except FileNotFoundError:
-            return "Error: answer yaml file not found."
-        # 答えの画像の取得
-        try:
-            with open(answer_image_path, "rb") as image_file:
-                image_bytes = image_file.read()
-                base64_bytes = base64.b64encode(image_bytes)
-                answer_image = base64_bytes.decode("utf-8")
-        except FileNotFoundError:
-            return "Error: answer image file not found."
-        except Exception as e:
-            return f"Error: get answer image file: {e}"
+        answer_str = record.expected_output or "NULL"
+        answer_image = record.answer_image_base64
 
         output_str_replaced = self.str_replace(output_str)
         answer_str_replaced = self.str_replace(answer_str)

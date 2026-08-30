@@ -4,9 +4,9 @@
 
 ## ディレクトリ
 
-- `yaml_data/`: 1問に1つのYAMLファイル
+- `v3/`: productionで使用するschema v3 YAMLと`manifest.json`
 - `image/`: 1問に1つの正解JPEG画像
-- `v3/`: schema v3へ移行・検証済みの全92問
+- `yaml_data/`: v3の決定的な移行元として保持するlegacy YAML
 - `semantic_manifest.json`: v3移行前の全問題definitionと正解画像のsemantic baseline
 
 YAMLとJPEGは、`STANDARD-00000001.yaml`と
@@ -19,10 +19,12 @@ problem IDには、次の条件があります。
 - ASCIIの英字、数字、区切りのハイフンだけを使用する
 - 先頭、末尾、連続するハイフンは使用しない
 
-R3-006時点のproduction API、runner、judgeは引き続き`yaml_data/`を参照します。
-`v3/`をproductionの正本へ切り替えるのは、全問題を移行・検証する後続unitです。
+backendとrunnerは起動時に`v3/`の全YAMLと`image/`の全JPEGを1回だけ読み、
+schema、ID集合、画像形式・上限、`manifest.json`のrevisionを検証します。
+1件でも欠損、破損、不一致があれば起動せず、request処理中は検証済みの不変な
+problem repositoryだけを参照します。
 
-## Legacy YAMLフィールド
+## Legacy YAMLフィールド（移行baseline）
 
 現在の問題データは、次の文字列フィールドを持ちます。
 
@@ -74,7 +76,8 @@ schema v3の実行可能な型定義は
 - 画像artifact: 750,000 byte
 
 fixtureとartifactのpathはabsolute path、`..`、`.`、空segment、backslash、
-NULを許可しません。同一fixture pathの重複も拒否します。
+NULを許可しません。同一fixture pathの重複と、提出command用に予約した
+`z.bash`も拒否します。
 
 `v3/`にはSTANDARD 51問、PRACTICE 36問、IMAGE 5問を移行済みです。
 全fileについてlegacyからの決定的な再生成結果と、問題文、入出力、参照解答、
@@ -96,10 +99,31 @@ poetry run python -m scripts.problem_migration \
 `exit_code: ignore`と`stderr: merge`を明示します。意味を失う可能性がある入力は
 推測で変換せずエラーにします。
 
+## Problem data revision
+
+`v3/manifest.json`はmanifest/schema version、問題数、64文字のSHA-256
+`revision`を保持します。revisionはID順に並べた全92問について、型検証後の
+problem definitionをcanonical JSON化した値と、対応する正解JPEGのSHA-256から
+決定的に算出します。YAMLの書式だけを変えて意味が同じ場合はrevisionは変わりません。
+
+問題定義または正解画像を意図して変更した後は、backend directoryからmanifestを
+再生成し、問題dataとmanifestを同じ変更としてreviewしてください。
+
+```sh
+cd backend
+poetry run python -m scripts.problem_manifest \
+  ../problems/v3 ../problems/image \
+  --output ../problems/v3/manifest.json
+```
+
+生成処理自体も全YAML・JPEGを検証します。backendとrunnerは、それぞれ起動時に
+checked-in manifestを再計算結果と照合します。両service間でrevisionを通信して
+照合するreadiness protocolは、runner境界の後続refactoringで扱います。
+
 ## 検査
 
-legacyの必須field、YAMLとJPEGの対応、problem IDに加え、schema v3の型、
-制約、全92問の移行結果はDockerを使用しないbackendテストで検査します。
+legacyの必須field、problem IDに加え、schema v3の型、YAMLとJPEGの対応、
+manifest revision、全92問の移行結果はDockerを使用しないbackendテストで検査します。
 
 実際の正解コマンドをsandboxで実行する方法は、
 [Docker統合テスト](../backend/tests/integration/README.md)を参照してください。

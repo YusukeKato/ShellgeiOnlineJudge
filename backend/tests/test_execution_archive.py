@@ -6,6 +6,7 @@ from scripts.execution_archive import build_execution_archive
 
 
 def read_archive(stream: io.BytesIO) -> dict[str, str]:
+    # memory内tarを展開し、file名とUTF-8内容のdictとして返す。
     files: dict[str, str] = {}
     with tarfile.open(fileobj=stream, mode="r:") as archive:
         for member in archive.getmembers():
@@ -16,7 +17,11 @@ def read_archive(stream: io.BytesIO) -> dict[str, str]:
 
 
 def test_execution_archive_preserves_command_and_input() -> None:
-    archive = build_execution_archive("printf '日本語\\n'", "line 1\nline 2\n")
+    # commandとinput.txt fixtureが内容を変えずにarchiveへ格納されることを確認する。
+    archive = build_execution_archive(
+        "printf '日本語\\n'",
+        (("input.txt", "line 1\nline 2\n"),),
+    )
 
     assert read_archive(archive) == {
         "input.txt": "line 1\nline 2\n",
@@ -25,17 +30,20 @@ def test_execution_archive_preserves_command_and_input() -> None:
 
 
 def test_execution_archive_omits_empty_input_for_compatibility() -> None:
-    archive = build_execution_archive("echo ok", "")
+    # fixtureがない問題では提出commandだけをarchiveへ格納することを確認する。
+    archive = build_execution_archive("echo ok", ())
 
     assert read_archive(archive) == {"z.bash": "echo ok"}
 
 
 def test_parallel_execution_archives_do_not_mix_request_data() -> None:
+    # 多数の並行archive生成で、requestごとのcommandとfixtureが混ざらないことを確認する。
     def build_and_read(request_id: int) -> tuple[int, dict[str, str]]:
+        # 1 request分のarchiveを生成・展開し、照合用IDと内容を返す。
         files = read_archive(
             build_execution_archive(
                 f"printf 'command-{request_id}'",
-                f"input-{request_id}",
+                (("input.txt", f"input-{request_id}"),),
             )
         )
         return request_id, files

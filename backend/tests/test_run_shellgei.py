@@ -18,13 +18,20 @@ from scripts.run_shellgei import (
     SandboxBusyError,
     ShellgeiDockerClient,
 )
+from scripts.problem_repository import build_problem_repository
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+PROBLEM_REPOSITORY = build_problem_repository(
+    REPOSITORY_ROOT / "problems/v3",
+    REPOSITORY_ROOT / "problems/image",
+    REPOSITORY_ROOT / "problems/v3/manifest.json",
+)
 
 
 class FakeContainer:
     def __init__(self, output: Any = None, image: bytes = b"image") -> None:
+        """模擬command出力と画像を受け取り、観測可能なcontainer状態を初期化する。"""
         self.id = "execution-container"
         self.output = [b"ok\n"] if output is None else output
         self.image = image
@@ -34,6 +41,7 @@ class FakeContainer:
         self.setup_error: Exception | None = None
 
     def exec_run(self, command: Any, **kwargs: Any) -> Any:
+        """入力commandに応じてarchive展開・実行・画像取得の模擬結果を返す。"""
         if command == ["/bin/sh", "-c", EXECUTION_ARCHIVE_EXTRACT_COMMAND]:
             if self.setup_error is not None:
                 raise self.setup_error
@@ -68,35 +76,44 @@ class FakeContainer:
         raise AssertionError(f"unexpected command: {command}")
 
     def kill(self) -> None:
+        """kill回数を加算し、container停止eventを設定する。"""
         self.kill_calls += 1
         self.killed.set()
 
 
 class FakeManager:
     def __init__(self, container: FakeContainer, pool_size: int = 1) -> None:
+        """貸出対象containerとpool数を受け取り、release観測用listを初期化する。"""
         self.container = container
         self.pool_size = pool_size
         self.released: list[FakeContainer] = []
         self.release_stopped_values: list[bool] = []
 
     def get_container(self) -> FakeContainer:
+        """現在poolへ設定されている模擬containerを返す。"""
         return self.container
 
     def release_container(
         self, container: FakeContainer, already_stopped: bool = False
     ) -> None:
+        """返却containerと停止済みflagを入力として受け取り、観測用listへ記録する。"""
         self.released.append(container)
         self.release_stopped_values.append(already_stopped)
 
 
 def make_client(container: FakeContainer) -> tuple[ShellgeiDockerClient, FakeManager]:
+    # fake containerと実問題repositoryを注入したclient、および観測用managerを返す。
     manager = FakeManager(container)
-    client = ShellgeiDockerClient(container_manager=manager, max_concurrent=1)
-    client.base_dir = REPOSITORY_ROOT
+    client = ShellgeiDockerClient(
+        container_manager=manager,
+        max_concurrent=1,
+        problem_repository=PROBLEM_REPOSITORY,
+    )
     return client, manager
 
 
 def test_normal_execution_stops_container_and_returns_bounded_results() -> None:
+    # 正常実行でcommand・画像を返し、containerを停止済みとして返却することを確認する。
     container = FakeContainer(output=[b"hello\n"], image=b"jpeg-data")
     client, manager = make_client(container)
 
@@ -116,9 +133,11 @@ def test_normal_execution_stops_container_and_returns_bounded_results() -> None:
 
 
 def test_silent_execution_is_killed_at_deadline_and_worker_returns() -> None:
+    # 無出力commandを期限でkillし、同じworkerが後続requestを処理できることを確認する。
     container = FakeContainer()
 
     def silent_output() -> Any:
+        """container停止までbyteを生成せず待機する模擬streamを返すgenerator。"""
         container.killed.wait(timeout=2)
         if False:
             yield b""
@@ -152,6 +171,7 @@ def test_silent_execution_is_killed_at_deadline_and_worker_returns() -> None:
 
 
 def test_large_combined_stdout_stderr_is_bounded_and_kills_container() -> None:
+    # 出力上限超過時に表示を切り詰め、実行containerをkillすることを確認する。
     container = FakeContainer(output=[b"x" * 100_000])
     client, manager = make_client(container)
 
@@ -165,6 +185,7 @@ def test_large_combined_stdout_stderr_is_bounded_and_kills_container() -> None:
 
 
 def test_oversized_image_is_rejected() -> None:
+    # 許容byte数を超える画像を空文字列へ変換し、text結果は保持することを確認する。
     container = FakeContainer(output=[b"ok"], image=b"x" * (MAX_IMAGE_BYTES + 1))
     client, _ = make_client(container)
 
@@ -176,6 +197,7 @@ def test_oversized_image_is_rejected() -> None:
 
 
 def test_image_stream_is_bounded_before_base64_encoding() -> None:
+    # 画像streamを全量保持せずbyte上限で拒否してからbase64処理を止めることを確認する。
     container = FakeContainer(output=[b"ok"], image=b"x" * (MAX_IMAGE_BYTES + 65_536))
     client, _ = make_client(container)
 
@@ -187,6 +209,7 @@ def test_image_stream_is_bounded_before_base64_encoding() -> None:
 
 
 def test_setup_failure_is_cleaned_up_as_a_running_container() -> None:
+    # sandbox file準備失敗をerror結果へ変換し、未停止containerとして返却することを確認する。
     container = FakeContainer()
     container.setup_error = RuntimeError("archive transfer failed")
     client, manager = make_client(container)
@@ -201,12 +224,14 @@ def test_setup_failure_is_cleaned_up_as_a_running_container() -> None:
 
 
 def test_hard_concurrency_limit_returns_busy_without_queueing() -> None:
+    # 実行slot使用中の追加requestをqueueへ入れずSandboxBusyErrorにすることを確認する。
     entered = threading.Event()
     finish = threading.Event()
     manager = FakeManager(FakeContainer())
     client = ShellgeiDockerClient(container_manager=manager, max_concurrent=1)
 
     def blocking_execution(*args: Any) -> list[str]:
+        """入力を使用せずrelease通知まで待機し、固定実行結果を返す。"""
         entered.set()
         finish.wait(timeout=2)
         return ["done", ""]
@@ -214,6 +239,7 @@ def test_hard_concurrency_limit_returns_busy_without_queueing() -> None:
     client.exec_shellgei = blocking_execution  # type: ignore[assignment]
 
     async def scenario() -> None:
+        """1枠を占有した状態で2件目を送り、即時busyになる非同期手順を実行する。"""
         first = asyncio.create_task(
             client.run_with_timeout("one", "problem", timeout=1)
         )
@@ -233,6 +259,7 @@ def test_hard_concurrency_limit_returns_busy_without_queueing() -> None:
 
 
 def test_outer_timeout_keeps_capacity_reserved_until_worker_returns() -> None:
+    # 外側timeout後もthread終了までslotを保持し、終了後に再利用できることを確認する。
     entered = threading.Event()
     finish = threading.Event()
     manager = FakeManager(FakeContainer())
@@ -241,6 +268,7 @@ def test_outer_timeout_keeps_capacity_reserved_until_worker_returns() -> None:
     run_shellgei_module.DOCKER_OPERATION_GRACE_SECONDS = 0.05
 
     def blocking_execution(*args: Any) -> list[str]:
+        """入力を使用せずrelease通知まで同期処理を継続し、固定結果を返す。"""
         entered.set()
         finish.wait(timeout=2)
         return ["done", ""]
@@ -248,6 +276,7 @@ def test_outer_timeout_keeps_capacity_reserved_until_worker_returns() -> None:
     client.exec_shellgei = blocking_execution  # type: ignore[assignment]
 
     async def scenario() -> None:
+        """外側timeout、busy継続、worker終了後のslot回復を順番に検証する。"""
         first = await client.run_with_timeout("one", "problem", timeout=0.01)
         assert first == ["Error: sandbox cleanup timed out.", ""]
         assert entered.is_set()

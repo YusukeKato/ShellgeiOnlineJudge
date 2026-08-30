@@ -1,23 +1,20 @@
 import logging
-import pytz
-from pathlib import Path
+from datetime import datetime
 from typing import Annotated
 
-import yaml
+import pytz
 from fastapi import APIRouter, Header, HTTPException, Response
-from datetime import datetime
+
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
 from scripts.execution_log_persistence import (
     ExecutionLogPersistenceError,
     persist_execution_log_async,
 )
 from scripts.input_validation import ProblemId
-from scripts.problem_catalog import (
-    PROBLEM_LIST_CACHE_CONTROL,
-    get_problem_catalog,
-)
-from scripts.runner_client import RunnerBusyError, RunnerUnavailableError, runner_client
 from scripts.judge import ShellgeiJudge
+from scripts.problem_catalog import PROBLEM_LIST_CACHE_CONTROL
+from scripts.problem_repository import get_problem_repository
+from scripts.runner_client import RunnerBusyError, RunnerUnavailableError, runner_client
 
 router = APIRouter()
 shellgei_judge = ShellgeiJudge()
@@ -26,12 +23,15 @@ logger = logging.getLogger(__name__)
 
 @router.post("/shellgei")
 async def post_shellgei(shellgei_data: ShellgeiData) -> ShellgeiResultResponse:
+    """提出commandをrunnerで実行・判定・記録し、既存形式の結果を返す。
+
+    入力は検証済みのcommandとproblem ID。未登録問題は404を送出し、runnerの
+    混雑・停止やDB保存失敗は既存のerror responseへ変換する。
+    """
     japan_timezone = pytz.timezone("Asia/Tokyo")
     japan_date = datetime.now(japan_timezone)
 
-    base_dir = Path(__file__).resolve().parent.parent
-    yaml_path = base_dir / "problems" / "yaml_data" / f"{shellgei_data.problem_id}.yaml"
-    if not yaml_path.is_file():
+    if get_problem_repository().get(shellgei_data.problem_id) is None:
         raise HTTPException(status_code=404, detail="Problem not found")
 
     # シェル芸の実行
@@ -84,7 +84,11 @@ async def get_problems_list(
         Header(alias="If-None-Match"),
     ] = None,
 ) -> Response:
-    catalog = get_problem_catalog()
+    """検証済みrepositoryの問題一覧をETag付きResponseとして返す。
+
+    入力のIf-None-Matchが現在のETagと一致する場合は、本文なしの304を返す。
+    """
+    catalog = get_problem_repository().catalog
     headers = {
         "Cache-Control": PROBLEM_LIST_CACHE_CONTROL,
         "ETag": catalog.etag,
@@ -101,24 +105,9 @@ async def get_problems_list(
 
 
 @router.get("/problems/{problem_id}")
-async def get_problem(problem_id: ProblemId):
-    # backend/problems/yaml_data/{problem_id}.yaml を参照
-    base_dir = Path(__file__).resolve().parent.parent
-    yaml_path = base_dir / "problems" / "yaml_data" / f"{problem_id}.yaml"
-
-    if not yaml_path.is_file():
+async def get_problem(problem_id: ProblemId) -> dict[str, str]:
+    """入力problem IDの詳細を既存API形式で返し、未登録なら404を送出する。"""
+    record = get_problem_repository().get(problem_id)
+    if record is None:
         raise HTTPException(status_code=404, detail="Problem not found")
-
-    with open(yaml_path, "r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
-
-    return {
-        "title_ja": data.get("title_ja", ""),
-        "title_en": data.get("title_en", ""),
-        "statement_ja": data.get("statement_ja", ""),
-        "statement_en": data.get("statement_en", ""),
-        "input": data.get("input", ""),
-        "expected_output": data.get("expected_output", ""),
-        "answer": data.get("answer", ""),
-        "image": f"/image/{problem_id}.jpg",  # Nginxから配信される画像URL
-    }
+    return record.api_detail()

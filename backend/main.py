@@ -7,14 +7,19 @@ from contextlib import asynccontextmanager
 from scripts.database import Base, SessionLocal, engine
 from scripts.execution_log_retention import prune_execution_logs
 from scripts.execution_log_persistence import close_execution_log_persistence
-from scripts.problem_catalog import load_problem_catalog
+from scripts.problem_repository import load_problem_repository
 from scripts.runner_client import runner_client
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """backendの問題data・DBを起動時に準備し、終了時にworker資源を閉じる。
+
+    入力はFastAPI application。contextへ制御を渡す前にrepository検証やDB処理が
+    失敗した場合は例外を伝播し、request受付を開始しない。
+    """
     runner_client.validate_configuration()
-    load_problem_catalog()
+    load_problem_repository()
     # テーブルが存在しない場合は作成する
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
@@ -52,4 +57,5 @@ app.include_router(api_shellgei.router, prefix="/api")
 
 @app.get("/api")
 def read_root():
+    """backend APIの到達確認用messageをdictとして返す。"""
     return {"message": "Hello from FastAPI!"}

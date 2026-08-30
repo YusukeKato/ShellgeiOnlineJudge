@@ -205,11 +205,11 @@ const AboutPage: React.FC<AboutPageProps> = ({
         </ul>
         <h3>回答例 / SAMPLE SOLUTIONS</h3>
         <a
-          href={`${github_repository_url}/tree/main/problems/yaml_data`}
+          href={`${github_repository_url}/tree/main/problems/v3`}
           target="_blank"
           rel="noopener noreferrer"
         >
-          GitHub - problems/yaml_data/
+          GitHub - problems/v3/
         </a>
         <h3>おすすめ / RECOMMENDATIONS</h3>
         <p>さらに難しい問題や面白い問題が解きたい方には以下がおすすめです。</p>

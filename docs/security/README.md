@@ -291,6 +291,8 @@ Deferredは不要という意味ではありません。
   - timeout、出力上限、実行slot、background cleanup
 - `backend/tests/test_runner_boundary.py`
   - secret、固定schema、response上限、backend/runner分離
+- `backend/tests/test_problem_repository.py`
+  - 起動時schema・画像・manifest検証、不変lookup、revision再計算
 - `backend/tests/test_nginx_config.py`
   - nginx directiveの静的確認
 - `backend/tests/integration/test_nginx_admission.py`
@@ -315,7 +317,7 @@ Deferredは不要という意味ではありません。
 - 外側proxyを含むpublic Host allowlistとsecurity header
 - DB停止、lock、timeout、commit失敗、NUL、rollback後の回復
 - judge collision、画像全byte比較
-- backend/runnerのrevision・problem manifest不一致
+- backend/runner間のproblem revision不一致
 - dependency、container image、secret、workflowの継続scan
 - 外側proxyと複数送信元を含む負荷・公平性test
 
@@ -328,10 +330,11 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  R3-008: immutable ProblemRepoとmanifest digestを導入
+  R3-008: immutable ProblemRepoとmanifest digestのreview・commit
     ↓
 Later
-  judge、artifact、権限分離、E2E、browser、CI、運用基盤を改善
+  typed runner protocol、revision照合、judge、artifact、権限分離、
+  E2E、browser、CI、運用基盤を改善
 ```
 
 Highとして確定したOpen課題はありません。

@@ -1,5 +1,6 @@
 import asyncio
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -36,11 +37,13 @@ INVALID_PROBLEM_IDS = [
 
 @pytest.mark.parametrize("problem_id", INVALID_PROBLEM_IDS)
 def test_problem_id_rejects_non_path_safe_values(problem_id: str) -> None:
+    # path traversalや形式不正を含む入力problem IDが型検証で拒否されることを確認する。
     with pytest.raises(ValidationError):
         PROBLEM_ID_ADAPTER.validate_python(problem_id)
 
 
 def test_all_existing_problem_ids_pass_validation() -> None:
+    # 登録済みの全legacy problem IDが現在の共通validatorを通過することを確認する。
     yaml_paths = sorted(PROBLEMS_DIR.glob("*.yaml"))
 
     assert yaml_paths
@@ -49,6 +52,7 @@ def test_all_existing_problem_ids_pass_validation() -> None:
 
 
 def test_openapi_schema_exposes_input_constraints() -> None:
+    # OpenAPIにproblem IDとcommandの長さ・pattern制約が公開されることを確認する。
     schema = app.openapi()
     problem_parameter = schema["paths"]["/api/problems/{problem_id}"]["get"][
         "parameters"
@@ -63,6 +67,7 @@ def test_openapi_schema_exposes_input_constraints() -> None:
 
 
 def test_shellgei_data_normalizes_carriage_returns() -> None:
+    # CRLFまたはCRを含むcommandがLFへ正規化されることを確認する。
     data = ShellgeiData(
         shellgei="printf 'first\r\nsecond'\r",
         problem_id="STANDARD-00000001",
@@ -81,11 +86,13 @@ def test_shellgei_data_normalizes_carriage_returns() -> None:
     ],
 )
 def test_shellgei_data_rejects_invalid_commands(shellgei: str) -> None:
+    # 空文字、上限超過、NUL、不正Unicodeを含むcommandを拒否することを確認する。
     with pytest.raises(ValidationError):
         ShellgeiData(shellgei=shellgei, problem_id="STANDARD-00000001")
 
 
 def test_shellgei_data_accepts_the_frontend_character_limit() -> None:
+    # frontend上限と同じ文字数の日本語commandをbackendが受理することを確認する。
     shellgei = "あ" * MAX_SHELLGEI_CHARS
 
     data = ShellgeiData(shellgei=shellgei, problem_id="STANDARD-00000001")
@@ -94,6 +101,7 @@ def test_shellgei_data_accepts_the_frontend_character_limit() -> None:
 
 
 def test_shellgei_data_rejects_extra_json_fields() -> None:
+    # 公開request schemaにない追加fieldをfail-closedで拒否することを確認する。
     with pytest.raises(ValidationError):
         ShellgeiData.model_validate(
             {
@@ -104,7 +112,14 @@ def test_shellgei_data_rejects_extra_json_fields() -> None:
         )
 
 
-def test_unknown_problem_is_rejected_before_database_or_sandbox_work() -> None:
+def test_unknown_problem_is_rejected_before_database_or_sandbox_work(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # 未登録IDがrunner・DB処理より前に404として拒否されることを確認する。
+    monkeypatch.setattr(
+        "api.api_shellgei.get_problem_repository",
+        lambda: SimpleNamespace(get=lambda _problem_id: None),
+    )
     data = ShellgeiData(shellgei="true", problem_id="MISSING-00000001")
 
     with pytest.raises(HTTPException) as exc_info:
@@ -118,6 +133,7 @@ class _UnusedContainerManager:
     pool_size = 1
 
     def get_container(self) -> Any:
+        """container取得に到達した場合にtestを失敗させ、返値は生成しない。"""
         raise AssertionError("invalid problem IDs must not lease a container")
 
 
@@ -125,6 +141,7 @@ class _UnusedContainerManager:
 def test_executor_rejects_invalid_problem_id_before_leasing_container(
     problem_id: str,
 ) -> None:
+    # executorが不正problem IDをcontainer取得前にerror結果へ変換することを確認する。
     client = ShellgeiDockerClient(
         container_manager=_UnusedContainerManager(),
         max_concurrent=1,
@@ -139,6 +156,7 @@ def test_executor_rejects_invalid_problem_id_before_leasing_container(
 
 
 def test_judge_rejects_invalid_problem_id_before_reading_files() -> None:
+    # judgeが不正problem IDをrepository参照前にerror結果へ変換することを確認する。
     judge = ShellgeiJudge()
 
     assert judge.judge("output", "", "../secret") == "Error: invalid problem ID."

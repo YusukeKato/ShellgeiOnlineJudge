@@ -1,79 +1,42 @@
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Iterable
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
 
-import yaml
-
-from scripts.input_validation import validate_problem_id
+from models.problem import ProblemDefinitionV3
 
 
-DEFAULT_PROBLEM_YAML_DIRECTORY = (
-    Path(__file__).resolve().parent.parent / "problems" / "yaml_data"
-)
 PROBLEM_LIST_CACHE_CONTROL = "public, max-age=300"
-
-
-class ProblemCatalogError(RuntimeError):
-    """Raised when the problem list cannot be loaded safely at startup."""
 
 
 @dataclass(frozen=True)
 class ProblemCatalog:
+    """一覧APIの応答本文とcache情報を保持する不変なcatalog。"""
+
     response_body: bytes
     etag: str
     problem_count: int
 
 
-_loaded_catalog: ProblemCatalog | None = None
+def build_problem_catalog(
+    definitions: Iterable[ProblemDefinitionV3],
+) -> ProblemCatalog:
+    """型検証済み問題定義から、ID順の一覧API応答とETagを生成する。
 
-
-def _problem_summary(yaml_path: Path, data: Any) -> dict[str, str]:
-    if not isinstance(data, Mapping):
-        raise ProblemCatalogError(f"{yaml_path.name} must contain a YAML mapping")
-
-    try:
-        validate_problem_id(yaml_path.stem)
-    except ValueError as exc:
-        raise ProblemCatalogError(
-            f"{yaml_path.name} has an invalid problem ID"
-        ) from exc
-
-    title_ja = data.get("title_ja")
-    title_en = data.get("title_en")
-    if not isinstance(title_ja, str) or not isinstance(title_en, str):
-        raise ProblemCatalogError(
-            f"{yaml_path.name} must contain string title_ja and title_en fields"
-        )
-
-    return {
-        "id": yaml_path.stem,
-        "category": yaml_path.stem.split("-")[0],
-        "title_ja": title_ja,
-        "title_en": title_en,
-    }
-
-
-def build_problem_catalog(yaml_directory: Path) -> ProblemCatalog:
-    try:
-        yaml_paths = sorted(yaml_directory.glob("*.yaml"))
-    except OSError as exc:
-        raise ProblemCatalogError(
-            f"failed to list problem data in {yaml_directory}"
-        ) from exc
-
-    if not yaml_paths:
-        raise ProblemCatalogError(f"no problem data found in {yaml_directory}")
-
-    summaries: list[dict[str, str]] = []
-    for yaml_path in yaml_paths:
-        try:
-            data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, yaml.YAMLError) as exc:
-            raise ProblemCatalogError(f"failed to load {yaml_path.name}") from exc
-        summaries.append(_problem_summary(yaml_path, data))
+    入力は問題定義の反復可能object、出力は不変なProblemCatalog。
+    問題が0件の場合はValueErrorを送出する。
+    """
+    summaries = [
+        {
+            "id": definition.id,
+            "category": definition.category,
+            "title_ja": definition.title.ja,
+            "title_en": definition.title.en,
+        }
+        for definition in sorted(definitions, key=lambda item: item.id)
+    ]
+    if not summaries:
+        raise ValueError("problem catalog must not be empty")
 
     response_body = json.dumps(
         summaries,
@@ -86,19 +49,3 @@ def build_problem_catalog(yaml_directory: Path) -> ProblemCatalog:
         etag=f'"{digest}"',
         problem_count=len(summaries),
     )
-
-
-def load_problem_catalog(
-    yaml_directory: Path = DEFAULT_PROBLEM_YAML_DIRECTORY,
-) -> ProblemCatalog:
-    global _loaded_catalog
-
-    catalog = build_problem_catalog(yaml_directory)
-    _loaded_catalog = catalog
-    return catalog
-
-
-def get_problem_catalog() -> ProblemCatalog:
-    if _loaded_catalog is None:
-        raise RuntimeError("problem catalog has not been loaded")
-    return _loaded_catalog

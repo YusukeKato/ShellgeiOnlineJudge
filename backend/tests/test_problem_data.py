@@ -6,6 +6,7 @@ from pathlib import Path
 import yaml
 
 from scripts.judge import ShellgeiJudge
+from scripts.problem_repository import build_problem_repository
 
 
 PROBLEMS_DIR = Path(__file__).resolve().parents[2] / "problems"
@@ -90,9 +91,12 @@ def test_problem_semantic_manifest_matches_all_legacy_records() -> None:
 
 def test_judge_accepts_all_expected_problem_outputs() -> None:
     # 全問題の期待出力と正解画像を現在のjudgeへ渡し、すべて正解判定になることを確認する。
-    judge = ShellgeiJudge()
-    # Production images copy problems below backend/. Tests use the repository source tree.
-    judge.base_dir = PROBLEMS_DIR.parent
+    repository = build_problem_repository(
+        PROBLEMS_DIR / "v3",
+        IMAGE_DIR,
+        PROBLEMS_DIR / "v3/manifest.json",
+    )
+    judge = ShellgeiJudge(repository)
 
     for yaml_path in sorted(YAML_DIR.glob("*.yaml")):
         data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))

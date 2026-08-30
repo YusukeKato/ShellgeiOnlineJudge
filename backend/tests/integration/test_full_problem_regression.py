@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from scripts.problem_schema import load_problem_definition
+from scripts.problem_repository import build_problem_repository
 from scripts.container_manager import ContainerManager
 from scripts.judge import ShellgeiJudge
 from scripts.run_shellgei import ShellgeiDockerClient
@@ -21,15 +22,22 @@ pytestmark = [
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 V3_DIRECTORY = REPOSITORY_ROOT / "problems" / "v3"
+PROBLEM_REPOSITORY = build_problem_repository(
+    V3_DIRECTORY,
+    REPOSITORY_ROOT / "problems/image",
+    V3_DIRECTORY / "manifest.json",
+)
 
 
 def test_all_problem_answers_in_real_sandboxes() -> None:
     # 全v3問題の参照解答を実sandboxで実行し、legacy judgeで正解になることを確認する。
     manager = ContainerManager(pool_size=1)
-    client = ShellgeiDockerClient(container_manager=manager, max_concurrent=1)
-    client.base_dir = REPOSITORY_ROOT
-    judge = ShellgeiJudge()
-    judge.base_dir = REPOSITORY_ROOT
+    client = ShellgeiDockerClient(
+        container_manager=manager,
+        max_concurrent=1,
+        problem_repository=PROBLEM_REPOSITORY,
+    )
+    judge = ShellgeiJudge(PROBLEM_REPOSITORY)
     manager.initialize_pool()
     try:
         for yaml_path in sorted(V3_DIRECTORY.glob("*.yaml")):
