@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 21
 - Pending (`Ready` + `Planned`): 21
 - In Progress: 0
-- Review: 1
-- Completed: 5
+- Review: 0
+- Completed: 6
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -158,7 +158,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-003 | P1 | Completed | A | Make execution-log persistence non-blocking and failure-safe | - | `3843e37` |
 | R3-004 | P1 | Completed | A | Align supported Python versions and concurrency behavior | - | `9510c1f` |
 | R3-005 | P0 | Completed | A | Characterize legacy problem, judge, and frontend behavior | - | `79ca954` |
-| R3-006 | P0 | Review | B | Introduce v3 problem schema and migration tooling | R3-005 | - |
+| R3-006 | P0 | Completed | B | Introduce v3 problem schema and migration tooling | R3-005 | `e710670` |
 | R3-007 | P0 | Planned | B | Migrate all problem definitions to schema v3 | R3-006 | - |
 | R3-008 | P0 | Planned | B | Introduce immutable ProblemRepo and manifest digest | R3-007 | - |
 | R3-009 | P0 | Planned | B | Introduce typed runner execution protocol | R3-005 | - |
@@ -246,14 +246,14 @@ They are planning aids, not acceptance criteria.
 
 ### R3-006: Introduce v3 problem schema and migration tooling
 
-- Priority / Status: P0 / `Review`
+- Priority / Status: P0 / `Completed`
 - Goal: schema version、execution input/fixture、judge type、exit/stderr policy、artifactを明示する型付きproblem schemaを導入する
 - Main files/components: problem domain model、schema validator、migration tool、`problems/README.md`、代表problem 3件程度
 - Dependencies: R3-005
 - Risk: Medium。既存problemの暗黙的な意味を誤って変換しないこと
 - Expected tests: valid/invalid schema、duplicate/extra/missing field、path/size/image制約、pilot problem回帰
 - Size: M
-- Completion: commit `-` / date `-` / note `implementation and planned tests complete; awaiting review`
+- Completion: commit `e710670` / date 2026-08-30 / typed schema v3, strict YAML validation, deterministic legacy migration, and three pilot problems introduced without changing the production read path
 
 ### R3-007: Migrate all problem definitions to schema v3
 
@@ -604,3 +604,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-08-27 | R3-005 characterization and planned tests completed; moved to `Review` | - |
 | 2026-08-28 | R3-005 approved and recorded as `Completed` | `79ca954` |
 | 2026-08-30 | R3-006 schema, migration tooling, and planned tests completed; moved to `Review` | - |
+| 2026-08-30 | R3-006 approved and recorded as `Completed` | `e710670` |

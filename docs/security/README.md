@@ -328,8 +328,6 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  R3-006: problem schemaとmigration toolingをreviewし、commitする
-    ↓
   R3-007: review gateを解決し、全92問をschema v3へ移行
     ↓
 Later
