@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 19
 - Pending (`Ready` + `Planned`): 19
 - In Progress: 0
-- Review: 1
-- Completed: 7
+- Review: 0
+- Completed: 8
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -160,7 +160,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-005 | P0 | Completed | A | Characterize legacy problem, judge, and frontend behavior | - | `79ca954` |
 | R3-006 | P0 | Completed | B | Introduce v3 problem schema and migration tooling | R3-005 | `e710670` |
 | R3-007 | P0 | Completed | B | Migrate all problem definitions to schema v3 | R3-006 | `4d25fa8` |
-| R3-008 | P0 | Review | B | Introduce immutable ProblemRepo and manifest digest | R3-007 | - |
+| R3-008 | P0 | Completed | B | Introduce immutable ProblemRepo and manifest digest | R3-007 | `6360c34` |
 | R3-009 | P0 | Planned | B | Introduce typed runner execution protocol | R3-005 | - |
 | R3-010 | P0 | Planned | B | Extract pure text judge and typed JudgeResult | R3-006, R3-009 | - |
 | R3-011 | P0 | Planned | B | Separate and correct image judging | R3-007, R3-009 | - |
@@ -268,14 +268,14 @@ They are planning aids, not acceptance criteria.
 
 ### R3-008: Introduce immutable ProblemRepo and manifest digest
 
-- Priority / Status: P0 / `Review`
+- Priority / Status: P0 / `Completed`
 - Goal: YAML/imageの重複読込を一元化し、startup時に検証済みのimmutableな`ProblemDefinition`とproblem data revisionを提供する
 - Main files/components: problem catalog/repository、backend startup、runner startup、problem API/judge caller
 - Dependencies: R3-007
 - Risk: Medium。cache lifetime、startup failure、backend/runner間のdata不一致を正しく扱う必要がある
 - Expected tests: startup validation、immutable lookup、missing/corrupt data、manifest digest一致/不一致
 - Size: M
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `6360c34` / date 2026-08-30 / startup-validated immutable problem repository, canonical manifest revision, and v3 production read path introduced
 
 ### R3-009: Introduce typed runner execution protocol
 
