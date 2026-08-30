@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 17
 - Pending (`Ready` + `Planned`): 17
 - In Progress: 0
-- Review: 1
-- Completed: 9
+- Review: 0
+- Completed: 10
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -162,7 +162,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-007 | P0 | Completed | B | Migrate all problem definitions to schema v3 | R3-006 | `4d25fa8` |
 | R3-008 | P0 | Completed | B | Introduce immutable ProblemRepo and manifest digest | R3-007 | `6360c34` |
 | R3-009 | P0 | Completed | B | Introduce typed runner execution protocol | R3-005 | `62dadf6` |
-| R3-010 | P0 | Review | B | Extract pure text judge and typed JudgeResult | R3-006, R3-009 | - |
+| R3-010 | P0 | Completed | B | Extract pure text judge and typed JudgeResult | R3-006, R3-009 | `91fdbad` |
 | R3-011 | P0 | Planned | B | Separate and correct image judging | R3-007, R3-009 | - |
 | R3-012 | P1 | Planned | C | Separate sandbox preparation, execution, capture, and cleanup | R3-009 | - |
 | R3-013 | P0 | Planned | C | Capture structured execution outcomes | R3-012 | - |
@@ -290,14 +290,14 @@ They are planning aids, not acceptance criteria.
 
 ### R3-010: Extract pure text judge and typed JudgeResult
 
-- Priority / Status: P0 / `Review`
+- Priority / Status: P0 / `Completed`
 - Goal: file I/Oをjudgeから除き、token置換/`NULL`衝突をなくして、明示的なnewline・space・stderr・exit policyでtext verdictを返す
 - Main files/components: judge domain model、pure text judge、problem judge specification、judge test corpus
 - Dependencies: R3-006、R3-009
 - Risk: High。現在の誤ったacceptを含む判定結果が変わるため、意図したbreaking changeの確認が必要
 - Expected tests: whitespace truth table、token literal、empty/`NULL`、non-zero exit、stderr、timeout/truncation、全text problem回帰
 - Size: M
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `91fdbad` / date 2026-08-30 / pure typed text judge, collision-free comparison, explicit execution policies, and legacy public code mapping introduced
 
 ### R3-011: Separate and correct image judging
 
