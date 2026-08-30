@@ -75,11 +75,11 @@ Statusは次の意味で使用します。
   - 概要: runner侵害時の影響が同一daemon上のDB、frontend、TLS鍵へ及ぶ
   - 関連: `docker-compose.yml`
   - 次: runner専用hostまたは使い捨てVMへ分離
-- `SOJ-009` — Medium / P2 / Open
-  - 概要: 文字列置換と画像先頭除外により判定衝突が起きる
+- `SOJ-009` — Medium / P2 / Partially resolved
+  - 概要: text置換tokenと`NULL`衝突は解消したが、画像先頭除外が残る
   - 関連: `backend/scripts/judge.py`
-  - 次: [legacy behavior baseline](../refactoring/legacy-behavior.md)の既知不具合を
-    R3-010、R3-011で修正し、全問題回帰を実行
+  - 次: [legacy behavior baseline](../refactoring/legacy-behavior.md)の画像不具合を
+    R3-011で修正し、全問題回帰を実行
 - `SOJ-011` — Medium / P2 / Deferred
   - 概要: backend containerとDB runtime roleの権限が大きい
   - 関連: `backend/Dockerfile`、`docker-compose.yml`
@@ -128,8 +128,8 @@ Statusは次の意味で使用します。
 
 現在の未解決trackerは次の内訳です。
 
-- Open: 6件
-- Partially resolved: 2件
+- Open: 5件
+- Partially resolved: 3件
 - Deferred: 6件
 - Severity: High 0件、Medium 10件、Low 4件
 
@@ -293,6 +293,8 @@ Deferredは不要という意味ではありません。
   - secret、version付き固定schema、response上限、backend/runner分離
 - `backend/tests/test_runner_protocol.py`
   - request/response JSON往復、未知version・field、result不変性・上限
+- `backend/tests/test_text_judge.py`
+  - text空白規則、literal衝突、終了code・stderr policy、timeout、切り詰め
 - `backend/tests/test_problem_repository.py`
   - 起動時schema・画像・manifest検証、不変lookup、revision再計算
 - `backend/tests/test_nginx_config.py`
@@ -318,7 +320,7 @@ Deferredは不要という意味ではありません。
 - 実Composeのfrontend -> backend -> runner -> Docker -> DB E2E
 - 外側proxyを含むpublic Host allowlistとsecurity header
 - DB停止、lock、timeout、commit失敗、NUL、rollback後の回復
-- judge collision、画像全byte比較
+- 画像全byte比較
 - backend/runner間のproblem revision不一致
 - dependency、container image、secret、workflowの継続scan
 - 外側proxyと複数送信元を含む負荷・公平性test
@@ -332,10 +334,10 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  R3-010: pure text judgeとtyped JudgeResultを導入
+  R3-011: image judgeを分離して全byte比較へ修正
     ↓
 Later
-  image judge、revision照合、artifact、権限分離、E2E、browser、
+  structured execution、revision照合、artifact、権限分離、E2E、browser、
   CI、運用基盤を改善
 ```
 

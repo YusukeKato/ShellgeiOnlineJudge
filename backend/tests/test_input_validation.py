@@ -11,7 +11,7 @@ from api.api_shellgei import post_shellgei
 from main import app
 from models.model_shellgei import MAX_SHELLGEI_CHARS, ShellgeiData
 from scripts.input_validation import MAX_PROBLEM_ID_CHARS, ProblemId
-from scripts.judge import ShellgeiJudge
+from scripts.judge import JudgeReason, JudgeVerdict, ShellgeiJudge
 from scripts.run_shellgei import ShellgeiDockerClient
 
 
@@ -159,4 +159,7 @@ def test_judge_rejects_invalid_problem_id_before_reading_files() -> None:
     # judgeが不正problem IDをrepository参照前にerror結果へ変換することを確認する。
     judge = ShellgeiJudge()
 
-    assert judge.judge("output", "", "../secret") == "Error: invalid problem ID."
+    result = judge.judge("output", "", "../secret")
+
+    assert result.verdict is JudgeVerdict.JUDGE_ERROR
+    assert result.reason is JudgeReason.INVALID_PROBLEM_ID

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from scripts.judge import ShellgeiJudge
+from scripts.judge import JudgeVerdict, ShellgeiJudge
 from scripts.problem_repository import build_problem_repository
 
 
@@ -103,6 +103,7 @@ def test_judge_accepts_all_expected_problem_outputs() -> None:
         image_bytes = (IMAGE_DIR / f"{yaml_path.stem}.jpg").read_bytes()
         image = base64.b64encode(image_bytes).decode("ascii")
 
-        assert judge.judge(data["expected_output"], image, yaml_path.stem) == "1", (
-            yaml_path.name
-        )
+        assert (
+            judge.judge(data["expected_output"], image, yaml_path.stem).verdict
+            is JudgeVerdict.ACCEPTED
+        ), yaml_path.name

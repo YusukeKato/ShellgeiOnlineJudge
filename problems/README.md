@@ -65,6 +65,23 @@ schema v3の実行可能な型定義は
 対応する`image/jpeg`または`image/gif`、取得byte上限を明示します。
 `IMAGE`問題は`image` judge、それ以外は`text` judgeだけを使用できます。
 
+### Text判定
+
+text判定の仕様と期待出力、構造化された実行結果を受け取る純粋関数は、
+[`backend/scripts/judge.py`](../backend/scripts/judge.py)を正本とします。
+比較時はCRを除去し、末尾に連続するspaceとnewlineを無視します。途中のspace、
+newline、tab、`NULL`等のliteral文字列は区別し、画像は判定に使用しません。
+
+`execution.exit_code`が`zero`なら終了code 0を要求し、`ignore`なら使用しません。
+`execution.stderr`の`merge`はstdout末尾へstderrを連結し、`ignore`は判定に使用せず、
+`must_be_empty`はstderrが空でなければ実行失敗とします。timeoutまたは出力切り詰めが
+記録された実行結果は、出力が一致しても実行失敗です。
+
+現在のrunner protocolはstdout/stderrや終了codeをまだ分離しておらず、全92問は
+互換policyの`exit_code: ignore`、`stderr: merge`です。その他のpolicyはpure judgeで
+検査済みですが、production経路ではR3-013のstructured execution outcome導入まで
+fail-closedで判定errorにします。
+
 主な入力上限は次のとおりです。すべてUTF-8のbyte数で検証します。
 
 - schema YAML: 2,000,000 byte

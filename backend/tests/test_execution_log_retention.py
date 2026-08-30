@@ -27,6 +27,7 @@ from scripts.execution_log_persistence import (
     persist_execution_log,
     persist_execution_log_async,
 )
+from scripts.judge import JudgeResult, JudgeVerdict
 from scripts.runner_protocol import ExecutionResult
 
 
@@ -289,9 +290,9 @@ def test_shell_api_returns_result_when_log_persistence_fails(
         """入力commandとIDを使用せず、runnerの固定成功結果を返す。"""
         return ExecutionResult(output="test", image="")
 
-    def judge(_output: str, _image: str, _problem_id: str) -> str:
-        """入力結果を使用せず、固定の正解判定codeを返す。"""
-        return "1"
+    def judge(_output: str, _image: str, _problem_id: str) -> JudgeResult:
+        """入力結果を使用せず、固定の型付き正解判定を返す。"""
+        return JudgeResult(verdict=JudgeVerdict.ACCEPTED)
 
     async def unavailable(*_args: Any, **_kwargs: Any) -> int:
         """DB worker停止を再現するExecutionLogPersistenceErrorを送出する。"""

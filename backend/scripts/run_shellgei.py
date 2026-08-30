@@ -119,7 +119,7 @@ class ShellgeiDockerClient:
         if execution_error is not None:
             return f"Error during execution: {execution_error}"[:limit_chars]
         if not decoded:
-            return "NULL"
+            return ""
         if len(decoded) > limit_chars:
             return decoded[:limit_chars] + "..."
         return decoded

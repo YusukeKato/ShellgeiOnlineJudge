@@ -132,6 +132,17 @@ def test_normal_execution_stops_container_and_returns_bounded_results() -> None:
     client.close()
 
 
+def test_empty_successful_output_is_not_replaced_with_null_literal() -> None:
+    # 正常な空出力をliteral NULLへ置換せず、空文字列のまま返すことを確認する。
+    container = FakeContainer(output=[])
+    client, _ = make_client(container)
+
+    output, _ = client.exec_shellgei("true", "STANDARD-00000001", 1, 1000)
+
+    assert output == ""
+    client.close()
+
+
 def test_silent_execution_is_killed_at_deadline_and_worker_returns() -> None:
     # 無出力commandを期限でkillし、同じworkerが後続requestを処理できることを確認する。
     container = FakeContainer()

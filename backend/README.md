@@ -38,6 +38,10 @@ requestは`protocol_version`、`shellgei`、`problem_id`、responseは
 exit code、stderr、timeout、artifact等の追加実行情報は、後続のstructured execution
 outcomeで`ExecutionResult`へ追加します。
 
+text判定は`JudgeResult`と`TextJudgeInput`を型付き境界とし、file I/Oやrepository参照を
+行わないpure functionへ分離しています。判定規則の正本は
+[問題データのText判定](../problems/README.md#text判定)を参照してください。
+
 ## 参考
 
 下記記事を参考にさせていただきました。

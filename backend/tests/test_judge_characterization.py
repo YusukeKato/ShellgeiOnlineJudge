@@ -4,34 +4,44 @@ from types import MappingProxyType
 
 import pytest
 
-from models.problem import TextJudgeSpecification
-from scripts.judge import ShellgeiJudge
+from models.problem import ExecutionSpecification, TextJudgeSpecification
+from scripts.judge import JudgeReason, JudgeResult, JudgeVerdict, ShellgeiJudge
 from scripts.problem_catalog import build_problem_catalog
 from scripts.problem_repository import ProblemRecord, ProblemRepository
 from scripts.problem_schema import load_problem_definition
 
 
-PROBLEM_ID = "STANDARD-00000001"
+TEXT_PROBLEM_ID = "STANDARD-00000001"
+IMAGE_PROBLEM_ID = "IMAGE-00000001"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-BASE_DEFINITION = load_problem_definition(
-    REPOSITORY_ROOT / "problems/v3" / f"{PROBLEM_ID}.yaml"
+TEXT_DEFINITION = load_problem_definition(
+    REPOSITORY_ROOT / "problems/v3" / f"{TEXT_PROBLEM_ID}.yaml"
+)
+IMAGE_DEFINITION = load_problem_definition(
+    REPOSITORY_ROOT / "problems/v3" / f"{IMAGE_PROBLEM_ID}.yaml"
 )
 
 
-def _judge_fixture(
+def _repository_judge(
     *,
     expected_output: str = "expected",
     answer_image: bytes = b"answer-image" * 4,
-) -> tuple[ShellgeiJudge, str]:
-    # 任意の期待出力・画像を持つ不変repositoryを組み立て、judgeと比較用Base64画像を返す。
-    definition = BASE_DEFINITION.model_copy(
-        update={
-            "judge": TextJudgeSpecification(
-                type="text",
-                expected_output=expected_output,
-            )
-        }
-    )
+    image_problem: bool = False,
+) -> tuple[ShellgeiJudge, str, str]:
+    # 任意のtext期待値または画像を持つ不変repositoryを作り、judge・画像・IDを返す。
+    if image_problem:
+        definition = IMAGE_DEFINITION
+        problem_id = IMAGE_PROBLEM_ID
+    else:
+        definition = TEXT_DEFINITION.model_copy(
+            update={
+                "judge": TextJudgeSpecification(
+                    type="text",
+                    expected_output=expected_output,
+                )
+            }
+        )
+        problem_id = TEXT_PROBLEM_ID
     answer_image_base64 = base64.b64encode(answer_image).decode("ascii")
     record = ProblemRecord(
         definition=definition,
@@ -39,39 +49,26 @@ def _judge_fixture(
         answer_image_base64=answer_image_base64,
     )
     repository = ProblemRepository(
-        records=MappingProxyType({PROBLEM_ID: record}),
+        records=MappingProxyType({problem_id: record}),
         revision="test-revision",
         catalog=build_problem_catalog([definition]),
     )
-    return ShellgeiJudge(repository), answer_image_base64
+    return ShellgeiJudge(repository), answer_image_base64, problem_id
 
 
-@pytest.mark.parametrize(
-    "text_matches,image_matches,expected_verdict",
-    [
-        (True, True, "1"),
-        (True, False, "2"),
-        (False, True, "3"),
-        (False, False, "4"),
-    ],
-)
-def test_legacy_judge_verdict_truth_table(
-    text_matches: bool,
-    image_matches: bool,
-    expected_verdict: str,
-) -> None:
-    # テキストと画像の一致・不一致の組み合わせが従来の判定番号になることを確認する。
-    judge, matching_image = _judge_fixture()
+@pytest.mark.parametrize("image_matches", [True, False])
+def test_text_judge_does_not_depend_on_image(image_matches: bool) -> None:
+    # text問題では画像の一致状態にかかわらず、stdout一致だけで正解になることを確認する。
+    judge, matching_image, problem_id = _repository_judge()
     different_image = base64.b64encode(b"different-image" * 4).decode("ascii")
 
-    assert (
-        judge.judge(
-            "expected" if text_matches else "different",
-            matching_image if image_matches else different_image,
-            PROBLEM_ID,
-        )
-        == expected_verdict
+    result = judge.judge(
+        "expected",
+        matching_image if image_matches else different_image,
+        problem_id,
     )
+
+    assert result == JudgeResult(verdict=JudgeVerdict.ACCEPTED)
 
 
 @pytest.mark.parametrize(
@@ -84,59 +81,104 @@ def test_legacy_judge_verdict_truth_table(
         "expected\r\n",
     ],
 )
-def test_legacy_judge_ignores_carriage_returns_and_trailing_spaces_or_newlines(
+def test_text_judge_ignores_carriage_returns_and_trailing_spaces_or_newlines(
     output: str,
 ) -> None:
-    # CRと末尾の空白・改行を除外して比較する従来の文字列判定を確認する。
-    judge, image = _judge_fixture(expected_output="expected\n")
+    # CRと末尾の空白・改行だけを除外し、期待出力と比較することを確認する。
+    judge, image, problem_id = _repository_judge(expected_output="expected\n")
 
-    assert judge.judge(output, image, PROBLEM_ID) == "1"
+    assert judge.judge(output, image, problem_id).verdict is JudgeVerdict.ACCEPTED
 
 
-def test_legacy_judge_keeps_tabs_significant() -> None:
+def test_text_judge_keeps_tabs_significant() -> None:
     # タブは通常の空白と同一視されず、文字列不一致になることを確認する。
-    judge, image = _judge_fixture(expected_output="a b")
+    judge, image, problem_id = _repository_judge(expected_output="a b")
 
-    assert judge.judge("a\tb", image, PROBLEM_ID) == "3"
+    result = judge.judge("a\tb", image, problem_id)
+
+    assert result.verdict is JudgeVerdict.WRONG_ANSWER
+    assert result.reason is JudgeReason.OUTPUT_MISMATCH
 
 
-def test_legacy_judge_maps_empty_output_and_answer_to_null() -> None:
+def test_text_judge_accepts_empty_output_and_answer() -> None:
     # 利用者出力と期待出力が両方空の場合に正解となることを確認する。
-    judge, image = _judge_fixture(expected_output="")
+    judge, image, problem_id = _repository_judge(expected_output="")
 
-    assert judge.judge("", image, PROBLEM_ID) == "1"
+    assert judge.judge("", image, problem_id).verdict is JudgeVerdict.ACCEPTED
+
+
+def test_text_judge_does_not_collide_with_replacement_token_literals() -> None:
+    # 実際の空白とliteral文字列SPACEを異なる出力として判定することを確認する。
+    judge, image, problem_id = _repository_judge(expected_output="SPACE")
+
+    assert judge.judge(" ", image, problem_id).verdict is JudgeVerdict.WRONG_ANSWER
+
+
+def test_text_judge_does_not_match_literal_null_to_empty_answer() -> None:
+    # 空出力とliteral文字列NULLを異なる出力として判定することを確認する。
+    judge, image, problem_id = _repository_judge(expected_output="")
+
+    assert judge.judge("NULL", image, problem_id).verdict is JudgeVerdict.WRONG_ANSWER
+
+
+def test_repository_adapter_fails_closed_for_not_yet_captured_policies() -> None:
+    # runnerが構造化していない終了code policyを暗黙に成功扱いしないことを確認する。
+    judge, image, problem_id = _repository_judge()
+    assert judge.problem_repository is not None
+    record = judge.problem_repository.require(problem_id)
+    definition = record.definition.model_copy(
+        update={
+            "execution": ExecutionSpecification(
+                stdin="",
+                fixtures=(),
+                exit_code="zero",
+                stderr="merge",
+            )
+        }
+    )
+    repository = ProblemRepository(
+        records=MappingProxyType(
+            {
+                problem_id: ProblemRecord(
+                    definition=definition,
+                    answer_image=record.answer_image,
+                    answer_image_base64=record.answer_image_base64,
+                )
+            }
+        ),
+        revision="test-revision",
+        catalog=build_problem_catalog([definition]),
+    )
+
+    result = ShellgeiJudge(repository).judge("expected", image, problem_id)
+
+    assert result.verdict is JudgeVerdict.JUDGE_ERROR
+    assert result.reason is JudgeReason.STRUCTURED_EXECUTION_UNAVAILABLE
+
+
+def test_image_judge_keeps_legacy_trailing_whitespace_order() -> None:
+    # R3-011前の画像問題ではnewline後のspaceだけを除き、残るnewlineを不一致とする。
+    judge, image, problem_id = _repository_judge(image_problem=True)
+
+    result = judge.judge("\n ", image, problem_id)
+
+    assert result.verdict is JudgeVerdict.WRONG_ANSWER
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="SOJ-009: replacement tokens can collide with literal output",
-)
-def test_known_bug_replacement_token_must_not_false_accept() -> None:
-    # 実際の空白と文字列SPACEが衝突して誤って正解になる既知不具合を追跡する。
-    judge, image = _judge_fixture(expected_output="SPACE")
-
-    assert judge.judge(" ", image, PROBLEM_ID) != "1"
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="SOJ-009: literal NULL collides with an empty expected output",
-)
-def test_known_bug_literal_null_must_not_match_empty_answer() -> None:
-    # 空出力の内部表現と文字列NULLが衝突して誤って正解になる既知不具合を追跡する。
-    judge, image = _judge_fixture(expected_output="")
-
-    assert judge.judge("NULL", image, PROBLEM_ID) != "1"
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="SOJ-009: the first 28 Base64 characters are excluded from comparison",
+    reason="SOJ-009/R3-011: the first 28 Base64 characters are excluded",
 )
 def test_known_bug_image_prefix_difference_must_not_be_ignored() -> None:
-    # 画像先頭21 byteだけの違いを検出できない既知不具合を追跡する。
+    # 画像先頭21 byteだけの違いを検出できない残存不具合をR3-011まで追跡する。
     suffix = b"same-image-suffix"
-    judge, _ = _judge_fixture(answer_image=b"A" * 21 + suffix)
+    judge, _, problem_id = _repository_judge(
+        answer_image=b"A" * 21 + suffix,
+        image_problem=True,
+    )
     different_prefix = base64.b64encode(b"B" * 21 + suffix).decode("ascii")
 
-    assert judge.judge("expected", different_prefix, PROBLEM_ID) != "1"
+    assert (
+        judge.judge("", different_prefix, problem_id).verdict
+        is not JudgeVerdict.ACCEPTED
+    )

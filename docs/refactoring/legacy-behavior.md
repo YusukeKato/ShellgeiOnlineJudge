@@ -12,7 +12,7 @@
 - problem corpusは92問で、STANDARD 51問、PRACTICE 36問、IMAGE 5問
 - 入力データを持つ問題は68問、空の期待出力を持つ問題はIMAGEの5問
 - 各問題のYAML definitionと正解JPEGはsemantic manifestのSHA-256で固定する
-- legacy judgeはtext一致とimage一致の組み合わせをverdict `1`から`4`で返す
+- public APIは互換性のためtyped verdictを判定code `1`から`4`へ変換する
 - text比較ではCRを除去し、末尾のspaceとnewlineを無視するが、tabは区別する
 - public APIのsubmission結果は`output`、`id`、`date`、`judge`、`image`を返す
 - frontendはsubmission結果を5要素tupleへ変換し、問題の空input/outputを`NULL`と表示する
@@ -23,12 +23,11 @@
 次の挙動は互換性要件ではありません。現在の誤動作を通常の期待値として固定せず、
 backendではstrict xfail、frontendでは後続unitの修正対象として追跡します。
 
-- judgeの文字列置換後に`SPACE`、`NEWLINE`、`TAB`、`LT`、`GT`がliteral出力と衝突する
-- 空出力を表す内部文字列`NULL`と、利用者が出力したliteral `NULL`が衝突する
 - Base64文字列の先頭28文字を除外するため、画像先頭21 byteの差を検出できない
 - frontendはverdict文字列に`1`が含まれるだけで正解表示にする
 - frontend timeoutは進行中の`fetch`を中断しない
 - infrastructure errorとjudge errorをtyped stateで区別せず、不正解表示へ変換し得る
 
-これらはR3-009からR3-020の対応unitで型付き境界へ移行し、
+text置換tokenと`NULL`の衝突はR3-010で修正し、通常の成功testへ変更しました。
+残る項目はR3-011からR3-020の対応unitで型付き境界へ移行し、
 修正時に該当xfailまたは追跡項目を通常の成功testへ置き換えます。

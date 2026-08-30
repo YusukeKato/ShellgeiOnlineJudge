@@ -61,7 +61,8 @@ async def post_shellgei(shellgei_data: ShellgeiData) -> ShellgeiResultResponse:
         )
     output = execution.output
     image = execution.image
-    judge: str = shellgei_judge.judge(output, image, problem_id_str)
+    judge_result = shellgei_judge.judge(output, image, problem_id_str)
+    judge = judge_result.legacy_code()
 
     try:
         log_id = await persist_execution_log_async(

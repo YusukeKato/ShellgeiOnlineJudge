@@ -6,7 +6,7 @@ import pytest
 from scripts.problem_schema import load_problem_definition
 from scripts.problem_repository import build_problem_repository
 from scripts.container_manager import ContainerManager
-from scripts.judge import ShellgeiJudge
+from scripts.judge import JudgeVerdict, ShellgeiJudge
 from scripts.run_shellgei import ShellgeiDockerClient
 
 
@@ -30,7 +30,7 @@ PROBLEM_REPOSITORY = build_problem_repository(
 
 
 def test_all_problem_answers_in_real_sandboxes() -> None:
-    # 全v3問題の参照解答を実sandboxで実行し、legacy judgeで正解になることを確認する。
+    # 全v3問題の参照解答を実sandboxで実行し、typed judgeで正解になることを確認する。
     manager = ContainerManager(pool_size=1)
     client = ShellgeiDockerClient(
         container_manager=manager,
@@ -48,7 +48,10 @@ def test_all_problem_answers_in_real_sandboxes() -> None:
                     yaml_path.stem,
                 )
             )
-            assert judge.judge(output, image, yaml_path.stem) == "1", yaml_path.name
+            assert (
+                judge.judge(output, image, yaml_path.stem).verdict
+                is JudgeVerdict.ACCEPTED
+            ), yaml_path.name
     finally:
         manager.shutdown_pool()
         client.close()

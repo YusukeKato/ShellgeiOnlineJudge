@@ -457,6 +457,6 @@ sandboxイメージとbase imageはtagで参照しており、digestを固定し
 - 外側proxyで実際のclient単位に共有するrate・connection制限
 - 複数frontend replica・複数hostで共有する受付制御
 - runnerとは独立したsandbox期限強制の必要性評価
-- 判定値の正規化と画像比較処理の修正
+- 画像比較処理の修正
 - イメージのdigest固定、SBOM、署名検証、脆弱性scan
 - runnerを別hostまたは使い捨てVMへ配置する追加隔離
