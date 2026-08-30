@@ -12,6 +12,7 @@ from scripts.runner_protocol import (
     RUNNER_EXECUTE_PATH,
     RUNNER_HEALTH_PATH,
     RUNNER_PROTOCOL_VERSION,
+    ExecutionArtifact,
     ExecutionResult,
     RunnerExecutionRequest,
     RunnerExecutionResponse,
@@ -76,19 +77,28 @@ async def execute_shellgei(
     入力は検証済みcommandとproblem ID。未登録問題は404、開始rateまたは実行枠の
     上限到達時は429を送出する。
     """
-    if get_problem_repository().get(shellgei_data.problem_id) is None:
+    record = get_problem_repository().get(shellgei_data.problem_id)
+    if record is None:
         raise HTTPException(status_code=404, detail="Problem not found")
     if not sandbox_start_rate_limiter.try_acquire():
         raise HTTPException(status_code=429, detail="Runner is busy")
 
     try:
-        output, image = await docker_client.run_with_timeout(
+        output, artifact_data = await docker_client.run_with_timeout(
             shellgei_data.shellgei,
             shellgei_data.problem_id,
         )
     except SandboxBusyError as exc:
         raise HTTPException(status_code=429, detail="Runner is busy") from exc
+    artifact = None
+    judge_specification = record.definition.judge
+    if judge_specification.type == "image" and artifact_data:
+        artifact = ExecutionArtifact(
+            path=judge_specification.artifact.path,
+            media_type=judge_specification.artifact.media_type,
+            data=artifact_data,
+        )
     return RunnerExecutionResponse(
         protocol_version=RUNNER_PROTOCOL_VERSION,
-        result=ExecutionResult(output=output, image=image),
+        result=ExecutionResult(output=output, artifact=artifact),
     )

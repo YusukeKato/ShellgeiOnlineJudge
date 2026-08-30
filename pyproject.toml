@@ -27,6 +27,7 @@ sqlalchemy = "^2.0.47"
 psycopg2-binary = "^2.9.11"
 pyyaml = "^6.0.3"
 types-pyyaml = "^6.0.12"
+pillow = "^12.3.0"
 
 [tool.mypy]
 mypy_path = "backend"

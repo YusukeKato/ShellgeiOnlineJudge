@@ -9,6 +9,7 @@ from scripts.judge import JudgeReason, JudgeResult, JudgeVerdict, ShellgeiJudge
 from scripts.problem_catalog import build_problem_catalog
 from scripts.problem_repository import ProblemRecord, ProblemRepository
 from scripts.problem_schema import load_problem_definition
+from scripts.runner_protocol import ExecutionArtifact
 
 
 TEXT_PROBLEM_ID = "STANDARD-00000001"
@@ -60,11 +61,15 @@ def _repository_judge(
 def test_text_judge_does_not_depend_on_image(image_matches: bool) -> None:
     # text問題では画像の一致状態にかかわらず、stdout一致だけで正解になることを確認する。
     judge, matching_image, problem_id = _repository_judge()
-    different_image = base64.b64encode(b"different-image" * 4).decode("ascii")
+    artifact = ExecutionArtifact(
+        path="media/output.jpg",
+        media_type="image/jpeg",
+        data=matching_image if image_matches else "different-image",
+    )
 
     result = judge.judge(
         "expected",
-        matching_image if image_matches else different_image,
+        artifact,
         problem_id,
     )
 
@@ -85,16 +90,16 @@ def test_text_judge_ignores_carriage_returns_and_trailing_spaces_or_newlines(
     output: str,
 ) -> None:
     # CRと末尾の空白・改行だけを除外し、期待出力と比較することを確認する。
-    judge, image, problem_id = _repository_judge(expected_output="expected\n")
+    judge, _, problem_id = _repository_judge(expected_output="expected\n")
 
-    assert judge.judge(output, image, problem_id).verdict is JudgeVerdict.ACCEPTED
+    assert judge.judge(output, None, problem_id).verdict is JudgeVerdict.ACCEPTED
 
 
 def test_text_judge_keeps_tabs_significant() -> None:
     # タブは通常の空白と同一視されず、文字列不一致になることを確認する。
-    judge, image, problem_id = _repository_judge(expected_output="a b")
+    judge, _, problem_id = _repository_judge(expected_output="a b")
 
-    result = judge.judge("a\tb", image, problem_id)
+    result = judge.judge("a\tb", None, problem_id)
 
     assert result.verdict is JudgeVerdict.WRONG_ANSWER
     assert result.reason is JudgeReason.OUTPUT_MISMATCH
@@ -102,28 +107,28 @@ def test_text_judge_keeps_tabs_significant() -> None:
 
 def test_text_judge_accepts_empty_output_and_answer() -> None:
     # 利用者出力と期待出力が両方空の場合に正解となることを確認する。
-    judge, image, problem_id = _repository_judge(expected_output="")
+    judge, _, problem_id = _repository_judge(expected_output="")
 
-    assert judge.judge("", image, problem_id).verdict is JudgeVerdict.ACCEPTED
+    assert judge.judge("", None, problem_id).verdict is JudgeVerdict.ACCEPTED
 
 
 def test_text_judge_does_not_collide_with_replacement_token_literals() -> None:
     # 実際の空白とliteral文字列SPACEを異なる出力として判定することを確認する。
-    judge, image, problem_id = _repository_judge(expected_output="SPACE")
+    judge, _, problem_id = _repository_judge(expected_output="SPACE")
 
-    assert judge.judge(" ", image, problem_id).verdict is JudgeVerdict.WRONG_ANSWER
+    assert judge.judge(" ", None, problem_id).verdict is JudgeVerdict.WRONG_ANSWER
 
 
 def test_text_judge_does_not_match_literal_null_to_empty_answer() -> None:
     # 空出力とliteral文字列NULLを異なる出力として判定することを確認する。
-    judge, image, problem_id = _repository_judge(expected_output="")
+    judge, _, problem_id = _repository_judge(expected_output="")
 
-    assert judge.judge("NULL", image, problem_id).verdict is JudgeVerdict.WRONG_ANSWER
+    assert judge.judge("NULL", None, problem_id).verdict is JudgeVerdict.WRONG_ANSWER
 
 
 def test_repository_adapter_fails_closed_for_not_yet_captured_policies() -> None:
     # runnerが構造化していない終了code policyを暗黙に成功扱いしないことを確認する。
-    judge, image, problem_id = _repository_judge()
+    judge, _, problem_id = _repository_judge()
     assert judge.problem_repository is not None
     record = judge.problem_repository.require(problem_id)
     definition = record.definition.model_copy(
@@ -150,35 +155,7 @@ def test_repository_adapter_fails_closed_for_not_yet_captured_policies() -> None
         catalog=build_problem_catalog([definition]),
     )
 
-    result = ShellgeiJudge(repository).judge("expected", image, problem_id)
+    result = ShellgeiJudge(repository).judge("expected", None, problem_id)
 
     assert result.verdict is JudgeVerdict.JUDGE_ERROR
     assert result.reason is JudgeReason.STRUCTURED_EXECUTION_UNAVAILABLE
-
-
-def test_image_judge_keeps_legacy_trailing_whitespace_order() -> None:
-    # R3-011前の画像問題ではnewline後のspaceだけを除き、残るnewlineを不一致とする。
-    judge, image, problem_id = _repository_judge(image_problem=True)
-
-    result = judge.judge("\n ", image, problem_id)
-
-    assert result.verdict is JudgeVerdict.WRONG_ANSWER
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="SOJ-009/R3-011: the first 28 Base64 characters are excluded",
-)
-def test_known_bug_image_prefix_difference_must_not_be_ignored() -> None:
-    # 画像先頭21 byteだけの違いを検出できない残存不具合をR3-011まで追跡する。
-    suffix = b"same-image-suffix"
-    judge, _, problem_id = _repository_judge(
-        answer_image=b"A" * 21 + suffix,
-        image_problem=True,
-    )
-    different_prefix = base64.b64encode(b"B" * 21 + suffix).decode("ascii")
-
-    assert (
-        judge.judge("", different_prefix, problem_id).verdict
-        is not JudgeVerdict.ACCEPTED
-    )

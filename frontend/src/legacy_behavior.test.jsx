@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 
 import { judgeResult } from "./functions/judge_result";
 import { postShellgei } from "./functions/post_shellgei";
+import { imageDataUrl } from "./functions/submit";
 import { updateProblem } from "./functions/update_problem";
 import SojResult from "./tsx/result";
 
@@ -31,7 +32,7 @@ describe("legacy frontend API and display behavior", () => {
   });
 
   test("maps a successful shellgei response to the legacy tuple", async () => {
-    // 投稿APIの成功レスポンスが従来の5要素配列へ変換されることを確認する。
+    // 投稿APIの成功レスポンスが画像MIMEを含む6要素配列へ変換されることを確認する。
     fetchMock.mockResolvedValue({
       ok: true,
       json: jest.fn().mockResolvedValue({
@@ -40,6 +41,7 @@ describe("legacy frontend API and display behavior", () => {
         date: "2026-08-27 12:34:56",
         judge: 1,
         image: "encoded-image",
+        image_media_type: "image/gif",
       }),
     });
 
@@ -49,6 +51,7 @@ describe("legacy frontend API and display behavior", () => {
       "2026-08-27 12:34:56",
       "1",
       "encoded-image",
+      "image/gif",
     ]);
     expect(fetchMock).toHaveBeenCalledWith(`${SOJ_URL}/api/shellgei`, {
       method: "POST",
@@ -70,7 +73,14 @@ describe("legacy frontend API and display behavior", () => {
     const result = postShellgei(SOJ_URL, "sleep 30", "STANDARD-00000001");
     jest.advanceTimersByTime(20_000);
 
-    await expect(result).resolves.toEqual(["Timeout: 20.0s", "", "", "", ""]);
+    await expect(result).resolves.toEqual(["Timeout: 20.0s", "", "", "", "", ""]);
+  });
+
+  test("builds data URLs only for declared JPEG and GIF artifacts", () => {
+    // backendが返すJPEG/GIF MIMEだけをdata URLへ反映し、未知MIMEを拒否する。
+    expect(imageDataUrl("jpeg-data", "image/jpeg")).toBe("data:image/jpeg;base64,jpeg-data");
+    expect(imageDataUrl("gif-data", "image/gif")).toBe("data:image/gif;base64,gif-data");
+    expect(imageDataUrl("svg-data", "image/svg+xml")).toBeNull();
   });
 
   test("maps problem details and empty values to the displayed legacy values", async () => {

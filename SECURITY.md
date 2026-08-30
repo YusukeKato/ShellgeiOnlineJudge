@@ -134,17 +134,14 @@ runnerメモリに保持する量は、APIが返す最大文字数の4倍まで�
 - 上限以降の出力を保持しない
 - 画像を保持しない
 
-出力画像は最大750,000 bytesです。
-watchdogが有効な間に、次のいずれかを固定コマンドで読み取ります。
+出力画像はproblem schemaのartifact pathとbyte上限を使用し、上限値は最大
+750,000 bytesです。text問題では画像を読み取らず、画像問題でも指定pathだけを
+read-only root filesystem上の`/usr/bin/head`で読み取ります。同じdirectoryに
+JPEG/GIFが複数あっても探索や暗黙選択を行いません。
 
-- `/media/output.gif`
-- `/media/output.jpg`
-
-読み取りにはread-only root filesystem上の`/usr/bin/head`を使用し、
-最大750,001 bytesをDocker execのstreamとしてrunnerへ返します。
-
-runnerも750,001 bytesを上限とするbufferへ読み込み、
-750,000 bytesを超えた画像を破棄します。
+runnerは設定上限+1 bytesのbufferへ読み込み、上限を超えた画像を破棄します。
+backendはBase64、schemaのpath・MIME、JPEG/GIF形式を検証し、decode後の寸法、
+frame数、RGBA画素を正解画像と比較します。decodeする総画素数は4,000,000以下です。
 
 画像をwritable root layerへ退避せず、Docker archive APIも使用しません。
 上限超過または読み取り失敗は、画像なしの結果として扱います。
@@ -457,6 +454,5 @@ sandboxイメージとbase imageはtagで参照しており、digestを固定し
 - 外側proxyで実際のclient単位に共有するrate・connection制限
 - 複数frontend replica・複数hostで共有する受付制御
 - runnerとは独立したsandbox期限強制の必要性評価
-- 画像比較処理の修正
 - イメージのdigest固定、SBOM、署名検証、脆弱性scan
 - runnerを別hostまたは使い捨てVMへ配置する追加隔離

@@ -19,6 +19,7 @@ execution:
   stderr: merge
 judge:
   type: image
+  comparison: exact_pixels
   artifact:
     path: media/output.jpg
     media_type: image/jpeg

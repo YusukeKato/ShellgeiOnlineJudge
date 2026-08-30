@@ -2,7 +2,7 @@ export const postShellgei = async (
   soj_url: string,
   shellgei: string,
   selectedProblem: string,
-): Promise<[string, string, string, string, string]> => {
+): Promise<[string, string, string, string, string, string]> => {
   const timeoutMessage = "Timeout: 20.0s";
   // const api_endpoint = soj_url + ":8000/api/shellgei";
   const api_endpoint = soj_url + "/api/shellgei";
@@ -41,18 +41,19 @@ export const postShellgei = async (
           String(res.date),
           String(res.judge),
           String(res.image),
+          res.image_media_type == null ? "" : String(res.image_media_type),
         ];
       } else {
-        return ["Error: response is empty", "", "", "", ""];
+        return ["Error: response is empty", "", "", "", "", ""];
       }
     } else {
-      return ["Error: response is null", "", "", "", ""];
+      return ["Error: response is null", "", "", "", "", ""];
     }
   } catch (error: any) {
     console.error("Failed to post shellgei:", error);
     if (error.message === timeoutMessage) {
-      return [timeoutMessage, "", "", "", ""];
+      return [timeoutMessage, "", "", "", "", ""];
     }
-    return [`Error: ${error.message}`, "", "", "", ""];
+    return [`Error: ${error.message}`, "", "", "", "", ""];
   }
 };

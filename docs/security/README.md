@@ -75,11 +75,6 @@ Statusは次の意味で使用します。
   - 概要: runner侵害時の影響が同一daemon上のDB、frontend、TLS鍵へ及ぶ
   - 関連: `docker-compose.yml`
   - 次: runner専用hostまたは使い捨てVMへ分離
-- `SOJ-009` — Medium / P2 / Partially resolved
-  - 概要: text置換tokenと`NULL`衝突は解消したが、画像先頭除外が残る
-  - 関連: `backend/scripts/judge.py`
-  - 次: [legacy behavior baseline](../refactoring/legacy-behavior.md)の画像不具合を
-    R3-011で修正し、全問題回帰を実行
 - `SOJ-011` — Medium / P2 / Deferred
   - 概要: backend containerとDB runtime roleの権限が大きい
   - 関連: `backend/Dockerfile`、`docker-compose.yml`
@@ -129,9 +124,9 @@ Statusは次の意味で使用します。
 現在の未解決trackerは次の内訳です。
 
 - Open: 5件
-- Partially resolved: 3件
+- Partially resolved: 2件
 - Deferred: 6件
-- Severity: High 0件、Medium 10件、Low 4件
+- Severity: High 0件、Medium 9件、Low 4件
 
 ## Resolved issues
 
@@ -158,9 +153,10 @@ Statusは次の意味で使用します。
 | RES-016 | slash自動redirectを無効化し、backendのHostとforwarded headerの信頼境界を固定 | `6061ebc` | ASGI boundary test、nginx静的test、基本Python検査 |
 | RES-017 | 実行ログ保存をevent loop外へ分離し、NUL正規化、DB timeout、rollbackと失敗後の回復を実装 | `3843e37` | persistence unit、PostgreSQL lock failure/recovery integration test |
 | RES-018 | Python 3.12--3.14のruntime matrixを固定し、thread future完了確認をversion間で一貫させた | `9510c1f` | runtime matrix、timeout/concurrency、3.12--3.14 non-Docker test |
+| RES-019 | text token衝突と画像先頭除外を解消し、schema指定artifactのMIME検証と全画素比較へ分離 | `91fdbad`、この変更 | text/image judge unit、全問題Docker回帰 |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
-RES-014、RES-015、RES-016、RES-017、RES-018は、
+RES-014、RES-015、RES-016、RES-017、RES-018、RES-019は、
 記載した範囲では解決済みです。
 daemon単独のsandbox有効期限、可変image等の残存経路は、
 別のtracker issueとして追跡しています。
@@ -295,6 +291,8 @@ Deferredは不要という意味ではありません。
   - request/response JSON往復、未知version・field、result不変性・上限
 - `backend/tests/test_text_judge.py`
   - text空白規則、literal衝突、終了code・stderr policy、timeout、切り詰め
+- `backend/tests/test_image_judge.py`
+  - JPEG/GIF、欠損・破損・path・MIME、全画素比較、旧先頭除外の回帰
 - `backend/tests/test_problem_repository.py`
   - 起動時schema・画像・manifest検証、不変lookup、revision再計算
 - `backend/tests/test_nginx_config.py`
@@ -320,7 +318,6 @@ Deferredは不要という意味ではありません。
 - 実Composeのfrontend -> backend -> runner -> Docker -> DB E2E
 - 外側proxyを含むpublic Host allowlistとsecurity header
 - DB停止、lock、timeout、commit失敗、NUL、rollback後の回復
-- 画像全byte比較
 - backend/runner間のproblem revision不一致
 - dependency、container image、secret、workflowの継続scan
 - 外側proxyと複数送信元を含む負荷・公平性test
@@ -334,10 +331,10 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  R3-011: image judgeを分離して全byte比較へ修正
+  R3-012: sandbox preparation、execution、capture、cleanupを分離
     ↓
 Later
-  structured execution、revision照合、artifact、権限分離、E2E、browser、
+  structured execution、revision照合、権限分離、E2E、browser、
   CI、運用基盤を改善
 ```
 

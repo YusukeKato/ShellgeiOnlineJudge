@@ -7,6 +7,7 @@ import yaml
 
 from scripts.judge import JudgeVerdict, ShellgeiJudge
 from scripts.problem_repository import build_problem_repository
+from scripts.runner_protocol import ExecutionArtifact
 
 
 PROBLEMS_DIR = Path(__file__).resolve().parents[2] / "problems"
@@ -103,7 +104,15 @@ def test_judge_accepts_all_expected_problem_outputs() -> None:
         image_bytes = (IMAGE_DIR / f"{yaml_path.stem}.jpg").read_bytes()
         image = base64.b64encode(image_bytes).decode("ascii")
 
+        definition = repository.require(yaml_path.stem).definition
+        artifact = None
+        if definition.judge.type == "image":
+            artifact = ExecutionArtifact(
+                path=definition.judge.artifact.path,
+                media_type=definition.judge.artifact.media_type,
+                data=image,
+            )
         assert (
-            judge.judge(data["expected_output"], image, yaml_path.stem).verdict
+            judge.judge(data["expected_output"], artifact, yaml_path.stem).verdict
             is JudgeVerdict.ACCEPTED
         ), yaml_path.name

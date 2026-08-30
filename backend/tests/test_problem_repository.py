@@ -114,12 +114,12 @@ def test_repository_lookup_does_not_reread_problem_files(tmp_path: Path) -> None
     assert record.answer_image == MINIMAL_JPEG
 
 
-@pytest.mark.parametrize("failure", ["missing", "extra", "corrupt"])
+@pytest.mark.parametrize("failure", ["missing", "extra", "extra_gif", "corrupt"])
 def test_repository_rejects_missing_extra_or_corrupt_images(
     tmp_path: Path,
     failure: str,
 ) -> None:
-    # YAMLとJPEGのID集合不一致、およびJPEG形式破損を起動時に拒否することを確認する。
+    # YAML/JPEGのID不一致、未定義GIF、およびJPEG形式破損を起動時に拒否することを確認する。
     definition_directory, image_directory, manifest_path = _one_problem_repository(
         tmp_path
     )
@@ -128,6 +128,8 @@ def test_repository_rejects_missing_extra_or_corrupt_images(
         image_path.unlink()
     elif failure == "extra":
         (image_directory / "STANDARD-00000002.jpg").write_bytes(MINIMAL_JPEG)
+    elif failure == "extra_gif":
+        (image_directory / "STANDARD-00000001.gif").write_bytes(b"GIF89atest;")
     else:
         image_path.write_bytes(b"not-a-jpeg")
 

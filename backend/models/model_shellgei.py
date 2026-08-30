@@ -3,6 +3,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from scripts.input_validation import ProblemId
+from models.problem import ImageMediaType
 
 
 MAX_SHELLGEI_CHARS = 1000
@@ -38,4 +39,5 @@ class ShellgeiResultResponse(BaseModel):
     id: str
     date: str
     image: str
+    image_media_type: ImageMediaType | None
     judge: str

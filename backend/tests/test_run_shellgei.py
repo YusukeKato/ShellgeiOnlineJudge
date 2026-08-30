@@ -14,7 +14,6 @@ from scripts.run_shellgei import (
     EXECUTION_ARCHIVE_ENVIRONMENT,
     EXECUTION_ARCHIVE_EXTRACT_COMMAND,
     MAX_IMAGE_BYTES,
-    OUTPUT_IMAGE_READ_COMMAND,
     SandboxBusyError,
     ShellgeiDockerClient,
 )
@@ -39,9 +38,11 @@ class FakeContainer:
         self.kill_calls = 0
         self.archive: bytes | None = None
         self.setup_error: Exception | None = None
+        self.commands: list[Any] = []
 
     def exec_run(self, command: Any, **kwargs: Any) -> Any:
         """入力commandに応じてarchive展開・実行・画像取得の模擬結果を返す。"""
+        self.commands.append(command)
         if command == ["/bin/sh", "-c", EXECUTION_ARCHIVE_EXTRACT_COMMAND]:
             if self.setup_error is not None:
                 raise self.setup_error
@@ -53,19 +54,16 @@ class FakeContainer:
             }
             self.archive = base64.b64decode(encoded_archive, validate=True)
             return SimpleNamespace(exit_code=0, output=None)
-        if command == ["/bin/sh", "-c", OUTPUT_IMAGE_READ_COMMAND]:
+        if command == [
+            "/usr/bin/head",
+            "-c",
+            str(MAX_IMAGE_BYTES + 1),
+            "--",
+            "/work/media/output.jpg",
+        ]:
             assert kwargs == {"stdout": True, "stderr": False, "stream": True}
             assert not self.killed.is_set()
             return SimpleNamespace(exit_code=None, output=iter((self.image,)))
-        if command == [
-            "convert",
-            "-size",
-            "200x200",
-            "xc:white",
-            "/media/output.jpg",
-        ]:
-            assert kwargs == {"workdir": SANDBOX_WORK_DIRECTORY}
-            return SimpleNamespace(exit_code=0, output=b"")
         if command == ["bash", "z.bash"]:
             assert kwargs == {
                 "demux": False,
@@ -120,7 +118,8 @@ def test_normal_execution_stops_container_and_returns_bounded_results() -> None:
     output, image = client.exec_shellgei("printf hello", "STANDARD-00000001", 1, 1000)
 
     assert output == "hello\n"
-    assert image == base64.b64encode(b"jpeg-data").decode("ascii")
+    assert image == ""
+    assert not any(command[0] == "/usr/bin/head" for command in container.commands)
     assert container.kill_calls == 1
     assert manager.released == [container]
     assert manager.release_stopped_values == [True]
@@ -140,6 +139,25 @@ def test_empty_successful_output_is_not_replaced_with_null_literal() -> None:
     output, _ = client.exec_shellgei("true", "STANDARD-00000001", 1, 1000)
 
     assert output == ""
+    client.close()
+
+
+def test_image_problem_captures_only_the_schema_artifact_path() -> None:
+    # 画像問題ではschema指定pathだけを上限付きで読み、Base64 artifactを返すことを確認する。
+    payload = b"\xff\xd8image\xff\xd9"
+    container = FakeContainer(output=[], image=payload)
+    client, _ = make_client(container)
+
+    _, artifact = client.exec_shellgei("true", "IMAGE-00000001", 1, 1000)
+
+    assert artifact == base64.b64encode(payload).decode("ascii")
+    assert [
+        "/usr/bin/head",
+        "-c",
+        str(MAX_IMAGE_BYTES + 1),
+        "--",
+        "/work/media/output.jpg",
+    ] in container.commands
     client.close()
 
 
@@ -200,7 +218,7 @@ def test_oversized_image_is_rejected() -> None:
     container = FakeContainer(output=[b"ok"], image=b"x" * (MAX_IMAGE_BYTES + 1))
     client, _ = make_client(container)
 
-    output, image = client.exec_shellgei("echo ok", "STANDARD-00000001", 1, 1000)
+    output, image = client.exec_shellgei("echo ok", "IMAGE-00000001", 1, 1000)
 
     assert output == "ok"
     assert image == ""
@@ -212,7 +230,7 @@ def test_image_stream_is_bounded_before_base64_encoding() -> None:
     container = FakeContainer(output=[b"ok"], image=b"x" * (MAX_IMAGE_BYTES + 65_536))
     client, _ = make_client(container)
 
-    output, image = client.exec_shellgei("echo ok", "STANDARD-00000001", 1, 1000)
+    output, image = client.exec_shellgei("echo ok", "IMAGE-00000001", 1, 1000)
 
     assert output == "ok"
     assert image == ""

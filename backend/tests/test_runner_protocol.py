@@ -7,6 +7,7 @@ from scripts.runner_protocol import (
     MAX_RUNNER_IMAGE_BASE64_CHARS,
     MAX_RUNNER_OUTPUT_CHARS,
     RUNNER_PROTOCOL_VERSION,
+    ExecutionArtifact,
     ExecutionResult,
     RunnerExecutionRequest,
     RunnerExecutionResponse,
@@ -23,7 +24,14 @@ def test_runner_protocol_round_trip_preserves_versioned_request_and_result() -> 
     )
     response = RunnerExecutionResponse(
         protocol_version=RUNNER_PROTOCOL_VERSION,
-        result=ExecutionResult(output="ok", image="base64-image"),
+        result=ExecutionResult(
+            output="ok",
+            artifact=ExecutionArtifact(
+                path="media/output.jpg",
+                media_type="image/jpeg",
+                data="base64-image",
+            ),
+        ),
     )
 
     assert RunnerExecutionRequest.model_validate_json(request.model_dump_json()) == (
@@ -39,12 +47,12 @@ def test_runner_protocol_round_trip_preserves_versioned_request_and_result() -> 
     [
         {"shellgei": "true", "problem_id": "STANDARD-00000001"},
         {
-            "protocol_version": 2,
+            "protocol_version": 1,
             "shellgei": "true",
             "problem_id": "STANDARD-00000001",
         },
         {
-            "protocol_version": 1,
+            "protocol_version": 2,
             "shellgei": "true",
             "problem_id": "STANDARD-00000001",
             "unknown": "value",
@@ -62,18 +70,18 @@ def test_runner_request_rejects_missing_wrong_version_and_unknown_fields(
 @pytest.mark.parametrize(
     "payload",
     [
-        {"result": {"output": "ok", "image": ""}},
+        {"result": {"output": "ok", "artifact": None}},
+        {
+            "protocol_version": 1,
+            "result": {"output": "ok", "artifact": None},
+        },
         {
             "protocol_version": 2,
-            "result": {"output": "ok", "image": ""},
+            "result": {"output": "ok", "artifact": None, "unknown": "value"},
         },
         {
-            "protocol_version": 1,
-            "result": {"output": "ok", "image": "", "unknown": "value"},
-        },
-        {
-            "protocol_version": 1,
-            "result": {"output": "ok", "image": ""},
+            "protocol_version": 2,
+            "result": {"output": "ok", "artifact": None},
             "unknown": "value",
         },
     ],
@@ -88,16 +96,20 @@ def test_runner_response_rejects_missing_wrong_version_and_unknown_fields(
 
 def test_execution_result_is_immutable_and_enforces_wire_limits() -> None:
     # typed resultが変更不能で、文字列・画像のprotocol上限超過を拒否することを確認する。
-    result = ExecutionResult(output="ok", image="")
+    result = ExecutionResult(output="ok", artifact=None)
 
     with pytest.raises(ValidationError):
         result.output = "changed"
     with pytest.raises(ValidationError):
-        ExecutionResult(output="x" * (MAX_RUNNER_OUTPUT_CHARS + 1), image="")
-    with pytest.raises(ValidationError):
         ExecutionResult(
-            output="ok",
-            image="x" * (MAX_RUNNER_IMAGE_BASE64_CHARS + 1),
+            output="x" * (MAX_RUNNER_OUTPUT_CHARS + 1),
+            artifact=None,
+        )
+    with pytest.raises(ValidationError):
+        ExecutionArtifact(
+            path="media/output.jpg",
+            media_type="image/jpeg",
+            data="x" * (MAX_RUNNER_IMAGE_BASE64_CHARS + 1),
         )
 
 
@@ -106,10 +118,13 @@ def test_runner_gateway_returns_execution_result_without_sequence_contract() -> 
     class FakeGateway:
         async def execute(self, shellgei: str, problem_id: str) -> ExecutionResult:
             """入力command・IDを結果へ埋め込み、typed ExecutionResultを返す。"""
-            return ExecutionResult(output=f"{problem_id}:{shellgei}", image="")
+            return ExecutionResult(
+                output=f"{problem_id}:{shellgei}",
+                artifact=None,
+            )
 
     gateway: RunnerGateway = FakeGateway()
     result = asyncio.run(gateway.execute("true", "STANDARD-00000001"))
 
     assert result.output == "STANDARD-00000001:true"
-    assert result.image == ""
+    assert result.artifact is None

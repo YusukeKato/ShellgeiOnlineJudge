@@ -29,14 +29,19 @@ problem schema、manifest revision、移行・更新手順は、
 
 backendからrunnerへの実行境界は、`scripts/runner_protocol.py`の
 `RunnerGateway`、`RunnerExecutionRequest`、`RunnerExecutionResponse`、
-`ExecutionResult`を正本とします。requestとresponseは`protocol_version: 1`を必須とし、
+`ExecutionResult`を正本とします。requestとresponseは`protocol_version: 2`を必須とし、
 未知version、未知field、欠落field、文字列・画像上限超過を拒否します。
 
 requestは`protocol_version`、`shellgei`、`problem_id`、responseは
-`protocol_version`と、`output`・`image`を持つ`result`で構成します。
+`protocol_version`と、`output`・任意の`artifact`を持つ`result`で構成します。
+artifactはproblem schemaと一致する`path`、`media_type`、Base64 `data`を保持します。
 これは外部公開APIではなく、backendとrunnerを同時に更新する内部protocolです。
 exit code、stderr、timeout、artifact等の追加実行情報は、後続のstructured execution
 outcomeで`ExecutionResult`へ追加します。
+
+公開submission APIは画像dataに加えて`image_media_type`を返します。画像がない場合は
+空文字列と`null`、現在の画像問題では`image/jpeg`を返します。frontendはJPEG/GIFだけを
+data URLとして許可します。
 
 text判定は`JudgeResult`と`TextJudgeInput`を型付き境界とし、file I/Oやrepository参照を
 行わないpure functionへ分離しています。判定規則の正本は

@@ -5,7 +5,7 @@
 ## ディレクトリ
 
 - `v3/`: productionで使用するschema v3 YAMLと`manifest.json`
-- `image/`: 1問に1つの正解JPEG画像
+- `image/`: 全問題の表示・判定用JPEG。GIF artifact問題では同じIDの判定用GIFも配置する
 - `yaml_data/`: v3の決定的な移行元として保持するlegacy YAML
 - `semantic_manifest.json`: v3移行前の全問題definitionと正解画像のsemantic baseline
 
@@ -19,7 +19,7 @@ problem IDには、次の条件があります。
 - ASCIIの英字、数字、区切りのハイフンだけを使用する
 - 先頭、末尾、連続するハイフンは使用しない
 
-backendとrunnerは起動時に`v3/`の全YAMLと`image/`の全JPEGを1回だけ読み、
+backendとrunnerは起動時に`v3/`の全YAMLと`image/`の全JPEG・判定用GIFを1回だけ読み、
 schema、ID集合、画像形式・上限、`manifest.json`のrevisionを検証します。
 1件でも欠損、破損、不一致があれば起動せず、request処理中は検証済みの不変な
 problem repositoryだけを参照します。
@@ -59,11 +59,22 @@ schema v3の実行可能な型定義は
 | `execution.fixtures` | sandboxへ配置する相対pathとUTF-8 text。legacy `input`は`input.txt`へ移行 |
 | `execution.exit_code` | `ignore`または終了code 0を要求する`zero` |
 | `execution.stderr` | `merge`、`ignore`、`must_be_empty` |
-| `judge` | discriminator `type`が`text`なら期待出力、`image`ならartifact仕様 |
+| `judge` | discriminator `type`が`text`なら期待出力、`image`なら比較方式とartifact仕様 |
 
 `image` judgeのartifactは、正規化された相対POSIX path、
 対応する`image/jpeg`または`image/gif`、取得byte上限を明示します。
 `IMAGE`問題は`image` judge、それ以外は`text` judgeだけを使用できます。
+
+画像問題は`judge.comparison: exact_pixels`を必須とします。runnerは
+`judge.artifact.path`で指定された1fileだけを取得し、同じdirectoryの別JPEG/GIFを
+候補として探索しません。欠損、上限超過、Base64破損、宣言MIMEとJPEG/GIF形式の不一致、
+decode上限超過を拒否します。正解画像と提出画像をRGBAへdecodeし、寸法、frame数、
+全画素が完全一致する場合だけ正解です。JPEG品質やmetadata等、表示画素へ影響しない
+encoder差は判定に使用しません。
+
+旧方式のようにBase64先頭28文字を無条件に除外せず、画像headerと形式を検証してから
+全画素を比較します。画像生成toolやdecoderを変更するときは、5画像問題のrootless
+Docker回帰を実行してください。
 
 ### Text判定
 

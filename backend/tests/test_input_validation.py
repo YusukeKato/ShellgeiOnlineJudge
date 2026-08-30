@@ -159,7 +159,7 @@ def test_judge_rejects_invalid_problem_id_before_reading_files() -> None:
     # judgeが不正problem IDをrepository参照前にerror結果へ変換することを確認する。
     judge = ShellgeiJudge()
 
-    result = judge.judge("output", "", "../secret")
+    result = judge.judge("output", None, "../secret")
 
     assert result.verdict is JudgeVerdict.JUDGE_ERROR
     assert result.reason is JudgeReason.INVALID_PROBLEM_ID

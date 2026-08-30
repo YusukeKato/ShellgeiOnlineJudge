@@ -25,12 +25,6 @@ EXECUTION_ARCHIVE_EXTRACT_COMMAND = (
     f'printf "%s" "${EXECUTION_ARCHIVE_ENVIRONMENT}" | /usr/bin/base64 -d | '
     "/usr/bin/tar -x -f - --no-same-owner --no-same-permissions"
 )
-OUTPUT_IMAGE_READ_COMMAND = (
-    "if [ -f /media/output.gif ]; then source=/media/output.gif; "
-    "elif [ -f /media/output.jpg ]; then source=/media/output.jpg; "
-    "else exit 0; fi; "
-    f'exec /usr/bin/head -c {MAX_IMAGE_BYTES + 1} -- "$source"'
-)
 
 
 class SandboxBusyError(RuntimeError):
@@ -124,23 +118,38 @@ class ShellgeiDockerClient:
             return decoded[:limit_chars] + "..."
         return decoded
 
-    def _read_output_image(self, container: Any) -> str:
-        """sandboxの出力画像を上限内で読込み、base64文字列または空文字列を返す。"""
-        image = BoundedByteBuffer(MAX_IMAGE_BYTES + 1)
+    def _read_output_artifact(
+        self,
+        container: Any,
+        path: str,
+        max_bytes: int,
+    ) -> str:
+        """指定artifactを上限内で読み、Base64文字列または空文字列を返す。
+
+        入力pathと上限は起動時検証済みproblem schema由来。設定pathだけを読み、
+        欠損、読込失敗、上限超過時は空文字列を返す。
+        """
+        artifact = BoundedByteBuffer(max_bytes + 1)
         try:
-            image_stream = container.exec_run(
-                ["/bin/sh", "-c", OUTPUT_IMAGE_READ_COMMAND],
+            artifact_stream = container.exec_run(
+                [
+                    "/usr/bin/head",
+                    "-c",
+                    str(max_bytes + 1),
+                    "--",
+                    f"{SANDBOX_WORK_DIRECTORY}/{path}",
+                ],
                 stdout=True,
                 stderr=False,
                 stream=True,
             )
-            for chunk in self._stream_chunks(image_stream.output):
-                if chunk and not image.append(chunk):
+            for chunk in self._stream_chunks(artifact_stream.output):
+                if chunk and not artifact.append(chunk):
                     return ""
         except Exception:
             return ""
-        payload = image.to_bytes()
-        if not payload or len(payload) > MAX_IMAGE_BYTES:
+        payload = artifact.to_bytes()
+        if not payload or len(payload) > max_bytes:
             return ""
         return base64.b64encode(payload).decode("ascii")
 
@@ -187,13 +196,9 @@ class ShellgeiDockerClient:
             timeout_timer.start()
 
             output = BoundedByteBuffer(limit_str * MAX_UTF8_BYTES_PER_CHAR)
-            output_image = ""
+            output_artifact = ""
             execution_error: Exception | None = None
             try:
-                container.exec_run(
-                    ["convert", "-size", "200x200", "xc:white", "/media/output.jpg"],
-                    workdir=SANDBOX_WORK_DIRECTORY,
-                )
                 if watchdog.reason is None:
                     exec_stream = container.exec_run(
                         ["bash", "z.bash"],
@@ -205,8 +210,13 @@ class ShellgeiDockerClient:
                         if chunk and not output.append(chunk):
                             watchdog.terminate("output_limit")
                             break
-                if watchdog.reason is None:
-                    output_image = self._read_output_image(container)
+                judge_specification = record.definition.judge
+                if watchdog.reason is None and judge_specification.type == "image":
+                    output_artifact = self._read_output_artifact(
+                        container,
+                        judge_specification.artifact.path,
+                        judge_specification.artifact.max_bytes,
+                    )
             except Exception as exc:
                 execution_error = exc
             finally:
@@ -229,7 +239,7 @@ class ShellgeiDockerClient:
             )
             if reason is not None or execution_error is not None:
                 return [output_utf8, ""]
-            return [output_utf8, output_image]
+            return [output_utf8, output_artifact]
         except Exception as e:
             return [f"Error during execution: {e}", ""]
 

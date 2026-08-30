@@ -49,6 +49,7 @@ async def post_shellgei(shellgei_data: ShellgeiData) -> ShellgeiResultResponse:
             id="-1",
             date=f"{japan_date.strftime('%Y-%m-%d %H:%M:%S')}",
             image="",
+            image_media_type=None,
             judge="4",
         )
     except RunnerUnavailableError:
@@ -57,11 +58,14 @@ async def post_shellgei(shellgei_data: ShellgeiData) -> ShellgeiResultResponse:
             id="-1",
             date=f"{japan_date.strftime('%Y-%m-%d %H:%M:%S')}",
             image="",
+            image_media_type=None,
             judge="4",
         )
     output = execution.output
-    image = execution.image
-    judge_result = shellgei_judge.judge(output, image, problem_id_str)
+    artifact = execution.artifact
+    image = artifact.data if artifact is not None else ""
+    image_media_type = artifact.media_type if artifact is not None else None
+    judge_result = shellgei_judge.judge(output, artifact, problem_id_str)
     judge = judge_result.legacy_code()
 
     try:
@@ -80,6 +84,7 @@ async def post_shellgei(shellgei_data: ShellgeiData) -> ShellgeiResultResponse:
         id=str(log_id),
         date=f"{japan_date.strftime('%Y-%m-%d %H:%M:%S')}",
         image=image,
+        image_media_type=image_media_type,
         judge=judge,
     )
 

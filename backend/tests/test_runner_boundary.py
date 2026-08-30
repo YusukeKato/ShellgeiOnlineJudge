@@ -21,6 +21,7 @@ from scripts.runner_client import (
 from scripts.runner_protocol import (
     RUNNER_EXECUTE_PATH,
     RUNNER_PROTOCOL_VERSION,
+    ExecutionArtifact,
     ExecutionResult,
     RunnerConfigurationError,
     RunnerExecutionRequest,
@@ -119,7 +120,11 @@ def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
     monkeypatch.setattr(
         runner_main,
         "get_problem_repository",
-        lambda: SimpleNamespace(get=lambda _problem_id: object()),
+        lambda: SimpleNamespace(
+            get=lambda _problem_id: SimpleNamespace(
+                definition=SimpleNamespace(judge=SimpleNamespace(type="text"))
+            )
+        ),
     )
     monkeypatch.setattr(runner_main, "sandbox_start_rate_limiter", AllowStart())
     monkeypatch.setattr(
@@ -138,10 +143,61 @@ def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
     )
 
     assert result.model_dump() == {
-        "protocol_version": 1,
-        "result": {"output": "output", "image": "image"},
+        "protocol_version": 2,
+        "result": {"output": "output", "artifact": None},
     }
     assert calls == [("printf output", "STANDARD-00000001")]
+
+
+def test_runner_returns_schema_path_and_media_type_with_image_artifact(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # 画像問題の取得dataへschema由来のpath・MIMEを付けたtyped responseを返すことを確認する。
+    class AllowStart:
+        def try_acquire(self) -> bool:
+            """sandbox開始token取得を常に許可し、Trueを返す。"""
+            return True
+
+    async def run_with_timeout(_shellgei: str, _problem_id: str) -> list[str]:
+        """入力command・IDを使用せず、固定の出力とBase64画像dataを返す。"""
+        return ["", "encoded-image"]
+
+    artifact_specification = SimpleNamespace(
+        path="media/output.jpg",
+        media_type="image/jpeg",
+    )
+    record = SimpleNamespace(
+        definition=SimpleNamespace(
+            judge=SimpleNamespace(type="image", artifact=artifact_specification)
+        )
+    )
+    monkeypatch.setattr(
+        runner_main,
+        "get_problem_repository",
+        lambda: SimpleNamespace(get=lambda _problem_id: record),
+    )
+    monkeypatch.setattr(runner_main, "sandbox_start_rate_limiter", AllowStart())
+    monkeypatch.setattr(
+        runner_main.docker_client,
+        "run_with_timeout",
+        run_with_timeout,
+    )
+
+    result = asyncio.run(
+        runner_main.execute_shellgei(_runner_request(problem_id="IMAGE-00000001"))
+    )
+
+    assert result.model_dump() == {
+        "protocol_version": 2,
+        "result": {
+            "output": "",
+            "artifact": {
+                "path": "media/output.jpg",
+                "media_type": "image/jpeg",
+                "data": "encoded-image",
+            },
+        },
+    }
 
 
 def test_runner_rejects_unknown_problem_before_admission_or_docker(
@@ -283,7 +339,7 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
         assert timeout == runner_client_module.RUNNER_REQUEST_TIMEOUT_SECONDS
         captured.append(request)
         return FakeResponse(
-            b'{"protocol_version":1,"result":{"output":"ok","image":""}}'
+            b'{"protocol_version":2,"result":{"output":"ok","artifact":null}}'
         )
 
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
@@ -294,7 +350,7 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
     finally:
         client.close()
 
-    assert result == ExecutionResult(output="ok", image="")
+    assert result == ExecutionResult(output="ok", artifact=None)
     assert len(captured) == 1
     request = captured[0]
     assert request.full_url == f"{RUNNER_BASE_URL}{RUNNER_EXECUTE_PATH}"
@@ -304,7 +360,7 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
     assert json.loads(request.data) == {
         "shellgei": "printf ok",
         "problem_id": "STANDARD-00000001",
-        "protocol_version": 1,
+        "protocol_version": 2,
     }
 
 
@@ -321,7 +377,7 @@ def test_backend_runner_client_disables_environment_proxies(
             assert timeout == runner_client_module.RUNNER_REQUEST_TIMEOUT_SECONDS
             captured_requests.append(request)
             return FakeResponse(
-                b'{"protocol_version":1,"result":{"output":"direct","image":""}}'
+                b'{"protocol_version":2,"result":{"output":"direct","artifact":null}}'
             )
 
     def fake_build_opener(*handlers: object) -> FakeOpener:
@@ -345,7 +401,7 @@ def test_backend_runner_client_disables_environment_proxies(
     finally:
         client.close()
 
-    assert result == ExecutionResult(output="direct", image="")
+    assert result == ExecutionResult(output="direct", artifact=None)
     assert len(configured_handlers) == 1
     proxy_handler = configured_handlers[0]
     assert isinstance(proxy_handler, ProxyHandler)
@@ -378,10 +434,10 @@ def test_backend_runner_client_maps_busy_without_accepting_error_body(
     "payload",
     [
         b"not-json",
-        b'{"output":"ok","image":""}',
-        b'{"protocol_version":2,"result":{"output":"ok","image":""}}',
-        b'{"protocol_version":1,"result":{"output":"ok","image":""},"extra":"value"}',
-        b'{"protocol_version":1,"result":{"output":"ok","image":"","extra":"value"}}',
+        b'{"output":"ok","artifact":null}',
+        b'{"protocol_version":1,"result":{"output":"ok","artifact":null}}',
+        b'{"protocol_version":2,"result":{"output":"ok","artifact":null},"extra":"value"}',
+        b'{"protocol_version":2,"result":{"output":"ok","artifact":null,"extra":"value"}}',
     ],
 )
 def test_backend_runner_client_rejects_invalid_responses(
@@ -420,6 +476,54 @@ def test_backend_runner_client_rejects_oversized_response(
             asyncio.run(client.execute("true", "STANDARD-00000001"))
     finally:
         client.close()
+
+
+def test_public_api_preserves_artifact_data_and_media_type(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # typed runner artifactを既存画像dataと追加MIME fieldへ変換して返すことを確認する。
+    class FakeJudgeResult:
+        def legacy_code(self) -> str:
+            """固定の正解判定code 1を返す。"""
+            return "1"
+
+    async def execute(_shellgei: str, _problem_id: str) -> ExecutionResult:
+        """入力command・IDを使用せず、固定JPEG artifact付き実行結果を返す。"""
+        return ExecutionResult(
+            output="",
+            artifact=ExecutionArtifact(
+                path="media/output.jpg",
+                media_type="image/jpeg",
+                data="encoded-image",
+            ),
+        )
+
+    def judge(_output: str, _artifact: object, _problem_id: str) -> FakeJudgeResult:
+        """入力を使用せず、固定の模擬判定結果を返す。"""
+        return FakeJudgeResult()
+
+    async def persist(*_args: object) -> int:
+        """入力log内容を使用せず、固定保存IDを返す。"""
+        return 42
+
+    monkeypatch.setattr(
+        api_shellgei,
+        "get_problem_repository",
+        lambda: SimpleNamespace(get=lambda _problem_id: object()),
+    )
+    monkeypatch.setattr(api_shellgei.runner_gateway, "execute", execute)
+    monkeypatch.setattr(api_shellgei.shellgei_judge, "judge", judge)
+    monkeypatch.setattr(api_shellgei, "persist_execution_log_async", persist)
+
+    response = asyncio.run(
+        api_shellgei.post_shellgei(
+            ShellgeiData(shellgei="true", problem_id="IMAGE-00000001")
+        )
+    )
+
+    assert response.image == "encoded-image"
+    assert response.image_media_type == "image/jpeg"
+    assert response.judge == "1"
 
 
 def test_public_api_maps_runner_failure_without_database_work(

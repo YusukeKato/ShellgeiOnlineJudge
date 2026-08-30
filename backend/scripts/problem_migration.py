@@ -70,6 +70,7 @@ def migrate_legacy_mapping(
             )
         judge: dict[str, Any] = {
             "type": "image",
+            "comparison": "exact_pixels",
             "artifact": {
                 "path": "media/output.jpg",
                 "media_type": "image/jpeg",

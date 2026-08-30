@@ -162,6 +162,7 @@ class ImageArtifactSpecification(StrictProblemModel):
 
 class ImageJudgeSpecification(StrictProblemModel):
     type: Literal["image"]
+    comparison: Literal["exact_pixels"]
     artifact: ImageArtifactSpecification
 
 

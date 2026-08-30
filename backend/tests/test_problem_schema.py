@@ -183,7 +183,11 @@ def test_schema_rejects_invalid_image_artifact_constraints(
     data = _valid_text_data()
     data["id"] = "IMAGE-00000001"
     data["category"] = "IMAGE"
-    data["judge"] = {"type": "image", "artifact": artifact}
+    data["judge"] = {
+        "type": "image",
+        "comparison": "exact_pixels",
+        "artifact": artifact,
+    }
 
     with pytest.raises(ProblemSchemaError):
         parse_problem_definition(_yaml(data))

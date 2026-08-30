@@ -133,8 +133,8 @@ def _load_manifest(path: Path) -> ProblemManifestV1:
         raise ProblemRepositoryError(f"invalid problem manifest: {path}") from exc
 
 
-def _validate_answer_image(path: Path) -> bytes:
-    """判定用JPEGを読んで形式とbyte上限を検証し、画像bytesを返す。"""
+def _validate_image(path: Path, media_type: str) -> bytes:
+    """JPEG/GIFを読んで宣言形式とbyte上限を検証し、画像bytesを返す。"""
     try:
         payload = path.read_bytes()
     except OSError as exc:
@@ -143,12 +143,19 @@ def _validate_answer_image(path: Path) -> bytes:
         raise ProblemRepositoryError(
             f"answer image exceeds {MAX_ARTIFACT_BYTES} bytes: {path}"
         )
-    if (
-        len(payload) < 4
-        or not payload.startswith(b"\xff\xd8")
-        or not payload.endswith(b"\xff\xd9")
-    ):
-        raise ProblemRepositoryError(f"answer image is not a complete JPEG: {path}")
+    valid = (
+        len(payload) >= 4
+        and payload.startswith(b"\xff\xd8")
+        and payload.endswith(b"\xff\xd9")
+        if media_type == "image/jpeg"
+        else len(payload) >= 7
+        and payload[:6] in {b"GIF87a", b"GIF89a"}
+        and payload.endswith(b";")
+    )
+    if not valid:
+        raise ProblemRepositoryError(
+            f"answer image does not match {media_type}: {path}"
+        )
     return payload
 
 
@@ -203,6 +210,7 @@ def collect_problem_records(
     try:
         definition_paths = sorted(definition_directory.glob("*.yaml"))
         image_paths = sorted(image_directory.glob("*.jpg"))
+        gif_paths = sorted(image_directory.glob("*.gif"))
     except OSError as exc:
         raise ProblemRepositoryError("failed to list problem data") from exc
     if not definition_paths:
@@ -221,6 +229,7 @@ def collect_problem_records(
         )
 
     records: list[ProblemRecord] = []
+    expected_gif_ids: set[str] = set()
     for definition_path in definition_paths:
         try:
             definition = load_problem_definition(definition_path)
@@ -228,13 +237,33 @@ def collect_problem_records(
             raise ProblemRepositoryError(
                 f"failed to load problem definition: {definition_path}"
             ) from exc
-        image = _validate_answer_image(image_directory / f"{definition.id}.jpg")
+        preview_path = image_directory / f"{definition.id}.jpg"
+        preview_image = _validate_image(preview_path, "image/jpeg")
+        judge_specification = definition.judge
+        if (
+            judge_specification.type == "image"
+            and judge_specification.artifact.media_type == "image/gif"
+        ):
+            expected_gif_ids.add(definition.id)
+            image = _validate_image(
+                image_directory / f"{definition.id}.gif",
+                "image/gif",
+            )
+        else:
+            image = preview_image
         records.append(
             ProblemRecord(
                 definition=definition,
                 answer_image=image,
                 answer_image_base64=base64.b64encode(image).decode("ascii"),
             )
+        )
+    gif_ids = {path.stem for path in gif_paths}
+    if gif_ids != expected_gif_ids:
+        raise ProblemRepositoryError(
+            "problem GIF artifact ID mismatch: "
+            f"missing={sorted(expected_gif_ids - gif_ids)}, "
+            f"extra={sorted(gif_ids - expected_gif_ids)}"
         )
     return records
 

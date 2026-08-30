@@ -1,11 +1,24 @@
 #!/usr/bin/env python3
+import base64
+import binascii
+import warnings
 from enum import Enum
+from io import BytesIO
 
 from pydantic import BaseModel, ConfigDict
+from PIL import Image, UnidentifiedImageError
 
-from models.problem import ExecutionSpecification, TextJudgeSpecification
+from models.problem import (
+    ExecutionSpecification,
+    ImageJudgeSpecification,
+    TextJudgeSpecification,
+)
 from scripts.input_validation import validate_problem_id
 from scripts.problem_repository import ProblemRepository, get_problem_repository
+from scripts.runner_protocol import ExecutionArtifact
+
+
+MAX_DECODED_IMAGE_PIXELS = 4_000_000
 
 
 class JudgeVerdict(str, Enum):
@@ -25,6 +38,10 @@ class JudgeReason(str, Enum):
     OUTPUT_MISMATCH = "output_mismatch"
     IMAGE_MISMATCH = "image_mismatch"
     OUTPUT_AND_IMAGE_MISMATCH = "output_and_image_mismatch"
+    ARTIFACT_MISSING = "artifact_missing"
+    ARTIFACT_PATH_MISMATCH = "artifact_path_mismatch"
+    ARTIFACT_MEDIA_TYPE_MISMATCH = "artifact_media_type_mismatch"
+    ARTIFACT_INVALID = "artifact_invalid"
     NON_ZERO_EXIT = "non_zero_exit"
     STDERR_NOT_EMPTY = "stderr_not_empty"
     TIMED_OUT = "timed_out"
@@ -71,24 +88,6 @@ def normalize_text_output(value: str) -> str:
     return value.replace("\r", "").rstrip(" \n")
 
 
-def _normalize_image_text_legacy(value: str) -> str:
-    """画像問題の文字列をR3-011まで従来の置換順で正規化して返す。"""
-    normalized = value.replace("\r", "")
-    for source, target in (
-        (" ", "SPACE"),
-        ("\n", "NEWLINE"),
-        ("\t", "TAB"),
-        ("<", "LT"),
-        (">", "GT"),
-    ):
-        normalized = normalized.replace(source, target)
-    while normalized.endswith("NEWLINE"):
-        normalized = normalized.removesuffix("NEWLINE")
-    while normalized.endswith("SPACE"):
-        normalized = normalized.removesuffix("SPACE")
-    return normalized
-
-
 def judge_text(
     judge_specification: TextJudgeSpecification,
     execution_specification: ExecutionSpecification,
@@ -133,8 +132,110 @@ def judge_text(
     )
 
 
+def _matches_media_type(payload: bytes, media_type: str) -> bool:
+    """入力画像bytesが宣言MIMEの完全なJPEG/GIF外形ならTrueを返す。"""
+    if media_type == "image/jpeg":
+        return (
+            len(payload) >= 4
+            and payload.startswith(b"\xff\xd8")
+            and payload.endswith(b"\xff\xd9")
+        )
+    return (
+        len(payload) >= 7
+        and payload[:6] in {b"GIF87a", b"GIF89a"}
+        and payload.endswith(b";")
+    )
+
+
+def _decode_image_pixels(
+    payload: bytes,
+    media_type: str,
+) -> tuple[tuple[int, int], tuple[bytes, ...]] | None:
+    """JPEG/GIF bytesを上限内でdecodeし、寸法と全frameのRGBA画素列を返す。"""
+    expected_format = "JPEG" if media_type == "image/jpeg" else "GIF"
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(BytesIO(payload)) as image:
+                if image.format != expected_format:
+                    return None
+                width, height = image.size
+                frame_count = getattr(image, "n_frames", 1)
+                if width * height * frame_count > MAX_DECODED_IMAGE_PIXELS:
+                    return None
+                frames: list[bytes] = []
+                for frame_index in range(frame_count):
+                    image.seek(frame_index)
+                    frames.append(image.convert("RGBA").tobytes())
+                return (width, height), tuple(frames)
+    except (
+        Image.DecompressionBombError,
+        Image.DecompressionBombWarning,
+        OSError,
+        UnidentifiedImageError,
+        ValueError,
+    ):
+        return None
+
+
+def judge_image(
+    judge_specification: ImageJudgeSpecification,
+    expected_artifact: bytes,
+    actual_artifact: ExecutionArtifact | None,
+) -> JudgeResult:
+    """画像仕様・正解bytes・取得artifactを副作用なく全画素比較して結果を返す。
+
+    入力artifactの欠損、path・MIME不一致、Base64・画像形式破損はwrong imageとし、
+    schemaで明示されたexact_pixels方式では寸法・frame数・RGBA画素の一致を要求する。
+    """
+    if actual_artifact is None:
+        return JudgeResult(
+            verdict=JudgeVerdict.WRONG_IMAGE,
+            reason=JudgeReason.ARTIFACT_MISSING,
+        )
+    specification = judge_specification.artifact
+    if actual_artifact.path != specification.path:
+        return JudgeResult(
+            verdict=JudgeVerdict.WRONG_IMAGE,
+            reason=JudgeReason.ARTIFACT_PATH_MISMATCH,
+        )
+    if actual_artifact.media_type != specification.media_type:
+        return JudgeResult(
+            verdict=JudgeVerdict.WRONG_IMAGE,
+            reason=JudgeReason.ARTIFACT_MEDIA_TYPE_MISMATCH,
+        )
+    try:
+        payload = base64.b64decode(actual_artifact.data, validate=True)
+    except (binascii.Error, ValueError):
+        return JudgeResult(
+            verdict=JudgeVerdict.WRONG_IMAGE,
+            reason=JudgeReason.ARTIFACT_INVALID,
+        )
+    if not _matches_media_type(payload, specification.media_type):
+        return JudgeResult(
+            verdict=JudgeVerdict.WRONG_IMAGE,
+            reason=JudgeReason.ARTIFACT_INVALID,
+        )
+    actual_pixels = _decode_image_pixels(payload, specification.media_type)
+    expected_pixels = _decode_image_pixels(
+        expected_artifact,
+        specification.media_type,
+    )
+    if actual_pixels is None or expected_pixels is None:
+        return JudgeResult(
+            verdict=JudgeVerdict.WRONG_IMAGE,
+            reason=JudgeReason.ARTIFACT_INVALID,
+        )
+    if actual_pixels == expected_pixels:
+        return JudgeResult(verdict=JudgeVerdict.ACCEPTED)
+    return JudgeResult(
+        verdict=JudgeVerdict.WRONG_IMAGE,
+        reason=JudgeReason.IMAGE_MISMATCH,
+    )
+
+
 class ShellgeiJudge:
-    """problem取得を行い、純粋text judgeまたはlegacy image judgeへ委譲する。"""
+    """problem取得を行い、純粋なtextまたはimage judgeへ委譲する。"""
 
     def __init__(self, problem_repository: ProblemRepository | None = None) -> None:
         """任意の検証済みrepositoryを受け取り、未指定ならprocess globalを遅延参照する。"""
@@ -144,42 +245,16 @@ class ShellgeiJudge:
         """注入済みrepositoryを返し、未指定なら起動時にloadしたrepositoryを返す。"""
         return self.problem_repository or get_problem_repository()
 
-    @staticmethod
-    def _judge_image_legacy(
-        output_str: str,
-        output_image: str,
-        answer_image: str,
-    ) -> JudgeResult:
-        """画像問題をR3-011まで従来方式で比較し、型付き判定結果を返す。"""
-        text_matches = _normalize_image_text_legacy(output_str or "NULL") == "NULL"
-        image_matches = output_image[28:] == answer_image[28:]
-        if text_matches and image_matches:
-            return JudgeResult(verdict=JudgeVerdict.ACCEPTED)
-        if text_matches:
-            return JudgeResult(
-                verdict=JudgeVerdict.WRONG_IMAGE,
-                reason=JudgeReason.IMAGE_MISMATCH,
-            )
-        if image_matches:
-            return JudgeResult(
-                verdict=JudgeVerdict.WRONG_ANSWER,
-                reason=JudgeReason.OUTPUT_MISMATCH,
-            )
-        return JudgeResult(
-            verdict=JudgeVerdict.WRONG_TEXT_AND_IMAGE,
-            reason=JudgeReason.OUTPUT_AND_IMAGE_MISMATCH,
-        )
-
     def judge(
         self,
         output_str: str,
-        output_image: str,
+        output_artifact: ExecutionArtifact | None,
         problem_id: str,
     ) -> JudgeResult:
         """実行出力とproblem IDを受け取り、型付き判定結果を返す。
 
-        text問題は画像を参照せず純粋関数で比較する。画像問題はR3-011で置換する
-        legacy比較へ委譲し、不正ID・未登録IDはjudge errorとして返す。
+        text問題はartifactを参照せず、画像問題はstdoutを参照しない純粋関数へ
+        委譲する。不正ID・未登録IDはjudge errorとして返す。
         """
         try:
             validate_problem_id(problem_id)
@@ -209,8 +284,8 @@ class ShellgeiJudge:
                 definition.execution,
                 TextJudgeInput(stdout=output_str),
             )
-        return self._judge_image_legacy(
-            output_str,
-            output_image,
-            record.answer_image_base64,
+        return judge_image(
+            definition.judge,
+            record.answer_image,
+            output_artifact,
         )

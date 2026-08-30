@@ -8,6 +8,7 @@ from scripts.problem_repository import build_problem_repository
 from scripts.container_manager import ContainerManager
 from scripts.judge import JudgeVerdict, ShellgeiJudge
 from scripts.run_shellgei import ShellgeiDockerClient
+from scripts.runner_protocol import ExecutionArtifact
 
 
 pytestmark = [
@@ -48,8 +49,15 @@ def test_all_problem_answers_in_real_sandboxes() -> None:
                     yaml_path.stem,
                 )
             )
+            artifact = None
+            if definition.judge.type == "image" and image:
+                artifact = ExecutionArtifact(
+                    path=definition.judge.artifact.path,
+                    media_type=definition.judge.artifact.media_type,
+                    data=image,
+                )
             assert (
-                judge.judge(output, image, yaml_path.stem).verdict
+                judge.judge(output, artifact, yaml_path.stem).verdict
                 is JudgeVerdict.ACCEPTED
             ), yaml_path.name
     finally:
