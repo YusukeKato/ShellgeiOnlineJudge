@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 16
 - Pending (`Ready` + `Planned`): 16
 - In Progress: 0
-- Review: 1
-- Completed: 10
+- Review: 0
+- Completed: 11
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -163,7 +163,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-008 | P0 | Completed | B | Introduce immutable ProblemRepo and manifest digest | R3-007 | `6360c34` |
 | R3-009 | P0 | Completed | B | Introduce typed runner execution protocol | R3-005 | `62dadf6` |
 | R3-010 | P0 | Completed | B | Extract pure text judge and typed JudgeResult | R3-006, R3-009 | `91fdbad` |
-| R3-011 | P0 | Review | B | Separate and correct image judging | R3-007, R3-009 | - |
+| R3-011 | P0 | Completed | B | Separate and correct image judging | R3-007, R3-009 | `7947640` |
 | R3-012 | P1 | Planned | C | Separate sandbox preparation, execution, capture, and cleanup | R3-009 | - |
 | R3-013 | P0 | Planned | C | Capture structured execution outcomes | R3-012 | - |
 | R3-014 | P1 | Planned | C | Introduce ExecutionLogRepo and database migrations | R3-003, R3-009 | - |
@@ -301,7 +301,7 @@ They are planning aids, not acceptance criteria.
 
 ### R3-011: Separate and correct image judging
 
-- Priority / Status: P0 / `Review`
+- Priority / Status: P0 / `Completed`
 - Goal: text問題から暗黙の画像判定を除き、artifact MIME/pathと画像比較方式をschemaで明示し、先頭byte除外による誤判定をなくす
 - Main files/components: image judge、artifact model、problem schema、runner capture、frontend contract
 - Dependencies: R3-007、R3-009、image comparison strategyのreview gate
@@ -309,7 +309,7 @@ They are planning aids, not acceptance criteria.
 - Expected tests: exact/corrupt/header-only差分、JPEG/GIF MIME、missing/multiple artifact、5画像問題回帰
 - Size: M--L
 - Decision: JPEG encoder metadataの差を許容しつつ表示内容を厳密に比較するため、形式検証後の寸法・frame数・RGBA画素完全一致を採用。schema指定pathだけを取得し、複数候補から暗黙選択しない
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `7947640` / date 2026-08-30 / schema-selected typed artifacts, strict JPEG/GIF validation, exact-pixel judging, MIME-aware public response and frontend display introduced
 
 ## Phase C — Execution / Application / API
 
