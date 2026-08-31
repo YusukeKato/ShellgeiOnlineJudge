@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { updateProblem } from "../functions/update_problem";
 import SojSelectProblems from "./select_problems";
 import SojSelected from "./selected";
 import SojProblem from "./problem";
@@ -9,15 +10,29 @@ interface PlaygroundProps {
   soj_url: string;
 }
 
+const DEFAULT_PROBLEM_ID = "STANDARD-00000001";
+
 const Playground: React.FC<PlaygroundProps> = ({ soj_url }) => {
   const shellgei_limit: number = 1000;
-  const default_image: string = soj_url + "/image/STANDARD-00000001.jpg";
+  const default_image: string = soj_url + `/image/${DEFAULT_PROBLEM_ID}.jpg`;
 
-  const [selectedProblem, setSelectedProblem] = useState("Select a problem.");
-  const [problemStatement, setProblemStatement] = useState("Select a problem.");
-  const [problemInput, setProblemInput] = useState("Select a problem.");
-  const [problemOutput, setProblemOutput] = useState("Select a problem.");
+  const [selectedProblem, setSelectedProblem] = useState(DEFAULT_PROBLEM_ID);
+  const [problemStatement, setProblemStatement] = useState("Loading problem...");
+  const [problemInput, setProblemInput] = useState("Loading problem...");
+  const [problemOutput, setProblemOutput] = useState("Loading problem...");
   const [problemImage, setProblemImage] = useState(default_image);
+
+  useEffect(() => {
+    // 初回表示時に標準問題1番の詳細を取得し、初期選択IDに対応する問題文と入出力を表示する。
+    updateProblem(
+      soj_url,
+      DEFAULT_PROBLEM_ID,
+      setProblemStatement,
+      setProblemInput,
+      setProblemOutput,
+      setProblemImage,
+    );
+  }, [soj_url]);
 
   const [inputShellgei, setInputShellgei] = useState("");
   const changeInputShellgei = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
