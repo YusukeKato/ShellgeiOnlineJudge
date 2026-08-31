@@ -251,8 +251,9 @@ def test_real_workdir_home_input_image_and_request_isolation() -> None:
         )
 
         assert with_input[0] == input_data
-        assert with_input[1]
+        assert with_input[1] == ""
         assert isolated[0] == "clean"
+        assert isolated[1] == ""
         assert image_result[1]
         assert manager.managed_count == 1
     finally:
@@ -287,7 +288,7 @@ def test_real_silent_timeout_cleans_up_and_worker_recovers() -> None:
 
         assert timed_out == ["\n[Timed out]", ""]
         assert recovered[0] == "recovered"
-        assert recovered[1]
+        assert recovered[1] == ""
         assert manager.managed_count == 1
     finally:
         manager.shutdown_pool()

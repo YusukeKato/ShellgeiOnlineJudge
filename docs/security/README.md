@@ -284,7 +284,8 @@ Deferredは不要という意味ではありません。
   - hard cap、rootless/cgroup fail-closed、create/start失敗、
     起動時回収、cleanup競合
 - `backend/tests/test_run_shellgei.py`
-  - timeout、出力上限、実行slot、background cleanup
+  - archive準備、exec、artifact取得、cleanupの失敗、timeout、出力上限、
+    実行slot、kill完了待ち、background cleanup
 - `backend/tests/test_runner_boundary.py`
   - secret、version付き固定schema、response上限、backend/runner分離
 - `backend/tests/test_runner_protocol.py`
@@ -331,10 +332,10 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  R3-012: sandbox preparation、execution、capture、cleanupを分離
+  R3-013: structured execution outcomeを導入
     ↓
 Later
-  structured execution、revision照合、権限分離、E2E、browser、
+  revision照合、権限分離、E2E、browser、
   CI、運用基盤を改善
 ```
 

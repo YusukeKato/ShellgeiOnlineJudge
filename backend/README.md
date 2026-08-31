@@ -9,7 +9,10 @@
 - `runner_main.py`: 認証付き内部runnerとsandbox poolの起動・終了処理
 - `api/`: API endpoint
 - `models/`: APIの入出力、実行ログ、versioned problem schemaのmodel
-- `scripts/`: runner通信、Docker実行、判定、problem schema読込・移行、
+- `scripts/sandbox_executor.py`: request単位のarchive展開、上限付き出力・artifact取得、
+  watchdog、停止、container返却を編成するsandbox実行境界
+- `scripts/container_manager.py`: sandbox containerの作成、貸出、破棄、補充を担うpool
+- `scripts/`: runner通信、判定、problem schema読込・移行、
   起動時検証済みの不変problem repository、入力検証、DB接続とrollback-safeな
   実行ログ保存・保持処理
 - `tests/`: 単体・API・Docker統合テスト

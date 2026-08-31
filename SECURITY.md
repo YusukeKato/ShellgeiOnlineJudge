@@ -189,6 +189,11 @@ shell commandの改行、空白、記号、通常のUnicode文字は、
 
 ## コンテナの終了処理
 
+sandbox lifecycleの実装責務は、`SandboxExecutor`がrequest単位の準備、実行、
+capture、停止、返却を編成し、`ContainerManager`がcontainerの作成、貸出、破棄、
+補充を行うように分離しています。実装ファイルの対応は
+[backendの主な構成](backend/README.md#主な構成)を参照してください。
+
 次の場合は、コンテナの停止・削除処理へ進みます。
 
 - 正常終了

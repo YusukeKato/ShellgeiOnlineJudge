@@ -23,10 +23,10 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 27
 - Ready: 0
-- Planned: 16
-- Pending (`Ready` + `Planned`): 16
+- Planned: 15
+- Pending (`Ready` + `Planned`): 15
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 11
 - Blocked: 0
 - Deferred: 0
@@ -164,7 +164,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-009 | P0 | Completed | B | Introduce typed runner execution protocol | R3-005 | `62dadf6` |
 | R3-010 | P0 | Completed | B | Extract pure text judge and typed JudgeResult | R3-006, R3-009 | `91fdbad` |
 | R3-011 | P0 | Completed | B | Separate and correct image judging | R3-007, R3-009 | `7947640` |
-| R3-012 | P1 | Planned | C | Separate sandbox preparation, execution, capture, and cleanup | R3-009 | - |
+| R3-012 | P1 | Review | C | Separate sandbox preparation, execution, capture, and cleanup | R3-009 | - |
 | R3-013 | P0 | Planned | C | Capture structured execution outcomes | R3-012 | - |
 | R3-014 | P1 | Planned | C | Introduce ExecutionLogRepo and database migrations | R3-003, R3-009 | - |
 | R3-015 | P0 | Planned | C | Introduce SubmitSolutionService | R3-008, R3-010, R3-011, R3-014 | - |
@@ -315,14 +315,18 @@ They are planning aids, not acceptance criteria.
 
 ### R3-012: Separate sandbox preparation, execution, capture, and cleanup
 
-- Priority / Status: P1 / `Planned`
+- Priority / Status: P1 / `Review`
 - Goal: archive準備、container割当、exec、watchdog、出力capture、破棄を小さい責務へ分け、raceとresource leakを検証可能にする
 - Main files/components: execution archive、`SandboxExecutor`、`ContainerManager`、runner service
 - Dependencies: R3-009
 - Risk: High。Docker lifecycleとsecurity invariantを変更するため、timeout/例外時も必ずfresh containerを破棄する必要がある
 - Expected tests: fake Docker unit、create/start/exec/capture/cleanup failure、concurrency、Docker lifecycle integration
 - Size: M
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `-` / date 2026-08-31 / `SandboxPreparer`、
+  `SandboxOutputCapturer`、`ExecutionWatchdog`、`SandboxCleanup`、
+  `SandboxExecutor`へ責務を分離し、timeout側killの完了後に停止済み返却する同期を追加。
+  fake Docker failure unit、Python 3.14の非Docker 418件、rootless Docker integration
+  7件が成功。full problem regression 1件は明示flag未指定のためskip
 
 ### R3-013: Capture structured execution outcomes
 
@@ -608,3 +612,5 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-08-30 | R3-006 approved and recorded as `Completed` | `e710670` |
 | 2026-08-30 | R3-007 all-problem migration and planned tests completed; moved to `Review` | - |
 | 2026-08-30 | R3-007 approved and recorded as `Completed` | `4d25fa8` |
+| 2026-08-31 | R3-012 sandbox lifecycle separation started | - |
+| 2026-08-31 | R3-012 implementation and planned tests completed; moved to `Review` | - |

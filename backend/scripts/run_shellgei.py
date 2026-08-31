@@ -1,72 +1,27 @@
 #!/usr/bin/env python3
 import asyncio
-import base64
 import threading
-from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from scripts.async_thread import wait_for_thread_future
-from scripts.container_manager import SANDBOX_WORK_DIRECTORY, manager
-from scripts.execution_archive import build_execution_archive
+from scripts.container_manager import manager
 from scripts.input_validation import validate_problem_id
 from scripts.problem_repository import ProblemRepository, get_problem_repository
-from scripts.sandbox_limits import BoundedByteBuffer
+from scripts.sandbox_executor import (
+    SandboxAcquisitionError,
+    SandboxExecutor,
+)
 
 
 DEFAULT_EXECUTION_TIMEOUT_SECONDS = 10
 DEFAULT_OUTPUT_LIMIT_CHARS = 1000
-MAX_UTF8_BYTES_PER_CHAR = 4
 MAX_IMAGE_BYTES = 750_000
 DOCKER_OPERATION_GRACE_SECONDS: float = 15.0
-EXECUTION_ARCHIVE_ENVIRONMENT = "SOJ_EXECUTION_ARCHIVE"
-EXECUTION_ARCHIVE_EXTRACT_COMMAND = (
-    "set -eu; umask 077; "
-    f'printf "%s" "${EXECUTION_ARCHIVE_ENVIRONMENT}" | /usr/bin/base64 -d | '
-    "/usr/bin/tar -x -f - --no-same-owner --no-same-permissions"
-)
 
 
 class SandboxBusyError(RuntimeError):
     """Raised when all sandbox execution slots are occupied."""
-
-
-class _ExecutionWatchdog:
-    def __init__(self, container: Any) -> None:
-        """監視対象containerを受け取り、未終了・理由なしの状態を初期化する。"""
-        self.container = container
-        self._lock = threading.Lock()
-        self._finished = False
-        self._reason: str | None = None
-        self.termination_error: Exception | None = None
-
-    def terminate(self, reason: str) -> bool:
-        """入力理由を最初の終了理由として記録してcontainerをkillし、実行有無を返す。
-
-        既に終了済みまたは別の終了処理が開始済みならFalseを返す。kill失敗は
-        termination_errorへ保持し、cleanup側で結果へ反映できるようにする。
-        """
-        with self._lock:
-            if self._finished or self._reason is not None:
-                return False
-            self._reason = reason
-        try:
-            self.container.kill()
-        except Exception as exc:
-            self.termination_error = exc
-        return True
-
-    def finish(self) -> str | None:
-        """監視を終了済みに変更し、timeout等の終了理由またはNoneを返す。"""
-        with self._lock:
-            self._finished = True
-            return self._reason
-
-    @property
-    def reason(self) -> str | None:
-        """lockで保護された現在の終了理由を返し、未終了ならNoneを返す。"""
-        with self._lock:
-            return self._reason
 
 
 class ShellgeiDockerClient:
@@ -75,8 +30,9 @@ class ShellgeiDockerClient:
         container_manager: Any = manager,
         max_concurrent: int | None = None,
         problem_repository: ProblemRepository | None = None,
+        sandbox_executor: SandboxExecutor | None = None,
     ) -> None:
-        """container manager・並行数・任意の問題repositoryで実行clientを初期化する。"""
+        """manager・並行数・問題repository・任意executorでclientを初期化する。"""
         self.manager = container_manager
         capacity = max_concurrent or container_manager.pool_size
         if capacity < 1:
@@ -84,74 +40,11 @@ class ShellgeiDockerClient:
         self.executor = ThreadPoolExecutor(max_workers=capacity)
         self._execution_slots = threading.BoundedSemaphore(capacity)
         self.problem_repository = problem_repository
+        self.sandbox_executor = sandbox_executor or SandboxExecutor(container_manager)
 
     def _repository(self) -> ProblemRepository:
         """注入済みrepositoryを返し、未指定なら起動時にloadしたrepositoryを返す。"""
         return self.problem_repository or get_problem_repository()
-
-    @staticmethod
-    def _stream_chunks(output: Any) -> Iterable[bytes]:
-        """Docker SDKのbytesまたはbyte iterator出力を一様な反復可能objectで返す。"""
-        if isinstance(output, bytes):
-            return (output,)
-        return output
-
-    @staticmethod
-    def _format_output(
-        output: BoundedByteBuffer,
-        limit_chars: int,
-        reason: str | None,
-        execution_error: Exception | None,
-    ) -> str:
-        """収集済み出力と終了理由から、既存API用の表示文字列を生成して返す。"""
-        decoded = output.to_bytes().decode("utf-8", errors="ignore")
-        if reason == "timeout":
-            suffix = "\n[Timed out]"
-            return decoded[: max(0, limit_chars - len(suffix))] + suffix
-        if reason == "output_limit":
-            return decoded[:limit_chars] + "..."
-        if execution_error is not None:
-            return f"Error during execution: {execution_error}"[:limit_chars]
-        if not decoded:
-            return ""
-        if len(decoded) > limit_chars:
-            return decoded[:limit_chars] + "..."
-        return decoded
-
-    def _read_output_artifact(
-        self,
-        container: Any,
-        path: str,
-        max_bytes: int,
-    ) -> str:
-        """指定artifactを上限内で読み、Base64文字列または空文字列を返す。
-
-        入力pathと上限は起動時検証済みproblem schema由来。設定pathだけを読み、
-        欠損、読込失敗、上限超過時は空文字列を返す。
-        """
-        artifact = BoundedByteBuffer(max_bytes + 1)
-        try:
-            artifact_stream = container.exec_run(
-                [
-                    "/usr/bin/head",
-                    "-c",
-                    str(max_bytes + 1),
-                    "--",
-                    f"{SANDBOX_WORK_DIRECTORY}/{path}",
-                ],
-                stdout=True,
-                stderr=False,
-                stream=True,
-            )
-            for chunk in self._stream_chunks(artifact_stream.output):
-                if chunk and not artifact.append(chunk):
-                    return ""
-        except Exception:
-            return ""
-        payload = artifact.to_bytes()
-        if not payload or len(payload) > max_bytes:
-            return ""
-        return base64.b64encode(payload).decode("ascii")
 
     def exec_shellgei(
         self, shellgei: str, problem_id: str, timeout: float, limit_str: int
@@ -165,90 +58,18 @@ class ShellgeiDockerClient:
         if record is None:
             return ["Error: problem not found.", ""]
 
-        container = None
-        container_stopped = False
         try:
-            container = self.manager.get_container()
-        except Exception as e:
-            return [f"Error: failed to get container: {e}", ""]
-
-        try:
-            # Build all request-specific files in memory. Host-side shared temporary
-            # files would allow concurrent requests to overwrite each other's data.
-            execution_archive = build_execution_archive(shellgei, record.fixtures)
-            encoded_archive = base64.b64encode(execution_archive.getvalue()).decode(
-                "ascii"
+            result = self.sandbox_executor.execute(
+                record,
+                shellgei,
+                timeout,
+                limit_str,
             )
-            setup_result = container.exec_run(
-                ["/bin/sh", "-c", EXECUTION_ARCHIVE_EXTRACT_COMMAND],
-                environment={EXECUTION_ARCHIVE_ENVIRONMENT: encoded_archive},
-                stdout=False,
-                stderr=True,
-                workdir=SANDBOX_WORK_DIRECTORY,
-            )
-            if setup_result.exit_code != 0:
-                raise RuntimeError("failed to prepare sandbox files")
-            watchdog = _ExecutionWatchdog(container)
-            timeout_timer = threading.Timer(
-                timeout, watchdog.terminate, args=("timeout",)
-            )
-            timeout_timer.daemon = True
-            timeout_timer.start()
-
-            output = BoundedByteBuffer(limit_str * MAX_UTF8_BYTES_PER_CHAR)
-            output_artifact = ""
-            execution_error: Exception | None = None
-            try:
-                if watchdog.reason is None:
-                    exec_stream = container.exec_run(
-                        ["bash", "z.bash"],
-                        demux=False,
-                        stream=True,
-                        workdir=SANDBOX_WORK_DIRECTORY,
-                    )
-                    for chunk in self._stream_chunks(exec_stream.output):
-                        if chunk and not output.append(chunk):
-                            watchdog.terminate("output_limit")
-                            break
-                judge_specification = record.definition.judge
-                if watchdog.reason is None and judge_specification.type == "image":
-                    output_artifact = self._read_output_artifact(
-                        container,
-                        judge_specification.artifact.path,
-                        judge_specification.artifact.max_bytes,
-                    )
-            except Exception as exc:
-                execution_error = exc
-            finally:
-                timeout_timer.cancel()
-                reason = watchdog.finish()
-                if reason is None:
-                    try:
-                        # Stop PID 1 as well as any user-created background children
-                        # before inspecting the output image.
-                        container.kill()
-                        container_stopped = True
-                    except Exception as exc:
-                        execution_error = execution_error or exc
-                elif watchdog.termination_error is None:
-                    container_stopped = True
-                timeout_timer.join(timeout=0.1)
-
-            output_utf8 = self._format_output(
-                output, limit_str, reason, execution_error
-            )
-            if reason is not None or execution_error is not None:
-                return [output_utf8, ""]
-            return [output_utf8, output_artifact]
+            return [result.output, result.artifact]
+        except SandboxAcquisitionError as exc:
+            return [f"Error: failed to get container: {exc}", ""]
         except Exception as e:
             return [f"Error during execution: {e}", ""]
-
-        finally:
-            if container:
-                self.manager.release_container(
-                    container,
-                    already_stopped=container_stopped,
-                )
 
     async def run_with_timeout(
         self,

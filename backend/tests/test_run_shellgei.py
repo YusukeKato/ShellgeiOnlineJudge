@@ -11,13 +11,15 @@ from typing import Any
 import scripts.run_shellgei as run_shellgei_module
 from scripts.container_manager import SANDBOX_WORK_DIRECTORY
 from scripts.run_shellgei import (
-    EXECUTION_ARCHIVE_ENVIRONMENT,
-    EXECUTION_ARCHIVE_EXTRACT_COMMAND,
     MAX_IMAGE_BYTES,
     SandboxBusyError,
     ShellgeiDockerClient,
 )
 from scripts.problem_repository import build_problem_repository
+from scripts.sandbox_executor import (
+    EXECUTION_ARCHIVE_ENVIRONMENT,
+    EXECUTION_ARCHIVE_EXTRACT_COMMAND,
+)
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -38,6 +40,12 @@ class FakeContainer:
         self.kill_calls = 0
         self.archive: bytes | None = None
         self.setup_error: Exception | None = None
+        self.setup_exit_code = 0
+        self.execution_error: Exception | None = None
+        self.artifact_error: Exception | None = None
+        self.kill_error: Exception | None = None
+        self.kill_started = threading.Event()
+        self.allow_kill: threading.Event | None = None
         self.commands: list[Any] = []
 
     def exec_run(self, command: Any, **kwargs: Any) -> Any:
@@ -53,7 +61,7 @@ class FakeContainer:
                 "workdir": SANDBOX_WORK_DIRECTORY,
             }
             self.archive = base64.b64decode(encoded_archive, validate=True)
-            return SimpleNamespace(exit_code=0, output=None)
+            return SimpleNamespace(exit_code=self.setup_exit_code, output=None)
         if command == [
             "/usr/bin/head",
             "-c",
@@ -63,6 +71,8 @@ class FakeContainer:
         ]:
             assert kwargs == {"stdout": True, "stderr": False, "stream": True}
             assert not self.killed.is_set()
+            if self.artifact_error is not None:
+                raise self.artifact_error
             return SimpleNamespace(exit_code=None, output=iter((self.image,)))
         if command == ["bash", "z.bash"]:
             assert kwargs == {
@@ -70,12 +80,19 @@ class FakeContainer:
                 "stream": True,
                 "workdir": SANDBOX_WORK_DIRECTORY,
             }
+            if self.execution_error is not None:
+                raise self.execution_error
             return SimpleNamespace(exit_code=None, output=iter(self.output))
         raise AssertionError(f"unexpected command: {command}")
 
     def kill(self) -> None:
         """kill回数を加算し、container停止eventを設定する。"""
         self.kill_calls += 1
+        self.kill_started.set()
+        if self.allow_kill is not None:
+            self.allow_kill.wait(timeout=2)
+        if self.kill_error is not None:
+            raise self.kill_error
         self.killed.set()
 
 
@@ -86,9 +103,12 @@ class FakeManager:
         self.pool_size = pool_size
         self.released: list[FakeContainer] = []
         self.release_stopped_values: list[bool] = []
+        self.get_error: Exception | None = None
 
     def get_container(self) -> FakeContainer:
         """現在poolへ設定されている模擬containerを返す。"""
+        if self.get_error is not None:
+            raise self.get_error
         return self.container
 
     def release_container(
@@ -249,6 +269,118 @@ def test_setup_failure_is_cleaned_up_as_a_running_container() -> None:
     assert image == ""
     assert manager.released == [container]
     assert manager.release_stopped_values == [False]
+    client.close()
+
+
+def test_nonzero_setup_result_is_cleaned_up_as_a_running_container() -> None:
+    # archive展開commandの非zero終了を準備失敗とし、manager側で停止・破棄させる。
+    container = FakeContainer()
+    container.setup_exit_code = 1
+    client, manager = make_client(container)
+
+    output, image = client.exec_shellgei("echo ok", "STANDARD-00000001", 1, 1000)
+
+    assert output == "Error during execution: failed to prepare sandbox files"
+    assert image == ""
+    assert manager.release_stopped_values == [False]
+    client.close()
+
+
+def test_container_acquisition_failure_does_not_attempt_release() -> None:
+    # container取得失敗を専用errorへ変換し、未取得containerを返却しないことを確認する。
+    container = FakeContainer()
+    client, manager = make_client(container)
+    manager.get_error = RuntimeError("daemon unavailable")
+
+    output, image = client.exec_shellgei("echo ok", "STANDARD-00000001", 1, 1000)
+
+    assert output == "Error: failed to get container: daemon unavailable"
+    assert image == ""
+    assert manager.released == []
+    client.close()
+
+
+def test_command_execution_failure_stops_and_releases_container() -> None:
+    # Docker exec失敗をerror結果へ変換し、containerを停止済みとして返却する。
+    container = FakeContainer()
+    container.execution_error = RuntimeError("exec failed")
+    client, manager = make_client(container)
+
+    output, image = client.exec_shellgei("echo ok", "STANDARD-00000001", 1, 1000)
+
+    assert output == "Error during execution: exec failed"
+    assert image == ""
+    assert container.kill_calls == 1
+    assert manager.release_stopped_values == [True]
+    client.close()
+
+
+def test_artifact_capture_failure_returns_empty_artifact_and_cleans_up() -> None:
+    # 画像読込失敗を画像なしへ変換し、text出力とcontainer cleanupを維持する。
+    container = FakeContainer(output=[b"ok"])
+    container.artifact_error = RuntimeError("capture failed")
+    client, manager = make_client(container)
+
+    output, image = client.exec_shellgei("echo ok", "IMAGE-00000001", 1, 1000)
+
+    assert output == "ok"
+    assert image == ""
+    assert manager.release_stopped_values == [True]
+    client.close()
+
+
+def test_cleanup_kill_failure_is_reported_and_released_as_running() -> None:
+    # 正常exec後のkill失敗をerrorにし、managerへ未停止として返して再cleanupさせる。
+    container = FakeContainer(output=[b"ok"])
+    container.kill_error = RuntimeError("kill failed")
+    client, manager = make_client(container)
+
+    output, image = client.exec_shellgei("echo ok", "STANDARD-00000001", 1, 1000)
+
+    assert output == "Error during execution: kill failed"
+    assert image == ""
+    assert manager.release_stopped_values == [False]
+    client.close()
+
+
+def test_timeout_waits_for_kill_completion_before_stopped_release() -> None:
+    # timeout側killが完了するまで停止済み返却を待ち、cleanup競合を防ぐことを確認する。
+    container = FakeContainer()
+    container.allow_kill = threading.Event()
+
+    def output_until_kill_starts() -> Any:
+        """kill開始通知まで出力を待ち、kill完了前にstreamだけを終了する。"""
+        container.kill_started.wait(timeout=2)
+        if False:
+            yield b""
+
+    container.output = output_until_kill_starts()
+    client, manager = make_client(container)
+    result: list[list[str]] = []
+
+    def execute() -> None:
+        """同期sandbox実行結果を別threadから観測用listへ追加する。"""
+        result.append(
+            client.exec_shellgei(
+                "sleep infinity",
+                "STANDARD-00000001",
+                0.01,
+                1000,
+            )
+        )
+
+    worker = threading.Thread(target=execute)
+    worker.start()
+    assert container.kill_started.wait(timeout=1)
+    time.sleep(0.02)
+    assert manager.released == []
+
+    container.allow_kill.set()
+    worker.join(timeout=1)
+
+    assert worker.is_alive() is False
+    assert result == [["\n[Timed out]", ""]]
+    assert manager.release_stopped_values == [True]
     client.close()
 
 
