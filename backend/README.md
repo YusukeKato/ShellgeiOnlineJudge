@@ -31,23 +31,25 @@ problem schema、manifest revision、移行・更新手順は、
 ## 内部runner protocol
 
 backendからrunnerへの実行境界は、`scripts/runner_protocol.py`の
-`RunnerGateway`、`RunnerExecutionRequest`、`RunnerExecutionResponse`、
-`ExecutionResult`を正本とします。requestとresponseは`protocol_version: 2`を必須とし、
+`RunnerGateway`、`RunnerExecutionRequest`、`RunnerExecutionResponse`と、
+`models/execution.py`の`ExecutionResult`を正本とします。requestとresponseは
+`protocol_version: 3`を必須とし、
 未知version、未知field、欠落field、文字列・画像上限超過を拒否します。
 
 requestは`protocol_version`、`shellgei`、`problem_id`、responseは
-`protocol_version`と、`output`・任意の`artifact`を持つ`result`で構成します。
+`protocol_version`と構造化された`result`で構成します。`result`は`status`、
+分離した`stdout`・`stderr`、`exit_code`、`timed_out`、`truncated`、
+`duration_ms`、任意の`artifact`・`error`を保持します。
 artifactはproblem schemaと一致する`path`、`media_type`、Base64 `data`を保持します。
 これは外部公開APIではなく、backendとrunnerを同時に更新する内部protocolです。
-exit code、stderr、timeout、artifact等の追加実行情報は、後続のstructured execution
-outcomeで`ExecutionResult`へ追加します。
+公開APIと既存DB logへ渡すときだけ、構造化結果を従来の結合済み表示文字列へ変換します。
 
 公開submission APIは画像dataに加えて`image_media_type`を返します。画像がない場合は
 空文字列と`null`、現在の画像問題では`image/jpeg`を返します。frontendはJPEG/GIFだけを
 data URLとして許可します。
 
-text判定は`JudgeResult`と`TextJudgeInput`を型付き境界とし、file I/Oやrepository参照を
-行わないpure functionへ分離しています。判定規則の正本は
+text判定は`ExecutionResult`から`TextJudgeInput`へ必要項目だけを渡し、
+file I/Oを行わないpure functionへ分離しています。判定規則の正本は
 [問題データのText判定](../problems/README.md#text判定)を参照してください。
 
 ## 参考

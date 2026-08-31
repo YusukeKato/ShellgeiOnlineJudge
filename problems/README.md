@@ -88,10 +88,9 @@ newline、tab、`NULL`等のliteral文字列は区別し、画像は判定に使
 `must_be_empty`はstderrが空でなければ実行失敗とします。timeoutまたは出力切り詰めが
 記録された実行結果は、出力が一致しても実行失敗です。
 
-現在のrunner protocolはstdout/stderrや終了codeをまだ分離しておらず、全92問は
-互換policyの`exit_code: ignore`、`stderr: merge`です。その他のpolicyはpure judgeで
-検査済みですが、production経路ではR3-013のstructured execution outcome導入まで
-fail-closedで判定errorにします。
+runner protocolはstdout、stderr、終了code、timeout、切り詰めを分離して保持し、
+production判定にも上記policyを適用します。移行済みの全92問は、従来挙動を維持する
+`exit_code: ignore`、`stderr: merge`です。
 
 主な入力上限は次のとおりです。すべてUTF-8のbyte数で検証します。
 

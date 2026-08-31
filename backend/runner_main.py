@@ -12,8 +12,6 @@ from scripts.runner_protocol import (
     RUNNER_EXECUTE_PATH,
     RUNNER_HEALTH_PATH,
     RUNNER_PROTOCOL_VERSION,
-    ExecutionArtifact,
-    ExecutionResult,
     RunnerExecutionRequest,
     RunnerExecutionResponse,
     get_runner_shared_secret,
@@ -84,21 +82,13 @@ async def execute_shellgei(
         raise HTTPException(status_code=429, detail="Runner is busy")
 
     try:
-        output, artifact_data = await docker_client.run_with_timeout(
+        result = await docker_client.run_with_timeout(
             shellgei_data.shellgei,
             shellgei_data.problem_id,
         )
     except SandboxBusyError as exc:
         raise HTTPException(status_code=429, detail="Runner is busy") from exc
-    artifact = None
-    judge_specification = record.definition.judge
-    if judge_specification.type == "image" and artifact_data:
-        artifact = ExecutionArtifact(
-            path=judge_specification.artifact.path,
-            media_type=judge_specification.artifact.media_type,
-            data=artifact_data,
-        )
     return RunnerExecutionResponse(
         protocol_version=RUNNER_PROTOCOL_VERSION,
-        result=ExecutionResult(output=output, artifact=artifact),
+        result=result,
     )

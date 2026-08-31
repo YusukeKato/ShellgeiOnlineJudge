@@ -61,11 +61,11 @@ async def post_shellgei(shellgei_data: ShellgeiData) -> ShellgeiResultResponse:
             image_media_type=None,
             judge="4",
         )
-    output = execution.output
+    output = execution.legacy_output()
     artifact = execution.artifact
     image = artifact.data if artifact is not None else ""
     image_media_type = artifact.media_type if artifact is not None else None
-    judge_result = shellgei_judge.judge(output, artifact, problem_id_str)
+    judge_result = shellgei_judge.judge(execution, problem_id_str)
     judge = judge_result.legacy_code()
 
     try:

@@ -5,11 +5,11 @@ from types import MappingProxyType
 import pytest
 
 from models.problem import ExecutionSpecification, TextJudgeSpecification
+from models.execution import ExecutionArtifact, ExecutionResult, ExecutionStatus
 from scripts.judge import JudgeReason, JudgeResult, JudgeVerdict, ShellgeiJudge
 from scripts.problem_catalog import build_problem_catalog
 from scripts.problem_repository import ProblemRecord, ProblemRepository
 from scripts.problem_schema import load_problem_definition
-from scripts.runner_protocol import ExecutionArtifact
 
 
 TEXT_PROBLEM_ID = "STANDARD-00000001"
@@ -21,6 +21,27 @@ TEXT_DEFINITION = load_problem_definition(
 IMAGE_DEFINITION = load_problem_definition(
     REPOSITORY_ROOT / "problems/v3" / f"{IMAGE_PROBLEM_ID}.yaml"
 )
+
+
+def _execution_result(
+    stdout: str,
+    artifact: ExecutionArtifact | None = None,
+    *,
+    stderr: str = "",
+    exit_code: int = 0,
+) -> ExecutionResult:
+    # 任意の分離出力・終了code・artifactから、正常完了した実行結果を返す。
+    return ExecutionResult(
+        status=ExecutionStatus.COMPLETED,
+        stdout=stdout,
+        stderr=stderr,
+        exit_code=exit_code,
+        timed_out=False,
+        truncated=False,
+        duration_ms=1,
+        artifact=artifact,
+        error=None,
+    )
 
 
 def _repository_judge(
@@ -68,8 +89,7 @@ def test_text_judge_does_not_depend_on_image(image_matches: bool) -> None:
     )
 
     result = judge.judge(
-        "expected",
-        artifact,
+        _execution_result("expected", artifact),
         problem_id,
     )
 
@@ -92,14 +112,17 @@ def test_text_judge_ignores_carriage_returns_and_trailing_spaces_or_newlines(
     # CRと末尾の空白・改行だけを除外し、期待出力と比較することを確認する。
     judge, _, problem_id = _repository_judge(expected_output="expected\n")
 
-    assert judge.judge(output, None, problem_id).verdict is JudgeVerdict.ACCEPTED
+    assert (
+        judge.judge(_execution_result(output), problem_id).verdict
+        is JudgeVerdict.ACCEPTED
+    )
 
 
 def test_text_judge_keeps_tabs_significant() -> None:
     # タブは通常の空白と同一視されず、文字列不一致になることを確認する。
     judge, _, problem_id = _repository_judge(expected_output="a b")
 
-    result = judge.judge("a\tb", None, problem_id)
+    result = judge.judge(_execution_result("a\tb"), problem_id)
 
     assert result.verdict is JudgeVerdict.WRONG_ANSWER
     assert result.reason is JudgeReason.OUTPUT_MISMATCH
@@ -109,25 +132,33 @@ def test_text_judge_accepts_empty_output_and_answer() -> None:
     # 利用者出力と期待出力が両方空の場合に正解となることを確認する。
     judge, _, problem_id = _repository_judge(expected_output="")
 
-    assert judge.judge("", None, problem_id).verdict is JudgeVerdict.ACCEPTED
+    assert (
+        judge.judge(_execution_result(""), problem_id).verdict is JudgeVerdict.ACCEPTED
+    )
 
 
 def test_text_judge_does_not_collide_with_replacement_token_literals() -> None:
     # 実際の空白とliteral文字列SPACEを異なる出力として判定することを確認する。
     judge, _, problem_id = _repository_judge(expected_output="SPACE")
 
-    assert judge.judge(" ", None, problem_id).verdict is JudgeVerdict.WRONG_ANSWER
+    assert (
+        judge.judge(_execution_result(" "), problem_id).verdict
+        is JudgeVerdict.WRONG_ANSWER
+    )
 
 
 def test_text_judge_does_not_match_literal_null_to_empty_answer() -> None:
     # 空出力とliteral文字列NULLを異なる出力として判定することを確認する。
     judge, _, problem_id = _repository_judge(expected_output="")
 
-    assert judge.judge("NULL", None, problem_id).verdict is JudgeVerdict.WRONG_ANSWER
+    assert (
+        judge.judge(_execution_result("NULL"), problem_id).verdict
+        is JudgeVerdict.WRONG_ANSWER
+    )
 
 
-def test_repository_adapter_fails_closed_for_not_yet_captured_policies() -> None:
-    # runnerが構造化していない終了code policyを暗黙に成功扱いしないことを確認する。
+def test_repository_adapter_applies_structured_exit_code_policy() -> None:
+    # repository経由の判定が構造化された非0終了codeを実行失敗にすることを確認する。
     judge, _, problem_id = _repository_judge()
     assert judge.problem_repository is not None
     record = judge.problem_repository.require(problem_id)
@@ -155,7 +186,10 @@ def test_repository_adapter_fails_closed_for_not_yet_captured_policies() -> None
         catalog=build_problem_catalog([definition]),
     )
 
-    result = ShellgeiJudge(repository).judge("expected", None, problem_id)
+    result = ShellgeiJudge(repository).judge(
+        _execution_result("expected", exit_code=7),
+        problem_id,
+    )
 
-    assert result.verdict is JudgeVerdict.JUDGE_ERROR
-    assert result.reason is JudgeReason.STRUCTURED_EXECUTION_UNAVAILABLE
+    assert result.verdict is JudgeVerdict.EXECUTION_FAILURE
+    assert result.reason is JudgeReason.NON_ZERO_EXIT

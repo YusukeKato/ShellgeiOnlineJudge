@@ -8,7 +8,6 @@ from scripts.problem_repository import build_problem_repository
 from scripts.container_manager import ContainerManager
 from scripts.judge import JudgeVerdict, ShellgeiJudge
 from scripts.run_shellgei import ShellgeiDockerClient
-from scripts.runner_protocol import ExecutionArtifact
 
 
 pytestmark = [
@@ -43,22 +42,14 @@ def test_all_problem_answers_in_real_sandboxes() -> None:
     try:
         for yaml_path in sorted(V3_DIRECTORY.glob("*.yaml")):
             definition = load_problem_definition(yaml_path)
-            output, image = asyncio.run(
+            execution = asyncio.run(
                 client.run_with_timeout(
                     definition.reference_solution,
                     yaml_path.stem,
                 )
             )
-            artifact = None
-            if definition.judge.type == "image" and image:
-                artifact = ExecutionArtifact(
-                    path=definition.judge.artifact.path,
-                    media_type=definition.judge.artifact.media_type,
-                    data=image,
-                )
             assert (
-                judge.judge(output, artifact, yaml_path.stem).verdict
-                is JudgeVerdict.ACCEPTED
+                judge.judge(execution, yaml_path.stem).verdict is JudgeVerdict.ACCEPTED
             ), yaml_path.name
     finally:
         manager.shutdown_pool()

@@ -1,21 +1,33 @@
 import os
 import re
-from pathlib import PurePosixPath
 from typing import Final, Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict
 
+from models.execution import (
+    MAX_CAPTURED_OUTPUT_CHARS,
+    MAX_RUNNER_IMAGE_BASE64_CHARS,
+    ExecutionArtifact,
+    ExecutionResult,
+    ExecutionStatus,
+)
 from models.model_shellgei import ShellgeiData
-from models.problem import ImageMediaType, MAX_PROBLEM_PATH_BYTES
+
+
+__all__ = [
+    "MAX_RUNNER_IMAGE_BASE64_CHARS",
+    "MAX_CAPTURED_OUTPUT_CHARS",
+    "ExecutionArtifact",
+    "ExecutionResult",
+    "ExecutionStatus",
+]
 
 RUNNER_EXECUTE_PATH = "/internal/execute"
 RUNNER_HEALTH_PATH = "/internal/health"
 RUNNER_SHARED_SECRET_ENVIRONMENT = "RUNNER_SHARED_SECRET"
 RUNNER_SHARED_SECRET_PATTERN = re.compile(r"^[A-Za-z0-9_-]{32,256}$")
 RUNNER_INSECURE_EXAMPLE_SECRET = "replace-with-at-least-32-random-characters"
-RUNNER_PROTOCOL_VERSION: Final = 2
-MAX_RUNNER_OUTPUT_CHARS = 1_003
-MAX_RUNNER_IMAGE_BASE64_CHARS = 1_000_000
+RUNNER_PROTOCOL_VERSION: Final = 3
 
 
 class RunnerConfigurationError(RuntimeError):
@@ -27,41 +39,7 @@ class RunnerExecutionRequest(ShellgeiData):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    protocol_version: Literal[2]
-
-
-class ExecutionArtifact(BaseModel):
-    """runnerが取得した画像artifactのpath・MIME・Base64 dataを不変に保持する。"""
-
-    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
-
-    path: str = Field(max_length=MAX_PROBLEM_PATH_BYTES)
-    media_type: ImageMediaType
-    data: str = Field(max_length=MAX_RUNNER_IMAGE_BASE64_CHARS)
-
-    @field_validator("path")
-    @classmethod
-    def validate_path(cls, value: str) -> str:
-        """入力pathが正規化済み相対POSIX pathなら同じ文字列を返す。"""
-        path = PurePosixPath(value)
-        if (
-            not value
-            or "\\" in value
-            or path.is_absolute()
-            or any(part in {"", ".", ".."} for part in value.split("/"))
-            or path.as_posix() != value
-        ):
-            raise ValueError("artifact path must be a normalized relative POSIX path")
-        return value
-
-
-class ExecutionResult(BaseModel):
-    """runnerからbackendへ返す、上限検証済みの文字列・artifact実行結果。"""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    output: str = Field(max_length=MAX_RUNNER_OUTPUT_CHARS)
-    artifact: ExecutionArtifact | None
+    protocol_version: Literal[3]
 
 
 class RunnerExecutionResponse(BaseModel):
@@ -69,7 +47,7 @@ class RunnerExecutionResponse(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    protocol_version: Literal[2]
+    protocol_version: Literal[3]
     result: ExecutionResult
 
 

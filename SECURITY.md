@@ -125,21 +125,28 @@ sandbox実行の開始頻度には、runnerプロセスごとに次の制限を�
 
 ## stdout、stderr、画像
 
-stdoutとstderrは結合されたstreamとして読み込みます。
-runnerメモリに保持する量は、APIが返す最大文字数の4倍までです。
+stdoutとstderrはDocker execの分離streamとして読み、終了後に同じexec IDから
+終了codeを取得します。runnerメモリに保持する両streamの合計量は、UTF-8の
+最大byte数を考慮してAPIが返す最大文字数の4倍までです。UTF-8 decode後も
+両stream合計1,000文字へ制限し、invalid UTF-8 byteは表示・判定対象から除外します。
 
 上限超過時は次の処理を行います。
 
 - コンテナを停止する
-- 上限以降の出力を保持しない
+- byteまたは文字数上限以降の出力を保持しない
 - 画像を保持しない
+
+runner内部では正常完了、timeout、出力上限、Docker等の基盤errorをstatusで区別し、
+stdout、stderr、終了code、timeout、切り詰め、所要時間を別fieldでbackendへ渡します。
+既存public APIの表示時だけstdoutとstderrを結合し、timeoutや切り詰めのsuffixを付けます。
 
 出力画像はproblem schemaのartifact pathとbyte上限を使用し、上限値は最大
 750,000 bytesです。text問題では画像を読み取らず、画像問題でも指定pathだけを
 read-only root filesystem上の`/usr/bin/head`で読み取ります。同じdirectoryに
 JPEG/GIFが複数あっても探索や暗黙選択を行いません。
 
-runnerは設定上限+1 bytesのbufferへ読み込み、上限を超えた画像を破棄します。
+runnerは設定上限+1 bytesのbufferへbinaryのまま読み込み、上限を超えた画像を破棄します。
+runner protocolへ変換するときだけBase64 encodeします。
 backendはBase64、schemaのpath・MIME、JPEG/GIF形式を検証し、decode後の寸法、
 frame数、RGBA画素を正解画像と比較します。decodeする総画素数は4,000,000以下です。
 

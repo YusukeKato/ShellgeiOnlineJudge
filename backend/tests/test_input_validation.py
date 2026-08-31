@@ -9,6 +9,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from api.api_shellgei import post_shellgei
 from main import app
+from models.execution import ExecutionResult, ExecutionStatus
 from models.model_shellgei import MAX_SHELLGEI_CHARS, ShellgeiData
 from scripts.input_validation import MAX_PROBLEM_ID_CHARS, ProblemId
 from scripts.judge import JudgeReason, JudgeVerdict, ShellgeiJudge
@@ -147,10 +148,9 @@ def test_executor_rejects_invalid_problem_id_before_leasing_container(
         max_concurrent=1,
     )
     try:
-        assert client.exec_shellgei("true", problem_id, 1, 1000) == [
-            "Error: invalid problem ID.",
-            "",
-        ]
+        result = client.exec_shellgei("true", problem_id, 1, 1000)
+        assert result.status is ExecutionStatus.ERROR
+        assert result.error == "invalid problem ID"
     finally:
         client.close()
 
@@ -159,7 +159,18 @@ def test_judge_rejects_invalid_problem_id_before_reading_files() -> None:
     # judgeが不正problem IDをrepository参照前にerror結果へ変換することを確認する。
     judge = ShellgeiJudge()
 
-    result = judge.judge("output", None, "../secret")
+    execution = ExecutionResult(
+        status=ExecutionStatus.COMPLETED,
+        stdout="output",
+        stderr="",
+        exit_code=0,
+        timed_out=False,
+        truncated=False,
+        duration_ms=0,
+        artifact=None,
+        error=None,
+    )
+    result = judge.judge(execution, "../secret")
 
     assert result.verdict is JudgeVerdict.JUDGE_ERROR
     assert result.reason is JudgeReason.INVALID_PROBLEM_ID

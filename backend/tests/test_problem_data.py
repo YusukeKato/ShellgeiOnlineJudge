@@ -5,6 +5,7 @@ from pathlib import Path
 
 import yaml
 
+from models.execution import ExecutionResult, ExecutionStatus
 from scripts.judge import JudgeVerdict, ShellgeiJudge
 from scripts.problem_repository import build_problem_repository
 from scripts.runner_protocol import ExecutionArtifact
@@ -112,7 +113,17 @@ def test_judge_accepts_all_expected_problem_outputs() -> None:
                 media_type=definition.judge.artifact.media_type,
                 data=image,
             )
+        execution = ExecutionResult(
+            status=ExecutionStatus.COMPLETED,
+            stdout=data["expected_output"],
+            stderr="",
+            exit_code=0,
+            timed_out=False,
+            truncated=False,
+            duration_ms=0,
+            artifact=artifact,
+            error=None,
+        )
         assert (
-            judge.judge(data["expected_output"], artifact, yaml_path.stem).verdict
-            is JudgeVerdict.ACCEPTED
+            judge.judge(execution, yaml_path.stem).verdict is JudgeVerdict.ACCEPTED
         ), yaml_path.name

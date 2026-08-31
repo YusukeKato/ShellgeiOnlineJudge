@@ -28,7 +28,7 @@ from scripts.execution_log_persistence import (
     persist_execution_log_async,
 )
 from scripts.judge import JudgeResult, JudgeVerdict
-from scripts.runner_protocol import ExecutionResult
+from scripts.runner_protocol import ExecutionResult, ExecutionStatus
 
 
 def _database_session() -> Session:
@@ -288,9 +288,19 @@ def test_shell_api_returns_result_when_log_persistence_fails(
     # DB保存に失敗しても実行・判定結果をid=-1で利用者へ返すことを確認する。
     async def execute(_shellgei: str, _problem_id: str) -> ExecutionResult:
         """入力commandとIDを使用せず、runnerの固定成功結果を返す。"""
-        return ExecutionResult(output="test", artifact=None)
+        return ExecutionResult(
+            status=ExecutionStatus.COMPLETED,
+            stdout="test",
+            stderr="",
+            exit_code=0,
+            timed_out=False,
+            truncated=False,
+            duration_ms=1,
+            artifact=None,
+            error=None,
+        )
 
-    def judge(_output: str, _artifact: object, _problem_id: str) -> JudgeResult:
+    def judge(_execution: ExecutionResult, _problem_id: str) -> JudgeResult:
         """入力結果を使用せず、固定の型付き正解判定を返す。"""
         return JudgeResult(verdict=JudgeVerdict.ACCEPTED)
 

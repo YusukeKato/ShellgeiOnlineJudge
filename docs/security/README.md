@@ -285,11 +285,13 @@ Deferredは不要という意味ではありません。
     起動時回収、cleanup競合
 - `backend/tests/test_run_shellgei.py`
   - archive準備、exec、artifact取得、cleanupの失敗、timeout、出力上限、
+    stdout/stderr・終了code分離、invalid UTF-8、NUL、文字数上限、所要時間、
     実行slot、kill完了待ち、background cleanup
 - `backend/tests/test_runner_boundary.py`
   - secret、version付き固定schema、response上限、backend/runner分離
 - `backend/tests/test_runner_protocol.py`
-  - request/response JSON往復、未知version・field、result不変性・上限
+  - version 3 request/response JSON往復、未知version・field、構造化resultの
+    status整合性・不変性・合計上限
 - `backend/tests/test_text_judge.py`
   - text空白規則、literal衝突、終了code・stderr policy、timeout、切り詰め
 - `backend/tests/test_image_judge.py`
@@ -303,7 +305,7 @@ Deferredは不要という意味ではありません。
     共有のsandbox開始枠を消費しないこと
 - `backend/tests/integration/test_docker_executor.py`
   - 実containerの起動時回収、filesystem、resource、logging、
-    isolation、timeout、画像、状態分離
+    isolation、stdout/stderr・終了code、timeout、画像、状態分離
 - `backend/tests/integration/test_postgres_retention.py`
   - 実PostgreSQLの期間・件数制限
 - `backend/tests/integration/test_full_problem_regression.py`
@@ -332,7 +334,7 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 ```text
 Next
-  R3-013: structured execution outcomeを導入
+  R3-014: ExecutionLogRepoとdatabase migrationを導入
     ↓
 Later
   revision照合、権限分離、E2E、browser、

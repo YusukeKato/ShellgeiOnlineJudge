@@ -6,6 +6,7 @@ from pathlib import Path
 import docker
 import pytest
 
+from models.execution import ExecutionStatus
 from scripts.container_manager import (
     INSTANCE_LABEL,
     MANAGED_LABEL,
@@ -250,12 +251,42 @@ def test_real_workdir_home_input_image_and_request_isolation() -> None:
             client.run_with_timeout(image_command, "IMAGE-00000001", timeout=5)
         )
 
-        assert with_input[0] == input_data
-        assert with_input[1] == ""
-        assert isolated[0] == "clean"
-        assert isolated[1] == ""
-        assert image_result[1]
+        assert with_input.status is ExecutionStatus.COMPLETED
+        assert with_input.stdout == input_data
+        assert with_input.stderr == ""
+        assert isolated.stdout == "clean"
+        assert isolated.artifact is None
+        assert image_result.artifact is not None
         assert manager.managed_count == 1
+    finally:
+        manager.shutdown_pool()
+        client.close()
+
+
+def test_real_exec_separates_stdout_stderr_exit_code_and_duration() -> None:
+    # 実Docker execのstdout/stderr、非0終了code、所要時間を構造化して取得する。
+    manager = ContainerManager(pool_size=1)
+    client = ShellgeiDockerClient(
+        container_manager=manager,
+        max_concurrent=1,
+        problem_repository=PROBLEM_REPOSITORY,
+    )
+    manager.initialize_pool()
+    try:
+        result = asyncio.run(
+            client.run_with_timeout(
+                "printf stdout; printf stderr >&2; exit 7",
+                "STANDARD-00000001",
+                timeout=5,
+            )
+        )
+
+        assert result.status is ExecutionStatus.COMPLETED
+        assert result.stdout == "stdout"
+        assert result.stderr == "stderr"
+        assert result.exit_code == 7
+        assert result.duration_ms >= 0
+        assert result.legacy_output() == "stdoutstderr"
     finally:
         manager.shutdown_pool()
         client.close()
@@ -286,9 +317,12 @@ def test_real_silent_timeout_cleans_up_and_worker_recovers() -> None:
             )
         )
 
-        assert timed_out == ["\n[Timed out]", ""]
-        assert recovered[0] == "recovered"
-        assert recovered[1] == ""
+        assert timed_out.status is ExecutionStatus.TIMED_OUT
+        assert timed_out.timed_out is True
+        assert timed_out.legacy_output() == "\n[Timed out]"
+        assert recovered.status is ExecutionStatus.COMPLETED
+        assert recovered.stdout == "recovered"
+        assert recovered.artifact is None
         assert manager.managed_count == 1
     finally:
         manager.shutdown_pool()

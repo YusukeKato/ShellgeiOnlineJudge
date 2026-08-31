@@ -8,6 +8,7 @@ from io import BytesIO
 from pydantic import BaseModel, ConfigDict
 from PIL import Image, UnidentifiedImageError
 
+from models.execution import ExecutionArtifact, ExecutionResult, ExecutionStatus
 from models.problem import (
     ExecutionSpecification,
     ImageJudgeSpecification,
@@ -15,7 +16,6 @@ from models.problem import (
 )
 from scripts.input_validation import validate_problem_id
 from scripts.problem_repository import ProblemRepository, get_problem_repository
-from scripts.runner_protocol import ExecutionArtifact
 
 
 MAX_DECODED_IMAGE_PIXELS = 4_000_000
@@ -46,7 +46,7 @@ class JudgeReason(str, Enum):
     STDERR_NOT_EMPTY = "stderr_not_empty"
     TIMED_OUT = "timed_out"
     OUTPUT_TRUNCATED = "output_truncated"
-    STRUCTURED_EXECUTION_UNAVAILABLE = "structured_execution_unavailable"
+    EXECUTION_ERROR = "execution_error"
     INVALID_PROBLEM_ID = "invalid_problem_id"
     PROBLEM_NOT_FOUND = "problem_not_found"
 
@@ -98,6 +98,31 @@ def judge_text(
     入力は期待出力、終了code・stderr policy、構造化されたstdout等。fileや
     repositoryを参照せず、timeout、切り詰め、policy違反、出力差を順に判定する。
     """
+    execution_failure = _execution_policy_failure(
+        execution_specification,
+        execution,
+    )
+    if execution_failure is not None:
+        return execution_failure
+
+    actual_output = execution.stdout
+    if execution_specification.stderr == "merge":
+        actual_output += execution.stderr
+    if normalize_text_output(actual_output) == normalize_text_output(
+        judge_specification.expected_output
+    ):
+        return JudgeResult(verdict=JudgeVerdict.ACCEPTED)
+    return JudgeResult(
+        verdict=JudgeVerdict.WRONG_ANSWER,
+        reason=JudgeReason.OUTPUT_MISMATCH,
+    )
+
+
+def _execution_policy_failure(
+    execution_specification: ExecutionSpecification,
+    execution: TextJudgeInput,
+) -> JudgeResult | None:
+    """実行状態とproblem policyを検査し、失敗結果または問題なしのNoneを返す。"""
     if execution.timed_out:
         return JudgeResult(
             verdict=JudgeVerdict.EXECUTION_FAILURE,
@@ -118,18 +143,7 @@ def judge_text(
             verdict=JudgeVerdict.EXECUTION_FAILURE,
             reason=JudgeReason.STDERR_NOT_EMPTY,
         )
-
-    actual_output = execution.stdout
-    if execution_specification.stderr == "merge":
-        actual_output += execution.stderr
-    if normalize_text_output(actual_output) == normalize_text_output(
-        judge_specification.expected_output
-    ):
-        return JudgeResult(verdict=JudgeVerdict.ACCEPTED)
-    return JudgeResult(
-        verdict=JudgeVerdict.WRONG_ANSWER,
-        reason=JudgeReason.OUTPUT_MISMATCH,
-    )
+    return None
 
 
 def _matches_media_type(payload: bytes, media_type: str) -> bool:
@@ -247,11 +261,10 @@ class ShellgeiJudge:
 
     def judge(
         self,
-        output_str: str,
-        output_artifact: ExecutionArtifact | None,
+        execution: ExecutionResult,
         problem_id: str,
     ) -> JudgeResult:
-        """実行出力とproblem IDを受け取り、型付き判定結果を返す。
+        """構造化実行結果とproblem IDを受け取り、型付き判定結果を返す。
 
         text問題はartifactを参照せず、画像問題はstdoutを参照しない純粋関数へ
         委譲する。不正ID・未登録IDはjudge errorとして返す。
@@ -270,22 +283,32 @@ class ShellgeiJudge:
                 reason=JudgeReason.PROBLEM_NOT_FOUND,
             )
         definition = record.definition
+        if execution.status is ExecutionStatus.ERROR:
+            return JudgeResult(
+                verdict=JudgeVerdict.EXECUTION_FAILURE,
+                reason=JudgeReason.EXECUTION_ERROR,
+            )
+        policy_input = TextJudgeInput(
+            stdout=execution.stdout,
+            stderr=execution.stderr,
+            exit_code=execution.exit_code or 0,
+            timed_out=execution.timed_out,
+            truncated=execution.truncated,
+        )
         if definition.judge.type == "text":
-            if (
-                definition.execution.exit_code != "ignore"
-                or definition.execution.stderr != "merge"
-            ):
-                return JudgeResult(
-                    verdict=JudgeVerdict.JUDGE_ERROR,
-                    reason=JudgeReason.STRUCTURED_EXECUTION_UNAVAILABLE,
-                )
             return judge_text(
                 definition.judge,
                 definition.execution,
-                TextJudgeInput(stdout=output_str),
+                policy_input,
             )
+        execution_failure = _execution_policy_failure(
+            definition.execution,
+            policy_input,
+        )
+        if execution_failure is not None:
+            return execution_failure
         return judge_image(
             definition.judge,
             record.answer_image,
-            output_artifact,
+            execution.artifact,
         )

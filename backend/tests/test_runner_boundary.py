@@ -23,13 +23,47 @@ from scripts.runner_protocol import (
     RUNNER_PROTOCOL_VERSION,
     ExecutionArtifact,
     ExecutionResult,
+    ExecutionStatus,
     RunnerConfigurationError,
     RunnerExecutionRequest,
+    RunnerExecutionResponse,
     get_runner_shared_secret,
 )
 
 
 VALID_SECRET = "a" * 64
+
+
+def _completed_result(
+    stdout: str = "ok",
+    *,
+    stderr: str = "",
+    artifact: ExecutionArtifact | None = None,
+) -> ExecutionResult:
+    # 任意の分離出力とartifactから、境界test用の正常完了結果を返す。
+    return ExecutionResult(
+        status=ExecutionStatus.COMPLETED,
+        stdout=stdout,
+        stderr=stderr,
+        exit_code=0,
+        timed_out=False,
+        truncated=False,
+        duration_ms=1,
+        artifact=artifact,
+        error=None,
+    )
+
+
+def _runner_response_bytes(stdout: str) -> bytes:
+    # 任意stdoutをprotocol version 3の正常runner response JSONへ変換する。
+    return (
+        RunnerExecutionResponse(
+            protocol_version=RUNNER_PROTOCOL_VERSION,
+            result=_completed_result(stdout),
+        )
+        .model_dump_json()
+        .encode("utf-8")
+    )
 
 
 def _runner_request(
@@ -112,10 +146,10 @@ def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
 
     calls: list[tuple[str, str]] = []
 
-    async def run_with_timeout(shellgei: str, problem_id: str) -> list[str]:
-        """入力command・IDを記録し、固定の文字列・画像結果を返す。"""
+    async def run_with_timeout(shellgei: str, problem_id: str) -> ExecutionResult:
+        """入力command・IDを記録し、固定の構造化結果を返す。"""
         calls.append((shellgei, problem_id))
-        return ["output", "image"]
+        return _completed_result("output")
 
     monkeypatch.setattr(
         runner_main,
@@ -143,8 +177,18 @@ def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
     )
 
     assert result.model_dump() == {
-        "protocol_version": 2,
-        "result": {"output": "output", "artifact": None},
+        "protocol_version": 3,
+        "result": {
+            "status": "completed",
+            "stdout": "output",
+            "stderr": "",
+            "exit_code": 0,
+            "timed_out": False,
+            "truncated": False,
+            "duration_ms": 1,
+            "artifact": None,
+            "error": None,
+        },
     }
     assert calls == [("printf output", "STANDARD-00000001")]
 
@@ -158,9 +202,19 @@ def test_runner_returns_schema_path_and_media_type_with_image_artifact(
             """sandbox開始token取得を常に許可し、Trueを返す。"""
             return True
 
-    async def run_with_timeout(_shellgei: str, _problem_id: str) -> list[str]:
-        """入力command・IDを使用せず、固定の出力とBase64画像dataを返す。"""
-        return ["", "encoded-image"]
+    async def run_with_timeout(
+        _shellgei: str,
+        _problem_id: str,
+    ) -> ExecutionResult:
+        """入力command・IDを使用せず、固定の画像artifact付き結果を返す。"""
+        return _completed_result(
+            "",
+            artifact=ExecutionArtifact(
+                path="media/output.jpg",
+                media_type="image/jpeg",
+                data="encoded-image",
+            ),
+        )
 
     artifact_specification = SimpleNamespace(
         path="media/output.jpg",
@@ -188,14 +242,21 @@ def test_runner_returns_schema_path_and_media_type_with_image_artifact(
     )
 
     assert result.model_dump() == {
-        "protocol_version": 2,
+        "protocol_version": 3,
         "result": {
-            "output": "",
+            "status": "completed",
+            "stdout": "",
+            "stderr": "",
+            "exit_code": 0,
+            "timed_out": False,
+            "truncated": False,
+            "duration_ms": 1,
             "artifact": {
                 "path": "media/output.jpg",
                 "media_type": "image/jpeg",
                 "data": "encoded-image",
             },
+            "error": None,
         },
     }
 
@@ -209,7 +270,7 @@ def test_runner_rejects_unknown_problem_before_admission_or_docker(
             """呼び出された場合にtestを失敗させ、token状態は返さない。"""
             raise AssertionError("unknown problems must not consume admission tokens")
 
-    async def unexpected_execution(*_args: object) -> list[str]:
+    async def unexpected_execution(*_args: object) -> ExecutionResult:
         """Docker実行へ到達した場合にtestを失敗させ、結果は返さない。"""
         raise AssertionError("unknown problems must not reach Docker")
 
@@ -338,9 +399,7 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
         """入力requestとtimeoutを記録し、固定runner responseを返す。"""
         assert timeout == runner_client_module.RUNNER_REQUEST_TIMEOUT_SECONDS
         captured.append(request)
-        return FakeResponse(
-            b'{"protocol_version":2,"result":{"output":"ok","artifact":null}}'
-        )
+        return FakeResponse(_runner_response_bytes("ok"))
 
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
     client = RunnerClient()
@@ -350,7 +409,7 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
     finally:
         client.close()
 
-    assert result == ExecutionResult(output="ok", artifact=None)
+    assert result == _completed_result("ok")
     assert len(captured) == 1
     request = captured[0]
     assert request.full_url == f"{RUNNER_BASE_URL}{RUNNER_EXECUTE_PATH}"
@@ -360,7 +419,7 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
     assert json.loads(request.data) == {
         "shellgei": "printf ok",
         "problem_id": "STANDARD-00000001",
-        "protocol_version": 2,
+        "protocol_version": 3,
     }
 
 
@@ -376,9 +435,7 @@ def test_backend_runner_client_disables_environment_proxies(
             """入力requestとtimeoutを記録し、直接接続の固定responseを返す。"""
             assert timeout == runner_client_module.RUNNER_REQUEST_TIMEOUT_SECONDS
             captured_requests.append(request)
-            return FakeResponse(
-                b'{"protocol_version":2,"result":{"output":"direct","artifact":null}}'
-            )
+            return FakeResponse(_runner_response_bytes("direct"))
 
     def fake_build_opener(*handlers: object) -> FakeOpener:
         """入力handler群を記録し、観測用の模擬openerを返す。"""
@@ -401,7 +458,7 @@ def test_backend_runner_client_disables_environment_proxies(
     finally:
         client.close()
 
-    assert result == ExecutionResult(output="direct", artifact=None)
+    assert result == _completed_result("direct")
     assert len(configured_handlers) == 1
     proxy_handler = configured_handlers[0]
     assert isinstance(proxy_handler, ProxyHandler)
@@ -434,10 +491,10 @@ def test_backend_runner_client_maps_busy_without_accepting_error_body(
     "payload",
     [
         b"not-json",
-        b'{"output":"ok","artifact":null}',
-        b'{"protocol_version":1,"result":{"output":"ok","artifact":null}}',
-        b'{"protocol_version":2,"result":{"output":"ok","artifact":null},"extra":"value"}',
-        b'{"protocol_version":2,"result":{"output":"ok","artifact":null,"extra":"value"}}',
+        b'{"stdout":"ok","artifact":null}',
+        b'{"protocol_version":2,"result":{"stdout":"ok"}}',
+        b'{"protocol_version":3,"result":{"stdout":"ok"},"extra":"value"}',
+        b'{"protocol_version":3,"result":{"stdout":"ok","extra":"value"}}',
     ],
 )
 def test_backend_runner_client_rejects_invalid_responses(
@@ -489,8 +546,8 @@ def test_public_api_preserves_artifact_data_and_media_type(
 
     async def execute(_shellgei: str, _problem_id: str) -> ExecutionResult:
         """入力command・IDを使用せず、固定JPEG artifact付き実行結果を返す。"""
-        return ExecutionResult(
-            output="",
+        return _completed_result(
+            "",
             artifact=ExecutionArtifact(
                 path="media/output.jpg",
                 media_type="image/jpeg",
@@ -498,7 +555,7 @@ def test_public_api_preserves_artifact_data_and_media_type(
             ),
         )
 
-    def judge(_output: str, _artifact: object, _problem_id: str) -> FakeJudgeResult:
+    def judge(_execution: ExecutionResult, _problem_id: str) -> FakeJudgeResult:
         """入力を使用せず、固定の模擬判定結果を返す。"""
         return FakeJudgeResult()
 

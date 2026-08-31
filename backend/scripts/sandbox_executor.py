@@ -1,9 +1,11 @@
 import base64
 import threading
+import time
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
+from models.execution import ExecutionStatus
 from scripts.container_manager import SANDBOX_WORK_DIRECTORY
 from scripts.execution_archive import build_execution_archive
 from scripts.problem_repository import ProblemRecord
@@ -24,11 +26,29 @@ class SandboxAcquisitionError(RuntimeError):
 
 
 @dataclass(frozen=True)
-class SandboxExecutionResponse:
-    """既存runner APIへ返すtext出力と任意のBase64 artifactを保持する。"""
+class CapturedCommandOutput:
+    """分離したstdout/stderr、終了code、切り詰め、Docker errorを保持する。"""
 
-    output: str
-    artifact: str
+    stdout: bytes
+    stderr: bytes
+    exit_code: int | None
+    truncated: bool
+    error: Exception | None
+
+
+@dataclass(frozen=True)
+class SandboxExecutionOutcome:
+    """sandbox層の構造化結果とBase64化前のbinary artifactを保持する。"""
+
+    status: ExecutionStatus
+    stdout: bytes
+    stderr: bytes
+    exit_code: int | None
+    timed_out: bool
+    truncated: bool
+    duration_ms: int
+    artifact: bytes | None
+    error: str | None
 
 
 @dataclass(frozen=True)
@@ -103,49 +123,132 @@ class SandboxPreparer:
             raise RuntimeError("failed to prepare sandbox files")
 
 
+class DockerExecAdapter:
+    def start(
+        self,
+        container: Any,
+    ) -> tuple[str, Iterable[tuple[bytes | None, bytes | None]]]:
+        """Docker execをstdout/stderr分離streamで開始し、exec IDとstreamを返す。
+
+        入力containerの低レベルDocker APIを使用する。create/start失敗または
+        Dockerからexec IDが返らない場合は例外を呼出側へ伝播する。
+        """
+        api = container.client.api
+        created = api.exec_create(
+            container.id,
+            ["bash", "z.bash"],
+            stdout=True,
+            stderr=True,
+            stdin=False,
+            tty=False,
+            workdir=SANDBOX_WORK_DIRECTORY,
+        )
+        exec_id = created.get("Id") if isinstance(created, dict) else None
+        if not isinstance(exec_id, str) or not exec_id:
+            raise RuntimeError("Docker exec ID is unavailable")
+        output = api.exec_start(
+            exec_id,
+            stream=True,
+            demux=True,
+        )
+        return exec_id, output
+
+    def inspect_exit_code(self, container: Any, exec_id: str) -> int | None:
+        """入力exec IDをDockerへ照会し、整数終了codeまたは未確定のNoneを返す。"""
+        exit_code = container.client.api.exec_inspect(exec_id).get("ExitCode")
+        if exit_code is None:
+            return None
+        if not isinstance(exit_code, int) or isinstance(exit_code, bool):
+            raise RuntimeError("Docker exec exit code is invalid")
+        return exit_code
+
+
+class _SplitOutputBuffer:
+    def __init__(self, byte_limit: int) -> None:
+        """stdout/stderr共通byte上限を受け取り、空の分離bufferを初期化する。"""
+        if byte_limit < 1:
+            raise ValueError("byte_limit must be at least 1")
+        self.byte_limit = byte_limit
+        self.stdout = bytearray()
+        self.stderr = bytearray()
+        self.truncated = False
+
+    def append(self, chunk: bytes, *, stderr: bool) -> bool:
+        """入力chunkを指定streamへ合計上限まで追加し、全量保持できたか返す。"""
+        remaining = self.byte_limit - len(self.stdout) - len(self.stderr)
+        target = self.stderr if stderr else self.stdout
+        if len(chunk) > remaining:
+            target.extend(chunk[:remaining])
+            self.truncated = True
+            return False
+        target.extend(chunk)
+        return True
+
+
 class SandboxOutputCapturer:
-    @staticmethod
-    def _stream_chunks(output: Any) -> Iterable[bytes]:
-        """Docker SDKのbytesまたはbyte iteratorを、一様なbyte列iteratorとして返す。"""
-        if isinstance(output, bytes):
-            return (output,)
-        return output
+    def __init__(self, exec_adapter: DockerExecAdapter | None = None) -> None:
+        """差替可能なDocker exec adapterを受け取り、出力取得処理を初期化する。"""
+        self.exec_adapter = exec_adapter or DockerExecAdapter()
 
     def capture_command_output(
         self,
         container: Any,
         watchdog: ExecutionWatchdog,
         limit_chars: int,
-    ) -> BoundedByteBuffer:
-        """sandbox commandの混合出力を上限付きで読み、byte bufferを返す。
+    ) -> CapturedCommandOutput:
+        """sandbox commandのstdout/stderrと終了codeを上限付きで取得して返す。
 
-        文字数上限からUTF-8の最大byte数を算出する。上限超過時はwatchdogへ
-        output_limitを通知してcontainerを停止する。Docker失敗は呼出側へ送出する。
+        文字数上限からUTF-8の最大byte数を算出し、両streamの合計へ適用する。
+        上限超過時はwatchdogへoutput_limitを通知する。Docker失敗も部分出力と
+        一緒にerrorとして返し、cleanupを必ず実行できるようにする。
         """
-        output = BoundedByteBuffer(limit_chars * MAX_UTF8_BYTES_PER_CHAR)
+        output = _SplitOutputBuffer(limit_chars * MAX_UTF8_BYTES_PER_CHAR)
         if watchdog.reason is not None:
-            return output
-        exec_stream = container.exec_run(
-            ["bash", "z.bash"],
-            demux=False,
-            stream=True,
-            workdir=SANDBOX_WORK_DIRECTORY,
+            return CapturedCommandOutput(b"", b"", None, False, None)
+        exec_id: str | None = None
+        exec_stream: Any = None
+        exit_code: int | None = None
+        error: Exception | None = None
+        try:
+            exec_id, exec_stream = self.exec_adapter.start(container)
+            for stdout_chunk, stderr_chunk in exec_stream:
+                if stdout_chunk and not output.append(stdout_chunk, stderr=False):
+                    watchdog.terminate("output_limit")
+                    break
+                if stderr_chunk and not output.append(stderr_chunk, stderr=True):
+                    watchdog.terminate("output_limit")
+                    break
+        except Exception as exc:
+            error = exc
+        finally:
+            close = getattr(exec_stream, "close", None)
+            if close is not None:
+                try:
+                    close()
+                except Exception as exc:
+                    error = error or exc
+        if exec_id is not None:
+            try:
+                exit_code = self.exec_adapter.inspect_exit_code(container, exec_id)
+            except Exception as exc:
+                error = error or exc
+        return CapturedCommandOutput(
+            bytes(output.stdout),
+            bytes(output.stderr),
+            exit_code,
+            output.truncated,
+            error,
         )
-        for chunk in self._stream_chunks(exec_stream.output):
-            if chunk and not output.append(chunk):
-                watchdog.terminate("output_limit")
-                break
-        return output
 
     def capture_artifact(
         self,
         container: Any,
         path: str,
         max_bytes: int,
-    ) -> str:
-        """検証済み相対pathのartifactを上限付きで読み、Base64文字列を返す。
+    ) -> bytes | None:
+        """検証済み相対pathのartifactを上限付きで読み、binary dataを返す。
 
-        artifactの欠損、Docker読込失敗、空data、上限超過は空文字列へ変換する。
+        artifactの欠損、Docker読込失敗、空data、上限超過はNoneへ変換する。
         pathと上限は起動時検証済みproblem schemaからだけ受け取る。
         """
         artifact = BoundedByteBuffer(max_bytes + 1)
@@ -162,15 +265,20 @@ class SandboxOutputCapturer:
                 stderr=False,
                 stream=True,
             )
-            for chunk in self._stream_chunks(artifact_stream.output):
+            chunks = (
+                (artifact_stream.output,)
+                if isinstance(artifact_stream.output, bytes)
+                else artifact_stream.output
+            )
+            for chunk in chunks:
                 if chunk and not artifact.append(chunk):
-                    return ""
+                    return None
         except Exception:
-            return ""
+            return None
         payload = artifact.to_bytes()
         if not payload or len(payload) > max_bytes:
-            return ""
-        return base64.b64encode(payload).decode("ascii")
+            return None
+        return payload
 
 
 class SandboxCleanup:
@@ -216,28 +324,6 @@ class SandboxExecutor:
         self.output_capturer = output_capturer or SandboxOutputCapturer()
         self.cleanup = cleanup or SandboxCleanup()
 
-    @staticmethod
-    def _format_output(
-        output: BoundedByteBuffer,
-        limit_chars: int,
-        reason: str | None,
-        execution_error: Exception | None,
-    ) -> str:
-        """収集済み出力と終了理由から、既存runner API用の表示文字列を返す。"""
-        decoded = output.to_bytes().decode("utf-8", errors="ignore")
-        if reason == "timeout":
-            suffix = "\n[Timed out]"
-            return decoded[: max(0, limit_chars - len(suffix))] + suffix
-        if reason == "output_limit":
-            return decoded[:limit_chars] + "..."
-        if execution_error is not None:
-            return f"Error during execution: {execution_error}"[:limit_chars]
-        if not decoded:
-            return ""
-        if len(decoded) > limit_chars:
-            return decoded[:limit_chars] + "..."
-        return decoded
-
     def _execute_in_container(
         self,
         container: Any,
@@ -245,11 +331,13 @@ class SandboxExecutor:
         shellgei: str,
         timeout: float,
         limit_chars: int,
-    ) -> tuple[SandboxExecutionResponse, bool]:
-        """貸出済みcontainerを準備・実行・回収・停止し、結果と停止確認flagを返す。
+        started_at: int,
+    ) -> tuple[SandboxExecutionOutcome, bool]:
+        """貸出済みcontainerを準備・実行・capture・停止し、構造化結果を返す。
 
-        準備失敗は呼出側へ送出する。exec失敗と停止失敗は既存互換のerror文字列へ
-        変換し、timeoutまたは出力超過を含む失敗時はartifactを返さない。
+        入力started_atはcontainer取得後の単調時計値。準備失敗は呼出側へ送出する。
+        timeout、出力超過、exec/停止失敗はstatus、flag、errorへ分離し、
+        失敗時はbinary artifactを返さない。
         """
         self.preparer.prepare(container, shellgei, record.fixtures)
         watchdog = ExecutionWatchdog(container)
@@ -257,40 +345,72 @@ class SandboxExecutor:
         timeout_timer.daemon = True
         timeout_timer.start()
 
-        output = BoundedByteBuffer(limit_chars * MAX_UTF8_BYTES_PER_CHAR)
-        artifact = ""
-        execution_error: Exception | None = None
+        command_output = CapturedCommandOutput(b"", b"", None, False, None)
+        artifact: bytes | None = None
         cleanup_result: SandboxCleanupResult
         try:
-            output = self.output_capturer.capture_command_output(
+            command_output = self.output_capturer.capture_command_output(
                 container,
                 watchdog,
                 limit_chars,
             )
             judge = record.definition.judge
-            if watchdog.reason is None and judge.type == "image":
+            if (
+                watchdog.reason is None
+                and command_output.error is None
+                and judge.type == "image"
+            ):
                 artifact = self.output_capturer.capture_artifact(
                     container,
                     judge.artifact.path,
                     judge.artifact.max_bytes,
                 )
-        except Exception as exc:
-            execution_error = exc
         finally:
             cleanup_result = self.cleanup.stop(container, watchdog, timeout_timer)
 
-        execution_error = execution_error or cleanup_result.error
-        formatted_output = self._format_output(
-            output,
-            limit_chars,
-            cleanup_result.reason,
-            execution_error,
+        execution_error = command_output.error or cleanup_result.error
+        reason = cleanup_result.reason
+        if reason == "timeout":
+            status = ExecutionStatus.TIMED_OUT
+        elif reason == "output_limit":
+            status = ExecutionStatus.OUTPUT_LIMIT
+        elif execution_error is not None or command_output.exit_code is None:
+            status = ExecutionStatus.ERROR
+            execution_error = execution_error or RuntimeError(
+                "Docker exec exit code is unavailable"
+            )
+        else:
+            status = ExecutionStatus.COMPLETED
+        if status is not ExecutionStatus.COMPLETED:
+            artifact = None
+        duration_ms = max(0, (time.monotonic_ns() - started_at) // 1_000_000)
+        outcome = SandboxExecutionOutcome(
+            status=status,
+            stdout=command_output.stdout,
+            stderr=command_output.stderr,
+            exit_code=command_output.exit_code,
+            timed_out=status is ExecutionStatus.TIMED_OUT,
+            truncated=command_output.truncated,
+            duration_ms=duration_ms,
+            artifact=artifact,
+            error=str(execution_error) if execution_error is not None else None,
         )
-        if cleanup_result.reason is not None or execution_error is not None:
-            artifact = ""
-        return (
-            SandboxExecutionResponse(formatted_output, artifact),
-            cleanup_result.container_stopped,
+        return outcome, cleanup_result.container_stopped
+
+    @staticmethod
+    def _error_outcome(error: Exception, started_at: int) -> SandboxExecutionOutcome:
+        """準備等の例外と開始時刻から、出力なしの構造化error結果を返す。"""
+        duration_ms = max(0, (time.monotonic_ns() - started_at) // 1_000_000)
+        return SandboxExecutionOutcome(
+            status=ExecutionStatus.ERROR,
+            stdout=b"",
+            stderr=b"",
+            exit_code=None,
+            timed_out=False,
+            truncated=False,
+            duration_ms=duration_ms,
+            artifact=None,
+            error=str(error),
         )
 
     def execute(
@@ -299,11 +419,11 @@ class SandboxExecutor:
         shellgei: str,
         timeout: float,
         limit_chars: int,
-    ) -> SandboxExecutionResponse:
-        """containerを1件借りて実行し、必ず破棄・返却して既存形式の結果を返す。
+    ) -> SandboxExecutionOutcome:
+        """containerを1件借りて実行し、必ず破棄・返却して構造化結果を返す。
 
         入力は検証済み問題record、command、期限、表示文字数上限。container取得失敗は
-        SandboxAcquisitionError、それ以外の準備失敗は元の例外として呼出側へ送出する。
+        SandboxAcquisitionError、取得後の準備失敗はerror outcomeとして返す。
         """
         try:
             container = self.container_manager.get_container()
@@ -311,15 +431,20 @@ class SandboxExecutor:
             raise SandboxAcquisitionError(str(exc)) from exc
 
         container_stopped = False
+        started_at = time.monotonic_ns()
         try:
-            response, container_stopped = self._execute_in_container(
-                container,
-                record,
-                shellgei,
-                timeout,
-                limit_chars,
-            )
-            return response
+            try:
+                outcome, container_stopped = self._execute_in_container(
+                    container,
+                    record,
+                    shellgei,
+                    timeout,
+                    limit_chars,
+                    started_at,
+                )
+                return outcome
+            except Exception as exc:
+                return self._error_outcome(exc, started_at)
         finally:
             self.container_manager.release_container(
                 container,

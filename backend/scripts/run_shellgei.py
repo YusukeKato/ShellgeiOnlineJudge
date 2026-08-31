@@ -1,21 +1,34 @@
 #!/usr/bin/env python3
 import asyncio
+import base64
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
+from models.execution import (
+    MAX_CAPTURED_OUTPUT_CHARS,
+    MAX_EXECUTION_ERROR_CHARS,
+    ExecutionArtifact,
+    ExecutionResult,
+    ExecutionStatus,
+)
 from scripts.async_thread import wait_for_thread_future
 from scripts.container_manager import manager
 from scripts.input_validation import validate_problem_id
-from scripts.problem_repository import ProblemRepository, get_problem_repository
+from scripts.problem_repository import (
+    ProblemRecord,
+    ProblemRepository,
+    get_problem_repository,
+)
 from scripts.sandbox_executor import (
     SandboxAcquisitionError,
+    SandboxExecutionOutcome,
     SandboxExecutor,
 )
 
 
 DEFAULT_EXECUTION_TIMEOUT_SECONDS = 10
-DEFAULT_OUTPUT_LIMIT_CHARS = 1000
+DEFAULT_OUTPUT_LIMIT_CHARS = MAX_CAPTURED_OUTPUT_CHARS
 MAX_IMAGE_BYTES = 750_000
 DOCKER_OPERATION_GRACE_SECONDS: float = 15.0
 
@@ -46,30 +59,104 @@ class ShellgeiDockerClient:
         """注入済みrepositoryを返し、未指定なら起動時にloadしたrepositoryを返す。"""
         return self.problem_repository or get_problem_repository()
 
+    @staticmethod
+    def _error_result(message: str, duration_ms: int = 0) -> ExecutionResult:
+        """入力messageと任意の所要時間から、出力なしの構造化error結果を返す。"""
+        return ExecutionResult(
+            status=ExecutionStatus.ERROR,
+            stdout="",
+            stderr="",
+            exit_code=None,
+            timed_out=False,
+            truncated=False,
+            duration_ms=duration_ms,
+            artifact=None,
+            error=message[:MAX_EXECUTION_ERROR_CHARS],
+        )
+
+    @staticmethod
+    def _decode_output(
+        outcome: SandboxExecutionOutcome,
+        limit_chars: int,
+    ) -> tuple[str, str, bool]:
+        """分離byte出力をUTF-8化して合計文字数上限へ収め、切り詰め有無を返す。"""
+        stdout = outcome.stdout.decode("utf-8", errors="ignore")
+        stderr = outcome.stderr.decode("utf-8", errors="ignore")
+        stdout_limited = stdout[:limit_chars]
+        stderr_limit = max(0, limit_chars - len(stdout_limited))
+        stderr_limited = stderr[:stderr_limit]
+        truncated = (
+            outcome.truncated
+            or len(stdout_limited) < len(stdout)
+            or len(stderr_limited) < len(stderr)
+        )
+        return stdout_limited, stderr_limited, truncated
+
+    @classmethod
+    def _to_execution_result(
+        cls,
+        outcome: SandboxExecutionOutcome,
+        record: ProblemRecord,
+        limit_chars: int,
+    ) -> ExecutionResult:
+        """sandboxのbinary outcomeを上限検証済みrunner実行結果へ変換して返す。"""
+        stdout, stderr, truncated = cls._decode_output(outcome, limit_chars)
+        status = outcome.status
+        if truncated and status is ExecutionStatus.COMPLETED:
+            status = ExecutionStatus.OUTPUT_LIMIT
+        artifact = None
+        judge = record.definition.judge
+        if (
+            status is ExecutionStatus.COMPLETED
+            and judge.type == "image"
+            and outcome.artifact is not None
+        ):
+            artifact = ExecutionArtifact(
+                path=judge.artifact.path,
+                media_type=judge.artifact.media_type,
+                data=base64.b64encode(outcome.artifact).decode("ascii"),
+            )
+        error = outcome.error
+        if status is ExecutionStatus.ERROR:
+            error = (error or "sandbox execution failed")[:MAX_EXECUTION_ERROR_CHARS]
+        elif error is not None:
+            error = error[:MAX_EXECUTION_ERROR_CHARS]
+        return ExecutionResult(
+            status=status,
+            stdout=stdout,
+            stderr=stderr,
+            exit_code=outcome.exit_code,
+            timed_out=outcome.timed_out,
+            truncated=truncated,
+            duration_ms=outcome.duration_ms,
+            artifact=artifact,
+            error=error,
+        )
+
     def exec_shellgei(
         self, shellgei: str, problem_id: str, timeout: float, limit_str: int
-    ) -> list[str]:
-        """指定問題のfixtureとcommandをsandboxで同期実行し、文字列・画像を返す。"""
+    ) -> ExecutionResult:
+        """指定問題のfixtureとcommandをsandboxで同期実行し、構造化結果を返す。"""
         try:
             validate_problem_id(problem_id)
         except ValueError:
-            return ["Error: invalid problem ID.", ""]
+            return self._error_result("invalid problem ID")
         record = self._repository().get(problem_id)
         if record is None:
-            return ["Error: problem not found.", ""]
+            return self._error_result("problem not found")
 
         try:
-            result = self.sandbox_executor.execute(
+            outcome = self.sandbox_executor.execute(
                 record,
                 shellgei,
                 timeout,
                 limit_str,
             )
-            return [result.output, result.artifact]
+            return self._to_execution_result(outcome, record, limit_str)
         except SandboxAcquisitionError as exc:
-            return [f"Error: failed to get container: {exc}", ""]
+            return self._error_result(f"failed to get container: {exc}")
         except Exception as e:
-            return [f"Error during execution: {e}", ""]
+            return self._error_result(str(e))
 
     async def run_with_timeout(
         self,
@@ -77,8 +164,8 @@ class ShellgeiDockerClient:
         problem_id: str,
         timeout: float = DEFAULT_EXECUTION_TIMEOUT_SECONDS,
         limit_str: int = DEFAULT_OUTPUT_LIMIT_CHARS,
-    ) -> list[str]:
-        """空き枠があればsandbox実行をthreadへ委譲し、timeout込みの結果を返す。"""
+    ) -> ExecutionResult:
+        """空き枠があればsandbox実行をthreadへ委譲し、構造化結果を返す。"""
         if not self._execution_slots.acquire(blocking=False):
             raise SandboxBusyError("sandbox execution capacity reached")
 
@@ -101,13 +188,13 @@ class ShellgeiDockerClient:
                 # until the watchdog-driven cleanup has actually returned.
                 future.add_done_callback(lambda _: self._execution_slots.release())
                 release_when_done = True
-                return ["Error: sandbox cleanup timed out.", ""]
+                return self._error_result("sandbox cleanup timed out")
             except asyncio.CancelledError:
                 future.add_done_callback(lambda _: self._execution_slots.release())
                 release_when_done = True
                 raise
         except Exception as e:
-            return [f"Error: run with timeout: {e}", ""]
+            return self._error_result(f"run with timeout: {e}")
         finally:
             if not release_when_done:
                 self._execution_slots.release()

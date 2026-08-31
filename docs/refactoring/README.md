@@ -23,10 +23,10 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 27
 - Ready: 0
-- Planned: 15
-- Pending (`Ready` + `Planned`): 15
+- Planned: 14
+- Pending (`Ready` + `Planned`): 14
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 12
 - Blocked: 0
 - Deferred: 0
@@ -165,7 +165,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-010 | P0 | Completed | B | Extract pure text judge and typed JudgeResult | R3-006, R3-009 | `91fdbad` |
 | R3-011 | P0 | Completed | B | Separate and correct image judging | R3-007, R3-009 | `7947640` |
 | R3-012 | P1 | Completed | C | Separate sandbox preparation, execution, capture, and cleanup | R3-009 | `370e5b8` |
-| R3-013 | P0 | Planned | C | Capture structured execution outcomes | R3-012 | - |
+| R3-013 | P0 | Review | C | Capture structured execution outcomes | R3-012 | - |
 | R3-014 | P1 | Planned | C | Introduce ExecutionLogRepo and database migrations | R3-003, R3-009 | - |
 | R3-015 | P0 | Planned | C | Introduce SubmitSolutionService | R3-008, R3-010, R3-011, R3-014 | - |
 | R3-016 | P1 | Planned | C | Expose typed public API v3 contract | R3-015 | - |
@@ -330,14 +330,18 @@ They are planning aids, not acceptance criteria.
 
 ### R3-013: Capture structured execution outcomes
 
-- Priority / Status: P0 / `Planned`
+- Priority / Status: P0 / `Review`
 - Goal: exit code、stdout、stderr、timeout、truncation、duration、binary artifactを別々にcaptureして`ExecutionResult`を完成させる
 - Main files/components: Docker exec adapter、capture limits、artifact reader、execution model
 - Dependencies: R3-012
 - Risk: High。memory/output limit、background process、binary data、cleanup順序の回帰を避ける
 - Expected tests: exit/stderr分離、invalid UTF-8、NUL、byte/character limit、timeout、background writer、Docker/full regression
 - Size: M--L
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `-` / date 2026-08-31 / internal runner protocolをversion 3へ更新し、
+  status、stdout、stderr、exit code、timeout、切り詰め、所要時間、binary artifactを
+  分離して取得する`ExecutionResult`を導入。既存public APIでは互換表示へ変換し、
+  typed judgeへ構造化結果を直接渡す。Python 3.14の非Docker 428件、rootless Docker
+  lifecycle・全92問回帰を含む9件が成功
 
 ### R3-014: Introduce ExecutionLogRepo and database migrations
 
@@ -615,3 +619,5 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-08-31 | R3-012 sandbox lifecycle separation started | - |
 | 2026-08-31 | R3-012 implementation and planned tests completed; moved to `Review` | - |
 | 2026-08-31 | R3-012 approved and recorded as `Completed` | `370e5b8` |
+| 2026-08-31 | R3-013 structured execution outcome implementation started | - |
+| 2026-08-31 | R3-013 implementation and planned tests completed; moved to `Review` | - |
