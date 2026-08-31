@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 
 import { judgeResult } from "./functions/judge_result";
 import { postShellgei } from "./functions/post_shellgei";
-import { imageDataUrl } from "./functions/submit";
+import { imageDataUrl, submit } from "./functions/submit";
 import { updateProblem } from "./functions/update_problem";
 import SojResult from "./tsx/result";
 
@@ -61,6 +61,134 @@ describe("legacy frontend API and display behavior", () => {
         problem_id: "STANDARD-00000001",
       }),
     });
+  });
+
+  test("preserves a successful image response with empty standard output", async () => {
+    // 画像だけを生成した正常レスポンスで、空の標準出力と画像情報が失われないことを確認する。
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        output: "",
+        id: 43,
+        date: "2026-09-01 12:34:56",
+        judge: 1,
+        image: "encoded-image",
+        image_media_type: "image/jpeg",
+      }),
+    });
+
+    await expect(postShellgei(SOJ_URL, "convert image", "IMAGE-00000001")).resolves.toEqual([
+      "",
+      "43",
+      "2026-09-01 12:34:56",
+      "1",
+      "encoded-image",
+      "image/jpeg",
+    ]);
+  });
+
+  test("displays an image and verdict when successful standard output is empty", async () => {
+    // 空の標準出力をerror扱いせず、正解表示とBase64画像を画面用setterへ渡すことを確認する。
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        output: "",
+        id: "44",
+        date: "2026-09-01 12:35:00",
+        judge: "1",
+        image: "encoded-image",
+        image_media_type: "image/jpeg",
+      }),
+    });
+    const setOutputResult = jest.fn();
+    const setJudgeResult = jest.fn();
+    const setImageResult = jest.fn();
+    const setUserShellgeiStatus = jest.fn();
+
+    await submit(
+      1000,
+      "default-image",
+      SOJ_URL,
+      "convert image",
+      "IMAGE-00000001",
+      setOutputResult,
+      setJudgeResult,
+      setImageResult,
+      setUserShellgeiStatus,
+    );
+
+    expect(setOutputResult).toHaveBeenLastCalledWith("");
+    expect(setJudgeResult).toHaveBeenLastCalledWith("正解 / Correct !!😄!!");
+    expect(setImageResult).toHaveBeenLastCalledWith("data:image/jpeg;base64,encoded-image");
+    expect(setUserShellgeiStatus).toHaveBeenLastCalledWith(
+      expect.stringContaining("SHELLGEI ID: 44"),
+    );
+  });
+
+  test("keeps a missing image result distinct from a transport error", async () => {
+    // 画像未生成による不正解も有効な応答として扱い、通信error表示に置換しないことを確認する。
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        output: "",
+        id: "45",
+        date: "2026-09-01 12:36:00",
+        judge: "2",
+        image: "",
+        image_media_type: null,
+      }),
+    });
+    const setOutputResult = jest.fn();
+    const setJudgeResult = jest.fn();
+    const setImageResult = jest.fn();
+    const setUserShellgeiStatus = jest.fn();
+
+    await submit(
+      1000,
+      "default-image",
+      SOJ_URL,
+      "true",
+      "IMAGE-00000001",
+      setOutputResult,
+      setJudgeResult,
+      setImageResult,
+      setUserShellgeiStatus,
+    );
+
+    expect(setOutputResult).toHaveBeenLastCalledWith("");
+    expect(setJudgeResult).toHaveBeenLastCalledWith("不正解 / Incorrect ...😭...");
+    expect(setImageResult).toHaveBeenLastCalledWith("default-image");
+    expect(setUserShellgeiStatus).toHaveBeenLastCalledWith(
+      expect.stringContaining("SHELLGEI ID: 45"),
+    );
+  });
+
+  test("shows a failed HTTP request as an error instead of a verdict", async () => {
+    // HTTP失敗ではjudge codeがないため、誤って不正解へ変換せずerror内容を各表示へ渡すことを確認する。
+    jest.spyOn(console, "error").mockImplementation(() => undefined);
+    fetchMock.mockResolvedValue({ ok: false, status: 503 });
+    const setOutputResult = jest.fn();
+    const setJudgeResult = jest.fn();
+    const setImageResult = jest.fn();
+    const setUserShellgeiStatus = jest.fn();
+
+    await submit(
+      1000,
+      "default-image",
+      SOJ_URL,
+      "true",
+      "IMAGE-00000001",
+      setOutputResult,
+      setJudgeResult,
+      setImageResult,
+      setUserShellgeiStatus,
+    );
+
+    const errorMessage = "Error: HTTP error! status: 503";
+    expect(setOutputResult).toHaveBeenLastCalledWith(errorMessage);
+    expect(setJudgeResult).toHaveBeenLastCalledWith(errorMessage);
+    expect(setUserShellgeiStatus).toHaveBeenLastCalledWith(errorMessage);
+    expect(setImageResult).toHaveBeenLastCalledWith("default-image");
   });
 
   test("returns the legacy timeout tuple after 20 seconds", async () => {

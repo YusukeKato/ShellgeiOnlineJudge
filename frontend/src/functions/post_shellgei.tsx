@@ -33,22 +33,21 @@ export const postShellgei = async (
 
     const res = await response.json();
 
-    if (res.output != null) {
-      if (String(res.output).length > 0 && String(res.judge).length > 0) {
-        return [
-          String(res.output),
-          String(res.id),
-          String(res.date),
-          String(res.judge),
-          String(res.image),
-          res.image_media_type == null ? "" : String(res.image_media_type),
-        ];
-      } else {
-        return ["Error: response is empty", "", "", "", "", ""];
-      }
-    } else {
+    // 画像問題は標準出力が空でも正常なため、outputの存在とjudgeの有無だけを検証する。
+    if (res.output == null || res.judge == null) {
       return ["Error: response is null", "", "", "", "", ""];
     }
+    if (String(res.judge).length === 0) {
+      return ["Error: response is empty", "", "", "", "", ""];
+    }
+    return [
+      String(res.output),
+      String(res.id),
+      String(res.date),
+      String(res.judge),
+      String(res.image),
+      res.image_media_type == null ? "" : String(res.image_media_type),
+    ];
   } catch (error: any) {
     console.error("Failed to post shellgei:", error);
     if (error.message === timeoutMessage) {

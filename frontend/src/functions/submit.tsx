@@ -35,10 +35,12 @@ export const submit = async (
       shellgei,
       selectedProblem,
     );
-    if (!result || result.length === 0) {
-      setOutputResult("Error: No result returned from server");
-      setJudgeResult("Error: No result returned from server");
-      setUserShellgeiStatus("Error: No result returned from server");
+    // 正常な空出力と通信errorを区別するため、必ず設定されるjudge codeを成功判定に使う。
+    if (judge.length === 0) {
+      const errorMessage = result || "Error: No result returned from server";
+      setOutputResult(errorMessage);
+      setJudgeResult(errorMessage);
+      setUserShellgeiStatus(errorMessage);
       setImageResult(default_image);
     } else {
       judge = judgeResult(judge);

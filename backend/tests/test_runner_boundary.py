@@ -578,6 +578,7 @@ def test_public_api_preserves_artifact_data_and_media_type(
         )
     )
 
+    assert response.output == ""
     assert response.image == "encoded-image"
     assert response.image_media_type == "image/jpeg"
     assert response.judge == "1"
