@@ -13,6 +13,8 @@
 - `scripts/sandbox_executor.py`: request単位のarchive展開、上限付き出力・artifact取得、
   watchdog、停止、container返却を編成するsandbox実行境界
 - `scripts/container_manager.py`: sandbox containerの作成、貸出、破棄、補充を担うpool
+- `scripts/submit_solution.py`: problem確認、runner実行、判定、実行ログ保存を
+  HTTPから独立して編成する`SubmitSolutionService`
 - `scripts/`: runner通信、判定、problem schema読込・移行、
   起動時検証済みの不変problem repository、入力検証、DB接続とrollback-safeな
   `ExecutionLogRepo`、DB migration、実行ログ保持処理
@@ -48,6 +50,18 @@ artifactはproblem schemaと一致する`path`、`media_type`、Base64 `data`を
 公開submission APIは画像dataに加えて`image_media_type`を返します。画像がない場合は
 空文字列と`null`、現在の画像問題では`image/jpeg`を返します。frontendはJPEG/GIFだけを
 data URLとして許可します。
+
+## 提出use case
+
+`SubmitSolutionService`は、検証済みcommandとproblem IDを受け取り、problem存在確認、
+runner実行、判定、実行ログ保存の順に処理します。結果は
+`models/submission.py`の`SubmissionResult`として返し、HTTP statusや既存response形式への
+変換は`api/api_shellgei.py`だけが担当します。
+
+problem未登録、runner混雑、runner停止は判定結果と別のstatusです。runnerが返した
+timeoutや出力上限到達は実行・判定結果として保存します。DB保存だけが失敗した場合は、
+実行・判定結果を失わず、保存IDなしの結果を返します。judgeの予期しない例外は
+wrong answerへ変換しません。
 
 ## 実行ログとDB migration
 

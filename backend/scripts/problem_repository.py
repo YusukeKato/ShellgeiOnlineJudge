@@ -101,6 +101,14 @@ class ProblemRepository:
 _loaded_repository: ProblemRepository | None = None
 
 
+class LoadedProblemRepo:
+    """起動時に検証・読込済みとなるprocess global repositoryへのadapter。"""
+
+    def get(self, problem_id: str) -> ProblemRecord | None:
+        """入力IDを読込済みrepositoryで検索し、未登録ならNoneを返す。"""
+        return get_problem_repository().get(problem_id)
+
+
 def _reject_duplicate_json_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     """JSON objectのkey-value列をdict化し、重複keyがあればValueErrorを送出する。"""
     result: dict[str, Any] = {}

@@ -10,10 +10,12 @@ from scripts.runner_protocol import (
     RUNNER_EXECUTE_PATH,
     RUNNER_PROTOCOL_VERSION,
     ExecutionResult,
+    RunnerBusyError,
     RunnerConfigurationError,
     RunnerExecutionRequest,
     RunnerExecutionResponse,
     RunnerGateway,
+    RunnerUnavailableError,
     get_runner_shared_secret,
 )
 
@@ -24,14 +26,6 @@ RUNNER_BASE_URL = "http://runner:8001"
 RUNNER_REQUEST_TIMEOUT_SECONDS = 30
 RUNNER_RESPONSE_LIMIT_BYTES = 1_100_000
 RUNNER_CLIENT_CAPACITY = 3
-
-
-class RunnerUnavailableError(RuntimeError):
-    """Raised when the private runner cannot return a valid result."""
-
-
-class RunnerBusyError(RuntimeError):
-    """Raised when the private runner cannot accept another execution."""
 
 
 class RunnerClient:

@@ -23,11 +23,11 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 27
 - Ready: 0
-- Planned: 13
-- Pending (`Ready` + `Planned`): 13
+- Planned: 12
+- Pending (`Ready` + `Planned`): 12
 - In Progress: 0
 - Review: 1
-- Completed: 13
+- Completed: 14
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -166,8 +166,8 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-011 | P0 | Completed | B | Separate and correct image judging | R3-007, R3-009 | `7947640` |
 | R3-012 | P1 | Completed | C | Separate sandbox preparation, execution, capture, and cleanup | R3-009 | `370e5b8` |
 | R3-013 | P0 | Completed | C | Capture structured execution outcomes | R3-012 | `97315a6` |
-| R3-014 | P1 | Review | C | Introduce ExecutionLogRepo and database migrations | R3-003, R3-009 | - |
-| R3-015 | P0 | Planned | C | Introduce SubmitSolutionService | R3-008, R3-010, R3-011, R3-014 | - |
+| R3-014 | P1 | Completed | C | Introduce ExecutionLogRepo and database migrations | R3-003, R3-009 | `b7cb6f9` |
+| R3-015 | P0 | Review | C | Introduce SubmitSolutionService | R3-008, R3-010, R3-011, R3-014 | - |
 | R3-016 | P1 | Planned | C | Expose typed public API v3 contract | R3-015 | - |
 | R3-017 | P1 | Planned | C | Harden runner authentication, readiness, and revision checks | R3-008, R3-009 | - |
 | R3-018 | P2 | Planned | C | Add safe structured logging and request correlation | R3-015 | - |
@@ -345,14 +345,14 @@ They are planning aids, not acceptance criteria.
 
 ### R3-014: Introduce ExecutionLogRepo and database migrations
 
-- Priority / Status: P1 / `Review`
+- Priority / Status: P1 / `Completed`
 - Goal: persistenceをapplication/APIから分離し、typed resultを安全に保存できるschema、migration、transaction、retention境界を導入する
 - Main files/components: DB model、`ExecutionLogRepo`、migration、retention、database test
 - Dependencies: R3-003、R3-009、execution log retention/privacyのreview gate
 - Risk: Medium--High。既存volume/data migrationとrollback、保持policyに影響する
 - Expected tests: forward/rollback migration、transaction failure、retention、real PostgreSQL integration
 - Size: M
-- Completion: commit `-` / date 2026-09-01 / `ExecutionLogRepo`とartifact・request情報を
+- Completion: commit `b7cb6f9` / date 2026-09-01 / `ExecutionLogRepo`とartifact・request情報を
   受け取らないtyped保存entry、version table・advisory lock付きforward/rollback migrationを
   導入。legacy列を保持して構造化実行・判定列を追加し、backend起動前migration、同一transactionの
   retention、失敗時rollbackを実装。request単位のnginx/Uvicorn access logも無効化した。
@@ -361,14 +361,18 @@ They are planning aids, not acceptance criteria.
 
 ### R3-015: Introduce SubmitSolutionService
 
-- Priority / Status: P0 / `Planned`
+- Priority / Status: P0 / `Review`
 - Goal: problem取得、runner実行、判定、保存をtyped use caseへ集約し、HTTP handlerをtransport mappingだけにする
 - Main files/components: application service、domain result、ProblemRepo/RunnerGateway/Judge/ExecutionLogRepo ports、API handler
 - Dependencies: R3-008、R3-010、R3-011、R3-014
 - Risk: Medium。error mappingと保存順序を維持しつつ、infrastructure failureをwrong answerから分離する
 - Expected tests: fake portsによるsuccess/not-found/busy/timeout/judge/persistence failure、call ordering
 - Size: M
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `-` / date 2026-09-01 / `SubmissionResult`、ProblemRepo・
+  RunnerGateway・Judge・ExecutionLogRepoのport、`SubmitSolutionService`を導入。
+  problem確認、実行、判定、保存の順序をHTTP handlerから分離し、未登録、runner混雑・停止、
+  timeout、judge例外、保存失敗をfake port testで検証。既存public response形式を維持し、
+  Python 3.14の非Docker 446件とruff・format・mypyが成功
 
 ### R3-016: Expose typed public API v3 contract
 
@@ -629,3 +633,5 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-01 | R3-013 approved and recorded as `Completed` | `97315a6` |
 | 2026-09-01 | R3-014 privacy and retention gate decided; implementation started | - |
 | 2026-09-01 | R3-014 implementation and planned tests completed; moved to `Review` | - |
+| 2026-09-01 | R3-014 approved and recorded as `Completed` | `b7cb6f9` |
+| 2026-09-01 | R3-015 implementation and planned tests completed; moved to `Review` | - |

@@ -1,5 +1,6 @@
 import asyncio
 import json
+from datetime import datetime, timezone
 from email.message import Message
 from types import SimpleNamespace
 from urllib.error import HTTPError
@@ -11,8 +12,12 @@ from fastapi import HTTPException
 import api.api_shellgei as api_shellgei
 import runner_main
 import scripts.runner_client as runner_client_module
-from models.execution_log import ExecutionLogEntry
 from models.model_shellgei import ShellgeiData
+from models.submission import (
+    SubmissionPersistenceStatus,
+    SubmissionResult,
+    SubmissionStatus,
+)
 from scripts.judge import JudgeResult, JudgeVerdict
 from scripts.runner_client import (
     RUNNER_BASE_URL,
@@ -540,12 +545,10 @@ def test_backend_runner_client_rejects_oversized_response(
 def test_public_api_preserves_artifact_data_and_media_type(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # typed runner artifactを既存画像dataと追加MIME fieldへ変換して返すことを確認する。
-    saved_entries: list[ExecutionLogEntry] = []
-
-    async def execute(_shellgei: str, _problem_id: str) -> ExecutionResult:
-        """入力command・IDを使用せず、固定JPEG artifact付き実行結果を返す。"""
-        return _completed_result(
+    # typed提出結果のartifactを既存画像dataと追加MIME fieldへ変換して返すことを確認する。
+    async def submit(_shellgei: str, _problem_id: str) -> SubmissionResult:
+        """入力を使わず、固定JPEG artifact付きの保存済み提出結果を返す。"""
+        execution = _completed_result(
             "",
             artifact=ExecutionArtifact(
                 path="media/output.jpg",
@@ -553,24 +556,16 @@ def test_public_api_preserves_artifact_data_and_media_type(
                 data="encoded-image",
             ),
         )
+        return SubmissionResult(
+            status=SubmissionStatus.COMPLETED,
+            submitted_at=datetime(2026, 9, 1, tzinfo=timezone.utc),
+            execution=execution,
+            judgment=JudgeResult(verdict=JudgeVerdict.ACCEPTED),
+            log_id=42,
+            persistence=SubmissionPersistenceStatus.SAVED,
+        )
 
-    def judge(_execution: ExecutionResult, _problem_id: str) -> JudgeResult:
-        """入力を使用せず、固定の模擬判定結果を返す。"""
-        return JudgeResult(verdict=JudgeVerdict.ACCEPTED)
-
-    async def persist(entry: ExecutionLogEntry) -> int:
-        """保存entryを記録し、固定保存IDを返す。"""
-        saved_entries.append(entry)
-        return 42
-
-    monkeypatch.setattr(
-        api_shellgei,
-        "get_problem_repository",
-        lambda: SimpleNamespace(get=lambda _problem_id: object()),
-    )
-    monkeypatch.setattr(api_shellgei.runner_gateway, "execute", execute)
-    monkeypatch.setattr(api_shellgei.shellgei_judge, "judge", judge)
-    monkeypatch.setattr(api_shellgei, "save_execution_log_async", persist)
+    monkeypatch.setattr(api_shellgei.submit_solution_service, "submit", submit)
 
     response = asyncio.run(
         api_shellgei.post_shellgei(
@@ -579,36 +574,30 @@ def test_public_api_preserves_artifact_data_and_media_type(
     )
 
     assert response.output == ""
+    assert response.date == "2026-09-01 09:00:00"
     assert response.image == "encoded-image"
     assert response.image_media_type == "image/jpeg"
     assert response.judge == "1"
-    assert len(saved_entries) == 1
-    assert "artifact" not in saved_entries[0].model_dump()
-    assert "encoded-image" not in str(saved_entries[0].model_dump())
 
 
 def test_public_api_maps_runner_failure_without_database_work(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # runner停止をpublic error responseへ変換し、DB保存を行わないことを確認する。
-    async def unavailable(*_args: object) -> ExecutionResult:
-        """runner停止を再現するRunnerUnavailableErrorを送出する。"""
-        raise RunnerUnavailableError("unavailable")
-
-    async def unused_persistence(*_args: object) -> int:
-        """DB保存へ到達した場合にtestを失敗させ、IDは返さない。"""
-        raise AssertionError("runner failure must not reach database persistence")
+    # use caseのrunner停止結果を既存public error responseへ変換することを確認する。
+    async def unavailable(_shellgei: str, _problem_id: str) -> SubmissionResult:
+        """入力を使わず、実行・保存結果なしのrunner停止状態を返す。"""
+        return SubmissionResult(
+            status=SubmissionStatus.RUNNER_UNAVAILABLE,
+            submitted_at=datetime(2026, 9, 1, tzinfo=timezone.utc),
+            execution=None,
+            judgment=None,
+            persistence=SubmissionPersistenceStatus.NOT_ATTEMPTED,
+        )
 
     monkeypatch.setattr(
-        api_shellgei,
-        "get_problem_repository",
-        lambda: SimpleNamespace(get=lambda _problem_id: object()),
-    )
-    monkeypatch.setattr(api_shellgei.runner_gateway, "execute", unavailable)
-    monkeypatch.setattr(
-        api_shellgei,
-        "save_execution_log_async",
-        unused_persistence,
+        api_shellgei.submit_solution_service,
+        "submit",
+        unavailable,
     )
 
     response = asyncio.run(
@@ -626,26 +615,18 @@ def test_public_api_maps_runner_failure_without_database_work(
 def test_public_api_preserves_busy_response_for_runner_capacity(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # runner混雑を既存public responseへ変換し、DB保存を行わないことを確認する。
-    async def busy(*_args: object) -> ExecutionResult:
-        """runner混雑を再現するRunnerBusyErrorを送出する。"""
-        raise RunnerBusyError("busy")
+    # use caseのrunner混雑結果を既存public responseへ変換することを確認する。
+    async def busy(_shellgei: str, _problem_id: str) -> SubmissionResult:
+        """入力を使わず、実行・保存結果なしのrunner混雑状態を返す。"""
+        return SubmissionResult(
+            status=SubmissionStatus.RUNNER_BUSY,
+            submitted_at=datetime(2026, 9, 1, tzinfo=timezone.utc),
+            execution=None,
+            judgment=None,
+            persistence=SubmissionPersistenceStatus.NOT_ATTEMPTED,
+        )
 
-    async def unused_persistence(*_args: object) -> int:
-        """混雑時にDB保存へ到達した場合にtestを失敗させ、IDは返さない。"""
-        raise AssertionError("busy response must not reach database persistence")
-
-    monkeypatch.setattr(
-        api_shellgei,
-        "get_problem_repository",
-        lambda: SimpleNamespace(get=lambda _problem_id: object()),
-    )
-    monkeypatch.setattr(api_shellgei.runner_gateway, "execute", busy)
-    monkeypatch.setattr(
-        api_shellgei,
-        "save_execution_log_async",
-        unused_persistence,
-    )
+    monkeypatch.setattr(api_shellgei.submit_solution_service, "submit", busy)
 
     response = asyncio.run(
         api_shellgei.post_shellgei(

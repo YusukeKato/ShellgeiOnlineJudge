@@ -1,8 +1,6 @@
 import asyncio
 import threading
 from datetime import datetime, timedelta, timezone
-from types import SimpleNamespace
-from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -14,6 +12,11 @@ import main as backend_main
 from models.execution_log import ExecutionLogEntry
 from models.model_db import ExecutionLog
 from models.model_shellgei import ShellgeiData
+from models.submission import (
+    SubmissionPersistenceStatus,
+    SubmissionResult,
+    SubmissionStatus,
+)
 from scripts.database import (
     _engine_options,
     _positive_integer_from_env as _database_positive_integer_from_env,
@@ -318,10 +321,10 @@ def test_async_execution_log_repository_does_not_block_the_event_loop() -> None:
 def test_shell_api_returns_result_when_log_persistence_fails(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # DB保存に失敗しても実行・判定結果をid=-1で利用者へ返すことを確認する。
-    async def execute(_shellgei: str, _problem_id: str) -> ExecutionResult:
-        """入力commandとIDを使用せず、runnerの固定成功結果を返す。"""
-        return ExecutionResult(
+    # use caseが返したDB保存不能結果を、id=-1の既存responseへ変換することを確認する。
+    async def submit(_shellgei: str, _problem_id: str) -> SubmissionResult:
+        """入力を使わず、実行・判定済みだがログ未保存の提出結果を返す。"""
+        execution = ExecutionResult(
             status=ExecutionStatus.COMPLETED,
             stdout="test",
             stderr="",
@@ -332,23 +335,15 @@ def test_shell_api_returns_result_when_log_persistence_fails(
             artifact=None,
             error=None,
         )
+        return SubmissionResult(
+            status=SubmissionStatus.COMPLETED,
+            submitted_at=datetime(2026, 9, 1, tzinfo=timezone.utc),
+            execution=execution,
+            judgment=JudgeResult(verdict=JudgeVerdict.ACCEPTED),
+            persistence=SubmissionPersistenceStatus.UNAVAILABLE,
+        )
 
-    def judge(_execution: ExecutionResult, _problem_id: str) -> JudgeResult:
-        """入力結果を使用せず、固定の型付き正解判定を返す。"""
-        return JudgeResult(verdict=JudgeVerdict.ACCEPTED)
-
-    async def unavailable(*_args: Any, **_kwargs: Any) -> int:
-        """DB worker停止を再現するExecutionLogRepositoryErrorを送出する。"""
-        raise ExecutionLogRepositoryError("unavailable")
-
-    monkeypatch.setattr(api_shellgei.runner_gateway, "execute", execute)
-    monkeypatch.setattr(api_shellgei.shellgei_judge, "judge", judge)
-    monkeypatch.setattr(api_shellgei, "save_execution_log_async", unavailable)
-    monkeypatch.setattr(
-        api_shellgei,
-        "get_problem_repository",
-        lambda: SimpleNamespace(get=lambda _problem_id: object()),
-    )
+    monkeypatch.setattr(api_shellgei.submit_solution_service, "submit", submit)
 
     response = asyncio.run(
         api_shellgei.post_shellgei(

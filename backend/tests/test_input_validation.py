@@ -1,16 +1,22 @@
 import asyncio
+from datetime import datetime, timezone
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Any
 
 import pytest
 from fastapi import HTTPException
 from pydantic import TypeAdapter, ValidationError
 
+import api.api_shellgei as api_shellgei
 from api.api_shellgei import post_shellgei
 from main import app
 from models.execution import ExecutionResult, ExecutionStatus
 from models.model_shellgei import MAX_SHELLGEI_CHARS, ShellgeiData
+from models.submission import (
+    SubmissionPersistenceStatus,
+    SubmissionResult,
+    SubmissionStatus,
+)
 from scripts.input_validation import MAX_PROBLEM_ID_CHARS, ProblemId
 from scripts.judge import JudgeReason, JudgeVerdict, ShellgeiJudge
 from scripts.run_shellgei import ShellgeiDockerClient
@@ -116,11 +122,18 @@ def test_shellgei_data_rejects_extra_json_fields() -> None:
 def test_unknown_problem_is_rejected_before_database_or_sandbox_work(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # 未登録IDがrunner・DB処理より前に404として拒否されることを確認する。
-    monkeypatch.setattr(
-        "api.api_shellgei.get_problem_repository",
-        lambda: SimpleNamespace(get=lambda _problem_id: None),
-    )
+    # use caseの未登録problem結果をHTTP 404へ変換することを確認する。
+    async def missing(_shellgei: str, _problem_id: str) -> SubmissionResult:
+        """入力値を使わず、後続処理を持たないproblem未登録結果を返す。"""
+        return SubmissionResult(
+            status=SubmissionStatus.PROBLEM_NOT_FOUND,
+            submitted_at=datetime(2026, 9, 1, tzinfo=timezone.utc),
+            execution=None,
+            judgment=None,
+            persistence=SubmissionPersistenceStatus.NOT_ATTEMPTED,
+        )
+
+    monkeypatch.setattr(api_shellgei.submit_solution_service, "submit", missing)
     data = ShellgeiData(shellgei="true", problem_id="MISSING-00000001")
 
     with pytest.raises(HTTPException) as exc_info:

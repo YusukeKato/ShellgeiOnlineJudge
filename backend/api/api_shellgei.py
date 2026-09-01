@@ -1,95 +1,84 @@
-import logging
-from datetime import datetime
 from typing import Annotated
 
-import pytz
 from fastapi import APIRouter, Header, HTTPException, Response
 
-from models.execution_log import ExecutionLogEntry
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
+from models.submission import SubmissionResult, SubmissionStatus
 from scripts.execution_log_repository import (
-    ExecutionLogRepositoryError,
-    save_execution_log_async,
+    async_execution_log_repo,
 )
 from scripts.input_validation import ProblemId
 from scripts.judge import ShellgeiJudge
 from scripts.problem_catalog import PROBLEM_LIST_CACHE_CONTROL
-from scripts.problem_repository import get_problem_repository
-from scripts.runner_client import (
-    RunnerBusyError,
-    RunnerUnavailableError,
-    runner_gateway,
-)
+from scripts.problem_repository import LoadedProblemRepo, get_problem_repository
+from scripts.runner_client import runner_gateway
+from scripts.submit_solution import JAPAN_TIMEZONE, SubmitSolutionService
 
 router = APIRouter()
 shellgei_judge = ShellgeiJudge()
-logger = logging.getLogger(__name__)
+submit_solution_service = SubmitSolutionService(
+    problem_repository=LoadedProblemRepo(),
+    runner=runner_gateway,
+    judge=shellgei_judge,
+    execution_logs=async_execution_log_repo,
+)
+
+
+def _submission_date(result: SubmissionResult) -> str:
+    """入力提出結果のtimezone付き時刻を、既存APIの日時文字列へ変換して返す。"""
+    return result.submitted_at.astimezone(JAPAN_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _unavailable_response(
+    message: str, result: SubmissionResult
+) -> ShellgeiResultResponse:
+    """入力messageと提出時刻から、既存API互換の実行不能responseを返す。"""
+    return ShellgeiResultResponse(
+        output=message,
+        id="-1",
+        date=_submission_date(result),
+        image="",
+        image_media_type=None,
+        judge="4",
+    )
+
+
+def _submission_response(result: SubmissionResult) -> ShellgeiResultResponse:
+    """HTTP非依存の提出結果を既存public responseへ変換し、未登録問題は404にする。"""
+    if result.status is SubmissionStatus.PROBLEM_NOT_FOUND:
+        raise HTTPException(status_code=404, detail="Problem not found")
+    if result.status is SubmissionStatus.RUNNER_BUSY:
+        return _unavailable_response("Error: server is busy.", result)
+    if result.status is SubmissionStatus.RUNNER_UNAVAILABLE:
+        return _unavailable_response("Error: runner is unavailable.", result)
+
+    execution = result.execution
+    judgment = result.judgment
+    if execution is None or judgment is None:
+        raise RuntimeError("completed submission result is inconsistent")
+    artifact = execution.artifact
+    return ShellgeiResultResponse(
+        output=execution.legacy_output(),
+        id=str(result.log_id if result.log_id is not None else -1),
+        date=_submission_date(result),
+        image=artifact.data if artifact is not None else "",
+        image_media_type=artifact.media_type if artifact is not None else None,
+        judge=judgment.legacy_code(),
+    )
 
 
 @router.post("/shellgei")
 async def post_shellgei(shellgei_data: ShellgeiData) -> ShellgeiResultResponse:
-    """提出commandをrunnerで実行・判定・記録し、既存形式の結果を返す。
+    """検証済みHTTP requestをuse caseへ渡し、既存形式のresponseへ変換する。
 
-    入力は検証済みのcommandとproblem ID。未登録問題は404を送出し、runnerの
-    混雑・停止やDB保存失敗は既存のerror responseへ変換する。
+    入力は検証済みのcommandとproblem ID。処理順やinfra例外を扱わず、型付き
+    提出結果のstatusとfieldだけをHTTP statusおよびresponse bodyへmappingする。
     """
-    japan_timezone = pytz.timezone("Asia/Tokyo")
-    japan_date = datetime.now(japan_timezone)
-
-    if get_problem_repository().get(shellgei_data.problem_id) is None:
-        raise HTTPException(status_code=404, detail="Problem not found")
-
-    # シェル芸の実行
-    shellgei_str = shellgei_data.shellgei
-    problem_id_str = shellgei_data.problem_id
-    try:
-        execution = await runner_gateway.execute(shellgei_str, problem_id_str)
-    except RunnerBusyError:
-        return ShellgeiResultResponse(
-            output="Error: server is busy.",
-            id="-1",
-            date=f"{japan_date.strftime('%Y-%m-%d %H:%M:%S')}",
-            image="",
-            image_media_type=None,
-            judge="4",
-        )
-    except RunnerUnavailableError:
-        return ShellgeiResultResponse(
-            output="Error: runner is unavailable.",
-            id="-1",
-            date=f"{japan_date.strftime('%Y-%m-%d %H:%M:%S')}",
-            image="",
-            image_media_type=None,
-            judge="4",
-        )
-    output = execution.legacy_output()
-    artifact = execution.artifact
-    image = artifact.data if artifact is not None else ""
-    image_media_type = artifact.media_type if artifact is not None else None
-    judge_result = shellgei_judge.judge(execution, problem_id_str)
-    judge = judge_result.legacy_code()
-
-    try:
-        log_id = await save_execution_log_async(
-            ExecutionLogEntry.from_results(
-                problem_id_str,
-                shellgei_str,
-                execution,
-                judge_result,
-            )
-        )
-    except ExecutionLogRepositoryError:
-        logger.warning("Execution log persistence unavailable")
-        log_id = -1
-
-    return ShellgeiResultResponse(
-        output=output,
-        id=str(log_id),
-        date=f"{japan_date.strftime('%Y-%m-%d %H:%M:%S')}",
-        image=image,
-        image_media_type=image_media_type,
-        judge=judge,
+    result = await submit_solution_service.submit(
+        shellgei_data.shellgei,
+        shellgei_data.problem_id,
     )
+    return _submission_response(result)
 
 
 @router.get("/problems")

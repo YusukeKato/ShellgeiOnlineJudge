@@ -34,6 +34,14 @@ class RunnerConfigurationError(RuntimeError):
     """Raised when the private runner channel is not configured safely."""
 
 
+class RunnerUnavailableError(RuntimeError):
+    """private runnerが検証済み実行結果を返せない場合に送出する。"""
+
+
+class RunnerBusyError(RuntimeError):
+    """private runnerが新しい実行を受け付けられない場合に送出する。"""
+
+
 class RunnerExecutionRequest(ShellgeiData):
     """version、command、problem IDを保持する不変な内部runner request。"""
 

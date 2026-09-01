@@ -115,6 +115,21 @@ class ExecutionLogRepo:
                     logger.exception("Execution log prune session close failed")
 
 
+class AsyncExecutionLogRepo:
+    """同期ExecutionLogRepoを専用workerで呼び出す非同期application adapter。"""
+
+    def __init__(self, repository: ExecutionLogRepo) -> None:
+        """入力の同期repositoryを、非同期saveが委譲する保存先として保持する。"""
+        self._repository = repository
+
+    async def save(self, entry: ExecutionLogEntry) -> int:
+        """入力entryの同期保存をevent loop外で実行し、採番IDを返す。"""
+        return await save_execution_log_async(
+            entry,
+            persist_entry=self._repository.save,
+        )
+
+
 execution_log_repo = ExecutionLogRepo()
 _executor = ThreadPoolExecutor(
     max_workers=EXECUTION_LOG_WORKER_CAPACITY,
@@ -141,3 +156,6 @@ async def save_execution_log_async(
 def close_execution_log_repository() -> None:
     """実行ログworkerへの新規受付を止め、処理中futureの終了を待って資源を閉じる。"""
     _executor.shutdown(wait=True, cancel_futures=True)
+
+
+async_execution_log_repo = AsyncExecutionLogRepo(execution_log_repo)
