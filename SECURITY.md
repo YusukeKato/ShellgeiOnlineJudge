@@ -31,6 +31,12 @@ backendにはDocker socketをmountしません。
 Docker操作は、ホストへportを公開しないrunnerだけが行います。
 sandboxコンテナにはDocker socketをマウントしません。
 
+利用者が入力したコマンドには、外部ネットワーク、Compose内部network、
+ホストへの通信経路を提供しません。sandboxコンテナは常に
+`network_mode=none`で実行し、この制約を無効化または緩和してはいけません。
+これは設計および設定上の保証であり、Docker runtimeやkernelに未知の脆弱性が
+存在しないことまで保証するものではありません。
+
 backendからrunnerへ送るfieldは次の2つだけです。
 
 - shell command
