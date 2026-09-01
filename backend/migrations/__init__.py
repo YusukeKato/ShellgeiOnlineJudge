@@ -1,0 +1,1 @@
+"""ShellgeiOnlineJudge database schema migrations."""

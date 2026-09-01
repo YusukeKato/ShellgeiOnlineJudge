@@ -62,3 +62,11 @@ def test_nginx_replaces_host_and_strips_untrusted_forwarding_headers() -> None:
     ):
         assert f'proxy_set_header {header} "";' in directives
     assert "$proxy_add_x_forwarded_for" not in config
+
+
+def test_nginx_does_not_persist_request_or_client_logs() -> None:
+    # client IP・header・queryをaccess/error logへ保存しない設定を確認する。
+    directives = _active_directives()
+
+    assert "access_log off;" in directives
+    assert "error_log /dev/null;" in directives

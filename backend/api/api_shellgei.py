@@ -5,10 +5,11 @@ from typing import Annotated
 import pytz
 from fastapi import APIRouter, Header, HTTPException, Response
 
+from models.execution_log import ExecutionLogEntry
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
-from scripts.execution_log_persistence import (
-    ExecutionLogPersistenceError,
-    persist_execution_log_async,
+from scripts.execution_log_repository import (
+    ExecutionLogRepositoryError,
+    save_execution_log_async,
 )
 from scripts.input_validation import ProblemId
 from scripts.judge import ShellgeiJudge
@@ -69,13 +70,15 @@ async def post_shellgei(shellgei_data: ShellgeiData) -> ShellgeiResultResponse:
     judge = judge_result.legacy_code()
 
     try:
-        log_id = await persist_execution_log_async(
-            problem_id_str,
-            shellgei_str,
-            output,
-            judge,
+        log_id = await save_execution_log_async(
+            ExecutionLogEntry.from_results(
+                problem_id_str,
+                shellgei_str,
+                execution,
+                judge_result,
+            )
         )
-    except ExecutionLogPersistenceError:
+    except ExecutionLogRepositoryError:
         logger.warning("Execution log persistence unavailable")
         log_id = -1
 

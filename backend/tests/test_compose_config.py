@@ -89,3 +89,10 @@ def test_backend_database_operations_have_a_bounded_default() -> None:
         "DATABASE_OPERATION_TIMEOUT_SECONDS=${DATABASE_OPERATION_TIMEOUT_SECONDS:-5}"
         in compose["services"]["backend"]["environment"]
     )
+
+
+def test_private_runner_disables_request_access_logs() -> None:
+    # internal requestでも接続元IP等をservice logへ残さないrunner起動optionを確認する。
+    compose = yaml.safe_load(COMPOSE_FILE.read_text(encoding="utf-8"))
+
+    assert "--no-access-log" in compose["services"]["runner"]["command"]

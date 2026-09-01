@@ -116,16 +116,18 @@ Statusは次の意味で使用します。
   - 概要: DBをloopback公開し、Compose外では弱いfallback URLがある
   - 関連: `docker-compose.yml`、`backend/scripts/database.py`
   - 次: 本番port非公開化と設定fail-closedを検討
-- `SOJ-021` — Low / P3 / Deferred
-  - 概要: command/output保持と非公開脆弱性報告手順を改善できる
-  - 関連: `backend/models/model_db.py`、`SECURITY.md`
-  - 次: データ最小化方針と報告窓口を決定
+- `SOJ-021` — Low / P3 / Partially resolved
+  - 概要: command/output保持の目的・最小field・backup方針は確定したが、
+    非公開脆弱性報告手順は未整備
+  - 関連: `backend/models/execution_log.py`、
+    `backend/scripts/execution_log_repository.py`、`SECURITY.md`
+  - 次: security contactと非公開報告手順を決定
 
 現在の未解決trackerは次の内訳です。
 
 - Open: 5件
-- Partially resolved: 2件
-- Deferred: 6件
+- Partially resolved: 3件
+- Deferred: 5件
 - Severity: High 0件、Medium 9件、Low 4件
 
 ## Resolved issues
@@ -211,8 +213,7 @@ daemon単独のsandbox有効期限、可変image等の残存経路は、
 ### Product・browser方針が必要
 
 - SOJ-016は、Google Analytics、Google Fonts、CSPの要件決定が必要です。
-- SOJ-021は、実行ログの利用目的、保持期間、backup、脆弱性報告窓口の
-  運用判断が必要です。
+- SOJ-021の非公開脆弱性報告窓口は、運用判断が必要です。
 
 ### CI・運用基盤が必要
 
@@ -236,6 +237,8 @@ Deferredは不要という意味ではありません。
 - Production verification required:
   - 公開443のTLS設定、証明書更新、HSTS、Host allowlist
   - upstream証明書検証、実client単位rate/connection limit、XFF trust
+  - client IPを揮発性の受付制御だけに使用し、proxy・WAF・分析基盤へ
+    raw値やhashを保存しないこと
 
 ### rootless Docker、kernel、runtime isolation
 

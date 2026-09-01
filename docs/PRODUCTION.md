@@ -282,10 +282,12 @@ proxyに集約されます。
 - `/api/shellgei`とその他のpathを分けた制限
 - host全体の同時接続・request上限
 - upstream timeoutはfrontend nginxの現在値より長くする
-- 429、413、5xxの記録と監視
+- 429、413、5xxの集計値による監視
 
 外側proxyは、受信した`X-Forwarded-For`を無条件に引き継がず、
 直接接続元から確認したclient IPを基に制限してください。
+client IPは揮発性の受付制御にだけ使い、access/error logやWAF eventへ保存しません。
+監視にはclient識別子、header、query、bodyを含まないstatus別の集計値を使用します。
 frontend nginxからbackendへのHost・forwarded headerの扱いは、
 [SECURITY.mdの「ネットワークとHTTPの制約」](../SECURITY.md#ネットワークとhttpの制約)を
 正本とします。
@@ -473,7 +475,7 @@ rm -f -- "${SOJ_SMOKE_RESPONSE}"
 
 - 16 KiBを超えるrequest bodyが413になる
 - client単位のburstを超えるrequestが429になる
-- 413、429、5xxが運用ログへ記録される
+- client識別情報を含まない413、429、5xxの集計値を取得できる
 - 8443番と5432番が外部interfaceでlistenしていない
 - 受信した`X-Forwarded-For`をclient識別へ無条件に使用していない
 
@@ -497,6 +499,8 @@ rm -f -- "${SOJ_SMOKE_RESPONSE}"
 ### 更新前の確認
 
 DBデータを保持する場合は、更新前に整合性のあるbackupを取得します。
+実行ログを含むbackupの用途、暗号化、アクセス制限、保持期間は、
+[SECURITY.mdの「実行ログとDockerログ」](../SECURITY.md#実行ログとdockerログ)に従います。
 作業ツリーがcleanであることと、現在のcommitを確認します。
 
 ```sh
@@ -586,6 +590,8 @@ printf 'compose config exit=%s\n' "$?"
 
 ```sh
 ./deploy/rootless-compose.sh build --pull
+./deploy/rootless-compose.sh run --rm --no-deps backend \
+  python -m scripts.database_migrations head
 ./deploy/rootless-compose.sh up -d --remove-orphans
 ./deploy/rootless-compose.sh ps
 ./deploy/rootless-compose.sh logs --tail=100 db runner backend frontend
@@ -593,6 +599,8 @@ printf 'compose config exit=%s\n' "$?"
 
 単一host構成では、containerの再作成中に短時間の応答断が発生する可能性があります。
 更新のために`down`を先に実行する必要はありません。
+backendもrequest受付前に同じmigrationを確認します。明示migrationが失敗した場合は
+`up -d`へ進まず、DBを変更したまま旧backendを再起動しないでください。
 
 ### 反映後の確認
 
@@ -612,6 +620,17 @@ HTTPとsandbox実行の確認方法は、
 
 障害時は、更新前に記録したcommit IDを使います。
 DB schema、データ形式、`.env`の後方互換性を先に確認してください。
+R3-014の構造化実行ログschemaから、それ以前のbackendへ戻す場合は、Gitを切り替える前に
+frontendとbackendを停止し、現在のbackend imageでlegacy revisionへ戻します。
+
+```sh
+./deploy/rootless-compose.sh stop frontend backend
+./deploy/rootless-compose.sh run --rm --no-deps backend \
+  python -m scripts.database_migrations 0001_legacy_execution_logs
+```
+
+このrollbackは構造化列だけを削除し、従来の`output`、`judge`を含むlegacy列と行を残します。
+migrationに失敗した場合はcommitの切替へ進まず、更新前backupからの復元を検討してください。
 
 main branch自体を書き換えず、直前のcommitをdetached HEADで一時的に展開します。
 
@@ -698,15 +717,15 @@ docker system df
 - VM、Docker領域、DB volumeのディスク使用量とinode使用量
 - DB volumeを配置するfilesystemのquotaと容量アラート
 - CPU、メモリ、PID、ロードアベレージ
-- backendの5xx、timeout、拒否数、応答時間
-- runnerの認証失敗、429、5xx、再起動、sandbox削除失敗
+- backendの5xx、timeout、拒否数、応答時間の集計値
+- runnerの認証失敗、429、5xx、再起動、sandbox削除失敗の集計値
 - rootless Docker user serviceの稼働状態
 - owner別のsandboxコンテナ数、起動時回収、削除失敗
 - TLS証明書の有効期限と更新hookの成功
 - 証明書更新cronまたはsystemd timerの稼働状態とdry-runの定期確認
-- 外側proxyの413、429、5xxとrate・connection limitの発動状況
+- 外側proxyの413、429、5xxとrate・connection limitの匿名集計値
 - OS、Docker、Python/npm依存関係、base imageのセキュリティ更新
-- 実行ログのretention件数・期間と、Dockerログへの機密情報混入
+- 実行ログのretention件数・期間と、service logへのclient情報・機密情報混入
 
 rootless Dockerのデータは通常、
 デプロイユーザーの`~/.local/share/docker`配下にあります。

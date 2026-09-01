@@ -199,6 +199,18 @@ REACT_APP_SOJ_URL=https://localhost:8443
 実行ログの保持仕様は、
 [SECURITY.mdの「実行ログとDockerログ」](../SECURITY.md#実行ログとdockerログ)を参照してください。
 
+backendは起動時にDBを最新revisionへ自動migrationします。SQLiteを使うforward・rollback・
+失敗時のrevision検査は通常の非Docker test、一時PostgreSQLを使うtransactional DDL検査は
+Docker統合テストに含まれます。開発DBの現在schemaを明示的にheadへ進める場合は、
+backendが使用する`DATABASE_URL`を設定して次を実行します。
+
+```sh
+poetry run python -m scripts.database_migrations head
+```
+
+rollback commandと本番backup条件は
+[backendの実行ログとDB migration](../backend/README.md#実行ログとdb-migration)を参照してください。
+
 ## 5. 開発用TLS証明書
 
 自己署名証明書を、Git管理対象外の`deploy/tls`へ生成します。

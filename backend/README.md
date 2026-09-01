@@ -8,13 +8,14 @@
 - `main.py`: API endpointとapplication起動・終了処理
 - `runner_main.py`: 認証付き内部runnerとsandbox poolの起動・終了処理
 - `api/`: API endpoint
-- `models/`: APIの入出力、実行ログ、versioned problem schemaのmodel
+- `models/`: APIの入出力、typed実行ログ、versioned problem schemaのmodel
+- `migrations/`: legacy実行ログ表から構造化schemaへ進めるversioned migration
 - `scripts/sandbox_executor.py`: request単位のarchive展開、上限付き出力・artifact取得、
   watchdog、停止、container返却を編成するsandbox実行境界
 - `scripts/container_manager.py`: sandbox containerの作成、貸出、破棄、補充を担うpool
 - `scripts/`: runner通信、判定、problem schema読込・移行、
   起動時検証済みの不変problem repository、入力検証、DB接続とrollback-safeな
-  実行ログ保存・保持処理
+  `ExecutionLogRepo`、DB migration、実行ログ保持処理
 - `tests/`: 単体・API・Docker統合テスト
 
 ## 開発とテスト
@@ -47,6 +48,26 @@ artifactはproblem schemaと一致する`path`、`media_type`、Base64 `data`を
 公開submission APIは画像dataに加えて`image_media_type`を返します。画像がない場合は
 空文字列と`null`、現在の画像問題では`image/jpeg`を返します。frontendはJPEG/GIFだけを
 data URLとして許可します。
+
+## 実行ログとDB migration
+
+`models/execution_log.py`の`ExecutionLogEntry`は、problem ID、command、構造化された
+実行metadataと判定だけをrepositoryへ渡します。IP address、HTTP header、User-Agent、
+画像artifact、内部errorはfieldとして受け取らず、`scripts/execution_log_repository.py`も
+保存しません。利用目的、保持期間、backupを含むsecurity仕様は
+[実行ログとDockerログ](../SECURITY.md#実行ログとdockerログ)を正本とします。
+
+backendは起動時に`head`まで自動migrationします。開発時に明示して確認する場合は、
+リポジトリrootから次を実行します。
+
+```sh
+poetry run python -m scripts.database_migrations head
+poetry run python -m scripts.database_migrations 0001_legacy_execution_logs
+```
+
+2行目は構造化列をrollbackする操作です。実行前に整合性のあるbackupを取得し、
+backendからの書き込みを停止してください。本番手順は
+[更新デプロイとロールバック](../docs/PRODUCTION.md#8-更新デプロイ)を参照してください。
 
 text判定は`ExecutionResult`から`TextJudgeInput`へ必要項目だけを渡し、
 file I/Oを行わないpure functionへ分離しています。判定規則の正本は

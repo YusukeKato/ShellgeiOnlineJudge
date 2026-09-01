@@ -1,12 +1,17 @@
 import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
+
 from api import api_shellgei  # type: ignore
-from contextlib import asynccontextmanager
-from scripts.database import Base, SessionLocal, engine
-from scripts.execution_log_retention import prune_execution_logs
-from scripts.execution_log_persistence import close_execution_log_persistence
+from scripts.database import engine
+from scripts.database_migrations import migrate_database
+from scripts.execution_log_repository import (
+    close_execution_log_repository,
+    execution_log_repo,
+)
 from scripts.problem_repository import load_problem_repository
 from scripts.runner_client import runner_client
 
@@ -20,16 +25,13 @@ async def lifespan(app: FastAPI):
     """
     runner_client.validate_configuration()
     load_problem_repository()
-    # テーブルが存在しない場合は作成する
-    Base.metadata.create_all(bind=engine)
-    with SessionLocal() as db:
-        prune_execution_logs(db)
-        db.commit()
+    migrate_database(engine)
+    execution_log_repo.prune()
     try:
         yield
     finally:
         runner_client.close()
-        close_execution_log_persistence()
+        close_execution_log_repository()
 
 
 app = FastAPI(lifespan=lifespan, redirect_slashes=False)

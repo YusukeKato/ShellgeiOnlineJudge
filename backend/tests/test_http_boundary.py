@@ -93,5 +93,5 @@ def test_backend_runtime_disables_proxy_header_parsing() -> None:
 
     assert (
         'CMD ["uvicorn", "main:app", "--host", "0.0.0.0", '
-        '"--port", "8000", "--no-proxy-headers"]' in dockerfile
+        '"--port", "8000", "--no-proxy-headers", "--no-access-log"]' in dockerfile
     )

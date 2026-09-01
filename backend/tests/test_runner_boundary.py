@@ -11,7 +11,9 @@ from fastapi import HTTPException
 import api.api_shellgei as api_shellgei
 import runner_main
 import scripts.runner_client as runner_client_module
+from models.execution_log import ExecutionLogEntry
 from models.model_shellgei import ShellgeiData
+from scripts.judge import JudgeResult, JudgeVerdict
 from scripts.runner_client import (
     RUNNER_BASE_URL,
     RunnerBusyError,
@@ -539,10 +541,7 @@ def test_public_api_preserves_artifact_data_and_media_type(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # typed runner artifactを既存画像dataと追加MIME fieldへ変換して返すことを確認する。
-    class FakeJudgeResult:
-        def legacy_code(self) -> str:
-            """固定の正解判定code 1を返す。"""
-            return "1"
+    saved_entries: list[ExecutionLogEntry] = []
 
     async def execute(_shellgei: str, _problem_id: str) -> ExecutionResult:
         """入力command・IDを使用せず、固定JPEG artifact付き実行結果を返す。"""
@@ -555,12 +554,13 @@ def test_public_api_preserves_artifact_data_and_media_type(
             ),
         )
 
-    def judge(_execution: ExecutionResult, _problem_id: str) -> FakeJudgeResult:
+    def judge(_execution: ExecutionResult, _problem_id: str) -> JudgeResult:
         """入力を使用せず、固定の模擬判定結果を返す。"""
-        return FakeJudgeResult()
+        return JudgeResult(verdict=JudgeVerdict.ACCEPTED)
 
-    async def persist(*_args: object) -> int:
-        """入力log内容を使用せず、固定保存IDを返す。"""
+    async def persist(entry: ExecutionLogEntry) -> int:
+        """保存entryを記録し、固定保存IDを返す。"""
+        saved_entries.append(entry)
         return 42
 
     monkeypatch.setattr(
@@ -570,7 +570,7 @@ def test_public_api_preserves_artifact_data_and_media_type(
     )
     monkeypatch.setattr(api_shellgei.runner_gateway, "execute", execute)
     monkeypatch.setattr(api_shellgei.shellgei_judge, "judge", judge)
-    monkeypatch.setattr(api_shellgei, "persist_execution_log_async", persist)
+    monkeypatch.setattr(api_shellgei, "save_execution_log_async", persist)
 
     response = asyncio.run(
         api_shellgei.post_shellgei(
@@ -582,6 +582,9 @@ def test_public_api_preserves_artifact_data_and_media_type(
     assert response.image == "encoded-image"
     assert response.image_media_type == "image/jpeg"
     assert response.judge == "1"
+    assert len(saved_entries) == 1
+    assert "artifact" not in saved_entries[0].model_dump()
+    assert "encoded-image" not in str(saved_entries[0].model_dump())
 
 
 def test_public_api_maps_runner_failure_without_database_work(
@@ -604,7 +607,7 @@ def test_public_api_maps_runner_failure_without_database_work(
     monkeypatch.setattr(api_shellgei.runner_gateway, "execute", unavailable)
     monkeypatch.setattr(
         api_shellgei,
-        "persist_execution_log_async",
+        "save_execution_log_async",
         unused_persistence,
     )
 
@@ -640,7 +643,7 @@ def test_public_api_preserves_busy_response_for_runner_capacity(
     monkeypatch.setattr(api_shellgei.runner_gateway, "execute", busy)
     monkeypatch.setattr(
         api_shellgei,
-        "persist_execution_log_async",
+        "save_execution_log_async",
         unused_persistence,
     )
 

@@ -6,17 +6,27 @@ from typing import Any
 
 import docker
 import pytest
-from sqlalchemy import create_engine, select, text
+from sqlalchemy import create_engine, inspect, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session, sessionmaker
 
+import scripts.database_migrations as migration_module
+from migrations.versions import v0001_legacy_execution_logs
+from models.execution import ExecutionResult, ExecutionStatus
+from models.execution_log import ExecutionLogEntry
 from models.model_db import ExecutionLog
-from scripts.execution_log_persistence import (
-    ExecutionLogPersistenceError,
-    persist_execution_log,
+from scripts.database_migrations import (
+    DatabaseMigration,
+    DatabaseMigrationError,
+    migrate_database,
+)
+from scripts.execution_log_repository import (
+    ExecutionLogRepo,
+    ExecutionLogRepositoryError,
 )
 from scripts.execution_log_retention import prune_execution_logs
+from scripts.judge import JudgeResult, JudgeVerdict
 
 
 pytestmark = [
@@ -78,7 +88,31 @@ def _wait_for_database_connection(
     pytest.fail("temporary PostgreSQL port did not become reachable")
 
 
-def test_postgres_enforces_execution_log_age_and_row_limits() -> None:
+def _execution_log_entry(output: str) -> ExecutionLogEntry:
+    """入力stdoutから実PostgreSQL保存用のtyped実行ログentryを生成して返す。"""
+    execution = ExecutionResult(
+        status=ExecutionStatus.COMPLETED,
+        stdout=output,
+        stderr="",
+        exit_code=0,
+        timed_out=False,
+        truncated=False,
+        duration_ms=1,
+        artifact=None,
+        error=None,
+    )
+    return ExecutionLogEntry.from_results(
+        "STANDARD-00000001",
+        f"printf {output}",
+        execution,
+        JudgeResult(verdict=JudgeVerdict.ACCEPTED),
+    )
+
+
+def test_postgres_migration_repository_retention_and_recovery(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # 実PostgreSQLでforward/rollback、repository保存、保持上限、lock失敗後の回復を確認する。
     client = docker.from_env()
     container = None
     database_engine = None
@@ -118,7 +152,90 @@ def test_postgres_enforces_execution_log_age_and_row_limits() -> None:
         )
         database_engine = create_engine(database_url)
         _wait_for_database_connection(database_engine)
-        ExecutionLog.__table__.create(database_engine)
+        with database_engine.begin() as connection:
+            v0001_legacy_execution_logs.upgrade(connection)
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO execution_logs
+                        (problem_id, shellgei, output, judge, created_at)
+                    VALUES
+                        ('STANDARD-00000001', 'printf legacy',
+                         'legacy-output', '1', CURRENT_TIMESTAMP)
+                    """
+                )
+            )
+
+        migrate_database(database_engine)
+        with Session(database_engine) as db:
+            legacy = db.scalar(
+                select(ExecutionLog).where(ExecutionLog.shellgei == "printf legacy")
+            )
+            assert legacy is not None
+            assert legacy.execution_status == "legacy_unknown"
+            assert legacy.stdout == "legacy-output"
+            assert legacy.stderr == ""
+            assert legacy.verdict == "accepted"
+
+        migrate_database(database_engine, "0001_legacy_execution_logs")
+        rolled_back_columns = {
+            column["name"]
+            for column in inspect(database_engine).get_columns("execution_logs")
+        }
+        assert rolled_back_columns.isdisjoint(
+            migration_module.v0002_structured_execution_logs.STRUCTURED_COLUMNS
+        )
+
+        original_migrations = migration_module.MIGRATIONS
+
+        def fail_after_ddl(connection: Any) -> None:
+            """実PostgreSQLへ模擬列を追加後に失敗し、DDL rollbackを検証可能にする。"""
+            connection.execute(
+                text("ALTER TABLE execution_logs ADD COLUMN temporary_private TEXT")
+            )
+            raise RuntimeError("migration failed")
+
+        failing_migration = DatabaseMigration(
+            revision=original_migrations[1].revision,
+            upgrade=fail_after_ddl,
+            downgrade=original_migrations[1].downgrade,
+        )
+        monkeypatch.setattr(
+            migration_module,
+            "MIGRATIONS",
+            (original_migrations[0], failing_migration),
+        )
+        with pytest.raises(DatabaseMigrationError):
+            migrate_database(database_engine)
+        assert "temporary_private" not in {
+            column["name"]
+            for column in inspect(database_engine).get_columns("execution_logs")
+        }
+        monkeypatch.setattr(migration_module, "MIGRATIONS", original_migrations)
+        migrate_database(database_engine)
+        migrated_columns = {
+            column["name"]: column
+            for column in inspect(database_engine).get_columns("execution_logs")
+        }
+        for required_column in (
+            "execution_status",
+            "stdout",
+            "stderr",
+            "timed_out",
+            "truncated",
+            "verdict",
+        ):
+            assert migrated_columns[required_column]["nullable"] is False
+        assert set(migrated_columns).isdisjoint(
+            {"ip_address", "headers", "user_agent", "artifact", "image"}
+        )
+        with Session(database_engine) as db:
+            migrated_legacy = db.scalar(
+                select(ExecutionLog).where(ExecutionLog.shellgei == "printf legacy")
+            )
+            assert migrated_legacy is not None
+            db.delete(migrated_legacy)
+            db.commit()
 
         now = datetime.now(timezone.utc)
         with Session(database_engine) as db:
@@ -129,6 +246,12 @@ def test_postgres_enforces_execution_log_age_and_row_limits() -> None:
                         shellgei=f"printf {index}",
                         output=str(index),
                         judge="1",
+                        execution_status="completed",
+                        stdout=str(index),
+                        stderr="",
+                        timed_out=False,
+                        truncated=False,
+                        verdict="accepted",
                         created_at=(
                             now - timedelta(days=31)
                             if index == 0
@@ -156,13 +279,8 @@ def test_postgres_enforces_execution_log_age_and_row_limits() -> None:
             connect_args={"options": "-c lock_timeout=200"},
         )
         timeout_session_factory = sessionmaker(bind=timeout_engine)
-        nul_log_id = persist_execution_log(
-            "STANDARD-00000001",
-            "printf nul",
-            "before\x00after",
-            "1",
-            session_factory=timeout_session_factory,
-        )
+        repository = ExecutionLogRepo(session_factory=timeout_session_factory)
+        nul_log_id = repository.save(_execution_log_entry("before\x00after"))
         with Session(database_engine) as db:
             assert (
                 db.scalar(
@@ -175,23 +293,11 @@ def test_postgres_enforces_execution_log_age_and_row_limits() -> None:
             lock_session.execute(
                 text("LOCK TABLE execution_logs IN ACCESS EXCLUSIVE MODE")
             )
-            with pytest.raises(ExecutionLogPersistenceError):
-                persist_execution_log(
-                    "STANDARD-00000001",
-                    "printf blocked",
-                    "blocked",
-                    "1",
-                    session_factory=timeout_session_factory,
-                )
+            with pytest.raises(ExecutionLogRepositoryError):
+                repository.save(_execution_log_entry("blocked"))
             lock_session.rollback()
 
-        recovered_log_id = persist_execution_log(
-            "STANDARD-00000001",
-            "printf recovered",
-            "recovered",
-            "1",
-            session_factory=timeout_session_factory,
-        )
+        recovered_log_id = repository.save(_execution_log_entry("recovered"))
         with Session(database_engine) as db:
             assert (
                 db.scalar(

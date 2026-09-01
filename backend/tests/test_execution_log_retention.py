@@ -5,11 +5,13 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
 import api.api_shellgei as api_shellgei
 import main as backend_main
+from models.execution_log import ExecutionLogEntry
 from models.model_db import ExecutionLog
 from models.model_shellgei import ShellgeiData
 from scripts.database import (
@@ -21,14 +23,14 @@ from scripts.execution_log_retention import (
     _positive_integer_from_env,
     prune_execution_logs,
 )
-from scripts.execution_log_persistence import (
-    ExecutionLogPersistenceError,
+from scripts.execution_log_repository import (
+    ExecutionLogRepo,
+    ExecutionLogRepositoryError,
     normalize_execution_log_text,
-    persist_execution_log,
-    persist_execution_log_async,
+    save_execution_log_async,
 )
 from scripts.judge import JudgeResult, JudgeVerdict
-from scripts.runner_protocol import ExecutionResult, ExecutionStatus
+from scripts.runner_protocol import ExecutionArtifact, ExecutionResult, ExecutionStatus
 
 
 def _database_session() -> Session:
@@ -45,11 +47,43 @@ def _add_log(db: Session, created_at: datetime) -> ExecutionLog:
         shellgei="printf test",
         output="test",
         judge="1",
+        execution_status="completed",
+        stdout="test",
+        stderr="",
+        timed_out=False,
+        truncated=False,
+        verdict="accepted",
         created_at=created_at,
     )
     db.add(execution_log)
     db.flush()
     return execution_log
+
+
+def _execution_log_entry(
+    output: str = "test",
+    *,
+    stderr: str = "",
+    verdict: JudgeVerdict = JudgeVerdict.ACCEPTED,
+) -> ExecutionLogEntry:
+    """任意の分離出力と判定から、repository test用のtyped保存entryを返す。"""
+    execution = ExecutionResult(
+        status=ExecutionStatus.COMPLETED,
+        stdout=output,
+        stderr=stderr,
+        exit_code=0,
+        timed_out=False,
+        truncated=False,
+        duration_ms=12,
+        artifact=None,
+        error=None,
+    )
+    return ExecutionLogEntry.from_results(
+        "STANDARD-00000001",
+        "printf test",
+        execution,
+        JudgeResult(verdict=verdict),
+    )
 
 
 def test_default_execution_log_retention_is_one_year() -> None:
@@ -135,6 +169,12 @@ def test_prune_execution_logs_flushes_a_pending_new_log() -> None:
             shellgei="printf pending",
             output="pending",
             judge="1",
+            execution_status="completed",
+            stdout="pending",
+            stderr="",
+            timed_out=False,
+            truncated=False,
+            verdict="accepted",
             created_at=now,
         )
         db.add(pending)
@@ -154,7 +194,7 @@ def test_prune_execution_logs_flushes_a_pending_new_log() -> None:
         assert first_id != pending.id
 
 
-def test_persist_execution_log_applies_retention_in_the_log_transaction() -> None:
+def test_execution_log_repository_applies_retention_in_the_log_transaction() -> None:
     # log保存transaction内で保持件数を適用し、新規logだけが残ることを確認する。
     now = datetime.now(timezone.utc)
     with _database_session() as db:
@@ -171,37 +211,36 @@ def test_persist_execution_log_applies_retention_in_the_log_transaction() -> Non
                 max_rows=1,
             )
 
-        log_id = persist_execution_log(
-            "STANDARD-00000001",
-            "printf test",
-            "test",
-            "1",
-            session_factory=lambda: db,
-            prune_logs=prune,
-        )
+        repository = ExecutionLogRepo(session_factory=lambda: db, prune_logs=prune)
+        log_id = repository.save(_execution_log_entry())
 
         assert db.scalars(select(ExecutionLog.id)).all() == [log_id]
 
 
-def test_persist_execution_log_normalizes_nul_for_storage() -> None:
+def test_execution_log_repository_saves_structured_result_and_normalizes_nul() -> None:
     # DB保存前にNULをreplacement characterへ置換し、通常文字列は維持することを確認する。
     with _database_session() as db:
-        log_id = persist_execution_log(
-            "STANDARD-00000001",
-            "printf test",
-            "before\x00after",
-            "1",
-            session_factory=lambda: db,
+        repository = ExecutionLogRepo(session_factory=lambda: db)
+        log_id = repository.save(
+            _execution_log_entry("before\x00after", stderr="warning")
         )
 
-        stored_output = db.scalar(
-            select(ExecutionLog.output).where(ExecutionLog.id == log_id)
-        )
-        assert stored_output == "before\N{REPLACEMENT CHARACTER}after"
+        stored = db.scalar(select(ExecutionLog).where(ExecutionLog.id == log_id))
+        assert stored is not None
+        assert stored.output == "before\N{REPLACEMENT CHARACTER}afterwarning"
+        assert stored.stdout == "before\N{REPLACEMENT CHARACTER}after"
+        assert stored.stderr == "warning"
+        assert stored.execution_status == "completed"
+        assert stored.exit_code == 0
+        assert stored.timed_out is False
+        assert stored.truncated is False
+        assert stored.duration_ms == 12
+        assert stored.verdict == "accepted"
+        assert stored.judge_reason is None
         assert normalize_execution_log_text("no-nul") == "no-nul"
 
 
-def test_persist_execution_log_rolls_back_and_closes_after_commit_failure() -> None:
+def test_execution_log_repository_rolls_back_and_closes_after_commit_failure() -> None:
     # commit失敗時にrollbackとcloseを必ず順番に実行することを確認する。
     events: list[str] = []
 
@@ -228,25 +267,22 @@ def test_persist_execution_log_rolls_back_and_closes_after_commit_failure() -> N
         """失敗動作を持つ模擬Sessionを生成し、Session型として返す。"""
         return FailingSession()  # type: ignore[return-value]
 
-    with pytest.raises(ExecutionLogPersistenceError):
-        persist_execution_log(
-            "STANDARD-00000001",
-            "true",
-            "test",
-            "1",
-            session_factory=session_factory,
-            prune_logs=lambda _db: 0,
-        )
+    repository = ExecutionLogRepo(
+        session_factory=session_factory,
+        prune_logs=lambda _db: 0,
+    )
+    with pytest.raises(ExecutionLogRepositoryError):
+        repository.save(_execution_log_entry())
 
     assert events == ["add", "commit", "rollback", "close"]
 
 
-def test_async_execution_log_persistence_does_not_block_the_event_loop() -> None:
+def test_async_execution_log_repository_does_not_block_the_event_loop() -> None:
     # 同期DB保存をthreadへ移し、待機中もevent loopが動作することを確認する。
     started = threading.Event()
     release = threading.Event()
 
-    def blocking_persistence(*_args: str) -> int:
+    def blocking_persistence(_entry: ExecutionLogEntry) -> int:
         """release通知まで同期的に待機し、完了後に固定log IDを返す。"""
         started.set()
         release.wait(timeout=1)
@@ -255,12 +291,9 @@ def test_async_execution_log_persistence_does_not_block_the_event_loop() -> None
     async def scenario() -> None:
         """非同期保存を起動し、event loopを塞がず完了する一連の操作を実行する。"""
         persistence = asyncio.create_task(
-            persist_execution_log_async(
-                "STANDARD-00000001",
-                "true",
-                "test",
-                "1",
-                persist_log=blocking_persistence,
+            save_execution_log_async(
+                _execution_log_entry(),
+                persist_entry=blocking_persistence,
             )
         )
         while not started.is_set():
@@ -305,12 +338,12 @@ def test_shell_api_returns_result_when_log_persistence_fails(
         return JudgeResult(verdict=JudgeVerdict.ACCEPTED)
 
     async def unavailable(*_args: Any, **_kwargs: Any) -> int:
-        """DB worker停止を再現するExecutionLogPersistenceErrorを送出する。"""
-        raise ExecutionLogPersistenceError("unavailable")
+        """DB worker停止を再現するExecutionLogRepositoryErrorを送出する。"""
+        raise ExecutionLogRepositoryError("unavailable")
 
     monkeypatch.setattr(api_shellgei.runner_gateway, "execute", execute)
     monkeypatch.setattr(api_shellgei.shellgei_judge, "judge", judge)
-    monkeypatch.setattr(api_shellgei, "persist_execution_log_async", unavailable)
+    monkeypatch.setattr(api_shellgei, "save_execution_log_async", unavailable)
     monkeypatch.setattr(
         api_shellgei,
         "get_problem_repository",
@@ -337,21 +370,6 @@ def test_backend_startup_validates_runner_and_prunes_logs(
     # backend起動・終了処理がrepository、DB保持、worker終了を所定順で行うことを確認する。
     events: list[str] = []
 
-    class FakeDatabase:
-        def commit(self) -> None:
-            """模擬DB commitをeventへ記録する。"""
-            events.append("commit")
-
-    class DatabaseContext:
-        def __enter__(self) -> FakeDatabase:
-            """DB context開始を記録し、模擬DBを返す。"""
-            events.append("session_enter")
-            return FakeDatabase()
-
-        def __exit__(self, *_args: object) -> None:
-            """DB context終了をeventへ記録する。"""
-            events.append("session_exit")
-
     class FakeRunnerClient:
         def validate_configuration(self) -> None:
             """runner設定検証の呼出しをeventへ記録する。"""
@@ -361,17 +379,18 @@ def test_backend_startup_validates_runner_and_prunes_logs(
             """runner client終了の呼出しをeventへ記録する。"""
             events.append("runner_close")
 
-    monkeypatch.setattr(
-        backend_main.Base.metadata,
-        "create_all",
-        lambda **_kwargs: events.append("create_all"),
-    )
-    monkeypatch.setattr(backend_main, "SessionLocal", DatabaseContext)
+    class FakeExecutionLogRepo:
+        def prune(self) -> int:
+            """起動時retention呼出しを記録し、削除0件を返す。"""
+            events.append("prune")
+            return 0
+
     monkeypatch.setattr(
         backend_main,
-        "prune_execution_logs",
-        lambda _db: events.append("prune"),
+        "migrate_database",
+        lambda _engine: events.append("migrate"),
     )
+    monkeypatch.setattr(backend_main, "execution_log_repo", FakeExecutionLogRepo())
     monkeypatch.setattr(
         backend_main,
         "load_problem_repository",
@@ -379,8 +398,8 @@ def test_backend_startup_validates_runner_and_prunes_logs(
     )
     monkeypatch.setattr(
         backend_main,
-        "close_execution_log_persistence",
-        lambda: events.append("log_persistence_close"),
+        "close_execution_log_repository",
+        lambda: events.append("log_repository_close"),
     )
     monkeypatch.setattr(backend_main, "runner_client", FakeRunnerClient())
 
@@ -394,15 +413,92 @@ def test_backend_startup_validates_runner_and_prunes_logs(
     assert events == [
         "runner_validate",
         "repository_load",
-        "create_all",
-        "session_enter",
+        "migrate",
         "prune",
-        "commit",
-        "session_exit",
         "serving",
         "runner_close",
-        "log_persistence_close",
+        "log_repository_close",
     ]
+
+
+def test_execution_log_entry_rejects_request_metadata() -> None:
+    # IP addressやHTTP header等をtyped保存境界へ追加できず、個人特定情報を拒否することを確認する。
+    data = _execution_log_entry().model_dump()
+    data["ip_address"] = "198.51.100.10"
+
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        ExecutionLogEntry.model_validate(data)
+
+
+def test_execution_log_entry_discards_image_artifact_before_repository() -> None:
+    # typed実行結果に画像があっても、保存entryへartifact dataや内部error fieldを移さないことを確認する。
+    result = ExecutionResult(
+        status=ExecutionStatus.COMPLETED,
+        stdout="",
+        stderr="",
+        exit_code=0,
+        timed_out=False,
+        truncated=False,
+        duration_ms=1,
+        artifact=ExecutionArtifact(
+            path="media/output.jpg",
+            media_type="image/jpeg",
+            data="encoded-private-image",
+        ),
+        error=None,
+    )
+
+    entry = ExecutionLogEntry.from_results(
+        "IMAGE-00000001",
+        "convert image",
+        result,
+        JudgeResult(verdict=JudgeVerdict.ACCEPTED),
+    )
+
+    stored_fields = entry.model_dump()
+    assert "artifact" not in stored_fields
+    assert "error" not in stored_fields
+    assert "encoded-private-image" not in str(stored_fields)
+
+
+def test_execution_log_entry_discards_internal_error_detail() -> None:
+    # runner内部errorを一般化し、host path等の詳細がrepository入力へ残らないことを確認する。
+    result = ExecutionResult(
+        status=ExecutionStatus.ERROR,
+        stdout="",
+        stderr="",
+        exit_code=None,
+        timed_out=False,
+        truncated=False,
+        duration_ms=1,
+        artifact=None,
+        error="private backend path: /srv/internal/secret",
+    )
+
+    entry = ExecutionLogEntry.from_results(
+        "STANDARD-00000001",
+        "true",
+        result,
+        JudgeResult(verdict=JudgeVerdict.EXECUTION_FAILURE),
+    )
+
+    assert entry.legacy_output == "Error during execution"
+    assert "/srv/internal/secret" not in str(entry.model_dump())
+
+
+def test_execution_log_table_has_no_request_or_artifact_columns() -> None:
+    # 永続schemaにIP・header・User-Agent・画像artifact用の列が存在しないことを確認する。
+    stored_columns = set(ExecutionLog.__table__.columns.keys())
+    forbidden_columns = {
+        "ip_address",
+        "forwarded_for",
+        "headers",
+        "user_agent",
+        "artifact",
+        "image",
+    }
+
+    assert stored_columns.isdisjoint(forbidden_columns)
 
 
 @pytest.mark.parametrize("value", ["0", "-1", "not-an-integer"])

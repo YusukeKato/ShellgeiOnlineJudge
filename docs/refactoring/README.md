@@ -23,10 +23,10 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 27
 - Ready: 0
-- Planned: 14
-- Pending (`Ready` + `Planned`): 14
+- Planned: 13
+- Pending (`Ready` + `Planned`): 13
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 13
 - Blocked: 0
 - Deferred: 0
@@ -166,7 +166,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-011 | P0 | Completed | B | Separate and correct image judging | R3-007, R3-009 | `7947640` |
 | R3-012 | P1 | Completed | C | Separate sandbox preparation, execution, capture, and cleanup | R3-009 | `370e5b8` |
 | R3-013 | P0 | Completed | C | Capture structured execution outcomes | R3-012 | `97315a6` |
-| R3-014 | P1 | Planned | C | Introduce ExecutionLogRepo and database migrations | R3-003, R3-009 | - |
+| R3-014 | P1 | Review | C | Introduce ExecutionLogRepo and database migrations | R3-003, R3-009 | - |
 | R3-015 | P0 | Planned | C | Introduce SubmitSolutionService | R3-008, R3-010, R3-011, R3-014 | - |
 | R3-016 | P1 | Planned | C | Expose typed public API v3 contract | R3-015 | - |
 | R3-017 | P1 | Planned | C | Harden runner authentication, readiness, and revision checks | R3-008, R3-009 | - |
@@ -345,14 +345,19 @@ They are planning aids, not acceptance criteria.
 
 ### R3-014: Introduce ExecutionLogRepo and database migrations
 
-- Priority / Status: P1 / `Planned`
+- Priority / Status: P1 / `Review`
 - Goal: persistenceをapplication/APIから分離し、typed resultを安全に保存できるschema、migration、transaction、retention境界を導入する
 - Main files/components: DB model、`ExecutionLogRepo`、migration、retention、database test
 - Dependencies: R3-003、R3-009、execution log retention/privacyのreview gate
 - Risk: Medium--High。既存volume/data migrationとrollback、保持policyに影響する
 - Expected tests: forward/rollback migration、transaction failure、retention、real PostgreSQL integration
 - Size: M
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `-` / date 2026-09-01 / `ExecutionLogRepo`とartifact・request情報を
+  受け取らないtyped保存entry、version table・advisory lock付きforward/rollback migrationを
+  導入。legacy列を保持して構造化実行・判定列を追加し、backend起動前migration、同一transactionの
+  retention、失敗時rollbackを実装。request単位のnginx/Uvicorn access logも無効化した。
+  Python 3.14の非Docker 439件、rootless PostgreSQL migration/recovery 1件、実nginx 1件、
+  rootless Compose configが成功
 
 ### R3-015: Introduce SubmitSolutionService
 
@@ -527,7 +532,7 @@ They are planning aids, not acceptance criteria.
 | runner process外の独立reaperを導入するか | Open | R3-024のrecovery acceptance確定 | - | - |
 | Analytics / Google Fontsを維持するか、CSPをどう設定するか | Open | R3-021 | - | - |
 | reference solutionをpublic frontend/API artifactに含めるか | Decided | R3-007 | 現行どおりpublic problem detail APIで公開する | 既存APIは`answer`をすでに公開しているためR3-016以前の互換性を維持し、v3では`reference_solution`として保持する。2026-08-30決定、commit `4d25fa8` |
-| execution logの利用目的、保持期間、privacy、backup方針 | Open | R3-014 | - | - |
+| execution logの利用目的、保持期間、privacy、backup方針 | Decided | R3-014 | 投稿ID発行、障害・security・不正利用調査だけに使用し、365日かつ最新10,000件以内で保持する。IP address、HTTP header、User-Agent、画像artifact等は保存せず、backupも暗号化・アクセス制限した障害復旧用途に限定して同じ保持期間を超えて残さない | 漏えい時の影響を抑えるため個人特定につながるrequest情報と不要なbinaryを永続化せず、既存の保持上限とcommand・上限付き出力の互換性は維持する。2026-09-01決定 |
 | imageをbyte exact、canonicalized、pixel比較のどれで判定するか | Open | R3-011 | - | - |
 
 判断時は、該当行のstatusを`Decided`にし、決定内容、理由、日付、関連commitまたはissueを
@@ -622,3 +627,5 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-08-31 | R3-013 structured execution outcome implementation started | - |
 | 2026-08-31 | R3-013 implementation and planned tests completed; moved to `Review` | - |
 | 2026-09-01 | R3-013 approved and recorded as `Completed` | `97315a6` |
+| 2026-09-01 | R3-014 privacy and retention gate decided; implementation started | - |
+| 2026-09-01 | R3-014 implementation and planned tests completed; moved to `Review` | - |

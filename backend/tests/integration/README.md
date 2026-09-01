@@ -36,7 +36,9 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - 多数の小ファイルと複数の大きなファイルがtmpfs上限を超えられないこと
 - working directory、HOME、一時ファイル、入力ファイル、画像問題が動作すること
 - 使用済みcontainerの書き込み状態が次のrequestへ残らないこと
-- 一時PostgreSQL上で実行ログの期間・件数上限、NUL保存時の正規化、
+- 一時PostgreSQL上でlegacy DBからのforward migration、構造化列のrollback、
+  migration失敗時のtransactional DDL rollbackが機能すること
+- `ExecutionLogRepo`による期間・件数上限、NUL保存時の正規化、
   lock timeoutとrollback後の再保存が機能すること
 - 無出力コマンドのタイムアウト
 - Docker execのstdout・stderr分離、非0終了code、所要時間の取得

@@ -281,6 +281,29 @@ DBの実行ログは、次の両方を満たす範囲だけ保持します。
 どちらも1以上の整数が必要です。
 不正な値が設定されている場合、backendは起動しません。
 
+実行ログは、投稿IDの発行、障害調査、security incidentと不正利用の調査だけに
+使用します。公開、利用者profiling、広告、分析、機械学習には使用しません。
+保存するfieldは、problem ID、利用者command、上限付きstdout・stderr、判定、
+実行状態、終了code、timeout・切り詰めflag、実行時間、作成日時に限定します。
+
+次の情報は実行ログへ保存しません。
+
+- IP address
+- `Forwarded`、`X-Forwarded-*`、`X-Real-IP`を含むHTTP header
+- User-Agent、cookie、認証情報
+- 生成画像などのbinary artifact
+- sandboxやbackendの内部error詳細
+
+同じ方針をrequest単位のservice logにも適用します。Compose内frontend nginxの
+access logとrequest error log、backend・runner Uvicornのaccess logは無効です。
+application logへclient address、request header、query、body、command、出力を
+追加しないでください。生のIP addressだけでなく、hash化・仮名化したIP addressも
+永続化しません。
+
+commandや出力には利用者が自ら入力した機密情報が含まれる可能性があります。
+運用者だけがDBへアクセスできるようにし、application logへcommandや出力を
+複製しないでください。
+
 古いログは、backend起動時と新しい実行ログの保存時に削除します。
 新しいログの保存と件数による削除は、同じDB transaction内で処理します。
 
@@ -289,6 +312,16 @@ DBの実行ログは、次の両方を満たす範囲だけ保持します。
 実行ログの追加、retention、commit、rollback、closeはrequestのevent loop外の
 worker threadで処理し、commitを含む処理に失敗した場合はrollbackしてsessionを閉じます。
 保存に失敗しても実行・判定結果は返し、保存IDは`-1`とします。
+
+schemaは`soj_schema_migrations`でversion管理し、backendはrequest受付前にheadまで
+migrationします。既存のversionなし実行ログ表はlegacy baselineとして認識し、
+構造化列を追加して旧outputとjudgeを保持します。未知revision、不連続revision、
+部分的な構造化schemaはfail-closedで起動を中止します。
+
+実行ログを含むbackupは、暗号化・アクセス制限した障害復旧とmigration rollback用途に
+限定します。primary DBの実行ログ保持期間を超えて残さず、期限に達したbackupと不要になった
+migration前backupを削除してください。backupから復元した場合も、backend起動時のretentionを
+適用してから公開requestを受け付けます。
 
 PostgreSQLの接続待ち、connection pool待ち、statement、lockには、
 `DATABASE_OPERATION_TIMEOUT_SECONDS`の上限を適用します。既定値は5秒で、
@@ -443,6 +476,9 @@ ID・タイトルが不正な場合はbackendを起動しません。
 
 proxy配下のクライアントIPを利用する場合は、
 接続を許可するproxyと`X-Forwarded-For`の扱いを明示します。
+client IPはrate・connection制限のための揮発性memory stateにだけ使用し、raw値、
+hash、header、query、bodyをaccess log、error log、WAF event、分析基盤へ保存しません。
+外側serviceで保存を無効化できない場合、そのserviceをこの構成の公開入口に使用しないでください。
 
 ## 依存関係とイメージの制約
 
