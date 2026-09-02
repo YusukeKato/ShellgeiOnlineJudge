@@ -326,6 +326,7 @@ def test_cleanup_failure_does_not_create_replacement_container() -> None:
 
     assert len(client.containers.created) == 1
     assert manager.managed_count == 1
+    assert manager.is_ready is False
     assert_capacity_error(manager)
 
 
@@ -399,8 +400,48 @@ def test_runtime_create_failure_keeps_uncertain_name_in_capacity() -> None:
     manager.release_container(container)
 
     assert manager.managed_count == 1
+    assert manager.is_ready is False
     assert_capacity_error(manager)
     manager.shutdown_pool()
+
+
+def test_readiness_requires_initialized_complete_pool_and_stops_on_shutdown() -> None:
+    # 未初期化とshutdown中は非ready、完全初期化後はlease中でもreadyとなることを確認する。
+    client = FakeDockerClient()
+    manager = ContainerManager(client=client, pool_size=1)
+
+    assert manager.is_ready is False
+
+    manager.initialize_pool()
+    assert manager.is_ready is True
+
+    manager.get_container()
+    assert manager.is_ready is True
+
+    manager.begin_shutdown()
+    assert manager.is_ready is False
+    manager.shutdown_pool()
+
+
+def test_fresh_manager_recovers_readiness_after_degraded_replenishment() -> None:
+    # 補充失敗で劣化したmanagerは非readyを維持し、新規managerの再初期化で復帰する。
+    failed_client = FakeDockerClient()
+    failed_manager = ContainerManager(client=failed_client, pool_size=1)
+    failed_manager.initialize_pool()
+    container = failed_manager.get_container()
+    failed_client.containers.create_error = RuntimeError("daemon unavailable")
+
+    failed_manager.release_container(container)
+
+    assert failed_manager.is_ready is False
+    failed_manager.shutdown_pool()
+
+    restarted_client = FakeDockerClient()
+    restarted_manager = ContainerManager(client=restarted_client, pool_size=1)
+    restarted_manager.initialize_pool()
+
+    assert restarted_manager.is_ready is True
+    restarted_manager.shutdown_pool()
 
 
 @pytest.mark.parametrize("owner_id", ["", "contains space", "../other"])

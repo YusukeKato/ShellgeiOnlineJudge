@@ -8,6 +8,7 @@ from urllib.request import ProxyHandler, Request
 
 import pytest
 from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 
 import api.api_shellgei as api_shellgei
 import runner_main
@@ -34,11 +35,15 @@ from scripts.runner_protocol import (
     RunnerConfigurationError,
     RunnerExecutionRequest,
     RunnerExecutionResponse,
+    RunnerReadinessResponse,
+    RunnerReadinessStatus,
     get_runner_shared_secret,
 )
 
 
 VALID_SECRET = "a" * 64
+TEST_PROBLEM_REVISION = "b" * 64
+OTHER_PROBLEM_REVISION = "c" * 64
 
 
 def _completed_result(
@@ -61,11 +66,15 @@ def _completed_result(
     )
 
 
-def _runner_response_bytes(stdout: str) -> bytes:
-    # 任意stdoutをprotocol version 3の正常runner response JSONへ変換する。
+def _runner_response_bytes(
+    stdout: str,
+    problem_revision: str = TEST_PROBLEM_REVISION,
+) -> bytes:
+    # 任意stdoutとproblem revisionをprotocol version 3の正常runner response JSONへ変換する。
     return (
         RunnerExecutionResponse(
             protocol_version=RUNNER_PROTOCOL_VERSION,
+            problem_revision=problem_revision,
             result=_completed_result(stdout),
         )
         .model_dump_json()
@@ -76,10 +85,12 @@ def _runner_response_bytes(stdout: str) -> bytes:
 def _runner_request(
     shellgei: str = "true",
     problem_id: str = "STANDARD-00000001",
+    problem_revision: str = TEST_PROBLEM_REVISION,
 ) -> RunnerExecutionRequest:
-    """入力command・problem IDから、現行versionの内部runner requestを返す。"""
+    """入力command・problem ID・revisionから、現行versionの内部requestを返す。"""
     return RunnerExecutionRequest(
         protocol_version=RUNNER_PROTOCOL_VERSION,
+        problem_revision=problem_revision,
         shellgei=shellgei,
         problem_id=problem_id,
     )
@@ -126,22 +137,6 @@ def test_runner_shared_secret_rejects_unsafe_values(
         get_runner_shared_secret()
 
 
-def test_runner_authentication_uses_constant_time_secret_comparison(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    # 欠落・不一致secretを401にし、一致secretだけを許可することを確認する。
-    monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
-
-    with pytest.raises(HTTPException) as missing:
-        runner_main.require_runner_authentication(None)
-    with pytest.raises(HTTPException) as incorrect:
-        runner_main.require_runner_authentication("Bearer " + "b" * 64)
-
-    runner_main.require_runner_authentication(f"Bearer {VALID_SECRET}")
-    assert missing.value.status_code == 401
-    assert incorrect.value.status_code == 401
-
-
 def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -162,9 +157,10 @@ def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
         runner_main,
         "get_problem_repository",
         lambda: SimpleNamespace(
+            revision=TEST_PROBLEM_REVISION,
             get=lambda _problem_id: SimpleNamespace(
                 definition=SimpleNamespace(judge=SimpleNamespace(type="text"))
-            )
+            ),
         ),
     )
     monkeypatch.setattr(runner_main, "sandbox_start_rate_limiter", AllowStart())
@@ -185,6 +181,7 @@ def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
 
     assert result.model_dump() == {
         "protocol_version": 3,
+        "problem_revision": TEST_PROBLEM_REVISION,
         "result": {
             "status": "completed",
             "stdout": "output",
@@ -235,7 +232,10 @@ def test_runner_returns_schema_path_and_media_type_with_image_artifact(
     monkeypatch.setattr(
         runner_main,
         "get_problem_repository",
-        lambda: SimpleNamespace(get=lambda _problem_id: record),
+        lambda: SimpleNamespace(
+            revision=TEST_PROBLEM_REVISION,
+            get=lambda _problem_id: record,
+        ),
     )
     monkeypatch.setattr(runner_main, "sandbox_start_rate_limiter", AllowStart())
     monkeypatch.setattr(
@@ -250,6 +250,7 @@ def test_runner_returns_schema_path_and_media_type_with_image_artifact(
 
     assert result.model_dump() == {
         "protocol_version": 3,
+        "problem_revision": TEST_PROBLEM_REVISION,
         "result": {
             "status": "completed",
             "stdout": "",
@@ -284,7 +285,10 @@ def test_runner_rejects_unknown_problem_before_admission_or_docker(
     monkeypatch.setattr(
         runner_main,
         "get_problem_repository",
-        lambda: SimpleNamespace(get=lambda _problem_id: None),
+        lambda: SimpleNamespace(
+            revision=TEST_PROBLEM_REVISION,
+            get=lambda _problem_id: None,
+        ),
     )
     monkeypatch.setattr(
         runner_main,
@@ -309,6 +313,88 @@ def test_runner_rejects_unknown_problem_before_admission_or_docker(
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "Problem not found"
+
+
+def test_runner_rejects_problem_revision_mismatch_before_admission_or_docker(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # backendとrunnerのproblem revisionが異なるrequestを、admissionやDocker実行前に409で拒否する。
+    class UnusedAdmissionControl:
+        def try_acquire(self) -> bool:
+            """revision不一致時に呼ばれたらtestを失敗させる。"""
+            raise AssertionError("revision mismatch must not consume admission tokens")
+
+    async def unexpected_execution(*_args: object) -> ExecutionResult:
+        """revision不一致時にDockerへ到達したらtestを失敗させる。"""
+        raise AssertionError("revision mismatch must not reach Docker")
+
+    monkeypatch.setattr(
+        runner_main,
+        "get_problem_repository",
+        lambda: SimpleNamespace(
+            revision=TEST_PROBLEM_REVISION,
+            get=lambda _problem_id: object(),
+        ),
+    )
+    monkeypatch.setattr(
+        runner_main,
+        "sandbox_start_rate_limiter",
+        UnusedAdmissionControl(),
+    )
+    monkeypatch.setattr(
+        runner_main.docker_client,
+        "run_with_timeout",
+        unexpected_execution,
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        asyncio.run(
+            runner_main.execute_shellgei(
+                _runner_request(problem_revision=OTHER_PROBLEM_REVISION)
+            )
+        )
+
+    assert exc_info.value.status_code == 409
+    assert exc_info.value.detail == "Problem revision mismatch"
+
+
+@pytest.mark.parametrize(
+    ("pool_ready", "expected_status"),
+    [
+        (True, RunnerReadinessStatus.READY),
+        (False, RunnerReadinessStatus.DEGRADED),
+    ],
+)
+def test_runner_readiness_reflects_problem_revision_and_pool_state(
+    monkeypatch: pytest.MonkeyPatch,
+    pool_ready: bool,
+    expected_status: RunnerReadinessStatus,
+) -> None:
+    # problem revisionとpool状態を返し、劣化時だけ503になることを確認する。
+    monkeypatch.setattr(
+        runner_main,
+        "get_problem_repository",
+        lambda: SimpleNamespace(revision=TEST_PROBLEM_REVISION),
+    )
+    monkeypatch.setattr(runner_main, "manager", SimpleNamespace(is_ready=pool_ready))
+
+    response = asyncio.run(runner_main.readiness())
+
+    if pool_ready:
+        assert isinstance(response, RunnerReadinessResponse)
+        assert response == RunnerReadinessResponse(
+            protocol_version=RUNNER_PROTOCOL_VERSION,
+            problem_revision=TEST_PROBLEM_REVISION,
+            status=expected_status,
+        )
+    else:
+        assert isinstance(response, JSONResponse)
+        assert response.status_code == 503
+        assert json.loads(response.body) == {
+            "protocol_version": RUNNER_PROTOCOL_VERSION,
+            "problem_revision": TEST_PROBLEM_REVISION,
+            "status": expected_status.value,
+        }
 
 
 def test_runner_lifespan_owns_the_docker_pool(
@@ -409,7 +495,7 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
         return FakeResponse(_runner_response_bytes("ok"))
 
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
-    client = RunnerClient()
+    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
     monkeypatch.setattr(client._opener, "open", fake_urlopen)
     try:
         result = asyncio.run(client.execute("printf ok", "STANDARD-00000001"))
@@ -427,6 +513,7 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
         "shellgei": "printf ok",
         "problem_id": "STANDARD-00000001",
         "protocol_version": 3,
+        "problem_revision": TEST_PROBLEM_REVISION,
     }
 
 
@@ -459,7 +546,7 @@ def test_backend_runner_client_disables_environment_proxies(
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
     monkeypatch.setattr(runner_client_module, "build_opener", fake_build_opener)
 
-    client = RunnerClient()
+    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
     try:
         result = asyncio.run(client.execute("true", "STANDARD-00000001"))
     finally:
@@ -485,10 +572,48 @@ def test_backend_runner_client_maps_busy_without_accepting_error_body(
         raise HTTPError(request.full_url, 429, "busy", Message(), None)
 
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
-    client = RunnerClient()
+    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
     monkeypatch.setattr(client._opener, "open", fake_urlopen)
     try:
         with pytest.raises(RunnerBusyError):
+            asyncio.run(client.execute("true", "STANDARD-00000001"))
+    finally:
+        client.close()
+
+
+def test_backend_runner_client_maps_revision_conflict_to_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # runnerのHTTP 409をproblem data不一致としてunavailableへ変換し、bodyは受理しない。
+    def fake_urlopen(request: Request, timeout: int) -> FakeResponse:
+        """入力request URLを使用してHTTP 409例外を送出し、responseは返さない。"""
+        raise HTTPError(request.full_url, 409, "conflict", Message(), None)
+
+    monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
+    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
+    monkeypatch.setattr(client._opener, "open", fake_urlopen)
+    try:
+        with pytest.raises(RunnerUnavailableError, match="problem revision mismatch"):
+            asyncio.run(client.execute("true", "STANDARD-00000001"))
+    finally:
+        client.close()
+
+
+def test_backend_runner_client_rejects_different_response_revision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # schemaが正常でもrequestと異なるrevisionのrunner responseをfail closedで拒否する。
+    monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
+    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
+    monkeypatch.setattr(
+        client._opener,
+        "open",
+        lambda *_args, **_kwargs: FakeResponse(
+            _runner_response_bytes("ok", OTHER_PROBLEM_REVISION)
+        ),
+    )
+    try:
+        with pytest.raises(RunnerUnavailableError, match="different problem revision"):
             asyncio.run(client.execute("true", "STANDARD-00000001"))
     finally:
         client.close()
@@ -510,7 +635,7 @@ def test_backend_runner_client_rejects_invalid_responses(
 ) -> None:
     # JSON不正、field不正、型不正のrunner responseをunavailableとして拒否することを確認する。
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
-    client = RunnerClient()
+    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
     monkeypatch.setattr(
         client._opener,
         "open",
@@ -529,7 +654,7 @@ def test_backend_runner_client_rejects_oversized_response(
     # protocol上限を超えるrunner responseを読込後に拒否することを確認する。
     oversized = b"x" * (runner_client_module.RUNNER_RESPONSE_LIMIT_BYTES + 1)
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
-    client = RunnerClient()
+    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
     monkeypatch.setattr(
         client._opener,
         "open",

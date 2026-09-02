@@ -1,8 +1,9 @@
 import os
 import re
-from typing import Final, Literal, Protocol
+from enum import Enum
+from typing import Annotated, Final, Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, StringConstraints
 
 from models.execution import (
     MAX_CAPTURED_OUTPUT_CHARS,
@@ -24,10 +25,20 @@ __all__ = [
 
 RUNNER_EXECUTE_PATH = "/internal/execute"
 RUNNER_HEALTH_PATH = "/internal/health"
+RUNNER_READINESS_PATH = "/internal/ready"
 RUNNER_SHARED_SECRET_ENVIRONMENT = "RUNNER_SHARED_SECRET"
 RUNNER_SHARED_SECRET_PATTERN = re.compile(r"^[A-Za-z0-9_-]{32,256}$")
 RUNNER_INSECURE_EXAMPLE_SECRET = "replace-with-at-least-32-random-characters"
 RUNNER_PROTOCOL_VERSION: Final = 3
+PROBLEM_REVISION_PATTERN_TEXT = r"^[0-9a-f]{64}$"
+ProblemRevision = Annotated[
+    str,
+    StringConstraints(
+        min_length=64,
+        max_length=64,
+        pattern=PROBLEM_REVISION_PATTERN_TEXT,
+    ),
+]
 
 
 class RunnerConfigurationError(RuntimeError):
@@ -43,20 +54,39 @@ class RunnerBusyError(RuntimeError):
 
 
 class RunnerExecutionRequest(ShellgeiData):
-    """version、command、problem IDを保持する不変な内部runner request。"""
+    """version、problem revision、command、problem IDを保持する不変request。"""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     protocol_version: Literal[3]
+    problem_revision: ProblemRevision
 
 
 class RunnerExecutionResponse(BaseModel):
-    """protocol versionとtyped resultを保持する不変な内部runner response。"""
+    """protocol version、problem revision、typed resultを保持する不変response。"""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     protocol_version: Literal[3]
+    problem_revision: ProblemRevision
     result: ExecutionResult
+
+
+class RunnerReadinessStatus(str, Enum):
+    """runnerが実行受付可能か、再起動が必要な劣化状態かを表す。"""
+
+    READY = "ready"
+    DEGRADED = "degraded"
+
+
+class RunnerReadinessResponse(BaseModel):
+    """内部protocol・problem revisionとpool readinessを保持する。"""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    protocol_version: Literal[3]
+    problem_revision: ProblemRevision
+    status: RunnerReadinessStatus
 
 
 class RunnerGateway(Protocol):

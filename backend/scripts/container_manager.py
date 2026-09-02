@@ -79,6 +79,14 @@ class ContainerManager:
         self._managed: dict[str, Any] = {}
         self._pending_names: set[str] = set()
         self._shutting_down = False
+        self._initialized = False
+        self._degraded = False
+
+    def _mark_degraded(self) -> None:
+        """shutdown中でなければpoolを再起動が必要な劣化状態として記録する。"""
+        with self.lock:
+            if not self._shutting_down:
+                self._degraded = True
 
     def _get_client(self) -> Any:
         with self.lock:
@@ -274,6 +282,8 @@ class ContainerManager:
         except Exception:
             self.shutdown_pool()
             raise
+        with self.lock:
+            self._initialized = True
         logger.info("Container pool ready")
 
     def get_container(self) -> Any:
@@ -283,7 +293,13 @@ class ContainerManager:
                 raise RuntimeError("container manager is shutting down")
             if self.pool:
                 return self.pool.popleft()
-        return self._create_container()
+        try:
+            return self._create_container()
+        except ContainerCapacityError:
+            raise
+        except Exception:
+            self._mark_degraded()
+            raise
 
     def _forget_removed_container(self, container: Any) -> None:
         with self.lock:
@@ -384,6 +400,8 @@ class ContainerManager:
     def release_container(self, container: Any, already_stopped: bool = False) -> None:
         """Synchronously destroy a used container and replenish within capacity."""
         removed = self._cleanup_container(container, kill=not already_stopped)
+        if not removed:
+            self._mark_degraded()
         with self.lock:
             should_replenish = removed and not self._shutting_down
         if not should_replenish:
@@ -391,6 +409,7 @@ class ContainerManager:
         try:
             self._create_and_add()
         except Exception as exc:
+            self._mark_degraded()
             logger.error("Failed to replenish sandbox container: %s", exc)
 
     def shutdown_pool(self) -> None:
@@ -414,6 +433,18 @@ class ContainerManager:
     def managed_count(self) -> int:
         with self.lock:
             return len(self._managed) + len(self._pending_names)
+
+    @property
+    def is_ready(self) -> bool:
+        """初期化済み完全capacityで劣化・生成途中・shutdownがなければTrueを返す。"""
+        with self.lock:
+            return (
+                self._initialized
+                and not self._degraded
+                and not self._shutting_down
+                and len(self._managed) == self.pool_size
+                and not self._pending_names
+            )
 
 
 manager = ContainerManager(

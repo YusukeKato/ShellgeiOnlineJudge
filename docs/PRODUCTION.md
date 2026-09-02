@@ -60,6 +60,9 @@ runnerの実行権限が意図しない形で利用された場合、
 現在のCompose構成では、Web APIとDocker操作をversion付き固定schemaの
 内部runner APIで分離しています。protocolの正本は
 [backend文書](../backend/README.md#内部runner-protocol)を参照してください。
+Compose healthcheckはrunnerのreadinessを使用し、sandbox poolの削除・補充失敗と
+problem dataのrevisionを状態に反映します。readinessが劣化した場合は、
+runner logとrootless daemonを確認し、原因を解消してからrunnerを再起動します。
 影響範囲をさらに限定するには、runnerとsandbox用daemonを
 専用hostまたは使い捨てVMへ配置します。
 詳細は[セキュリティモデルと制約](../SECURITY.md)を参照してください。
@@ -608,7 +611,7 @@ backendもrequest受付前に同じmigrationを確認します。明示migration
 
 - DB、backend、frontendがrunningになる
 - runnerがhealthyになる
-- 起動loop、runner認証失敗、sandbox作成失敗がない
+- 起動loop、runner認証失敗、problem revision不一致、sandbox作成・削除・補充失敗がない
 - 公開URLの`GET /api`が成功する
 - ブラウザから問題一覧を取得できる
 - 安全なcommandを1回実行できる
@@ -686,6 +689,10 @@ cd /home/soj/ShellgeiOnlineJudge
 ./deploy/rootless-compose.sh down
 ./deploy/rootless-compose.sh up -d
 ```
+
+runnerはpool劣化を検知すると非readyを維持します。
+`restart runner`で起動時回収とpool再初期化が成功し、`ps`でhealthyへ戻ることを
+確認してください。削除失敗やdaemon障害が続く状態で再起動を繰り返さないでください。
 
 ComposeのDB、runner、backend、frontendにはDockerログのrotationが設定されています。
 現在の上限値は、

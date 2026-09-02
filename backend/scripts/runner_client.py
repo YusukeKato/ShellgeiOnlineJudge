@@ -1,11 +1,13 @@
 import asyncio
 import logging
 import threading
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from urllib.error import HTTPError
 from urllib.request import ProxyHandler, Request, build_opener
 
 from scripts.async_thread import wait_for_thread_future
+from scripts.problem_repository import get_problem_repository
 from scripts.runner_protocol import (
     RUNNER_EXECUTE_PATH,
     RUNNER_PROTOCOL_VERSION,
@@ -26,14 +28,24 @@ RUNNER_BASE_URL = "http://runner:8001"
 RUNNER_REQUEST_TIMEOUT_SECONDS = 30
 RUNNER_RESPONSE_LIMIT_BYTES = 1_100_000
 RUNNER_CLIENT_CAPACITY = 3
+ProblemRevisionProvider = Callable[[], str]
+
+
+def loaded_problem_revision() -> str:
+    """backend起動時に検証・読込済みとなったproblem revisionを返す。"""
+    return get_problem_repository().revision
 
 
 class RunnerClient:
-    def __init__(self) -> None:
-        """固定容量のHTTP workerとproxyを使用しないprivate openerを初期化する。"""
+    def __init__(
+        self,
+        problem_revision_provider: ProblemRevisionProvider = loaded_problem_revision,
+    ) -> None:
+        """固定HTTP worker、直接接続opener、problem revision取得関数を初期化する。"""
         self.executor = ThreadPoolExecutor(max_workers=RUNNER_CLIENT_CAPACITY)
         self._slots = threading.BoundedSemaphore(RUNNER_CLIENT_CAPACITY)
         self._opener = build_opener(ProxyHandler({}))
+        self._problem_revision_provider = problem_revision_provider
 
     @staticmethod
     def validate_configuration() -> None:
@@ -47,8 +59,10 @@ class RunnerClient:
         変換し、HTTP worker threadから呼び出せる同期処理として実行する。
         """
         secret = get_runner_shared_secret()
+        problem_revision = self._problem_revision_provider()
         payload = RunnerExecutionRequest(
             protocol_version=RUNNER_PROTOCOL_VERSION,
+            problem_revision=problem_revision,
             shellgei=shellgei,
             problem_id=problem_id,
         )
@@ -72,6 +86,10 @@ class RunnerClient:
         except HTTPError as exc:
             if exc.code == 429:
                 raise RunnerBusyError("runner execution capacity reached") from exc
+            if exc.code == 409:
+                raise RunnerUnavailableError(
+                    "runner problem revision mismatch"
+                ) from exc
             raise RunnerUnavailableError(
                 f"runner returned HTTP status {exc.code}"
             ) from exc
@@ -82,6 +100,8 @@ class RunnerClient:
             response = RunnerExecutionResponse.model_validate_json(response_body)
         except ValueError as exc:
             raise RunnerUnavailableError("runner returned an invalid response") from exc
+        if response.problem_revision != problem_revision:
+            raise RunnerUnavailableError("runner returned a different problem revision")
         return response.result
 
     async def execute(self, shellgei: str, problem_id: str) -> ExecutionResult:

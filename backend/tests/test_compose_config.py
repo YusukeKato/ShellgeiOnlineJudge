@@ -96,3 +96,12 @@ def test_private_runner_disables_request_access_logs() -> None:
     compose = yaml.safe_load(COMPOSE_FILE.read_text(encoding="utf-8"))
 
     assert "--no-access-log" in compose["services"]["runner"]["command"]
+
+
+def test_runner_healthcheck_uses_pool_readiness_endpoint() -> None:
+    # Composeがrunner processの生存だけでなく、problem dataとpoolの準備完了をhealthcheckする。
+    compose = yaml.safe_load(COMPOSE_FILE.read_text(encoding="utf-8"))
+    healthcheck = compose["services"]["runner"]["healthcheck"]["test"]
+
+    assert "/internal/ready" in healthcheck[-1]
+    assert "/internal/health" not in healthcheck[-1]

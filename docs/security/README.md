@@ -84,11 +84,11 @@ Statusは次の意味で使用します。
     DB volume、image cacheにquotaがない
   - 関連: `docker-compose.yml`、`backend/scripts/execution_log_retention.py`
   - 次: 専用filesystem、I/O制御、quota、監視を本番設計へ追加
-- `SOJ-013` — Medium / P2 / Open
-  - 概要: backend、runner、Docker、DBを通る実Compose E2Eと
-    version一致検証がない
+- `SOJ-013` — Medium / P2 / Partially resolved
+  - 概要: protocol versionとproblem data revisionの相互検証は追加したが、
+    backend、runner、Docker、DBを通る実Compose E2Eがない
   - 関連: `docker-compose.yml`、`backend/tests/test_runner_boundary.py`
-  - 次: protocol/data digest確認とrootless E2Eを追加
+  - 次: rootless Compose E2Eでrevision一致と実行・保存を検証
 - `SOJ-015` — Medium / P1 / Open
   - 概要: cgroup検査とmount前提が、可変sandbox image内の
     tool・metadataを信頼する
@@ -103,10 +103,6 @@ Statusは次の意味で使用します。
   - 概要: frontend nginx設定がhostからread-write mountされる
   - 関連: `docker-compose.yml`
   - 次: mount削除またはread-only化しCompose testを追加
-- `SOJ-018` — Low / P2 / Open
-  - 概要: runnerが認証前にbodyを読み、healthがpool劣化を検知しない
-  - 関連: `backend/runner_main.py`
-  - 次: pre-parse auth/body上限とreadinessを追加
 - `SOJ-019` — Medium / P2 / Deferred
   - 概要: CIにdependency/image/secret scan、最小token権限、
     artifact保証がない
@@ -125,10 +121,10 @@ Statusは次の意味で使用します。
 
 現在の未解決trackerは次の内訳です。
 
-- Open: 5件
-- Partially resolved: 3件
+- Open: 3件
+- Partially resolved: 4件
 - Deferred: 5件
-- Severity: High 0件、Medium 9件、Low 4件
+- Severity: High 0件、Medium 9件、Low 3件
 
 ## Resolved issues
 
@@ -156,9 +152,10 @@ Statusは次の意味で使用します。
 | RES-017 | 実行ログ保存をevent loop外へ分離し、NUL正規化、DB timeout、rollbackと失敗後の回復を実装 | `3843e37` | persistence unit、PostgreSQL lock failure/recovery integration test |
 | RES-018 | Python 3.12--3.14のruntime matrixを固定し、thread future完了確認をversion間で一貫させた | `9510c1f` | runtime matrix、timeout/concurrency、3.12--3.14 non-Docker test |
 | RES-019 | text token衝突と画像先頭除外を解消し、schema指定artifactのMIME検証と全画素比較へ分離 | `91fdbad`、`7947640` | text/image judge unit、全問題Docker回帰 |
+| RES-020 | runner実行認証をbody読込前へ移し、8 KiB上限、pool readiness、problem revision相互検証を追加 | この変更 | runner security・boundary・container manager・Compose静的test |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
-RES-014、RES-015、RES-016、RES-017、RES-018、RES-019は、
+RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020は、
 記載した範囲では解決済みです。
 daemon単独のsandbox有効期限、可変image等の残存経路は、
 別のtracker issueとして追跡しています。

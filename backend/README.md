@@ -36,15 +36,22 @@ problem schema、manifest revision、移行・更新手順は、
 backendからrunnerへの実行境界は、`scripts/runner_protocol.py`の
 `RunnerGateway`、`RunnerExecutionRequest`、`RunnerExecutionResponse`と、
 `models/execution.py`の`ExecutionResult`を正本とします。requestとresponseは
-`protocol_version: 3`を必須とし、
+`protocol_version: 3`と、起動時検証済み全problem dataのSHA-256
+`problem_revision`を必須とし、
 未知version、未知field、欠落field、文字列・画像上限超過を拒否します。
 
-requestは`protocol_version`、`shellgei`、`problem_id`、responseは
-`protocol_version`と構造化された`result`で構成します。`result`は`status`、
+requestは`protocol_version`、`problem_revision`、`shellgei`、`problem_id`、
+responseは`protocol_version`、`problem_revision`と構造化された`result`で
+構成します。両processのrevisionが異なる場合は実行せずfail-closedとします。
+`result`は`status`、
 分離した`stdout`・`stderr`、`exit_code`、`timed_out`、`truncated`、
 `duration_ms`、任意の`artifact`・`error`を保持します。
 artifactはproblem schemaと一致する`path`、`media_type`、Base64 `data`を保持します。
 これは外部公開APIではなく、backendとrunnerを同時に更新する内部protocolです。
+実行endpointはbody parse前にBearer認証し、認証後のbodyも8 KiBまでとします。
+`/internal/health`はprocessのliveness、`/internal/ready`はproblem revisionと
+sandbox poolのreadinessを返します。認証、body上限、readinessのsecurity上の
+保証は[SECURITY.md](../SECURITY.md#runnerとdocker-socketの権限)を参照してください。
 公開APIと既存DB logへ渡すときだけ、構造化結果を従来の結合済み表示文字列へ変換します。
 
 既存`/api/shellgei`は画像dataに加えて`image_media_type`を返します。画像がない場合は

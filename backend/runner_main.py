@@ -1,19 +1,22 @@
-import secrets
 from contextlib import asynccontextmanager
-from typing import Annotated
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import FastAPI, HTTPException, status
+from fastapi.responses import JSONResponse
 
 from scripts.admission_control import sandbox_start_rate_limiter
 from scripts.container_manager import manager
 from scripts.problem_repository import get_problem_repository, load_problem_repository
 from scripts.run_shellgei import SandboxBusyError, ShellgeiDockerClient
+from scripts.runner_http_security import RunnerRequestSecurityMiddleware
 from scripts.runner_protocol import (
     RUNNER_EXECUTE_PATH,
     RUNNER_HEALTH_PATH,
     RUNNER_PROTOCOL_VERSION,
+    RUNNER_READINESS_PATH,
     RunnerExecutionRequest,
     RunnerExecutionResponse,
+    RunnerReadinessResponse,
+    RunnerReadinessStatus,
     get_runner_shared_secret,
 )
 
@@ -45,27 +48,44 @@ app = FastAPI(
     redoc_url=None,
     openapi_url=None,
 )
-
-
-def require_runner_authentication(
-    authorization: Annotated[str | None, Header()] = None,
-) -> None:
-    """入力Authorization headerを共有secretと定数時間比較し、不一致なら401を送出する。"""
-    expected = f"Bearer {get_runner_shared_secret()}"
-    if authorization is None or not secrets.compare_digest(authorization, expected):
-        raise HTTPException(status_code=401, detail="Unauthorized")
+app.add_middleware(RunnerRequestSecurityMiddleware)
 
 
 @app.get(RUNNER_HEALTH_PATH)
 async def health() -> dict[str, str]:
-    """runner processが応答可能であることを示す固定statusを返す。"""
+    """runner processのlivenessだけを示す固定statusを返す。"""
     return {"status": "ok"}
+
+
+@app.get(
+    RUNNER_READINESS_PATH,
+    response_model=RunnerReadinessResponse,
+    responses={status.HTTP_503_SERVICE_UNAVAILABLE: {"model": RunnerReadinessResponse}},
+)
+async def readiness() -> RunnerReadinessResponse | JSONResponse:
+    """problem revisionとsandbox poolが実行受付可能なら200、劣化時は503を返す。"""
+    repository = get_problem_repository()
+    readiness_status = (
+        RunnerReadinessStatus.READY
+        if manager.is_ready
+        else RunnerReadinessStatus.DEGRADED
+    )
+    response = RunnerReadinessResponse(
+        protocol_version=RUNNER_PROTOCOL_VERSION,
+        problem_revision=repository.revision,
+        status=readiness_status,
+    )
+    if readiness_status is RunnerReadinessStatus.DEGRADED:
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=response.model_dump(mode="json"),
+        )
+    return response
 
 
 @app.post(
     RUNNER_EXECUTE_PATH,
     response_model=RunnerExecutionResponse,
-    dependencies=[Depends(require_runner_authentication)],
 )
 async def execute_shellgei(
     shellgei_data: RunnerExecutionRequest,
@@ -75,7 +95,10 @@ async def execute_shellgei(
     入力は検証済みcommandとproblem ID。未登録問題は404、開始rateまたは実行枠の
     上限到達時は429を送出する。
     """
-    record = get_problem_repository().get(shellgei_data.problem_id)
+    repository = get_problem_repository()
+    if shellgei_data.problem_revision != repository.revision:
+        raise HTTPException(status_code=409, detail="Problem revision mismatch")
+    record = repository.get(shellgei_data.problem_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Problem not found")
     if not sandbox_start_rate_limiter.try_acquire():
@@ -90,5 +113,6 @@ async def execute_shellgei(
         raise HTTPException(status_code=429, detail="Runner is busy") from exc
     return RunnerExecutionResponse(
         protocol_version=RUNNER_PROTOCOL_VERSION,
+        problem_revision=repository.revision,
         result=result,
     )

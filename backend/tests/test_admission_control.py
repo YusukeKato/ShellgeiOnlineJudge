@@ -14,6 +14,9 @@ from scripts.admission_control import (
 from scripts.runner_protocol import RUNNER_PROTOCOL_VERSION, RunnerExecutionRequest
 
 
+TEST_PROBLEM_REVISION = "a" * 64
+
+
 def test_start_rate_limiter_defaults_match_the_production_policy() -> None:
     # 既定の開始rateとburstがproduction policyの定数と一致することを確認する。
     limiter = SandboxStartRateLimiter()
@@ -110,7 +113,10 @@ def test_runner_rejects_rate_limited_request_before_docker(
     monkeypatch.setattr(
         runner_main,
         "get_problem_repository",
-        lambda: SimpleNamespace(get=lambda _problem_id: object()),
+        lambda: SimpleNamespace(
+            revision=TEST_PROBLEM_REVISION,
+            get=lambda _problem_id: object(),
+        ),
     )
 
     with pytest.raises(HTTPException) as exc_info:
@@ -118,6 +124,7 @@ def test_runner_rejects_rate_limited_request_before_docker(
             runner_main.execute_shellgei(
                 RunnerExecutionRequest(
                     protocol_version=RUNNER_PROTOCOL_VERSION,
+                    problem_revision=TEST_PROBLEM_REVISION,
                     shellgei="printf test",
                     problem_id="STANDARD-00000001",
                 )

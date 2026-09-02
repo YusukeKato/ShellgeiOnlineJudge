@@ -37,11 +37,13 @@ sandboxコンテナにはDocker socketをマウントしません。
 これは設計および設定上の保証であり、Docker runtimeやkernelに未知の脆弱性が
 存在しないことまで保証するものではありません。
 
-backendからrunnerへ送るfieldは次の2つだけです。
+backendからrunnerへ送る実行内容のfieldは次の2つだけです。
 
 - shell command
 - problem ID
 
+internal protocolの検証用metadataとして、protocol versionと起動時に
+検証した全problem dataのSHA-256 revisionも送信します。
 runner APIは共有secretで認証し、イメージ名、mount、capability、device、
 privileged modeなどのDocker optionを受け付けません。
 
@@ -238,6 +240,11 @@ containerはcreateとstartを分け、create前に一意な名前を管理対象
 create応答が失われた場合は名前からcontainerを再取得して削除します。
 startまたはcgroup検証に失敗したcontainerも、poolへ追加せず削除します。
 削除結果が確認できない名前またはcontainerは管理上限へ含め続けます。
+初期poolが完成していない場合、containerの削除または補充が失敗した場合、
+shutdown中はreadinessを503とします。実行中のcontainerも管理済みcapacityに
+含むため、全slotが利用中であることだけで非readyにはしません。
+一度検知したpool劣化は自動でreadyへ戻さず、runnerの再起動と起動時回収・
+初期化の成功を必要とします。
 
 次の場合はコンテナが残存する可能性があります。
 
@@ -379,9 +386,16 @@ backendのrunner HTTP clientはproxyを明示的に無効化し、
 `HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY`等の環境変数を使用しません。
 
 runner APIの共有secretは32文字以上の安全なランダム値を使用します。
-runnerは認証、version付き入力schema、登録済みproblem ID、開始頻度、
-同時実行数を検査してからsandbox処理を開始します。backendはrunner responseの
-version、schema、byte上限を検証し、未知versionや追加fieldをfail-closedで拒否します。
+runnerは実行requestのbodyを読む前に共有secretを定数時間比較し、
+未認証requestのbodyは読み込みません。認証済みの内部実行requestも
+8 KiB以下に制限します。その後、version付き入力schema、problem revision、
+登録済みproblem ID、開始頻度、同時実行数を検査してからsandbox処理を
+開始します。backendはrunner responseのversion、problem revision、schema、
+byte上限を検証し、不一致、未知version、追加fieldをfail-closedで拒否します。
+
+`GET /internal/health`はprocessのliveness、`GET /internal/ready`はprotocol version、
+problem revision、sandbox pool状態を含むreadinessです。Compose healthcheckは
+readinessを使用し、backendはrunnerがreadyになるまで起動を待ちます。
 
 runnerの実行権限が意図しない形で利用された場合、
 rootless daemonの権限で次のリソースを操作できる状態になります。
