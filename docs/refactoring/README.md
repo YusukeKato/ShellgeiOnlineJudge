@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 10
 - Pending (`Ready` + `Planned`): 10
 - In Progress: 0
-- Review: 1
-- Completed: 16
+- Review: 0
+- Completed: 17
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -169,7 +169,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-014 | P1 | Completed | C | Introduce ExecutionLogRepo and database migrations | R3-003, R3-009 | `b7cb6f9` |
 | R3-015 | P0 | Completed | C | Introduce SubmitSolutionService | R3-008, R3-010, R3-011, R3-014 | `105ec70` |
 | R3-016 | P1 | Completed | C | Expose typed public API v3 contract | R3-015 | `074f450` |
-| R3-017 | P1 | Review | C | Harden runner authentication, readiness, and revision checks | R3-008, R3-009 | - |
+| R3-017 | P1 | Completed | C | Harden runner authentication, readiness, and revision checks | R3-008, R3-009 | `07545a5` |
 | R3-018 | P2 | Planned | C | Add safe structured logging and request correlation | R3-015 | - |
 | R3-019 | P1 | Planned | D | Introduce typed frontend API client | R3-005, R3-016 | - |
 | R3-020 | P1 | Planned | D | Model frontend submission state and cancellation safely | R3-019 | - |
@@ -392,14 +392,14 @@ They are planning aids, not acceptance criteria.
 
 ### R3-017: Harden runner authentication, readiness, and revision checks
 
-- Priority / Status: P1 / `Review`
+- Priority / Status: P1 / `Completed`
 - Goal: request body parse前にrunner認証を行い、pool劣化をreadinessへ反映し、protocol/problem revision不一致をfail-closedにする
 - Main files/components: runner middleware/endpoint、health/readiness、RunnerGateway、Compose healthcheck
 - Dependencies: R3-008、R3-009
 - Risk: Medium。ASGI request処理順、起動中のreadiness、rolling update互換性へ影響する
 - Expected tests: unauthorized large body、body limit、degraded pool、protocol/data digest mismatch、restart behavior
 - Size: M
-- Completion: commit `-` / date 2026-09-03 / 実行requestをASGI middlewareでbody読込前に
+- Completion: commit `07545a5573208084f8a505fbad44b0f872826336` / date 2026-09-03 / 実行requestをASGI middlewareでbody読込前に
   Bearer認証し、認証後bodyを8 KiBへ制限。backendとrunnerの問題定義・画像全体の
   SHA-256 revisionをrequest/responseで相互検証し、不一致を実行前にfail-closedとした。
   livenessとreadinessを分離し、pool削除・補充失敗後は再起動まで非readyを維持する。
@@ -649,3 +649,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-02 | R3-016 typed public API implementation and planned tests completed; moved to `Review` | - |
 | 2026-09-02 | R3-016 approved and recorded as `Completed` | `074f450` |
 | 2026-09-03 | R3-017 runner authentication, readiness, and revision checks completed; moved to `Review` | - |
+| 2026-09-03 | R3-017 approved and recorded as `Completed` | `07545a5` |
