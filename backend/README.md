@@ -47,9 +47,10 @@ artifactはproblem schemaと一致する`path`、`media_type`、Base64 `data`を
 これは外部公開APIではなく、backendとrunnerを同時に更新する内部protocolです。
 公開APIと既存DB logへ渡すときだけ、構造化結果を従来の結合済み表示文字列へ変換します。
 
-公開submission APIは画像dataに加えて`image_media_type`を返します。画像がない場合は
-空文字列と`null`、現在の画像問題では`image/jpeg`を返します。frontendはJPEG/GIFだけを
-data URLとして許可します。
+既存`/api/shellgei`は画像dataに加えて`image_media_type`を返します。画像がない場合は
+空文字列と`null`、現在の画像問題では`image/jpeg`を返します。新しい
+`/api/v3/submissions`はtyped verdict・execution・artifactとHTTP statusを返します。
+外部contractは[Public API](../docs/API.md)を正本とします。
 
 ## 提出use case
 

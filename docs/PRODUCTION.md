@@ -279,7 +279,7 @@ proxyに集約されます。
 - request bodyは16 KiB以下
 - 接続数とリクエスト頻度
 - burst
-- `/api/shellgei`とその他のpathを分けた制限
+- 提出API（`/api/shellgei`、`/api/v3/submissions`）とその他のpathを分けた制限
 - host全体の同時接続・request上限
 - upstream timeoutはfrontend nginxの現在値より長くする
 - 429、413、5xxの集計値による監視
@@ -308,10 +308,10 @@ Layer 7 proxyには次を設定します。
 
 - 通常request: clientごとに平均20件/秒、burst 40
 - 通常request: host全体で平均100件/秒、burst 200
-- `/api/shellgei`: clientごとに平均1件/秒、burst 3
-- `/api/shellgei`: host全体で平均10件/秒、burst 10
+- 提出API: clientごとに平均1件/秒、burst 3
+- 提出API: host全体で平均10件/秒、burst 10
 - 同時接続: clientごとに20、host全体で200
-- `/api/shellgei`の処理中接続: clientごとに3
+- 提出APIの処理中接続: clientごとに3
 - rate・connection limitの拒否status: 429
 
 複数host構成では、この値はhost間で共有されません。

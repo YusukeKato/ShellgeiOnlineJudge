@@ -3,7 +3,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import RequestResponseEndpoint
 from starlette.middleware.trustedhost import TrustedHostMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
 
 from api import api_shellgei  # type: ignore
 from scripts.database import engine
@@ -53,6 +56,20 @@ app.add_middleware(
     allowed_hosts=["backend", "localhost", "127.0.0.1"],
     www_redirect=False,
 )
+
+
+@app.middleware("http")
+async def add_submission_security_headers(
+    request: Request,
+    call_next: RequestResponseEndpoint,
+) -> Response:
+    """提出APIの成功・validation・error responseへ非cache・nosniff headerを付ける。"""
+    response = await call_next(request)
+    if request.url.path in {"/api/shellgei", "/api/v3/submissions"}:
+        for name, value in api_shellgei.SUBMISSION_RESPONSE_HEADERS.items():
+            response.headers[name] = value
+    return response
+
 
 app.include_router(api_shellgei.router, prefix="/api")
 

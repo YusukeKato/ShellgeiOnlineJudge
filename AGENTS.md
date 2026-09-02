@@ -6,6 +6,7 @@
 ## 参照文書
 
 - `README.md`: プロジェクト概要と文書索引
+- `docs/API.md`: public APIのrequest・response DTO、HTTP status、互換性
 - `SECURITY.md`: セキュリティモデル、保証範囲、既知の制約
 - `docs/security/README.md`: 現在のセキュリティ課題、対応状況、作業再開地点
 - `docs/DEVELOPMENT.md`: 開発環境、テスト、ローカル起動
@@ -67,6 +68,7 @@ fork bomb、ディスク枯渇、大量コンテナ生成、Docker daemon停止�
 特に、次の対応関係を確認してください。
 
 - 開発手順やテスト方法: `docs/DEVELOPMENT.md`
+- public APIのfield、型、status、上限、互換性: `docs/API.md`
 - 本番構成、デプロイ、運用: `docs/PRODUCTION.md`
 - sandbox、Docker socket、制限、既知のリスク: `SECURITY.md`
 - Docker統合テストの条件や内容: `backend/tests/integration/README.md`

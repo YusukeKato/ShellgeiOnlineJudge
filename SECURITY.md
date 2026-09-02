@@ -460,6 +460,13 @@ API pathの末尾slashが一致しないrequestはredirectせず404で拒否し�
 ID・タイトルが不正な場合はbackendを起動しません。
 `/api/problems`にはETagと`Cache-Control: public, max-age=300`を付与します。
 
+提出APIのrequestとresponseには利用者のcommand・出力が含まれます。
+`/api/shellgei`と`/api/v3/submissions`の成功・error・validation responseには、
+`Cache-Control: no-store`と`X-Content-Type-Options: nosniff`を付与します。
+v3 APIは内部Docker error文字列とartifact取得pathを返さず、公開response全体を
+1,025,000 bytes以下に制限します。fieldとHTTP statusの正本は
+[Public API](./docs/API.md)を参照してください。
+
 実際のclient単位のrequest頻度、burst、同時接続数は、
 接続元を確認できるホスト側reverse proxy、load balancer、
 またはWAFで制限します。

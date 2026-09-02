@@ -23,11 +23,11 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 27
 - Ready: 0
-- Planned: 12
-- Pending (`Ready` + `Planned`): 12
+- Planned: 11
+- Pending (`Ready` + `Planned`): 11
 - In Progress: 0
 - Review: 1
-- Completed: 14
+- Completed: 15
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -167,8 +167,8 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-012 | P1 | Completed | C | Separate sandbox preparation, execution, capture, and cleanup | R3-009 | `370e5b8` |
 | R3-013 | P0 | Completed | C | Capture structured execution outcomes | R3-012 | `97315a6` |
 | R3-014 | P1 | Completed | C | Introduce ExecutionLogRepo and database migrations | R3-003, R3-009 | `b7cb6f9` |
-| R3-015 | P0 | Review | C | Introduce SubmitSolutionService | R3-008, R3-010, R3-011, R3-014 | - |
-| R3-016 | P1 | Planned | C | Expose typed public API v3 contract | R3-015 | - |
+| R3-015 | P0 | Completed | C | Introduce SubmitSolutionService | R3-008, R3-010, R3-011, R3-014 | `105ec70` |
+| R3-016 | P1 | Review | C | Expose typed public API v3 contract | R3-015 | - |
 | R3-017 | P1 | Planned | C | Harden runner authentication, readiness, and revision checks | R3-008, R3-009 | - |
 | R3-018 | P2 | Planned | C | Add safe structured logging and request correlation | R3-015 | - |
 | R3-019 | P1 | Planned | D | Introduce typed frontend API client | R3-005, R3-016 | - |
@@ -361,14 +361,14 @@ They are planning aids, not acceptance criteria.
 
 ### R3-015: Introduce SubmitSolutionService
 
-- Priority / Status: P0 / `Review`
+- Priority / Status: P0 / `Completed`
 - Goal: problem取得、runner実行、判定、保存をtyped use caseへ集約し、HTTP handlerをtransport mappingだけにする
 - Main files/components: application service、domain result、ProblemRepo/RunnerGateway/Judge/ExecutionLogRepo ports、API handler
 - Dependencies: R3-008、R3-010、R3-011、R3-014
 - Risk: Medium。error mappingと保存順序を維持しつつ、infrastructure failureをwrong answerから分離する
 - Expected tests: fake portsによるsuccess/not-found/busy/timeout/judge/persistence failure、call ordering
 - Size: M
-- Completion: commit `-` / date 2026-09-01 / `SubmissionResult`、ProblemRepo・
+- Completion: commit `105ec70` / date 2026-09-01 / `SubmissionResult`、ProblemRepo・
   RunnerGateway・Judge・ExecutionLogRepoのport、`SubmitSolutionService`を導入。
   problem確認、実行、判定、保存の順序をHTTP handlerから分離し、未登録、runner混雑・停止、
   timeout、judge例外、保存失敗をfake port testで検証。既存public response形式を維持し、
@@ -376,14 +376,19 @@ They are planning aids, not acceptance criteria.
 
 ### R3-016: Expose typed public API v3 contract
 
-- Priority / Status: P1 / `Planned`
+- Priority / Status: P1 / `Review`
 - Goal: request/response DTO、typed verdict、execution failure、artifact MIME、HTTP statusを明文化しfrontendとのcontractを固定する
 - Main files/components: FastAPI route/model、OpenAPI、HTTP mapper、API documentation
 - Dependencies: R3-015
 - Risk: Medium。public contractのbreaking changeとfrontend移行を同期する必要がある
 - Expected tests: ASGI 200/404/422/429/503、OpenAPI schema、response size/cache/security header
 - Size: M
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `-` / date 2026-09-02 / legacy `/api/shellgei`を維持しながら
+  `/api/v3/submissions`、strict request DTO、typed verdict・reason・execution・artifact・
+  persistence response、404・422・429・503 contractを追加。内部errorとartifact pathを除外し、
+  response byte上限、no-store・nosniff、Retry-Afterを実装してOpenAPIとASGIで検証。
+  Python 3.14の非Docker 457件、ruff・format・mypy、rootless実nginx 1件が成功。
+  frontend JavaScriptは未変更だが、Node.js・Yarnが環境になくfrontend検査は未実行
 
 ### R3-017: Harden runner authentication, readiness, and revision checks
 
@@ -635,3 +640,5 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-01 | R3-014 implementation and planned tests completed; moved to `Review` | - |
 | 2026-09-01 | R3-014 approved and recorded as `Completed` | `b7cb6f9` |
 | 2026-09-01 | R3-015 implementation and planned tests completed; moved to `Review` | - |
+| 2026-09-02 | R3-015 approved and recorded as `Completed` | `105ec70` |
+| 2026-09-02 | R3-016 typed public API implementation and planned tests completed; moved to `Review` | - |

@@ -15,6 +15,7 @@ SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-j
 
 | 文書 | 対象 | 内容 |
 | --- | --- | --- |
+| [Public API](./docs/API.md) | API利用者・開発者 | v3 submission DTO、HTTP status、上限、legacy互換性 |
 | [開発環境](./docs/DEVELOPMENT.md) | 開発者 | ローカル環境、静的検査、テスト、Compose起動 |
 | [本番運用](./docs/PRODUCTION.md) | 運用者 | 本番構成、デプロイ、更新、ロールバック、監視 |
 | [セキュリティ](./SECURITY.md) | 開発者・運用者 | 現在のセキュリティモデル、sandbox制限、既知の制約 |

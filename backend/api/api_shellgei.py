@@ -1,8 +1,16 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Header, HTTPException, Response
+from fastapi import APIRouter, Header, HTTPException, Response, status
+from fastapi.responses import JSONResponse
 
 from models.model_shellgei import ShellgeiData, ShellgeiResultResponse
+from models.public_api import (
+    MAX_PUBLIC_SUBMISSION_RESPONSE_BYTES,
+    PublicApiErrorCodeV3,
+    PublicApiErrorV3,
+    SubmitSolutionRequestV3,
+    SubmitSolutionResponseV3,
+)
 from models.submission import SubmissionResult, SubmissionStatus
 from scripts.execution_log_repository import (
     async_execution_log_repo,
@@ -22,6 +30,14 @@ submit_solution_service = SubmitSolutionService(
     judge=shellgei_judge,
     execution_logs=async_execution_log_repo,
 )
+SUBMISSION_RESPONSE_HEADERS = {
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+}
+TEMPORARY_FAILURE_HEADERS = {
+    **SUBMISSION_RESPONSE_HEADERS,
+    "Retry-After": "1",
+}
 
 
 def _submission_date(result: SubmissionResult) -> str:
@@ -67,6 +83,57 @@ def _submission_response(result: SubmissionResult) -> ShellgeiResultResponse:
     )
 
 
+def _public_error_response_v3(
+    status_code: int,
+    code: PublicApiErrorCodeV3,
+    message: str,
+    *,
+    retryable: bool = False,
+) -> JSONResponse:
+    """入力status・安全なcode・messageから、cacheしないv3 JSON errorを返す。"""
+    error = PublicApiErrorV3(code=code, message=message)
+    return JSONResponse(
+        status_code=status_code,
+        content=error.model_dump(mode="json"),
+        headers=(
+            TEMPORARY_FAILURE_HEADERS if retryable else SUBMISSION_RESPONSE_HEADERS
+        ),
+    )
+
+
+def _submission_response_v3(
+    result: SubmissionResult,
+) -> SubmitSolutionResponseV3 | JSONResponse:
+    """application提出結果をtyped v3成功responseまたは適切なHTTP errorへ変換する。"""
+    if result.status is SubmissionStatus.PROBLEM_NOT_FOUND:
+        return _public_error_response_v3(
+            status.HTTP_404_NOT_FOUND,
+            PublicApiErrorCodeV3.PROBLEM_NOT_FOUND,
+            "Problem not found",
+        )
+    if result.status is SubmissionStatus.RUNNER_BUSY:
+        return _public_error_response_v3(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            PublicApiErrorCodeV3.RUNNER_BUSY,
+            "Runner capacity is temporarily exhausted",
+            retryable=True,
+        )
+    if result.status is SubmissionStatus.RUNNER_UNAVAILABLE:
+        return _public_error_response_v3(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            PublicApiErrorCodeV3.RUNNER_UNAVAILABLE,
+            "Runner is unavailable",
+            retryable=True,
+        )
+
+    response = SubmitSolutionResponseV3.from_submission(result)
+    if len(response.model_dump_json().encode("utf-8")) > (
+        MAX_PUBLIC_SUBMISSION_RESPONSE_BYTES
+    ):
+        raise RuntimeError("public submission response exceeded the byte limit")
+    return response
+
+
 @router.post("/shellgei")
 async def post_shellgei(shellgei_data: ShellgeiData) -> ShellgeiResultResponse:
     """検証済みHTTP requestをuse caseへ渡し、既存形式のresponseへ変換する。
@@ -79,6 +146,30 @@ async def post_shellgei(shellgei_data: ShellgeiData) -> ShellgeiResultResponse:
         shellgei_data.problem_id,
     )
     return _submission_response(result)
+
+
+@router.post(
+    "/v3/submissions",
+    response_model=SubmitSolutionResponseV3,
+    responses={
+        status.HTTP_404_NOT_FOUND: {"model": PublicApiErrorV3},
+        status.HTTP_429_TOO_MANY_REQUESTS: {"model": PublicApiErrorV3},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {"model": PublicApiErrorV3},
+    },
+)
+async def post_submission_v3(
+    submission: SubmitSolutionRequestV3,
+) -> SubmitSolutionResponseV3 | Response:
+    """v3提出requestをuse caseへ渡し、typed responseとHTTP statusを返す。
+
+    入力は上限・文字種検証済みcommandとproblem ID。成功・判定結果は200、
+    未登録problemは404、runner混雑は429、runner停止は503へmappingする。
+    """
+    result = await submit_solution_service.submit(
+        submission.shellgei,
+        submission.problem_id,
+    )
+    return _submission_response_v3(result)
 
 
 @router.get("/problems")

@@ -7,6 +7,7 @@ NGINX_CONFIG = (
 
 
 def _active_directives() -> set[str]:
+    # コメントと空行を除いたnginx directiveを集合で返す。
     return {
         line.strip()
         for line in NGINX_CONFIG.read_text(encoding="utf-8").splitlines()
@@ -15,6 +16,7 @@ def _active_directives() -> set[str]:
 
 
 def test_nginx_bounds_request_size_and_connection_lifetime() -> None:
+    # request body、header/body受信、送信、keep-aliveに上限があることを確認する。
     directives = _active_directives()
 
     assert "client_max_body_size 16k;" in directives
@@ -26,6 +28,7 @@ def test_nginx_bounds_request_size_and_connection_lifetime() -> None:
 
 
 def test_nginx_delegates_client_admission_control_to_the_outer_proxy() -> None:
+    # 中間proxy単位になるCompose nginxではIP別受付制御を行わないことを確認する。
     config = NGINX_CONFIG.read_text(encoding="utf-8")
     directives = _active_directives()
 
@@ -36,9 +39,11 @@ def test_nginx_delegates_client_admission_control_to_the_outer_proxy() -> None:
 
 
 def test_nginx_bounds_backend_proxy_operations() -> None:
+    # legacy・v3提出APIと一般APIのbackend転送にtimeoutとbufferingを設定することを確認する。
     directives = _active_directives()
 
     assert "location = /api/shellgei {" in directives
+    assert "location = /api/v3/submissions {" in directives
     assert "location /api {" in directives
     assert "proxy_request_buffering on;" in directives
     assert "proxy_connect_timeout 5s;" in directives
@@ -47,6 +52,7 @@ def test_nginx_bounds_backend_proxy_operations() -> None:
 
 
 def test_nginx_replaces_host_and_strips_untrusted_forwarding_headers() -> None:
+    # backend向けHostを固定し、client指定のforwarded headerを除去することを確認する。
     config = NGINX_CONFIG.read_text(encoding="utf-8")
     directives = _active_directives()
 
