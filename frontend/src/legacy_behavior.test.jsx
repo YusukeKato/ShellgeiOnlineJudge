@@ -1,16 +1,37 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 
+import { submitSolution } from "./api/client";
 import { judgeResult } from "./functions/judge_result";
-import { postShellgei } from "./functions/post_shellgei";
 import { imageDataUrl, submit } from "./functions/submit";
 import { updateProblem } from "./functions/update_problem";
 import SojResult from "./tsx/result";
 
 const SOJ_URL = "https://soj.example";
 
-describe("legacy frontend API and display behavior", () => {
-  // API変換と画面表示に関する従来挙動のテストを、このsuiteへまとめる。
+const submissionResponse = (overrides = {}) => ({
+  // 正常なv3 fixtureへテスト固有のfield上書きを適用して返す。
+  api_version: 3,
+  submission_id: 42,
+  submitted_at: "2026-09-03T12:34:56+09:00",
+  verdict: "accepted",
+  reason: null,
+  execution: {
+    status: "completed",
+    stdout: "result",
+    stderr: "",
+    exit_code: 0,
+    timed_out: false,
+    truncated: false,
+    duration_ms: 12,
+  },
+  artifact: null,
+  persistence: "saved",
+  ...overrides,
+});
+
+describe("typed frontend API and display behavior", () => {
+  // v3 API契約の検証と、既存画面への明示的な変換をこのsuiteで確認する。
   const fetchMock = jest.fn();
 
   beforeEach(() => {
@@ -31,29 +52,21 @@ describe("legacy frontend API and display behavior", () => {
     jest.restoreAllMocks();
   });
 
-  test("maps a successful shellgei response to the legacy tuple", async () => {
-    // 投稿APIの成功レスポンスが画像MIMEを含む6要素配列へ変換されることを確認する。
+  test("returns a validated typed submission response", async () => {
+    // 正常なv3 fixtureがtupleへ変換されず、分離出力や型付きverdictを保ったDTOで返ることを確認する。
     fetchMock.mockResolvedValue({
       ok: true,
-      json: jest.fn().mockResolvedValue({
-        output: "result",
-        id: 42,
-        date: "2026-08-27 12:34:56",
-        judge: 1,
-        image: "encoded-image",
-        image_media_type: "image/gif",
-      }),
+      headers: new Headers({ "X-Request-ID": "a".repeat(32) }),
+      json: jest.fn().mockResolvedValue(submissionResponse()),
     });
 
-    await expect(postShellgei(SOJ_URL, "printf result", "STANDARD-00000001")).resolves.toEqual([
-      "result",
-      "42",
-      "2026-08-27 12:34:56",
-      "1",
-      "encoded-image",
-      "image/gif",
-    ]);
-    expect(fetchMock).toHaveBeenCalledWith(`${SOJ_URL}/api/shellgei`, {
+    await expect(
+      submitSolution(SOJ_URL, {
+        shellgei: "printf result",
+        problem_id: "STANDARD-00000001",
+      }),
+    ).resolves.toEqual(submissionResponse());
+    expect(fetchMock).toHaveBeenCalledWith(`${SOJ_URL}/api/v3/submissions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -64,41 +77,66 @@ describe("legacy frontend API and display behavior", () => {
   });
 
   test("preserves a successful image response with empty standard output", async () => {
-    // 画像だけを生成した正常レスポンスで、空の標準出力と画像情報が失われないことを確認する。
+    // 画像だけを生成したv3応答で、空の標準出力とtyped artifactが画面表示まで失われないことを確認する。
     fetchMock.mockResolvedValue({
       ok: true,
-      json: jest.fn().mockResolvedValue({
-        output: "",
-        id: 43,
-        date: "2026-09-01 12:34:56",
-        judge: 1,
-        image: "encoded-image",
-        image_media_type: "image/jpeg",
-      }),
+      json: jest.fn().mockResolvedValue(
+        submissionResponse({
+          submission_id: 43,
+          execution: {
+            status: "completed",
+            stdout: "",
+            stderr: "",
+            exit_code: 0,
+            timed_out: false,
+            truncated: false,
+            duration_ms: 13,
+          },
+          artifact: { data: "encoded-image", media_type: "image/jpeg" },
+        }),
+      ),
     });
 
-    await expect(postShellgei(SOJ_URL, "convert image", "IMAGE-00000001")).resolves.toEqual([
-      "",
-      "43",
-      "2026-09-01 12:34:56",
-      "1",
-      "encoded-image",
-      "image/jpeg",
-    ]);
+    const setOutputResult = jest.fn();
+    const setJudgeResult = jest.fn();
+    const setImageResult = jest.fn();
+    const setUserShellgeiStatus = jest.fn();
+
+    await submit(
+      1000,
+      "default-image",
+      SOJ_URL,
+      "convert image",
+      "IMAGE-00000001",
+      setOutputResult,
+      setJudgeResult,
+      setImageResult,
+      setUserShellgeiStatus,
+    );
+
+    expect(setOutputResult).toHaveBeenLastCalledWith("");
+    expect(setImageResult).toHaveBeenLastCalledWith("data:image/jpeg;base64,encoded-image");
   });
 
   test("displays an image and verdict when successful standard output is empty", async () => {
     // 空の標準出力をerror扱いせず、正解表示とBase64画像を画面用setterへ渡すことを確認する。
     fetchMock.mockResolvedValue({
       ok: true,
-      json: jest.fn().mockResolvedValue({
-        output: "",
-        id: "44",
-        date: "2026-09-01 12:35:00",
-        judge: "1",
-        image: "encoded-image",
-        image_media_type: "image/jpeg",
-      }),
+      json: jest.fn().mockResolvedValue(
+        submissionResponse({
+          submission_id: 44,
+          execution: {
+            status: "completed",
+            stdout: "",
+            stderr: "",
+            exit_code: 0,
+            timed_out: false,
+            truncated: false,
+            duration_ms: 14,
+          },
+          artifact: { data: "encoded-image", media_type: "image/jpeg" },
+        }),
+      ),
     });
     const setOutputResult = jest.fn();
     const setJudgeResult = jest.fn();
@@ -129,14 +167,22 @@ describe("legacy frontend API and display behavior", () => {
     // 画像未生成による不正解も有効な応答として扱い、通信error表示に置換しないことを確認する。
     fetchMock.mockResolvedValue({
       ok: true,
-      json: jest.fn().mockResolvedValue({
-        output: "",
-        id: "45",
-        date: "2026-09-01 12:36:00",
-        judge: "2",
-        image: "",
-        image_media_type: null,
-      }),
+      json: jest.fn().mockResolvedValue(
+        submissionResponse({
+          submission_id: 45,
+          verdict: "wrong_image",
+          reason: "artifact_missing",
+          execution: {
+            status: "completed",
+            stdout: "",
+            stderr: "",
+            exit_code: 0,
+            timed_out: false,
+            truncated: false,
+            duration_ms: 15,
+          },
+        }),
+      ),
     });
     const setOutputResult = jest.fn();
     const setJudgeResult = jest.fn();
@@ -164,9 +210,18 @@ describe("legacy frontend API and display behavior", () => {
   });
 
   test("shows a failed HTTP request as an error instead of a verdict", async () => {
-    // HTTP失敗ではjudge codeがないため、誤って不正解へ変換せずerror内容を各表示へ渡すことを確認する。
+    // v3 HTTP失敗ではverdictがないため、誤って不正解へ変換せずerror内容を各表示へ渡すことを確認する。
     jest.spyOn(console, "error").mockImplementation(() => undefined);
-    fetchMock.mockResolvedValue({ ok: false, status: 503 });
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 503,
+      headers: new Headers({ "X-Request-ID": "b".repeat(32) }),
+      json: jest.fn().mockResolvedValue({
+        api_version: 3,
+        code: "runner_unavailable",
+        message: "Runner is unavailable",
+      }),
+    });
     const setOutputResult = jest.fn();
     const setJudgeResult = jest.fn();
     const setImageResult = jest.fn();
@@ -191,17 +246,79 @@ describe("legacy frontend API and display behavior", () => {
     expect(setImageResult).toHaveBeenLastCalledWith("default-image");
   });
 
-  test("returns the legacy timeout tuple after 20 seconds", async () => {
-    // APIが応答しない場合に20秒で従来のtimeout用配列を返すことを確認する。
+  test("preserves a typed API error and server request ID", async () => {
+    // v3 error fixtureのcode・messageと相関用request IDを、HTTP status付きclient errorへ保持する。
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 429,
+      headers: new Headers({ "X-Request-ID": "c".repeat(32) }),
+      json: jest.fn().mockResolvedValue({
+        api_version: 3,
+        code: "runner_busy",
+        message: "Runner capacity is temporarily exhausted",
+      }),
+    });
+
+    await expect(
+      submitSolution(SOJ_URL, { shellgei: "true", problem_id: "STANDARD-00000001" }),
+    ).rejects.toMatchObject({
+      kind: "http",
+      status: 429,
+      requestId: "c".repeat(32),
+      response: {
+        api_version: 3,
+        code: "runner_busy",
+        message: "Runner capacity is temporarily exhausted",
+      },
+    });
+  });
+
+  test("returns a typed timeout error after 20 seconds", async () => {
+    // APIが応答しない場合に20秒でtimeout種別のApiClientErrorを返すことを確認する。
     // timeout時に想定されるerror logは、このテスト中だけ出力しない。
     jest.spyOn(console, "error").mockImplementation(() => undefined);
     // resolveもrejectもしないPromiseで、応答しないfetchを再現する。
     fetchMock.mockReturnValue(new Promise(() => undefined));
 
-    const result = postShellgei(SOJ_URL, "sleep 30", "STANDARD-00000001");
+    const result = submitSolution(SOJ_URL, {
+      shellgei: "sleep 30",
+      problem_id: "STANDARD-00000001",
+    });
     jest.advanceTimersByTime(20_000);
 
-    await expect(result).resolves.toEqual(["Timeout: 20.0s", "", "", "", "", ""]);
+    await expect(result).rejects.toMatchObject({
+      name: "ApiClientError",
+      kind: "timeout",
+      message: "Timeout: 20.0s",
+    });
+  });
+
+  test("rejects an unknown verdict before it reaches display mapping", async () => {
+    // backend契約にないverdictを含む成功responseを受理せず、契約違反errorへ変換することを確認する。
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue(submissionResponse({ verdict: "future_verdict" })),
+    });
+
+    await expect(
+      submitSolution(SOJ_URL, { shellgei: "true", problem_id: "STANDARD-00000001" }),
+    ).rejects.toMatchObject({ kind: "invalid_response" });
+  });
+
+  test("rejects an undeclared artifact MIME before building a data URL", async () => {
+    // JPEG/GIF以外のartifact MIMEを含むresponseを契約違反として拒否し、DOMへdata URLを渡さない。
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: jest
+        .fn()
+        .mockResolvedValue(
+          submissionResponse({ artifact: { data: "svg-data", media_type: "image/svg+xml" } }),
+        ),
+    });
+
+    await expect(
+      submitSolution(SOJ_URL, { shellgei: "true", problem_id: "IMAGE-00000001" }),
+    ).rejects.toMatchObject({ kind: "invalid_response" });
   });
 
   test("builds data URLs only for declared JPEG and GIF artifacts", () => {
@@ -248,13 +365,14 @@ describe("legacy frontend API and display behavior", () => {
   });
 
   test.each([
-    ["1", "正解 / Correct !!😄!!"],
-    ["2", "不正解 / Incorrect ...😭..."],
-    ["3", "不正解 / Incorrect ...😭..."],
-    ["4", "不正解 / Incorrect ...😭..."],
-    ["", "不正解 / Incorrect ...😭..."],
-  ])("maps verdict %s to its legacy label", (verdict, label) => {
-    // 従来の判定番号が画面上の正解・不正解文言へ変換されることを確認する。
+    ["accepted", "正解 / Correct !!😄!!"],
+    ["wrong_answer", "不正解 / Incorrect ...😭..."],
+    ["wrong_image", "不正解 / Incorrect ...😭..."],
+    ["wrong_text_and_image", "不正解 / Incorrect ...😭..."],
+    ["execution_failure", "不正解 / Incorrect ...😭..."],
+    ["judge_error", "不正解 / Incorrect ...😭..."],
+  ])("maps typed verdict %s to its display label", (verdict, label) => {
+    // v3の各判定enumが画面上の正解・不正解文言へ変換されることを確認する。
     expect(judgeResult(verdict)).toBe(label);
   });
 

@@ -1,3 +1,5 @@
+import { getProblem } from "../api/client";
+
 export const updateProblem = async (
   soj_url: string,
   selectedProblem: string,
@@ -6,15 +8,10 @@ export const updateProblem = async (
   setProblemOutput: (value: string) => void,
   setProblemImage: (value: string) => void,
 ) => {
+  // 選択IDの型検証済み問題詳細を取得し、問題文・入出力・画像URLを画面へ反映する。
+  // 戻り値はなく、取得・契約検証に失敗した場合は各setterへfallback表示を設定する。
   try {
-    const api_endpoint = `${soj_url}/api/problems/${selectedProblem}`;
-    const response = await fetch(api_endpoint);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await getProblem(soj_url, selectedProblem);
 
     // 日本語と英語を結合
     const statementText =
@@ -24,8 +21,8 @@ export const updateProblem = async (
     setProblemInput(data.input || "NULL");
     setProblemOutput(data.expected_output || "NULL");
     setProblemImage(soj_url + data.image);
-  } catch (error) {
-    console.error("Failed to get problem:", error);
+  } catch {
+    console.error("Failed to get problem");
     setProblemStatement("Error: Failed to get problem");
     setProblemInput("Error: Failed to get problem");
     setProblemOutput("Error: Failed to get problem");

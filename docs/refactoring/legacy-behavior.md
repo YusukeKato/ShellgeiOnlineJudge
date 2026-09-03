@@ -28,5 +28,5 @@ backendではstrict xfail、frontendでは後続unitの修正対象として追�
 - infrastructure errorとjudge errorをtyped stateで区別せず、不正解表示へ変換し得る
 
 text置換tokenと`NULL`の衝突はR3-010、画像先頭除外はR3-011で修正し、
-通常の成功testへ変更しました。残る項目はR3-015からR3-020の対応unitで型付き境界へ移行し、
-修正時に該当xfailまたは追跡項目を通常の成功testへ置き換えます。
+通常の成功testへ変更しました。frontendのtupleと判定code部分一致はR3-019で型付き境界へ
+移行しました。未完了のfetch中断と非同期UI stateはR3-020で対応します。

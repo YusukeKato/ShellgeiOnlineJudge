@@ -111,14 +111,21 @@ CORSのexpose headerに含めます。clientが送信した`X-Request-ID`は信�
 
 ## legacy submission API
 
-現在のfrontendとの移行互換性のため、`POST /api/shellgei`も維持しています。
+外部clientの移行互換性のため、`POST /api/shellgei`も維持しています。
 requestは同じ`ShellgeiData`形式で、responseは`output`、文字列の`id`、JSTの`date`、
 Base64 `image`、`image_media_type`、数字文字列の`judge`を返します。
 
 legacy APIではrunner混雑・停止もHTTP 200と`judge: "4"`へ変換します。新規clientは、
 HTTP status、typed verdict、分離出力を利用できるv3 APIを使用してください。
+標準frontendもv3 APIを使用し、受信JSONを実行時に検証してから表示へ変換します。
 legacy APIにも`Cache-Control: no-store`と`X-Content-Type-Options: nosniff`を付与します。
 `X-Request-ID`の生成・応答規則もv3 APIと同じです。
 
-問題一覧`GET /api/problems`と問題詳細`GET /api/problems/{problem_id}`は、
-frontendのv3 client移行時に別途versioningします。
+## problem API
+
+問題一覧`GET /api/problems`は、`id`、`category`、`title_ja`、`title_en`を持つ配列を
+返します。問題詳細`GET /api/problems/{problem_id}`は、`title_ja`、`statement_ja`、
+`title_en`、`statement_en`、`input`、`expected_output`、`image`を返します。
+これらは現在versionなしの互換endpointです。frontendのAPI clientは受信した全表示fieldを
+実行時に型検証します。将来versioningする場合は、既存endpointの互換性と移行期間を
+別途定義します。

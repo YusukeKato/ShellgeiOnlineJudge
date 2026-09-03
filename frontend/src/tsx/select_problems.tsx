@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { getProblems } from "../api/client";
+import { ProblemSummary } from "../api/types";
 import { updateProblem } from "../functions/update_problem";
 import "../css/summary.css";
 import "../css/headline.css";
 import "../css/common.css";
 import "../css/table_tab.css";
-
-interface ProblemMeta {
-  id: string;
-  category: string;
-  title_ja: string;
-  title_en: string;
-}
 
 interface SojValuesInterface {
   soj_url: string;
@@ -32,19 +27,16 @@ const SojSelectProblems: React.FC<SojValuesInterface> = ({
   setProblemImage,
 }) => {
   const [activeTab, setActiveTab] = useState<string>("STANDARD");
-  const [problemList, setProblemList] = useState<ProblemMeta[]>([]);
+  const [problemList, setProblemList] = useState<ProblemSummary[]>([]);
 
   // 問題リストをAPI経由で取得
   useEffect(() => {
     const fetchProblems = async () => {
+      // API clientで検証済みの問題一覧だけをstateへ設定し、不正responseは表示へ混入させない。
       try {
-        const response = await fetch(`${soj_url}/api/problems`);
-        if (response.ok) {
-          const data = await response.json();
-          setProblemList(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch problem list:", error);
+        setProblemList(await getProblems(soj_url));
+      } catch {
+        console.error("Failed to fetch problem list");
       }
     };
     fetchProblems();
@@ -52,6 +44,7 @@ const SojSelectProblems: React.FC<SojValuesInterface> = ({
 
   // 問題行をクリックしたときの処理
   const handleSelectClick = (problemId: string) => {
+    // 選択された問題IDをstateへ保存し、同じIDの型検証済み詳細を取得して表示する。
     setSelectedProblem(problemId);
     updateProblem(
       soj_url,

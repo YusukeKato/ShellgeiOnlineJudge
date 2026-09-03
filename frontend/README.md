@@ -5,10 +5,15 @@
 
 ## 主な構成
 
+- `src/api/`: public APIの型、受信JSON検証、HTTP client
 - `src/`: React application
 - `public/`: 静的ファイル
 - `nginx/`: 静的ファイルの配信とAPI proxyの設定
 - `Dockerfile`: Node.js 22でbuildし、nginxで配信するmulti-stage build
+
+提出には`POST /api/v3/submissions`を使用します。API clientはresponseを`unknown`として
+受け取り、verdict、execution、artifact MIME等を実行時に検証してから画面表示用の値へ
+変換します。public API contractの正本は[API仕様](../docs/API.md)です。
 
 ## 開発とテスト
 

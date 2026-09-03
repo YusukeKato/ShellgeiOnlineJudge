@@ -39,16 +39,26 @@ describe("playground default problem", () => {
           }),
         };
       }
-      if (url === `${SOJ_URL}/api/shellgei` && options?.method === "POST") {
+      if (url === `${SOJ_URL}/api/v3/submissions` && options?.method === "POST") {
         return {
           ok: true,
           json: async () => ({
-            output: "ok",
-            id: "1",
-            date: "2026-09-01 00:00:00",
-            judge: "1",
-            image: "",
-            image_media_type: null,
+            api_version: 3,
+            submission_id: 1,
+            submitted_at: "2026-09-01T00:00:00+09:00",
+            verdict: "accepted",
+            reason: null,
+            execution: {
+              status: "completed",
+              stdout: "ok",
+              stderr: "",
+              exit_code: 0,
+              timed_out: false,
+              truncated: false,
+              duration_ms: 1,
+            },
+            artifact: null,
+            persistence: "saved",
           }),
         };
       }
@@ -87,7 +97,7 @@ describe("playground default problem", () => {
     fireEvent.click(screen.getByDisplayValue(/RUN/));
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(`${SOJ_URL}/api/shellgei`, {
+      expect(fetchMock).toHaveBeenCalledWith(`${SOJ_URL}/api/v3/submissions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

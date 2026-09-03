@@ -23,10 +23,10 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 27
 - Ready: 0
-- Planned: 9
-- Pending (`Ready` + `Planned`): 9
+- Planned: 8
+- Pending (`Ready` + `Planned`): 8
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 18
 - Blocked: 0
 - Deferred: 0
@@ -171,7 +171,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-016 | P1 | Completed | C | Expose typed public API v3 contract | R3-015 | `074f450` |
 | R3-017 | P1 | Completed | C | Harden runner authentication, readiness, and revision checks | R3-008, R3-009 | `07545a5` |
 | R3-018 | P2 | Completed | C | Add safe structured logging and request correlation | R3-015 | `45d5482` |
-| R3-019 | P1 | Planned | D | Introduce typed frontend API client | R3-005, R3-016 | - |
+| R3-019 | P1 | Review | D | Introduce typed frontend API client | R3-005, R3-016 | - |
 | R3-020 | P1 | Planned | D | Model frontend submission state and cancellation safely | R3-019 | - |
 | R3-021 | P2 | Planned | D | Consolidate frontend toolchain after behavior coverage | R3-020 | - |
 | R3-022 | P1 | Planned | E | Pin runtime artifacts and harden mounts and configuration | R3-013 | - |
@@ -426,14 +426,18 @@ They are planning aids, not acceptance criteria.
 
 ### R3-019: Introduce typed frontend API client
 
-- Priority / Status: P1 / `Planned`
+- Priority / Status: P1 / `Review`
 - Goal: raw `fetch`、tuple、`any`、magic verdict判定をtyped clientと明示的なDTO mappingへ置き換える
 - Main files/components: frontend API client/types、problem/result functions、component props、API mock
 - Dependencies: R3-005、R3-016
 - Risk: Medium。表示上の互換性とAPI移行期間を管理する必要がある
 - Expected tests: typed success/error fixtures、unknown verdict、artifact MIME、problem selection、lint/type/build
 - Size: M
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `-` / date 2026-09-03 / `fetch`を単一clientへ集約し、提出を
+  `/api/v3/submissions`へ移行。成功・HTTP error・problem responseを`unknown`から
+  runtime検証し、typed verdict、分離execution、JPEG/GIF artifactを明示的に画面へ
+  mappingする。legacy tuple、数字judge code、`any`、frontendのlegacy提出呼出しを削除。
+  frontend test 21件、format、lint、production buildがrootless Docker上で成功。
 
 ### R3-020: Model frontend submission state and cancellation safely
 
@@ -657,3 +661,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-03 | R3-017 approved and recorded as `Completed` | `07545a5` |
 | 2026-09-03 | R3-018 safe structured logging and request correlation completed; moved to `Review` | - |
 | 2026-09-03 | R3-018 approved and recorded as `Completed` | `45d5482` |
+| 2026-09-03 | R3-019 typed frontend API client completed; moved to `Review` | - |

@@ -1,7 +1,9 @@
-export const judgeResult = (judge: string): string => {
-  if (judge.indexOf("1") !== -1) {
+import { JudgeVerdict } from "../api/types";
+
+export const judgeResult = (verdict: JudgeVerdict): string => {
+  // v3の型付きverdictを既存の正解・不正解表示へ変換し、数字codeや部分一致に依存しない。
+  if (verdict === "accepted") {
     return "正解 / Correct !!😄!!";
-  } else {
-    return "不正解 / Incorrect ...😭...";
   }
+  return "不正解 / Incorrect ...😭...";
 };

@@ -459,7 +459,7 @@ curl --fail --show-error --silent \
   --output "${SOJ_SMOKE_RESPONSE}" \
   --header 'Content-Type: application/json' \
   --data '{"shellgei":"printf smoke-ok","problem_id":"STANDARD-00000001"}' \
-  https://example.com/api/shellgei
+  https://example.com/api/v3/submissions
 
 python3 -c '
 import json
@@ -467,7 +467,8 @@ import sys
 
 with open(sys.argv[1], encoding="utf-8") as response_file:
     response = json.load(response_file)
-assert response["output"] == "smoke-ok"
+assert response["api_version"] == 3
+assert response["execution"]["stdout"] == "smoke-ok"
 print("sandbox smoke test: ok")
 ' "${SOJ_SMOKE_RESPONSE}"
 
