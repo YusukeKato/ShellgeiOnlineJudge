@@ -726,6 +726,7 @@ docker system df
 - CPU、メモリ、PID、ロードアベレージ
 - backendの5xx、timeout、拒否数、応答時間の集計値
 - runnerの認証失敗、429、5xx、再起動、sandbox削除失敗の集計値
+- responseの`X-Request-ID`でbackend、runner、DB保存のJSON eventを紐付けられること
 - rootless Docker user serviceの稼働状態
 - owner別のsandboxコンテナ数、起動時回収、削除失敗
 - TLS証明書の有効期限と更新hookの成功
@@ -733,6 +734,10 @@ docker system df
 - 外側proxyの413、429、5xxとrate・connection limitの匿名集計値
 - OS、Docker、Python/npm依存関係、base imageのセキュリティ更新
 - 実行ログのretention件数・期間と、service logへのclient情報・機密情報混入
+
+request IDは問い合わせ対象の1 requestを追跡するためだけに使用し、
+利用者単位の集計やprofilingに使用しないでください。記録fieldと保持方針は
+[SECURITY.mdの「実行ログとDockerログ」](../SECURITY.md#実行ログとdockerログ)を正本とします。
 
 rootless Dockerのデータは通常、
 デプロイユーザーの`~/.local/share/docker`配下にあります。

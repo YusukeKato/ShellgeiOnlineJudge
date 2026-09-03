@@ -13,13 +13,16 @@ from models.submission import (
 from scripts.execution_log_repository import ExecutionLogRepositoryError
 from scripts.judge import JudgeReason, JudgeResult, JudgeVerdict
 from scripts.problem_repository import ProblemRecord
+from scripts.request_context import bind_request_id, current_request_id
 from scripts.runner_protocol import RunnerBusyError, RunnerUnavailableError
 from scripts.submit_solution import SubmitSolutionService
+from scripts.structured_logging import SAFE_EVENT_LOGGER_NAME
 
 
 PROBLEM_ID = "STANDARD-00000001"
 SUBMITTED_AT = datetime(2026, 9, 1, 12, 34, 56, tzinfo=timezone.utc)
 PROBLEM_RECORD = cast(ProblemRecord, object())
+TEST_REQUEST_ID = "a" * 32
 
 
 def _completed_execution(stdout: str = "ok") -> ExecutionResult:
@@ -84,11 +87,13 @@ class FakeRunner:
         self.events = events
         self.result = result or _completed_execution()
         self.error = error
+        self.request_ids: list[str | None] = []
 
     async def execute(self, shellgei: str, problem_id: str) -> ExecutionResult:
         """入力command・IDを確認し、設定された実行結果または例外を返す。"""
         assert shellgei == "printf ok"
         assert problem_id == PROBLEM_ID
+        self.request_ids.append(current_request_id())
         self.events.append("runner")
         if self.error is not None:
             raise self.error
@@ -133,11 +138,13 @@ class FakeExecutionLogRepo:
         self.log_id = log_id
         self.error = error
         self.entries: list[ExecutionLogEntry] = []
+        self.request_ids: list[str] = []
 
-    async def save(self, entry: ExecutionLogEntry) -> int:
-        """入力entryを記録し、設定された採番IDまたは例外を返す。"""
+    async def save(self, entry: ExecutionLogEntry, *, request_id: str) -> int:
+        """入力entryと保存紐付けIDを記録し、設定された採番IDまたは例外を返す。"""
         self.events.append("log")
         self.entries.append(entry)
+        self.request_ids.append(request_id)
         if self.error is not None:
             raise self.error
         return self.log_id
@@ -182,6 +189,24 @@ def test_submit_solution_orders_problem_execution_judge_and_persistence() -> Non
     assert len(logs.entries) == 1
     assert logs.entries[0].problem_id == PROBLEM_ID
     assert logs.entries[0].shellgei == "printf ok"
+    assert len(logs.request_ids) == 1
+    assert len(logs.request_ids[0]) == 32
+    assert logs.request_ids[0] not in logs.entries[0].model_dump_json()
+
+
+def test_submit_solution_propagates_bound_request_id_to_runner_and_db() -> None:
+    # HTTP contextのrequest IDが同じ値のままrunnerとDB保存境界へ届き、DB entryには混入しない。
+    events: list[str] = []
+    runner = FakeRunner(events)
+    service, logs = _service(events, runner=runner)
+
+    with bind_request_id(TEST_REQUEST_ID):
+        result = asyncio.run(service.submit("printf ok", PROBLEM_ID))
+
+    assert result.status is SubmissionStatus.COMPLETED
+    assert runner.request_ids == [TEST_REQUEST_ID]
+    assert logs.request_ids == [TEST_REQUEST_ID]
+    assert TEST_REQUEST_ID not in logs.entries[0].model_dump_json()
 
 
 def test_submit_solution_stops_when_problem_is_not_found() -> None:
@@ -248,20 +273,24 @@ def test_submit_solution_judges_and_persists_timeout_result() -> None:
     assert logs.entries[0].verdict is JudgeVerdict.EXECUTION_FAILURE
 
 
-def test_submit_solution_does_not_convert_unexpected_judge_error_to_wrong_answer() -> (
-    None
-):
+def test_submit_solution_does_not_convert_unexpected_judge_error_to_wrong_answer(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     # judgeの予期しない例外を不正解に偽装せず伝播し、実行ログも保存しないことを確認する。
     events: list[str] = []
     service, _ = _service(
         events,
-        judge=FakeJudge(events, error=RuntimeError("judge failed")),
+        judge=FakeJudge(events, error=RuntimeError("PRIVATE-JUDGE-ERROR")),
     )
+    caplog.set_level("ERROR", logger=SAFE_EVENT_LOGGER_NAME)
 
-    with pytest.raises(RuntimeError, match="judge failed"):
+    with pytest.raises(RuntimeError, match="PRIVATE-JUDGE-ERROR"):
         asyncio.run(service.submit("printf ok", PROBLEM_ID))
 
     assert events == ["problem", "runner", "judge"]
+    assert '"event":"submission_failed"' in caplog.records[-1].message
+    assert "PRIVATE-JUDGE-ERROR" not in caplog.records[-1].message
+    assert "printf ok" not in caplog.records[-1].message
 
 
 def test_submit_solution_returns_results_when_persistence_is_unavailable() -> None:

@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -16,6 +17,8 @@ from models.submission import (
     SubmissionStatus,
 )
 from scripts.judge import JudgeReason, JudgeResult, JudgeVerdict
+from scripts.request_context import current_request_id
+from scripts.structured_logging import SAFE_EVENT_LOGGER_NAME
 
 
 PROBLEM_ID = "STANDARD-00000001"
@@ -61,9 +64,11 @@ def _rejected_submission(status: SubmissionStatus) -> SubmissionResult:
 
 
 def _post_json(
-    path: str, payload: dict[str, object]
+    path: str,
+    payload: dict[str, object],
+    extra_headers: list[tuple[bytes, bytes]] | None = None,
 ) -> tuple[int, dict[str, str], bytes]:
-    """入力pathへJSONをASGI POSTし、status・header・結合済みbodyを返す。"""
+    """入力path・JSON・任意headerでASGI POSTし、status・header・結合済みbodyを返す。"""
 
     async def scenario() -> tuple[int, dict[str, str], bytes]:
         """ASGI messageを送受信し、1回のHTTP応答を組み立てて返す。"""
@@ -101,6 +106,7 @@ def _post_json(
                 (b"host", b"backend:8000"),
                 (b"content-type", b"application/json"),
                 (b"content-length", str(len(request_body)).encode("ascii")),
+                *(extra_headers or []),
             ],
             "client": ("127.0.0.1", 12345),
             "server": ("backend", 8000),
@@ -122,6 +128,70 @@ def _post_json(
         return response_start["status"], response_headers, response_body
 
     return asyncio.run(scenario())
+
+
+def test_submission_uses_server_request_id_and_logs_only_safe_fields(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # client指定IDを無視してserver生成IDをresponse・contextへ渡し、commandや接続情報をlogへ残さない。
+    observed_request_ids: list[str | None] = []
+
+    async def submit(_shellgei: str, _problem_id: str) -> SubmissionResult:
+        """現在のrequest IDを記録し、固定のrunner混雑結果を返す。"""
+        observed_request_ids.append(current_request_id())
+        return _rejected_submission(SubmissionStatus.RUNNER_BUSY)
+
+    caplog.set_level("INFO", logger=SAFE_EVENT_LOGGER_NAME)
+    monkeypatch.setattr(api_shellgei.submit_solution_service, "submit", submit)
+
+    status, headers, _ = _post_json(
+        "/api/v3/submissions",
+        {"shellgei": "printf PRIVATE-COMMAND", "problem_id": PROBLEM_ID},
+        extra_headers=[
+            (b"x-request-id", b"attacker-request-id"),
+            (b"origin", b"https://shellgei-online-judge.com"),
+        ],
+    )
+
+    response_request_id = headers["x-request-id"]
+    assert status == 429
+    assert re.fullmatch(r"[0-9a-f]{32}", response_request_id)
+    assert headers["access-control-expose-headers"] == "X-Request-ID"
+    assert observed_request_ids == [response_request_id]
+    event = json.loads(caplog.records[-1].message)
+    assert event == {
+        "event": "http_request_completed",
+        "component": "backend_http",
+        "request_id": response_request_id,
+        "endpoint": "v3_submission",
+        "http_status": 429,
+        "duration_ms": event["duration_ms"],
+    }
+    assert event["duration_ms"] >= 0
+    serialized_event = caplog.records[-1].message
+    assert "PRIVATE-COMMAND" not in serialized_event
+    assert "attacker-request-id" not in serialized_event
+    assert "127.0.0.1" not in serialized_event
+
+
+def test_legacy_submission_also_returns_server_request_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # 移行中のlegacy提出APIにも、v3と同じserver生成request IDをresponseで返す。
+    async def submit(_shellgei: str, _problem_id: str) -> SubmissionResult:
+        """入力を使わず、legacy response変換用のrunner混雑結果を返す。"""
+        return _rejected_submission(SubmissionStatus.RUNNER_BUSY)
+
+    monkeypatch.setattr(api_shellgei.submit_solution_service, "submit", submit)
+
+    status, headers, _ = _post_json(
+        "/api/shellgei",
+        {"shellgei": "true", "problem_id": PROBLEM_ID},
+    )
+
+    assert status == 200
+    assert re.fullmatch(r"[0-9a-f]{32}", headers["x-request-id"])
 
 
 def test_v3_submission_returns_typed_success_response(
@@ -269,6 +339,7 @@ def test_v3_submission_rejects_invalid_requests_before_use_case(
     assert status == 422
     assert headers["cache-control"] == "no-store"
     assert headers["x-content-type-options"] == "nosniff"
+    assert re.fullmatch(r"[0-9a-f]{32}", headers["x-request-id"])
 
 
 def test_v3_openapi_fixes_typed_contract_and_error_statuses() -> None:

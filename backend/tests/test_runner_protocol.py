@@ -16,6 +16,7 @@ from scripts.runner_protocol import (
 )
 
 TEST_PROBLEM_REVISION = "a" * 64
+TEST_REQUEST_ID = "b" * 32
 
 
 def _completed_result(
@@ -42,12 +43,14 @@ def test_runner_protocol_round_trip_preserves_versioned_request_and_result() -> 
     # versionとproblem revision付きrequest・responseをJSON往復し、実行内容が保持されることを確認する。
     request = RunnerExecutionRequest(
         protocol_version=RUNNER_PROTOCOL_VERSION,
+        request_id=TEST_REQUEST_ID,
         problem_revision=TEST_PROBLEM_REVISION,
         shellgei="printf ok",
         problem_id="STANDARD-00000001",
     )
     response = RunnerExecutionResponse(
         protocol_version=RUNNER_PROTOCOL_VERSION,
+        request_id=TEST_REQUEST_ID,
         problem_revision=TEST_PROBLEM_REVISION,
         result=_completed_result(
             artifact=ExecutionArtifact(
@@ -72,12 +75,14 @@ def test_runner_protocol_round_trip_preserves_versioned_request_and_result() -> 
         {"shellgei": "true", "problem_id": "STANDARD-00000001"},
         {
             "protocol_version": 2,
+            "request_id": TEST_REQUEST_ID,
             "problem_revision": TEST_PROBLEM_REVISION,
             "shellgei": "true",
             "problem_id": "STANDARD-00000001",
         },
         {
             "protocol_version": 3,
+            "request_id": TEST_REQUEST_ID,
             "problem_revision": TEST_PROBLEM_REVISION,
             "shellgei": "true",
             "problem_id": "STANDARD-00000001",
@@ -85,7 +90,15 @@ def test_runner_protocol_round_trip_preserves_versioned_request_and_result() -> 
         },
         {
             "protocol_version": 3,
+            "request_id": TEST_REQUEST_ID,
             "problem_revision": "not-a-sha256-digest",
+            "shellgei": "true",
+            "problem_id": "STANDARD-00000001",
+        },
+        {
+            "protocol_version": 3,
+            "request_id": "attacker-controlled",
+            "problem_revision": TEST_PROBLEM_REVISION,
             "shellgei": "true",
             "problem_id": "STANDARD-00000001",
         },
@@ -94,7 +107,7 @@ def test_runner_protocol_round_trip_preserves_versioned_request_and_result() -> 
 def test_runner_request_rejects_missing_wrong_version_and_unknown_fields(
     payload: dict[str, object],
 ) -> None:
-    # version欠落・未知version・不正revision・追加fieldを内部request schemaが拒否することを確認する。
+    # version欠落・未知version・不正ID/revision・追加fieldを内部request schemaが拒否する。
     with pytest.raises(ValidationError):
         RunnerExecutionRequest.model_validate(payload)
 
@@ -117,6 +130,7 @@ def test_runner_request_rejects_missing_wrong_version_and_unknown_fields(
         },
         {
             "protocol_version": 2,
+            "request_id": TEST_REQUEST_ID,
             "problem_revision": TEST_PROBLEM_REVISION,
             "result": {
                 "status": "completed",
@@ -132,6 +146,7 @@ def test_runner_request_rejects_missing_wrong_version_and_unknown_fields(
         },
         {
             "protocol_version": 3,
+            "request_id": TEST_REQUEST_ID,
             "problem_revision": TEST_PROBLEM_REVISION,
             "result": {
                 "status": "completed",
@@ -148,6 +163,7 @@ def test_runner_request_rejects_missing_wrong_version_and_unknown_fields(
         },
         {
             "protocol_version": 3,
+            "request_id": TEST_REQUEST_ID,
             "problem_revision": TEST_PROBLEM_REVISION,
             "result": {
                 "status": "completed",
@@ -164,7 +180,14 @@ def test_runner_request_rejects_missing_wrong_version_and_unknown_fields(
         },
         {
             "protocol_version": 3,
+            "request_id": TEST_REQUEST_ID,
             "problem_revision": "A" * 64,
+            "result": _completed_result().model_dump(),
+        },
+        {
+            "protocol_version": 3,
+            "request_id": "invalid-request-id",
+            "problem_revision": TEST_PROBLEM_REVISION,
             "result": _completed_result().model_dump(),
         },
     ],
@@ -172,7 +195,7 @@ def test_runner_request_rejects_missing_wrong_version_and_unknown_fields(
 def test_runner_response_rejects_missing_wrong_version_and_unknown_fields(
     payload: dict[str, object],
 ) -> None:
-    # version欠落・未知version・不正revisionと、response内外の追加fieldを拒否することを確認する。
+    # version欠落・未知version・不正ID/revisionと、response内外の追加fieldを拒否する。
     with pytest.raises(ValidationError):
         RunnerExecutionResponse.model_validate(payload)
 

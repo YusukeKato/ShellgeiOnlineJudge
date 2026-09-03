@@ -8,7 +8,7 @@ from scripts.judge import JudgeReason, JudgeResult, JudgeVerdict
 class ExecutionLogEntry(BaseModel):
     """DBへ保存可能な最小限の提出・実行・判定fieldだけを不変に保持する。
 
-    requestのIP address、header、User-Agent、画像artifact、内部errorをfieldとして
+    request ID、IP address、header、User-Agent、画像artifact、内部errorをfieldとして
     受け取らず、repository境界へ不要な情報を持ち込まない。
     """
 

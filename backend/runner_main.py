@@ -1,11 +1,14 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
 
+from models.execution import ExecutionStatus
 from scripts.admission_control import sandbox_start_rate_limiter
 from scripts.container_manager import manager
 from scripts.problem_repository import get_problem_repository, load_problem_repository
+from scripts.request_context import bind_request_id
 from scripts.run_shellgei import SandboxBusyError, ShellgeiDockerClient
 from scripts.runner_http_security import RunnerRequestSecurityMiddleware
 from scripts.runner_protocol import (
@@ -19,9 +22,16 @@ from scripts.runner_protocol import (
     RunnerReadinessStatus,
     get_runner_shared_secret,
 )
+from scripts.structured_logging import (
+    LogComponent,
+    LogEvent,
+    SAFE_EVENT_LOGGER_NAME,
+    log_safe_event,
+)
 
 
 docker_client = ShellgeiDockerClient()
+logger = logging.getLogger(SAFE_EVENT_LOGGER_NAME)
 
 
 @asynccontextmanager
@@ -95,24 +105,60 @@ async def execute_shellgei(
     入力は検証済みcommandとproblem ID。未登録問題は404、開始rateまたは実行枠の
     上限到達時は429を送出する。
     """
-    repository = get_problem_repository()
-    if shellgei_data.problem_revision != repository.revision:
-        raise HTTPException(status_code=409, detail="Problem revision mismatch")
-    record = repository.get(shellgei_data.problem_id)
-    if record is None:
-        raise HTTPException(status_code=404, detail="Problem not found")
-    if not sandbox_start_rate_limiter.try_acquire():
-        raise HTTPException(status_code=429, detail="Runner is busy")
+    with bind_request_id(shellgei_data.request_id):
+        try:
+            repository = get_problem_repository()
+            if shellgei_data.problem_revision != repository.revision:
+                raise HTTPException(status_code=409, detail="Problem revision mismatch")
+            record = repository.get(shellgei_data.problem_id)
+            if record is None:
+                raise HTTPException(status_code=404, detail="Problem not found")
+            if not sandbox_start_rate_limiter.try_acquire():
+                raise HTTPException(status_code=429, detail="Runner is busy")
 
-    try:
-        result = await docker_client.run_with_timeout(
-            shellgei_data.shellgei,
-            shellgei_data.problem_id,
+            try:
+                result = await docker_client.run_with_timeout(
+                    shellgei_data.shellgei,
+                    shellgei_data.problem_id,
+                )
+            except SandboxBusyError as exc:
+                raise HTTPException(status_code=429, detail="Runner is busy") from exc
+        except HTTPException as exc:
+            _log_runner_completion(shellgei_data, http_status=exc.status_code)
+            raise
+        except Exception:
+            _log_runner_completion(shellgei_data, http_status=500)
+            raise
+
+        _log_runner_completion(
+            shellgei_data,
+            http_status=200,
+            execution_status=result.status,
+            duration_ms=result.duration_ms,
         )
-    except SandboxBusyError as exc:
-        raise HTTPException(status_code=429, detail="Runner is busy") from exc
-    return RunnerExecutionResponse(
-        protocol_version=RUNNER_PROTOCOL_VERSION,
-        problem_revision=repository.revision,
-        result=result,
+        return RunnerExecutionResponse(
+            protocol_version=RUNNER_PROTOCOL_VERSION,
+            request_id=shellgei_data.request_id,
+            problem_revision=repository.revision,
+            result=result,
+        )
+
+
+def _log_runner_completion(
+    request: RunnerExecutionRequest,
+    *,
+    http_status: int,
+    execution_status: ExecutionStatus | None = None,
+    duration_ms: int | None = None,
+) -> None:
+    """runner実行の安全なstatus・時間だけを、入力request IDと構造化記録する。"""
+    log_safe_event(
+        logger,
+        LogEvent.RUNNER_EXECUTION_COMPLETED,
+        LogComponent.RUNNER,
+        request_id=request.request_id,
+        http_status=http_status,
+        execution_status=execution_status,
+        duration_ms=duration_ms,
+        level=logging.INFO if http_status < 500 else logging.ERROR,
     )

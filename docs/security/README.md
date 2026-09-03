@@ -153,9 +153,10 @@ Statusは次の意味で使用します。
 | RES-018 | Python 3.12--3.14のruntime matrixを固定し、thread future完了確認をversion間で一貫させた | `9510c1f` | runtime matrix、timeout/concurrency、3.12--3.14 non-Docker test |
 | RES-019 | text token衝突と画像先頭除外を解消し、schema指定artifactのMIME検証と全画素比較へ分離 | `91fdbad`、`7947640` | text/image judge unit、全問題Docker回帰 |
 | RES-020 | runner実行認証をbody読込前へ移し、8 KiB上限、pool readiness、problem revision相互検証を追加 | `07545a5` | runner security・boundary・container manager・Compose静的test |
+| RES-021 | server生成request IDとallowlist型JSON eventでbackend・runner・DB保存を紐付け、利用者dataの非記録を検証 | この変更 | structured logging・public API・runner・DB boundary test |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
-RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020は、
+RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020、RES-021は、
 記載した範囲では解決済みです。
 daemon単独のsandbox有効期限、可変image等の残存経路は、
 別のtracker issueとして追跡しています。

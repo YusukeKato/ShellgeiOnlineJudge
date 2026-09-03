@@ -103,6 +103,12 @@ use caseを開始できない場合は、内部例外やcommandを含まないer
 提出requestとresponseには利用者のcommand・出力を含むため、成功・error・422のすべてに
 `Cache-Control: no-store`と`X-Content-Type-Options: nosniff`を付与します。
 
+提出APIのすべてのresponseに、backendがリクエストごとに生成した
+128-bitの小文字16進数`X-Request-ID`を付与します。browserからも読めるよう
+CORSのexpose headerに含めます。clientが送信した`X-Request-ID`は信頼・再利用せず、
+必ずserver側で新しい値へ置き換えます。問い合わせ時には、responseのこの値を
+対象requestの特定に使用できます。
+
 ## legacy submission API
 
 現在のfrontendとの移行互換性のため、`POST /api/shellgei`も維持しています。
@@ -112,6 +118,7 @@ Base64 `image`、`image_media_type`、数字文字列の`judge`を返します�
 legacy APIではrunner混雑・停止もHTTP 200と`judge: "4"`へ変換します。新規clientは、
 HTTP status、typed verdict、分離出力を利用できるv3 APIを使用してください。
 legacy APIにも`Cache-Control: no-store`と`X-Content-Type-Options: nosniff`を付与します。
+`X-Request-ID`の生成・応答規則もv3 APIと同じです。
 
 問題一覧`GET /api/problems`と問題詳細`GET /api/problems/{problem_id}`は、
 frontendのv3 client移行時に別途versioningします。

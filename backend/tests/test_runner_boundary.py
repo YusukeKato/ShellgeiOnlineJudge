@@ -39,11 +39,14 @@ from scripts.runner_protocol import (
     RunnerReadinessStatus,
     get_runner_shared_secret,
 )
+from scripts.structured_logging import SAFE_EVENT_LOGGER_NAME
 
 
 VALID_SECRET = "a" * 64
 TEST_PROBLEM_REVISION = "b" * 64
 OTHER_PROBLEM_REVISION = "c" * 64
+TEST_REQUEST_ID = "d" * 32
+OTHER_REQUEST_ID = "e" * 32
 
 
 def _completed_result(
@@ -69,11 +72,13 @@ def _completed_result(
 def _runner_response_bytes(
     stdout: str,
     problem_revision: str = TEST_PROBLEM_REVISION,
+    request_id: str = TEST_REQUEST_ID,
 ) -> bytes:
-    # 任意stdoutとproblem revisionをprotocol version 3の正常runner response JSONへ変換する。
+    # 任意stdout・revision・request IDをprotocol version 3の正常response JSONへ変換する。
     return (
         RunnerExecutionResponse(
             protocol_version=RUNNER_PROTOCOL_VERSION,
+            request_id=request_id,
             problem_revision=problem_revision,
             result=_completed_result(stdout),
         )
@@ -86,10 +91,12 @@ def _runner_request(
     shellgei: str = "true",
     problem_id: str = "STANDARD-00000001",
     problem_revision: str = TEST_PROBLEM_REVISION,
+    request_id: str = TEST_REQUEST_ID,
 ) -> RunnerExecutionRequest:
-    """入力command・problem ID・revisionから、現行versionの内部requestを返す。"""
+    """入力command・problem ID・revision・request IDから現行の内部requestを返す。"""
     return RunnerExecutionRequest(
         protocol_version=RUNNER_PROTOCOL_VERSION,
+        request_id=request_id,
         problem_revision=problem_revision,
         shellgei=shellgei,
         problem_id=problem_id,
@@ -139,6 +146,7 @@ def test_runner_shared_secret_rejects_unsafe_values(
 
 def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     # 登録済み問題だけを固定引数でDocker clientへ渡し、typed responseを返すことを確認する。
     class AllowStart:
@@ -164,6 +172,7 @@ def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
         ),
     )
     monkeypatch.setattr(runner_main, "sandbox_start_rate_limiter", AllowStart())
+    caplog.set_level("INFO", logger=SAFE_EVENT_LOGGER_NAME)
     monkeypatch.setattr(
         runner_main.docker_client,
         "run_with_timeout",
@@ -181,6 +190,7 @@ def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
 
     assert result.model_dump() == {
         "protocol_version": 3,
+        "request_id": TEST_REQUEST_ID,
         "problem_revision": TEST_PROBLEM_REVISION,
         "result": {
             "status": "completed",
@@ -195,6 +205,17 @@ def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
         },
     }
     assert calls == [("printf output", "STANDARD-00000001")]
+    event = json.loads(caplog.records[-1].message)
+    assert event == {
+        "event": "runner_execution_completed",
+        "component": "runner",
+        "request_id": TEST_REQUEST_ID,
+        "http_status": 200,
+        "duration_ms": 1,
+        "execution_status": "completed",
+    }
+    assert "printf output" not in caplog.records[-1].message
+    assert '"stdout":"output"' not in caplog.records[-1].message
 
 
 def test_runner_returns_schema_path_and_media_type_with_image_artifact(
@@ -250,6 +271,7 @@ def test_runner_returns_schema_path_and_media_type_with_image_artifact(
 
     assert result.model_dump() == {
         "protocol_version": 3,
+        "request_id": TEST_REQUEST_ID,
         "problem_revision": TEST_PROBLEM_REVISION,
         "result": {
             "status": "completed",
@@ -317,6 +339,7 @@ def test_runner_rejects_unknown_problem_before_admission_or_docker(
 
 def test_runner_rejects_problem_revision_mismatch_before_admission_or_docker(
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     # backendとrunnerのproblem revisionが異なるrequestを、admissionやDocker実行前に409で拒否する。
     class UnusedAdmissionControl:
@@ -346,6 +369,7 @@ def test_runner_rejects_problem_revision_mismatch_before_admission_or_docker(
         "run_with_timeout",
         unexpected_execution,
     )
+    caplog.set_level("INFO", logger=SAFE_EVENT_LOGGER_NAME)
 
     with pytest.raises(HTTPException) as exc_info:
         asyncio.run(
@@ -356,6 +380,10 @@ def test_runner_rejects_problem_revision_mismatch_before_admission_or_docker(
 
     assert exc_info.value.status_code == 409
     assert exc_info.value.detail == "Problem revision mismatch"
+    event = json.loads(caplog.records[-1].message)
+    assert event["event"] == "runner_execution_completed"
+    assert event["request_id"] == TEST_REQUEST_ID
+    assert event["http_status"] == 409
 
 
 @pytest.mark.parametrize(
@@ -495,7 +523,10 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
         return FakeResponse(_runner_response_bytes("ok"))
 
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
-    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
+    client = RunnerClient(
+        problem_revision_provider=lambda: TEST_PROBLEM_REVISION,
+        request_id_provider=lambda: TEST_REQUEST_ID,
+    )
     monkeypatch.setattr(client._opener, "open", fake_urlopen)
     try:
         result = asyncio.run(client.execute("printf ok", "STANDARD-00000001"))
@@ -513,6 +544,7 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
         "shellgei": "printf ok",
         "problem_id": "STANDARD-00000001",
         "protocol_version": 3,
+        "request_id": TEST_REQUEST_ID,
         "problem_revision": TEST_PROBLEM_REVISION,
     }
 
@@ -546,7 +578,10 @@ def test_backend_runner_client_disables_environment_proxies(
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
     monkeypatch.setattr(runner_client_module, "build_opener", fake_build_opener)
 
-    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
+    client = RunnerClient(
+        problem_revision_provider=lambda: TEST_PROBLEM_REVISION,
+        request_id_provider=lambda: TEST_REQUEST_ID,
+    )
     try:
         result = asyncio.run(client.execute("true", "STANDARD-00000001"))
     finally:
@@ -572,7 +607,10 @@ def test_backend_runner_client_maps_busy_without_accepting_error_body(
         raise HTTPError(request.full_url, 429, "busy", Message(), None)
 
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
-    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
+    client = RunnerClient(
+        problem_revision_provider=lambda: TEST_PROBLEM_REVISION,
+        request_id_provider=lambda: TEST_REQUEST_ID,
+    )
     monkeypatch.setattr(client._opener, "open", fake_urlopen)
     try:
         with pytest.raises(RunnerBusyError):
@@ -590,7 +628,10 @@ def test_backend_runner_client_maps_revision_conflict_to_unavailable(
         raise HTTPError(request.full_url, 409, "conflict", Message(), None)
 
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
-    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
+    client = RunnerClient(
+        problem_revision_provider=lambda: TEST_PROBLEM_REVISION,
+        request_id_provider=lambda: TEST_REQUEST_ID,
+    )
     monkeypatch.setattr(client._opener, "open", fake_urlopen)
     try:
         with pytest.raises(RunnerUnavailableError, match="problem revision mismatch"):
@@ -604,7 +645,10 @@ def test_backend_runner_client_rejects_different_response_revision(
 ) -> None:
     # schemaが正常でもrequestと異なるrevisionのrunner responseをfail closedで拒否する。
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
-    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
+    client = RunnerClient(
+        problem_revision_provider=lambda: TEST_PROBLEM_REVISION,
+        request_id_provider=lambda: TEST_REQUEST_ID,
+    )
     monkeypatch.setattr(
         client._opener,
         "open",
@@ -614,6 +658,29 @@ def test_backend_runner_client_rejects_different_response_revision(
     )
     try:
         with pytest.raises(RunnerUnavailableError, match="different problem revision"):
+            asyncio.run(client.execute("true", "STANDARD-00000001"))
+    finally:
+        client.close()
+
+
+def test_backend_runner_client_rejects_different_response_request_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # responseのrequest IDが送信値と異なる場合は、他requestとの取り違えとして拒否する。
+    monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
+    client = RunnerClient(
+        problem_revision_provider=lambda: TEST_PROBLEM_REVISION,
+        request_id_provider=lambda: TEST_REQUEST_ID,
+    )
+    monkeypatch.setattr(
+        client._opener,
+        "open",
+        lambda *_args, **_kwargs: FakeResponse(
+            _runner_response_bytes("ok", request_id=OTHER_REQUEST_ID)
+        ),
+    )
+    try:
+        with pytest.raises(RunnerUnavailableError, match="different request ID"):
             asyncio.run(client.execute("true", "STANDARD-00000001"))
     finally:
         client.close()
@@ -635,7 +702,10 @@ def test_backend_runner_client_rejects_invalid_responses(
 ) -> None:
     # JSON不正、field不正、型不正のrunner responseをunavailableとして拒否することを確認する。
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
-    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
+    client = RunnerClient(
+        problem_revision_provider=lambda: TEST_PROBLEM_REVISION,
+        request_id_provider=lambda: TEST_REQUEST_ID,
+    )
     monkeypatch.setattr(
         client._opener,
         "open",
@@ -654,7 +724,10 @@ def test_backend_runner_client_rejects_oversized_response(
     # protocol上限を超えるrunner responseを読込後に拒否することを確認する。
     oversized = b"x" * (runner_client_module.RUNNER_RESPONSE_LIMIT_BYTES + 1)
     monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
-    client = RunnerClient(problem_revision_provider=lambda: TEST_PROBLEM_REVISION)
+    client = RunnerClient(
+        problem_revision_provider=lambda: TEST_PROBLEM_REVISION,
+        request_id_provider=lambda: TEST_REQUEST_ID,
+    )
     monkeypatch.setattr(
         client._opener,
         "open",
@@ -665,6 +738,35 @@ def test_backend_runner_client_rejects_oversized_response(
             asyncio.run(client.execute("true", "STANDARD-00000001"))
     finally:
         client.close()
+
+
+def test_backend_runner_client_redacts_unexpected_failure_log(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # 予期しないclient例外がcommand等を含んでも、eventには例外文やcommandを記録しない。
+    def fail_urlopen(*_args: object, **_kwargs: object) -> FakeResponse:
+        """入力を使わず、機密文字列を含む予期しない例外を送出する。"""
+        raise RuntimeError("PRIVATE-EXCEPTION-DATA")
+
+    monkeypatch.setenv("RUNNER_SHARED_SECRET", VALID_SECRET)
+    client = RunnerClient(
+        problem_revision_provider=lambda: TEST_PROBLEM_REVISION,
+        request_id_provider=lambda: TEST_REQUEST_ID,
+    )
+    monkeypatch.setattr(client._opener, "open", fail_urlopen)
+    caplog.set_level("WARNING", logger=SAFE_EVENT_LOGGER_NAME)
+    try:
+        with pytest.raises(RunnerUnavailableError):
+            asyncio.run(client.execute("printf PRIVATE-COMMAND", "STANDARD-00000001"))
+    finally:
+        client.close()
+
+    event = json.loads(caplog.records[-1].message)
+    assert event["event"] == "runner_client_failed"
+    assert event["request_id"] == TEST_REQUEST_ID
+    assert "PRIVATE-EXCEPTION-DATA" not in caplog.records[-1].message
+    assert "PRIVATE-COMMAND" not in caplog.records[-1].message
 
 
 def test_public_api_preserves_artifact_data_and_media_type(

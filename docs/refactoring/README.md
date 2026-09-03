@@ -23,10 +23,10 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 27
 - Ready: 0
-- Planned: 10
-- Pending (`Ready` + `Planned`): 10
+- Planned: 9
+- Pending (`Ready` + `Planned`): 9
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 17
 - Blocked: 0
 - Deferred: 0
@@ -170,7 +170,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-015 | P0 | Completed | C | Introduce SubmitSolutionService | R3-008, R3-010, R3-011, R3-014 | `105ec70` |
 | R3-016 | P1 | Completed | C | Expose typed public API v3 contract | R3-015 | `074f450` |
 | R3-017 | P1 | Completed | C | Harden runner authentication, readiness, and revision checks | R3-008, R3-009 | `07545a5` |
-| R3-018 | P2 | Planned | C | Add safe structured logging and request correlation | R3-015 | - |
+| R3-018 | P2 | Review | C | Add safe structured logging and request correlation | R3-015 | - |
 | R3-019 | P1 | Planned | D | Introduce typed frontend API client | R3-005, R3-016 | - |
 | R3-020 | P1 | Planned | D | Model frontend submission state and cancellation safely | R3-019 | - |
 | R3-021 | P2 | Planned | D | Consolidate frontend toolchain after behavior coverage | R3-020 | - |
@@ -408,14 +408,19 @@ They are planning aids, not acceptance criteria.
 
 ### R3-018: Add safe structured logging and request correlation
 
-- Priority / Status: P2 / `Planned`
+- Priority / Status: P2 / `Review`
 - Goal: public APIからrunner/DBまでrequest IDと安全なstatus/durationを追跡し、command、output、secretを不用意にlogしない
 - Main files/components: logging configuration、middleware、application/runner events、運用文書
 - Dependencies: R3-015
 - Risk: Low--Medium。sensitive data漏えいとlog cardinality増加を防ぐ
 - Expected tests: correlation propagation、redaction、no raw command/output/secret、failure event coverage
 - Size: S--M
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `-` / date 2026-09-03 / backendで提出ごとに128-bit request IDを
+  生成し、public response、application context、runner request/response、DB保存eventへ伝播。
+  client指定IDは無視し、request IDもDB行には保存しない。request単位eventを
+  allowlist型JSONとし、command、stdout/stderr、problem ID、例外文、secret、IP、headerを
+  schemaが受け付けないことを回帰testで固定。Python非Docker test 493件、
+  ruff、format、mypyが成功。sandbox・Docker・Compose設定は変更していない。
 
 ## Phase D — Frontend
 
@@ -650,3 +655,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-02 | R3-016 approved and recorded as `Completed` | `074f450` |
 | 2026-09-03 | R3-017 runner authentication, readiness, and revision checks completed; moved to `Review` | - |
 | 2026-09-03 | R3-017 approved and recorded as `Completed` | `07545a5` |
+| 2026-09-03 | R3-018 safe structured logging and request correlation completed; moved to `Review` | - |

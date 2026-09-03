@@ -1,4 +1,5 @@
 import logging
+import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 
@@ -9,9 +10,15 @@ from models.model_db import ExecutionLog
 from scripts.async_thread import wait_for_thread_future
 from scripts.database import SessionLocal
 from scripts.execution_log_retention import prune_execution_logs
+from scripts.structured_logging import (
+    LogComponent,
+    LogEvent,
+    SAFE_EVENT_LOGGER_NAME,
+    log_safe_event,
+)
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(SAFE_EVENT_LOGGER_NAME)
 
 EXECUTION_LOG_OUTPUT_MAX_CHARS = 1_000
 EXECUTION_LOG_WORKER_CAPACITY = 4
@@ -81,7 +88,12 @@ class ExecutionLogRepo:
                 try:
                     db.rollback()
                 except Exception:
-                    logger.exception("Execution log rollback failed")
+                    log_safe_event(
+                        logger,
+                        LogEvent.EXECUTION_LOG_ROLLBACK_FAILED,
+                        LogComponent.EXECUTION_LOG,
+                        level=logging.ERROR,
+                    )
             raise ExecutionLogRepositoryError(
                 "execution log persistence failed"
             ) from exc
@@ -90,7 +102,12 @@ class ExecutionLogRepo:
                 try:
                     db.close()
                 except Exception:
-                    logger.exception("Execution log session close failed")
+                    log_safe_event(
+                        logger,
+                        LogEvent.EXECUTION_LOG_SESSION_CLOSE_FAILED,
+                        LogComponent.EXECUTION_LOG,
+                        level=logging.ERROR,
+                    )
 
     def prune(self) -> int:
         """独立transactionで期限・件数超過ログを削除し、削除件数を返す。"""
@@ -105,14 +122,24 @@ class ExecutionLogRepo:
                 try:
                     db.rollback()
                 except Exception:
-                    logger.exception("Execution log prune rollback failed")
+                    log_safe_event(
+                        logger,
+                        LogEvent.EXECUTION_LOG_ROLLBACK_FAILED,
+                        LogComponent.EXECUTION_LOG,
+                        level=logging.ERROR,
+                    )
             raise ExecutionLogRepositoryError("execution log pruning failed") from exc
         finally:
             if db is not None:
                 try:
                     db.close()
                 except Exception:
-                    logger.exception("Execution log prune session close failed")
+                    log_safe_event(
+                        logger,
+                        LogEvent.EXECUTION_LOG_SESSION_CLOSE_FAILED,
+                        LogComponent.EXECUTION_LOG,
+                        level=logging.ERROR,
+                    )
 
 
 class AsyncExecutionLogRepo:
@@ -122,10 +149,11 @@ class AsyncExecutionLogRepo:
         """入力の同期repositoryを、非同期saveが委譲する保存先として保持する。"""
         self._repository = repository
 
-    async def save(self, entry: ExecutionLogEntry) -> int:
-        """入力entryの同期保存をevent loop外で実行し、採番IDを返す。"""
+    async def save(self, entry: ExecutionLogEntry, *, request_id: str) -> int:
+        """入力entryをthreadで保存し、request IDは安全なeventの紐付けだけに使う。"""
         return await save_execution_log_async(
             entry,
+            request_id=request_id,
             persist_entry=self._repository.save,
         )
 
@@ -140,17 +168,43 @@ _executor = ThreadPoolExecutor(
 async def save_execution_log_async(
     entry: ExecutionLogEntry,
     *,
+    request_id: str | None = None,
     persist_entry: PersistEntry | None = None,
 ) -> int:
-    """typed entryの同期DB保存をevent loop外で実行し、採番IDを返す。"""
+    """typed entryをthreadで保存し、ID付き安全eventと採番IDを返す。"""
     persistence = persist_entry or execution_log_repo.save
+    started_ns = time.monotonic_ns()
     try:
         future = _executor.submit(persistence, entry)
-        return await wait_for_thread_future(future)
+        log_id = await wait_for_thread_future(future)
     except ExecutionLogRepositoryError:
+        log_safe_event(
+            logger,
+            LogEvent.EXECUTION_LOG_SAVE_FAILED,
+            LogComponent.EXECUTION_LOG,
+            request_id=request_id,
+            duration_ms=max(0, (time.monotonic_ns() - started_ns) // 1_000_000),
+            level=logging.WARNING,
+        )
         raise
     except Exception as exc:
+        log_safe_event(
+            logger,
+            LogEvent.EXECUTION_LOG_SAVE_FAILED,
+            LogComponent.EXECUTION_LOG,
+            request_id=request_id,
+            duration_ms=max(0, (time.monotonic_ns() - started_ns) // 1_000_000),
+            level=logging.WARNING,
+        )
         raise ExecutionLogRepositoryError("execution log persistence failed") from exc
+    log_safe_event(
+        logger,
+        LogEvent.EXECUTION_LOG_SAVE_COMPLETED,
+        LogComponent.EXECUTION_LOG,
+        request_id=request_id,
+        duration_ms=max(0, (time.monotonic_ns() - started_ns) // 1_000_000),
+    )
+    return log_id
 
 
 def close_execution_log_repository() -> None:

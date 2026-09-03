@@ -1,4 +1,6 @@
 import asyncio
+import json
+import logging
 import threading
 from datetime import datetime, timedelta, timezone
 
@@ -34,6 +36,7 @@ from scripts.execution_log_repository import (
 )
 from scripts.judge import JudgeResult, JudgeVerdict
 from scripts.runner_protocol import ExecutionArtifact, ExecutionResult, ExecutionStatus
+from scripts.structured_logging import SAFE_EVENT_LOGGER_NAME
 
 
 def _database_session() -> Session:
@@ -318,6 +321,63 @@ def test_async_execution_log_repository_does_not_block_the_event_loop() -> None:
         release.set()
 
 
+def test_async_execution_log_success_event_uses_request_id_without_user_data(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # DB保存成功eventへrequest IDと所要時間だけを記録し、entry内のcommand・出力を複製しない。
+    request_id = "a" * 32
+    entry = _execution_log_entry("PRIVATE-OUTPUT")
+    caplog.set_level(logging.INFO, logger=SAFE_EVENT_LOGGER_NAME)
+
+    result = asyncio.run(
+        save_execution_log_async(
+            entry,
+            request_id=request_id,
+            persist_entry=lambda _entry: 42,
+        )
+    )
+
+    assert result == 42
+    event = json.loads(caplog.records[-1].message)
+    assert event["event"] == "execution_log_save_completed"
+    assert event["component"] == "execution_log"
+    assert event["request_id"] == request_id
+    assert event["duration_ms"] >= 0
+    assert "PRIVATE-OUTPUT" not in caplog.records[-1].message
+    assert entry.shellgei not in caplog.records[-1].message
+
+
+def test_async_execution_log_failure_event_redacts_exception_and_entry(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # DB保存例外に利用者dataが含まれても、失敗eventには例外文・command・出力を記録しない。
+    request_id = "b" * 32
+    entry = _execution_log_entry("PRIVATE-OUTPUT")
+
+    def fail_persistence(_entry: ExecutionLogEntry) -> int:
+        """入力entryは使用せず、機密文字列を含むrepository例外を送出する。"""
+        raise ExecutionLogRepositoryError("PRIVATE-DATABASE-ERROR")
+
+    caplog.set_level(logging.WARNING, logger=SAFE_EVENT_LOGGER_NAME)
+
+    with pytest.raises(ExecutionLogRepositoryError):
+        asyncio.run(
+            save_execution_log_async(
+                entry,
+                request_id=request_id,
+                persist_entry=fail_persistence,
+            )
+        )
+
+    event = json.loads(caplog.records[-1].message)
+    assert event["event"] == "execution_log_save_failed"
+    assert event["request_id"] == request_id
+    serialized_event = caplog.records[-1].message
+    assert "PRIVATE-DATABASE-ERROR" not in serialized_event
+    assert "PRIVATE-OUTPUT" not in serialized_event
+    assert entry.shellgei not in serialized_event
+
+
 def test_shell_api_returns_result_when_log_persistence_fails(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -416,10 +476,22 @@ def test_backend_startup_validates_runner_and_prunes_logs(
     ]
 
 
-def test_execution_log_entry_rejects_request_metadata() -> None:
-    # IP addressやHTTP header等をtyped保存境界へ追加できず、個人特定情報を拒否することを確認する。
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("request_id", "a" * 32),
+        # RFC 5737の文書・テスト専用範囲TEST-NET-2を使い、実在利用者のIP addressを含めない。
+        ("ip_address", "198.51.100.10"),
+        ("headers", {"User-Agent": "private"}),
+    ],
+)
+def test_execution_log_entry_rejects_request_metadata(
+    field: str,
+    value: object,
+) -> None:
+    # request ID・IP address・HTTP header等をtyped保存境界へ追加できないことを確認する。
     data = _execution_log_entry().model_dump()
-    data["ip_address"] = "198.51.100.10"
+    data[field] = value
 
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         ExecutionLogEntry.model_validate(data)
@@ -482,10 +554,11 @@ def test_execution_log_entry_discards_internal_error_detail() -> None:
 
 
 def test_execution_log_table_has_no_request_or_artifact_columns() -> None:
-    # 永続schemaにIP・header・User-Agent・画像artifact用の列が存在しないことを確認する。
+    # 永続schemaにrequest ID・IP・header・User-Agent・画像artifact用の列がないことを確認する。
     stored_columns = set(ExecutionLog.__table__.columns.keys())
     forbidden_columns = {
         "ip_address",
+        "request_id",
         "forwarded_for",
         "headers",
         "user_agent",

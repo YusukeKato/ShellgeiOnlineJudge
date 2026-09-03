@@ -190,6 +190,7 @@ def test_largest_valid_runner_request_fits_body_limit() -> None:
     # 4 byte UTF-8文字でcommand上限まで使った正常requestも、内部8 KiB上限内に収まる。
     request = RunnerExecutionRequest(
         protocol_version=RUNNER_PROTOCOL_VERSION,
+        request_id="b" * 32,
         problem_revision="a" * 64,
         shellgei="😀" * MAX_SHELLGEI_CHARS,
         problem_id="STANDARD-00000001",

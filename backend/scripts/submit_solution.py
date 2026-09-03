@@ -14,14 +14,21 @@ from models.submission import (
 from scripts.execution_log_repository import ExecutionLogRepositoryError
 from scripts.judge import JudgeResult
 from scripts.problem_repository import ProblemRecord
+from scripts.request_context import bind_request_id, current_request_id, new_request_id
 from scripts.runner_protocol import (
     RunnerBusyError,
     RunnerGateway,
     RunnerUnavailableError,
 )
+from scripts.structured_logging import (
+    LogComponent,
+    LogEvent,
+    SAFE_EVENT_LOGGER_NAME,
+    log_safe_event,
+)
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(SAFE_EVENT_LOGGER_NAME)
 JAPAN_TIMEZONE = ZoneInfo("Asia/Tokyo")
 Clock = Callable[[], datetime]
 
@@ -45,8 +52,8 @@ class Judge(Protocol):
 class ExecutionLogRepo(Protocol):
     """event loopを停止させずに最小限の実行ログを保存するapplication境界。"""
 
-    async def save(self, entry: ExecutionLogEntry) -> int:
-        """入力entryを保存して正の採番IDを返し、失敗時はrepository例外を送出する。"""
+    async def save(self, entry: ExecutionLogEntry, *, request_id: str) -> int:
+        """入力entryを保存し、request IDはDBではなくevent logの紐付けにだけ使う。"""
         ...
 
 
@@ -80,16 +87,46 @@ class SubmitSolutionService:
         判定後にログを保存し、保存だけが失敗した場合も実行・判定結果を返す。
         judgeの予期しない例外はwrong answerへ変換せず、呼び出し側へ伝播する。
         """
+        request_id = current_request_id() or new_request_id()
+        with bind_request_id(request_id):
+            try:
+                return await self._submit(shellgei, problem_id, request_id)
+            except Exception:
+                log_safe_event(
+                    logger,
+                    LogEvent.SUBMISSION_FAILED,
+                    LogComponent.SUBMISSION,
+                    request_id=request_id,
+                    level=logging.ERROR,
+                )
+                raise
+
+    async def _submit(
+        self,
+        shellgei: str,
+        problem_id: str,
+        request_id: str,
+    ) -> SubmissionResult:
+        """入力提出を実行・判定・保存し、各終了経路を安全なeventと結果で返す。"""
         submitted_at = self._clock()
         if self._problem_repository.get(problem_id) is None:
-            return self._rejected(SubmissionStatus.PROBLEM_NOT_FOUND, submitted_at)
+            return self._record_result(
+                self._rejected(SubmissionStatus.PROBLEM_NOT_FOUND, submitted_at),
+                request_id,
+            )
 
         try:
             execution = await self._runner.execute(shellgei, problem_id)
         except RunnerBusyError:
-            return self._rejected(SubmissionStatus.RUNNER_BUSY, submitted_at)
+            return self._record_result(
+                self._rejected(SubmissionStatus.RUNNER_BUSY, submitted_at),
+                request_id,
+            )
         except RunnerUnavailableError:
-            return self._rejected(SubmissionStatus.RUNNER_UNAVAILABLE, submitted_at)
+            return self._record_result(
+                self._rejected(SubmissionStatus.RUNNER_UNAVAILABLE, submitted_at),
+                request_id,
+            )
 
         judgment = self._judge.judge(execution, problem_id)
         entry = ExecutionLogEntry.from_results(
@@ -99,24 +136,52 @@ class SubmitSolutionService:
             judgment,
         )
         try:
-            log_id = await self._execution_logs.save(entry)
+            log_id = await self._execution_logs.save(entry, request_id=request_id)
         except ExecutionLogRepositoryError:
-            logger.warning("Execution log persistence unavailable")
-            return SubmissionResult(
+            return self._record_result(
+                SubmissionResult(
+                    status=SubmissionStatus.COMPLETED,
+                    submitted_at=submitted_at,
+                    execution=execution,
+                    judgment=judgment,
+                    persistence=SubmissionPersistenceStatus.UNAVAILABLE,
+                ),
+                request_id,
+                level=logging.WARNING,
+            )
+        return self._record_result(
+            SubmissionResult(
                 status=SubmissionStatus.COMPLETED,
                 submitted_at=submitted_at,
                 execution=execution,
                 judgment=judgment,
-                persistence=SubmissionPersistenceStatus.UNAVAILABLE,
-            )
-        return SubmissionResult(
-            status=SubmissionStatus.COMPLETED,
-            submitted_at=submitted_at,
-            execution=execution,
-            judgment=judgment,
-            log_id=log_id,
-            persistence=SubmissionPersistenceStatus.SAVED,
+                log_id=log_id,
+                persistence=SubmissionPersistenceStatus.SAVED,
+            ),
+            request_id,
         )
+
+    @staticmethod
+    def _record_result(
+        result: SubmissionResult,
+        request_id: str,
+        *,
+        level: int = logging.INFO,
+    ) -> SubmissionResult:
+        """入力結果の安全なstatusだけをrequest IDと記録し、同じ結果を返す。"""
+        execution = result.execution
+        log_safe_event(
+            logger,
+            LogEvent.SUBMISSION_COMPLETED,
+            LogComponent.SUBMISSION,
+            request_id=request_id,
+            submission_status=result.status,
+            execution_status=(execution.status if execution is not None else None),
+            duration_ms=(execution.duration_ms if execution is not None else None),
+            persistence_status=result.persistence,
+            level=level,
+        )
+        return result
 
     @staticmethod
     def _rejected(status: SubmissionStatus, submitted_at: datetime) -> SubmissionResult:

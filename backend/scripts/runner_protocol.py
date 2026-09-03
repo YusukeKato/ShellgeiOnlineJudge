@@ -13,6 +13,7 @@ from models.execution import (
     ExecutionStatus,
 )
 from models.model_shellgei import ShellgeiData
+from scripts.request_context import RequestId
 
 
 __all__ = [
@@ -54,20 +55,22 @@ class RunnerBusyError(RuntimeError):
 
 
 class RunnerExecutionRequest(ShellgeiData):
-    """version、problem revision、command、problem IDを保持する不変request。"""
+    """request ID、version、problem revision、command、problem IDを保持する不変request。"""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     protocol_version: Literal[3]
+    request_id: RequestId
     problem_revision: ProblemRevision
 
 
 class RunnerExecutionResponse(BaseModel):
-    """protocol version、problem revision、typed resultを保持する不変response。"""
+    """request ID、protocol version、problem revision、typed resultを保持する不変response。"""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     protocol_version: Literal[3]
+    request_id: RequestId
     problem_revision: ProblemRevision
     result: ExecutionResult
 

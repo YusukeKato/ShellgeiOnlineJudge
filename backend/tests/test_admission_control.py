@@ -15,6 +15,7 @@ from scripts.runner_protocol import RUNNER_PROTOCOL_VERSION, RunnerExecutionRequ
 
 
 TEST_PROBLEM_REVISION = "a" * 64
+TEST_REQUEST_ID = "b" * 32
 
 
 def test_start_rate_limiter_defaults_match_the_production_policy() -> None:
@@ -124,6 +125,7 @@ def test_runner_rejects_rate_limited_request_before_docker(
             runner_main.execute_shellgei(
                 RunnerExecutionRequest(
                     protocol_version=RUNNER_PROTOCOL_VERSION,
+                    request_id=TEST_REQUEST_ID,
                     problem_revision=TEST_PROBLEM_REVISION,
                     shellgei="printf test",
                     problem_id="STANDARD-00000001",

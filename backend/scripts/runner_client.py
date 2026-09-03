@@ -8,6 +8,7 @@ from urllib.request import ProxyHandler, Request, build_opener
 
 from scripts.async_thread import wait_for_thread_future
 from scripts.problem_repository import get_problem_repository
+from scripts.request_context import current_request_id, new_request_id
 from scripts.runner_protocol import (
     RUNNER_EXECUTE_PATH,
     RUNNER_PROTOCOL_VERSION,
@@ -20,15 +21,22 @@ from scripts.runner_protocol import (
     RunnerUnavailableError,
     get_runner_shared_secret,
 )
+from scripts.structured_logging import (
+    LogComponent,
+    LogEvent,
+    SAFE_EVENT_LOGGER_NAME,
+    log_safe_event,
+)
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(SAFE_EVENT_LOGGER_NAME)
 
 RUNNER_BASE_URL = "http://runner:8001"
 RUNNER_REQUEST_TIMEOUT_SECONDS = 30
 RUNNER_RESPONSE_LIMIT_BYTES = 1_100_000
 RUNNER_CLIENT_CAPACITY = 3
 ProblemRevisionProvider = Callable[[], str]
+RequestIdProvider = Callable[[], str]
 
 
 def loaded_problem_revision() -> str:
@@ -36,24 +44,36 @@ def loaded_problem_revision() -> str:
     return get_problem_repository().revision
 
 
+def request_id_for_execution() -> str:
+    """現在の提出IDを返し、HTTP context外の実行なら新しいIDを生成する。"""
+    return current_request_id() or new_request_id()
+
+
 class RunnerClient:
     def __init__(
         self,
         problem_revision_provider: ProblemRevisionProvider = loaded_problem_revision,
+        request_id_provider: RequestIdProvider = request_id_for_execution,
     ) -> None:
-        """固定HTTP worker、直接接続opener、problem revision取得関数を初期化する。"""
+        """固定worker・直接接続opener・revision・request ID取得関数を初期化する。"""
         self.executor = ThreadPoolExecutor(max_workers=RUNNER_CLIENT_CAPACITY)
         self._slots = threading.BoundedSemaphore(RUNNER_CLIENT_CAPACITY)
         self._opener = build_opener(ProxyHandler({}))
         self._problem_revision_provider = problem_revision_provider
+        self._request_id_provider = request_id_provider
 
     @staticmethod
     def validate_configuration() -> None:
         """runner共有secretを起動前に検証し、返値なしで設定不備を通知する。"""
         get_runner_shared_secret()
 
-    def _execute_sync(self, shellgei: str, problem_id: str) -> ExecutionResult:
-        """入力command・IDをversion付きHTTP requestで送り、typed結果を返す。
+    def _execute_sync(
+        self,
+        shellgei: str,
+        problem_id: str,
+        request_id: str,
+    ) -> ExecutionResult:
+        """入力command・ID・request IDをversion付きHTTP requestで送り、typed結果を返す。
 
         認証、通信、status、response byte上限、JSON schemaの異常はrunner用例外へ
         変換し、HTTP worker threadから呼び出せる同期処理として実行する。
@@ -62,6 +82,7 @@ class RunnerClient:
         problem_revision = self._problem_revision_provider()
         payload = RunnerExecutionRequest(
             protocol_version=RUNNER_PROTOCOL_VERSION,
+            request_id=request_id,
             problem_revision=problem_revision,
             shellgei=shellgei,
             problem_id=problem_id,
@@ -102,6 +123,8 @@ class RunnerClient:
             raise RunnerUnavailableError("runner returned an invalid response") from exc
         if response.problem_revision != problem_revision:
             raise RunnerUnavailableError("runner returned a different problem revision")
+        if response.request_id != request_id:
+            raise RunnerUnavailableError("runner returned a different request ID")
         return response.result
 
     async def execute(self, shellgei: str, problem_id: str) -> ExecutionResult:
@@ -113,12 +136,14 @@ class RunnerClient:
         if not self._slots.acquire(blocking=False):
             raise RunnerBusyError("runner client capacity reached")
 
+        request_id = self._request_id_provider()
         release_when_done = False
         try:
             future = self.executor.submit(
                 self._execute_sync,
                 shellgei,
                 problem_id,
+                request_id,
             )
             try:
                 return await wait_for_thread_future(future)
@@ -129,7 +154,13 @@ class RunnerClient:
         except (RunnerBusyError, RunnerConfigurationError, RunnerUnavailableError):
             raise
         except Exception as exc:
-            logger.warning("Unexpected runner client failure: %s", exc)
+            log_safe_event(
+                logger,
+                LogEvent.RUNNER_CLIENT_FAILED,
+                LogComponent.SUBMISSION,
+                request_id=request_id,
+                level=logging.WARNING,
+            )
             raise RunnerUnavailableError("runner request failed") from exc
         finally:
             if not release_when_done:

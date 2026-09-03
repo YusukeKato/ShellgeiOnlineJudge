@@ -36,13 +36,14 @@ problem schema、manifest revision、移行・更新手順は、
 backendからrunnerへの実行境界は、`scripts/runner_protocol.py`の
 `RunnerGateway`、`RunnerExecutionRequest`、`RunnerExecutionResponse`と、
 `models/execution.py`の`ExecutionResult`を正本とします。requestとresponseは
-`protocol_version: 3`と、起動時検証済み全problem dataのSHA-256
-`problem_revision`を必須とし、
+`protocol_version: 3`、backend生成の`request_id`、起動時検証済み
+全problem dataのSHA-256 `problem_revision`を必須とし、
 未知version、未知field、欠落field、文字列・画像上限超過を拒否します。
 
-requestは`protocol_version`、`problem_revision`、`shellgei`、`problem_id`、
-responseは`protocol_version`、`problem_revision`と構造化された`result`で
-構成します。両processのrevisionが異なる場合は実行せずfail-closedとします。
+requestは`protocol_version`、`request_id`、`problem_revision`、`shellgei`、
+`problem_id`、responseは`protocol_version`、`request_id`、`problem_revision`と
+構造化された`result`で構成します。両processのrevisionまたはrequest IDが
+異なる場合は実行結果を受理せずfail-closedとします。
 `result`は`status`、
 分離した`stdout`・`stderr`、`exit_code`、`timed_out`、`truncated`、
 `duration_ms`、任意の`artifact`・`error`を保持します。

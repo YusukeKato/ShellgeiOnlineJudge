@@ -16,6 +16,7 @@ from scripts.execution_log_repository import (
     execution_log_repo,
 )
 from scripts.problem_repository import load_problem_repository
+from scripts.request_correlation import RequestCorrelationMiddleware
 from scripts.runner_client import runner_client
 
 
@@ -50,12 +51,14 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID"],
 )
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["backend", "localhost", "127.0.0.1"],
     www_redirect=False,
 )
+app.add_middleware(RequestCorrelationMiddleware)
 
 
 @app.middleware("http")

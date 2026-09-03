@@ -301,6 +301,7 @@ DBの実行ログは、次の両方を満たす範囲だけ保持します。
 
 次の情報は実行ログへ保存しません。
 
+- request ID
 - IP address
 - `Forwarded`、`X-Forwarded-*`、`X-Real-IP`を含むHTTP header
 - User-Agent、cookie、認証情報
@@ -312,6 +313,16 @@ access logとrequest error log、backend・runner Uvicornのaccess logは無効�
 application logへclient address、request header、query、body、command、出力を
 追加しないでください。生のIP addressだけでなく、hash化・仮名化したIP addressも
 永続化しません。
+
+提出requestには、backendがrequestごとに生成する128-bitのランダムIDを付与します。
+clientから受け取った`X-Request-ID`は使用しません。このIDは単一request内で
+backend、runner、DB保存eventを紐付けるためだけに使い、利用者やclientを
+request間で識別する値にはしません。DBの実行ログには保存しません。
+
+request単位のapplication eventはJSONとし、固定のevent・component・endpoint名、
+request ID、HTTP・実行・提出・保存status、所要時間だけをallowlist型で
+記録します。problem ID、command、stdout、stderr、例外文、secret、IP address、
+HTTP headerをrequest単位eventのfieldに持てないschemaとしています。
 
 commandや出力には利用者が自ら入力した機密情報が含まれる可能性があります。
 運用者だけがDBへアクセスできるようにし、application logへcommandや出力を
@@ -392,6 +403,7 @@ runnerは実行requestのbodyを読む前に共有secretを定数時間比較し
 登録済みproblem ID、開始頻度、同時実行数を検査してからsandbox処理を
 開始します。backendはrunner responseのversion、problem revision、schema、
 byte上限を検証し、不一致、未知version、追加fieldをfail-closedで拒否します。
+backendが生成したrequest IDも内部request/responseで一致を検証します。
 
 `GET /internal/health`はprocessのliveness、`GET /internal/ready`はprotocol version、
 problem revision、sandbox pool状態を含むreadinessです。Compose healthcheckは

@@ -180,6 +180,7 @@ def test_non_executing_requests_do_not_consume_a_shared_nginx_start_budget(
                 headers={
                     "Host": "attacker.invalid",
                     "Forwarded": "host=attacker.invalid;proto=http",
+                    # RFC 5737の文書・テスト専用範囲TEST-NET-2で偽装client IPを表す。
                     "X-Forwarded-For": "198.51.100.10",
                     "X-Forwarded-Host": "attacker.invalid",
                     "X-Forwarded-Port": "80",
