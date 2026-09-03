@@ -1,5 +1,5 @@
-import React from "react";
-import { submit } from "../functions/submit";
+import React, { useEffect, useRef } from "react";
+import { prepareSubmission, submit, SubmissionState } from "../functions/submit";
 import "../css/code.css";
 import "../css/button.css";
 import "../css/common.css";
@@ -8,46 +8,77 @@ import sample_gif from "../images/sample.gif";
 
 interface SojValuesInterface {
   shellgei_limit: number;
-  default_image: string;
   soj_url: string;
   inputShellgei: string;
   changeInputShellgei: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   selectedProblem: string;
-  setOutputResult: (value: string) => void;
-  setJudgeResult: (value: string) => void;
-  setImageResult: (value: string) => void;
-  setUserShellgeiStatus: (value: string) => void;
+  submissionState: SubmissionState;
+  setSubmissionState: React.Dispatch<React.SetStateAction<SubmissionState>>;
+}
+
+interface ActiveSubmission {
+  controller: AbortController;
+  requestKey: string;
+  version: number;
 }
 
 const SojRun: React.FC<SojValuesInterface> = ({
   shellgei_limit,
-  default_image,
   soj_url,
   inputShellgei,
   changeInputShellgei,
   selectedProblem,
-  setOutputResult,
-  setJudgeResult,
-  setImageResult,
-  setUserShellgeiStatus,
+  submissionState,
+  setSubmissionState,
 }) => {
-  const SubmitClick = () => {
-    submit(
-      shellgei_limit,
-      default_image,
-      soj_url,
-      inputShellgei,
-      selectedProblem,
-      setOutputResult,
-      setJudgeResult,
-      setImageResult,
-      setUserShellgeiStatus,
-    );
+  const submissionVersion = useRef(0);
+  const activeSubmission = useRef<ActiveSubmission | null>(null);
+
+  useEffect(() => {
+    return () => {
+      // unmount時に進行中の提出をabortし、破棄済みcomponentへ結果を反映しない。
+      submissionVersion.current += 1;
+      activeSubmission.current?.controller.abort();
+      activeSubmission.current = null;
+    };
+  }, []);
+
+  const submitClick = () => {
+    // 入力を検証し、同一提出は無視する。異なる新規提出は旧通信をabortして最新結果だけを反映する。
+    const prepared = prepareSubmission(shellgei_limit, inputShellgei, selectedProblem);
+    if (prepared.kind === "validation_error") {
+      submissionVersion.current += 1;
+      activeSubmission.current?.controller.abort();
+      activeSubmission.current = null;
+      setSubmissionState(prepared);
+      return;
+    }
+    if (activeSubmission.current?.requestKey === prepared.requestKey) {
+      return;
+    }
+    activeSubmission.current?.controller.abort();
+    const controller = new AbortController();
+    const version = ++submissionVersion.current;
+    activeSubmission.current = {
+      controller,
+      requestKey: prepared.requestKey,
+      version,
+    };
+    setSubmissionState(prepared);
+    void submit(soj_url, prepared, controller.signal).then((result) => {
+      // abortを無視するfetchが遅れて完了しても、最新versionと一致する結果だけを採用する。
+      if (version !== submissionVersion.current) {
+        return;
+      }
+      activeSubmission.current = null;
+      setSubmissionState(result);
+    });
   };
   // ctrl + Enter で実行
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.ctrlKey && e.key === "Enter") {
-      SubmitClick();
+      e.preventDefault();
+      submitClick();
     }
   };
   return (
@@ -133,7 +164,8 @@ const SojRun: React.FC<SojValuesInterface> = ({
           value="実行 / RUN (Ctrl+Enter)"
           className="run-button"
           id="submit-button"
-          onClick={SubmitClick}
+          aria-busy={submissionState.kind === "running"}
+          onClick={submitClick}
         />
       </div>
     </div>

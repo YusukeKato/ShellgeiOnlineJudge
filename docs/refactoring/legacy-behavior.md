@@ -29,4 +29,5 @@ backendではstrict xfail、frontendでは後続unitの修正対象として追�
 
 text置換tokenと`NULL`の衝突はR3-010、画像先頭除外はR3-011で修正し、
 通常の成功testへ変更しました。frontendのtupleと判定code部分一致はR3-019で型付き境界へ
-移行しました。未完了のfetch中断と非同期UI stateはR3-020で対応します。
+移行しました。fetch中断、二重送信防止、最新responseの選択と非同期UI stateは
+R3-020で対応しました。

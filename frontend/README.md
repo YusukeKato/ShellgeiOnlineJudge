@@ -15,6 +15,12 @@
 受け取り、verdict、execution、artifact MIME等を実行時に検証してから画面表示用の値へ
 変換します。public API contractの正本は[API仕様](../docs/API.md)です。
 
+提出画面は`idle`、`running`、`succeeded`、`failed`、`validation_error`を区別する
+単一stateを使用します。同じ問題・commandの実行中の再送は無視し、内容が異なる新しい
+提出では以前の通信を中断します。提出timeout、component破棄、問題選択変更では
+`AbortController`で通信を停止し、responseの到着順にかかわらず最新requestだけを
+画面へ反映します。
+
 ## 開発とテスト
 
 Node.js、Yarn、静的検査、テスト、buildの手順は、

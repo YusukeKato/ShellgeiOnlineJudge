@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 
 import { submitSolution } from "./api/client";
 import { judgeResult } from "./functions/judge_result";
-import { imageDataUrl, submit } from "./functions/submit";
+import { imageDataUrl, prepareSubmission, submissionDisplay, submit } from "./functions/submit";
 import { updateProblem } from "./functions/update_problem";
 import SojResult from "./tsx/result";
 
@@ -29,6 +29,15 @@ const submissionResponse = (overrides = {}) => ({
   persistence: "saved",
   ...overrides,
 });
+
+const executeSubmission = async (shellgei, problemId = "STANDARD-00000001") => {
+  // テスト入力からrunning stateを作ってAPI送信し、完了後の判別可能なstateを返す。
+  const prepared = prepareSubmission(1000, shellgei, problemId);
+  if (prepared.kind !== "running") {
+    throw new Error("test submission was not valid");
+  }
+  return submit(SOJ_URL, prepared, new AbortController().signal);
+};
 
 describe("typed frontend API and display behavior", () => {
   // v3 API契約の検証と、既存画面への明示的な変換をこのsuiteで確認する。
@@ -66,14 +75,18 @@ describe("typed frontend API and display behavior", () => {
         problem_id: "STANDARD-00000001",
       }),
     ).resolves.toEqual(submissionResponse());
-    expect(fetchMock).toHaveBeenCalledWith(`${SOJ_URL}/api/v3/submissions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        shellgei: "printf result",
-        problem_id: "STANDARD-00000001",
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${SOJ_URL}/api/v3/submissions`,
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shellgei: "printf result",
+          problem_id: "STANDARD-00000001",
+        }),
+        signal: expect.any(AbortSignal),
       }),
-    });
+    );
   });
 
   test("preserves a successful image response with empty standard output", async () => {
@@ -97,25 +110,11 @@ describe("typed frontend API and display behavior", () => {
       ),
     });
 
-    const setOutputResult = jest.fn();
-    const setJudgeResult = jest.fn();
-    const setImageResult = jest.fn();
-    const setUserShellgeiStatus = jest.fn();
+    const state = await executeSubmission("convert image", "IMAGE-00000001");
+    const display = submissionDisplay(state, "default-image");
 
-    await submit(
-      1000,
-      "default-image",
-      SOJ_URL,
-      "convert image",
-      "IMAGE-00000001",
-      setOutputResult,
-      setJudgeResult,
-      setImageResult,
-      setUserShellgeiStatus,
-    );
-
-    expect(setOutputResult).toHaveBeenLastCalledWith("");
-    expect(setImageResult).toHaveBeenLastCalledWith("data:image/jpeg;base64,encoded-image");
+    expect(display.output).toBe("");
+    expect(display.image).toBe("data:image/jpeg;base64,encoded-image");
   });
 
   test("displays an image and verdict when successful standard output is empty", async () => {
@@ -138,29 +137,13 @@ describe("typed frontend API and display behavior", () => {
         }),
       ),
     });
-    const setOutputResult = jest.fn();
-    const setJudgeResult = jest.fn();
-    const setImageResult = jest.fn();
-    const setUserShellgeiStatus = jest.fn();
+    const state = await executeSubmission("convert image", "IMAGE-00000001");
+    const display = submissionDisplay(state, "default-image");
 
-    await submit(
-      1000,
-      "default-image",
-      SOJ_URL,
-      "convert image",
-      "IMAGE-00000001",
-      setOutputResult,
-      setJudgeResult,
-      setImageResult,
-      setUserShellgeiStatus,
-    );
-
-    expect(setOutputResult).toHaveBeenLastCalledWith("");
-    expect(setJudgeResult).toHaveBeenLastCalledWith("正解 / Correct !!😄!!");
-    expect(setImageResult).toHaveBeenLastCalledWith("data:image/jpeg;base64,encoded-image");
-    expect(setUserShellgeiStatus).toHaveBeenLastCalledWith(
-      expect.stringContaining("SHELLGEI ID: 44"),
-    );
+    expect(display.output).toBe("");
+    expect(display.verdict).toBe("正解 / Correct !!😄!!");
+    expect(display.image).toBe("data:image/jpeg;base64,encoded-image");
+    expect(display.commandStatus).toContain("SHELLGEI ID: 44");
   });
 
   test("keeps a missing image result distinct from a transport error", async () => {
@@ -184,29 +167,13 @@ describe("typed frontend API and display behavior", () => {
         }),
       ),
     });
-    const setOutputResult = jest.fn();
-    const setJudgeResult = jest.fn();
-    const setImageResult = jest.fn();
-    const setUserShellgeiStatus = jest.fn();
+    const state = await executeSubmission("true", "IMAGE-00000001");
+    const display = submissionDisplay(state, "default-image");
 
-    await submit(
-      1000,
-      "default-image",
-      SOJ_URL,
-      "true",
-      "IMAGE-00000001",
-      setOutputResult,
-      setJudgeResult,
-      setImageResult,
-      setUserShellgeiStatus,
-    );
-
-    expect(setOutputResult).toHaveBeenLastCalledWith("");
-    expect(setJudgeResult).toHaveBeenLastCalledWith("不正解 / Incorrect ...😭...");
-    expect(setImageResult).toHaveBeenLastCalledWith("default-image");
-    expect(setUserShellgeiStatus).toHaveBeenLastCalledWith(
-      expect.stringContaining("SHELLGEI ID: 45"),
-    );
+    expect(display.output).toBe("");
+    expect(display.verdict).toBe("不正解 / Incorrect ...😭...");
+    expect(display.image).toBe("default-image");
+    expect(display.commandStatus).toContain("SHELLGEI ID: 45");
   });
 
   test("shows a failed HTTP request as an error instead of a verdict", async () => {
@@ -222,28 +189,13 @@ describe("typed frontend API and display behavior", () => {
         message: "Runner is unavailable",
       }),
     });
-    const setOutputResult = jest.fn();
-    const setJudgeResult = jest.fn();
-    const setImageResult = jest.fn();
-    const setUserShellgeiStatus = jest.fn();
-
-    await submit(
-      1000,
-      "default-image",
-      SOJ_URL,
-      "true",
-      "IMAGE-00000001",
-      setOutputResult,
-      setJudgeResult,
-      setImageResult,
-      setUserShellgeiStatus,
-    );
-
+    const state = await executeSubmission("true", "IMAGE-00000001");
+    const display = submissionDisplay(state, "default-image");
     const errorMessage = "Error: HTTP error! status: 503";
-    expect(setOutputResult).toHaveBeenLastCalledWith(errorMessage);
-    expect(setJudgeResult).toHaveBeenLastCalledWith(errorMessage);
-    expect(setUserShellgeiStatus).toHaveBeenLastCalledWith(errorMessage);
-    expect(setImageResult).toHaveBeenLastCalledWith("default-image");
+    expect(display.output).toBe(errorMessage);
+    expect(display.verdict).toBe(errorMessage);
+    expect(display.commandStatus).toBe(errorMessage);
+    expect(display.image).toBe("default-image");
   });
 
   test("preserves a typed API error and server request ID", async () => {
@@ -278,7 +230,12 @@ describe("typed frontend API and display behavior", () => {
     // timeout時に想定されるerror logは、このテスト中だけ出力しない。
     jest.spyOn(console, "error").mockImplementation(() => undefined);
     // resolveもrejectもしないPromiseで、応答しないfetchを再現する。
-    fetchMock.mockReturnValue(new Promise(() => undefined));
+    let fetchSignal;
+    fetchMock.mockImplementation((_url, options) => {
+      // API clientがfetchへ渡したsignalを保持し、timeout後の実abortを確認できるようにする。
+      fetchSignal = options.signal;
+      return new Promise(() => undefined);
+    });
 
     const result = submitSolution(SOJ_URL, {
       shellgei: "sleep 30",
@@ -291,6 +248,49 @@ describe("typed frontend API and display behavior", () => {
       kind: "timeout",
       message: "Timeout: 20.0s",
     });
+    expect(fetchSignal.aborted).toBe(true);
+  });
+
+  test("maps a submission timeout to the visible timeout state", async () => {
+    // 20秒応答しない提出をfailed stateへ変換し、結果・判定・command欄へtimeoutを表示する。
+    jest.spyOn(console, "error").mockImplementation(() => undefined);
+    fetchMock.mockReturnValue(new Promise(() => undefined));
+    const prepared = prepareSubmission(1000, "sleep 30", "STANDARD-00000001");
+    if (prepared.kind !== "running") {
+      throw new Error("test submission was not valid");
+    }
+    const result = submit(SOJ_URL, prepared, new AbortController().signal);
+
+    jest.advanceTimersByTime(20_000);
+
+    const state = await result;
+    expect(state).toEqual({ kind: "failed", message: "Timeout: 20.0s" });
+    expect(submissionDisplay(state, "default-image")).toEqual({
+      output: "Timeout: 20.0s",
+      verdict: "Timeout: 20.0s",
+      image: "default-image",
+      commandStatus: "Timeout: 20.0s",
+    });
+  });
+
+  test("aborts fetch when the caller cancels a request", async () => {
+    // 呼出側AbortControllerの中断がfetch signalへ伝播し、timeoutとは異なるaborted errorになることを確認する。
+    let fetchSignal;
+    fetchMock.mockImplementation((_url, options) => {
+      fetchSignal = options.signal;
+      return new Promise(() => undefined);
+    });
+    const controller = new AbortController();
+    const result = submitSolution(
+      SOJ_URL,
+      { shellgei: "sleep 30", problem_id: "STANDARD-00000001" },
+      { signal: controller.signal },
+    );
+
+    controller.abort();
+
+    await expect(result).rejects.toMatchObject({ kind: "aborted", message: "Request cancelled" });
+    expect(fetchSignal.aborted).toBe(true);
   });
 
   test("rejects an unknown verdict before it reaches display mapping", async () => {
@@ -342,26 +342,14 @@ describe("typed frontend API and display behavior", () => {
         image: "/image/STANDARD-00000001.jpg",
       }),
     });
-    const setProblemStatement = jest.fn();
-    const setProblemInput = jest.fn();
-    const setProblemOutput = jest.fn();
-    const setProblemImage = jest.fn();
+    const problem = await updateProblem(SOJ_URL, "STANDARD-00000001", new AbortController().signal);
 
-    await updateProblem(
-      SOJ_URL,
-      "STANDARD-00000001",
-      setProblemStatement,
-      setProblemInput,
-      setProblemOutput,
-      setProblemImage,
-    );
-
-    expect(setProblemStatement).toHaveBeenCalledWith(
+    expect(problem.statement).toBe(
       "日本語タイトル\n日本語本文\n\nEnglish title\nEnglish statement",
     );
-    expect(setProblemInput).toHaveBeenCalledWith("NULL");
-    expect(setProblemOutput).toHaveBeenCalledWith("NULL");
-    expect(setProblemImage).toHaveBeenCalledWith(`${SOJ_URL}/image/STANDARD-00000001.jpg`);
+    expect(problem.input).toBe("NULL");
+    expect(problem.output).toBe("NULL");
+    expect(problem.image).toBe(`${SOJ_URL}/image/STANDARD-00000001.jpg`);
   });
 
   test.each([
@@ -380,16 +368,30 @@ describe("typed frontend API and display behavior", () => {
     // 標準出力、判定、投稿ID、結果画像がDOMへそのまま描画されることを確認する。
     render(
       <SojResult
-        outputResult={"line 1\nline 2"}
-        judgeResult="正解 / Correct !!😄!!"
-        imageResult="data:image/jpeg;base64,encoded-image"
-        userShellgeiStatus="SHELLGEI ID: 42"
+        submissionState={{
+          kind: "succeeded",
+          shellgei: "printf result",
+          problemId: "STANDARD-00000001",
+          response: submissionResponse({
+            execution: {
+              status: "completed",
+              stdout: "line 1\nline 2",
+              stderr: "",
+              exit_code: 0,
+              timed_out: false,
+              truncated: false,
+              duration_ms: 1,
+            },
+            artifact: { data: "encoded-image", media_type: "image/jpeg" },
+          }),
+        }}
+        defaultImage="default-image"
       />,
     );
 
     expect(document.querySelector("#user-output-text")?.textContent).toBe("line 1\nline 2");
     expect(screen.getByText("正解 / Correct !!😄!!")).toBeInTheDocument();
-    expect(screen.getByText("SHELLGEI ID: 42")).toBeInTheDocument();
+    expect(document.querySelector("#shellgei-text")?.textContent).toContain("SHELLGEI ID: 42");
     expect(screen.getByAltText("result-image")).toHaveAttribute(
       "src",
       "data:image/jpeg;base64,encoded-image",

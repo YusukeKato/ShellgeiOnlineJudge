@@ -11,7 +11,12 @@ import {
   parseSubmissionResponse,
 } from "./types";
 
-export type ApiClientErrorKind = "http" | "invalid_response" | "network" | "timeout";
+export type ApiClientErrorKind = "aborted" | "http" | "invalid_response" | "network" | "timeout";
+
+export interface ApiRequestOptions {
+  signal?: AbortSignal;
+  timeoutMs?: number;
+}
 
 export class ApiClientError extends Error {
   readonly kind: ApiClientErrorKind;
@@ -60,33 +65,64 @@ const parseHttpError = async (response: Response): Promise<ApiClientError> => {
   });
 };
 
-const fetchJson = async (url: string, init?: RequestInit, timeoutMs?: number): Promise<unknown> => {
+const fetchJson = async (
+  url: string,
+  init?: RequestInit,
+  options: ApiRequestOptions = {},
+): Promise<unknown> => {
   // URLと任意request設定をfetchし、HTTP成功時のJSONをunknownとして返す。
-  // timeoutMs指定時は時間超過を区別し、HTTP・network・JSON parse失敗を型付き例外へ変換する。
+  // timeoutまたは呼出側signalで実通信をabortし、失敗理由を型付き例外へ変換する。
+  const controller = new AbortController();
+  const timeoutMs = options.timeoutMs;
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let removeAbortListener: (() => void) | undefined;
   const timeoutPromise =
     timeoutMs === undefined
       ? null
-      : new Promise<Response>((_, reject) => {
+      : new Promise<never>((_, reject) => {
           timeoutId = setTimeout(() => {
+            controller.abort();
             reject(new ApiClientError("timeout", `Timeout: ${(timeoutMs / 1000).toFixed(1)}s`));
           }, timeoutMs);
         });
+  const abortPromise =
+    options.signal === undefined
+      ? null
+      : new Promise<never>((_, reject) => {
+          const abortRequest = () => {
+            controller.abort();
+            reject(new ApiClientError("aborted", "Request cancelled"));
+          };
+          if (options.signal?.aborted) {
+            abortRequest();
+            return;
+          }
+          options.signal?.addEventListener("abort", abortRequest, { once: true });
+          removeAbortListener = () => options.signal?.removeEventListener("abort", abortRequest);
+        });
   try {
-    const fetchPromise = fetch(url, init);
-    const response = await (timeoutPromise
-      ? Promise.race([fetchPromise, timeoutPromise])
-      : fetchPromise);
-    if (!response.ok) {
-      throw await parseHttpError(response);
+    const fetchPromise = (async (): Promise<unknown> => {
+      // header取得からJSON body解析までを1つの処理とし、全体をtimeout・abortの対象にする。
+      const response = await fetch(url, { ...init, signal: controller.signal });
+      if (!response.ok) {
+        throw await parseHttpError(response);
+      }
+      try {
+        return await response.json();
+      } catch {
+        throw new ApiClientError("invalid_response", "Invalid JSON response", {
+          requestId: responseRequestId(response),
+        });
+      }
+    })();
+    const pendingResponses: Promise<unknown>[] = [fetchPromise];
+    if (timeoutPromise !== null) {
+      pendingResponses.push(timeoutPromise);
     }
-    try {
-      return await response.json();
-    } catch {
-      throw new ApiClientError("invalid_response", "Invalid JSON response", {
-        requestId: responseRequestId(response),
-      });
+    if (abortPromise !== null) {
+      pendingResponses.push(abortPromise);
     }
+    return await Promise.race(pendingResponses);
   } catch (error: unknown) {
     if (error instanceof ApiClientError) {
       throw error;
@@ -96,12 +132,14 @@ const fetchJson = async (url: string, init?: RequestInit, timeoutMs?: number): P
     if (timeoutId !== undefined) {
       clearTimeout(timeoutId);
     }
+    removeAbortListener?.();
   }
 };
 
 export const submitSolution = async (
   baseUrl: string,
   request: SubmissionRequestV3,
+  options: ApiRequestOptions = {},
 ): Promise<SubmissionResponseV3> => {
   // base URLとcommand・problem IDをv3提出APIへ送り、検証済みresponse DTOを返す。
   // HTTP、timeout、network、契約違反時はApiClientErrorを送出する。
@@ -112,7 +150,10 @@ export const submitSolution = async (
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     },
-    SUBMISSION_TIMEOUT_MS,
+    {
+      signal: options.signal,
+      timeoutMs: options.timeoutMs ?? SUBMISSION_TIMEOUT_MS,
+    },
   );
   try {
     return parseSubmissionResponse(value);
@@ -124,9 +165,14 @@ export const submitSolution = async (
   }
 };
 
-export const getProblems = async (baseUrl: string): Promise<ProblemSummary[]> => {
+export const getProblems = async (
+  baseUrl: string,
+  options: ApiRequestOptions = {},
+): Promise<ProblemSummary[]> => {
   // base URLから問題一覧を取得し、全要素を検証したtyped summary配列を返す。
-  const value = await fetchJson(`${baseUrl}/api/problems`);
+  const value = await fetchJson(`${baseUrl}/api/problems`, undefined, {
+    signal: options.signal,
+  });
   try {
     return parseProblemSummaries(value);
   } catch (error: unknown) {
@@ -137,9 +183,15 @@ export const getProblems = async (baseUrl: string): Promise<ProblemSummary[]> =>
   }
 };
 
-export const getProblem = async (baseUrl: string, problemId: string): Promise<ProblemDetail> => {
+export const getProblem = async (
+  baseUrl: string,
+  problemId: string,
+  options: ApiRequestOptions = {},
+): Promise<ProblemDetail> => {
   // base URLと選択済みIDから問題詳細を取得し、検証済みDTOを返す。
-  const value = await fetchJson(`${baseUrl}/api/problems/${problemId}`);
+  const value = await fetchJson(`${baseUrl}/api/problems/${problemId}`, undefined, {
+    signal: options.signal,
+  });
   try {
     return parseProblemDetail(value);
   } catch (error: unknown) {

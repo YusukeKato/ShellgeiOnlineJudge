@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getProblems } from "../api/client";
 import { ProblemSummary } from "../api/types";
-import { updateProblem } from "../functions/update_problem";
 import "../css/summary.css";
 import "../css/headline.css";
 import "../css/common.css";
@@ -10,50 +9,41 @@ import "../css/table_tab.css";
 interface SojValuesInterface {
   soj_url: string;
   selectedProblem: string;
-  setSelectedProblem: (value: string) => void;
-  setProblemStatement: (value: string) => void;
-  setProblemInput: (value: string) => void;
-  setProblemOutput: (value: string) => void;
-  setProblemImage: (value: string) => void;
+  onSelectProblem: (problemId: string) => void;
 }
 
 const SojSelectProblems: React.FC<SojValuesInterface> = ({
   soj_url,
   selectedProblem,
-  setSelectedProblem,
-  setProblemStatement,
-  setProblemInput,
-  setProblemOutput,
-  setProblemImage,
+  onSelectProblem,
 }) => {
   const [activeTab, setActiveTab] = useState<string>("STANDARD");
   const [problemList, setProblemList] = useState<ProblemSummary[]>([]);
 
   // 問題リストをAPI経由で取得
   useEffect(() => {
+    const controller = new AbortController();
     const fetchProblems = async () => {
       // API clientで検証済みの問題一覧だけをstateへ設定し、不正responseは表示へ混入させない。
       try {
-        setProblemList(await getProblems(soj_url));
+        setProblemList(await getProblems(soj_url, { signal: controller.signal }));
       } catch {
-        console.error("Failed to fetch problem list");
+        if (!controller.signal.aborted) {
+          console.error("Failed to fetch problem list");
+        }
       }
     };
-    fetchProblems();
+    void fetchProblems();
+    return () => {
+      // URL変更またはunmount時に一覧取得を中断し、破棄済みcomponentのstateを更新しない。
+      controller.abort();
+    };
   }, [soj_url]);
 
   // 問題行をクリックしたときの処理
   const handleSelectClick = (problemId: string) => {
-    // 選択された問題IDをstateへ保存し、同じIDの型検証済み詳細を取得して表示する。
-    setSelectedProblem(problemId);
-    updateProblem(
-      soj_url,
-      problemId,
-      setProblemStatement,
-      setProblemInput,
-      setProblemOutput,
-      setProblemImage,
-    );
+    // 選択された問題IDを親へ通知し、親の世代管理下で問題詳細を取得する。
+    onSelectProblem(problemId);
   };
 
   // アクティブなタブのカテゴリで絞り込み
