@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 7
 - Pending (`Ready` + `Planned`): 7
 - In Progress: 0
-- Review: 1
-- Completed: 19
+- Review: 0
+- Completed: 20
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -172,7 +172,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-017 | P1 | Completed | C | Harden runner authentication, readiness, and revision checks | R3-008, R3-009 | `07545a5` |
 | R3-018 | P2 | Completed | C | Add safe structured logging and request correlation | R3-015 | `45d5482` |
 | R3-019 | P1 | Completed | D | Introduce typed frontend API client | R3-005, R3-016 | `82a19be` |
-| R3-020 | P1 | Review | D | Model frontend submission state and cancellation safely | R3-019 | - |
+| R3-020 | P1 | Completed | D | Model frontend submission state and cancellation safely | R3-019 | `bc6e60c` |
 | R3-021 | P2 | Planned | D | Consolidate frontend toolchain after behavior coverage | R3-020 | - |
 | R3-022 | P1 | Planned | E | Pin runtime artifacts and harden mounts and configuration | R3-013 | - |
 | R3-023 | P1 | Planned | E | Split production backend and runner images | R3-017, R3-022 | - |
@@ -441,14 +441,14 @@ They are planning aids, not acceptance criteria.
 
 ### R3-020: Model frontend submission state and cancellation safely
 
-- Priority / Status: P1 / `Review`
+- Priority / Status: P1 / `Completed`
 - Goal: submission stateをdiscriminated unionで表し、`AbortController`、duplicate防止、selection/response race、timeout表示を正しく扱う
 - Main files/components: React state/hooks、submit/result components、API cancellation、frontend test
 - Dependencies: R3-019
 - Risk: Medium。非同期UI behaviorと既存操作感へ影響する
 - Expected tests: timeout/abort、double submit、out-of-order response、selection race、latest request wins、JPEG/GIF表示
 - Size: M
-- Completion: commit `-` / date 2026-09-03 / 提出表示を`idle`、`running`、
+- Completion: commit `bc6e60c156a1617e19dfc6414c60988e61f169cd` / date 2026-09-03 / 提出表示を`idle`、`running`、
   `succeeded`、`failed`、`validation_error`のdiscriminated unionへ統合。
   timeout、差し替え、component破棄でfetch本体をabortし、同一提出の二重送信を抑止。
   異なる新規提出と問題選択は世代番号で最新responseだけを反映し、abortを無視する
@@ -669,3 +669,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-03 | R3-019 typed frontend API client completed; moved to `Review` | - |
 | 2026-09-03 | R3-019 approved and recorded as `Completed` | `82a19be` |
 | 2026-09-03 | R3-020 submission state and cancellation completed; moved to `Review` | - |
+| 2026-09-03 | R3-020 approved and recorded as `Completed` | `bc6e60c` |
