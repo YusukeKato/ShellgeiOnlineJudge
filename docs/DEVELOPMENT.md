@@ -286,7 +286,8 @@ rootless daemonへsandboxイメージをpullし、設定検査後に起動しま
 
 ```sh
 export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
-docker pull theoldmoon0602/shellgeibot
+docker pull \
+  theoldmoon0602/shellgeibot:latest@sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36
 ./deploy/rootless-compose.sh config --quiet
 ./deploy/rootless-compose.sh up -d --build
 ./deploy/rootless-compose.sh ps
@@ -347,8 +348,10 @@ docker info --format '{{json .SecurityOptions}}'
 rootfulとrootlessのイメージは共有されません。rootless socketを指定した同じshellでpullしてください。
 
 ```sh
-docker pull theoldmoon0602/shellgeibot
-docker image inspect theoldmoon0602/shellgeibot
+docker pull \
+  theoldmoon0602/shellgeibot:latest@sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36
+docker image inspect \
+  theoldmoon0602/shellgeibot:latest@sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36
 ```
 
 ### TLSファイルのmountに失敗する

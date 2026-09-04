@@ -66,11 +66,6 @@ Statusは次の意味で使用します。
     daemon単独のsandbox有効期限はない
   - 関連: `backend/scripts/container_manager.py`、`backend/runner_main.py`
   - 次: runner再起動・回収失敗の監視と、独立した期限強制の要否を判断
-- `SOJ-005` — Medium / P1 / Open
-  - 概要: sandbox、base、DB imageが可変tagで、
-    検証済みartifactを保証しない
-  - 関連: `docker-compose.yml`、各`Dockerfile`
-  - 次: digest固定、artifact promotion、SBOM・署名・scanを導入
 - `SOJ-006` — Medium / P1 / Deferred
   - 概要: runner侵害時の影響が同一daemon上のDB、frontend、TLS鍵へ及ぶ
   - 関連: `docker-compose.yml`
@@ -89,15 +84,6 @@ Statusは次の意味で使用します。
     backend、runner、Docker、DBを通る実Compose E2Eがない
   - 関連: `docker-compose.yml`、`backend/tests/test_runner_boundary.py`
   - 次: rootless Compose E2Eでrevision一致と実行・保存を検証
-- `SOJ-015` — Medium / P1 / Open
-  - 概要: cgroup検査とmount前提が、可変sandbox image内の
-    tool・metadataを信頼する
-  - 関連: `backend/scripts/container_manager.py`、`docker-compose.yml`
-  - 次: image digest固定、予期しないmount拒否、volume cleanupを追加
-- `SOJ-017` — Low / P2 / Open
-  - 概要: frontend nginx設定がhostからread-write mountされる
-  - 関連: `docker-compose.yml`
-  - 次: mount削除またはread-only化しCompose testを追加
 - `SOJ-019` — Medium / P2 / Deferred
   - 概要: CIにdependency/image/secret scan、最小token権限、
     artifact保証がない
@@ -116,10 +102,10 @@ Statusは次の意味で使用します。
 
 現在の未解決trackerは次の内訳です。
 
-- Open: 3件
+- Open: 0件
 - Partially resolved: 4件
 - Deferred: 4件
-- Severity: High 0件、Medium 8件、Low 3件
+- Severity: High 0件、Medium 6件、Low 2件
 
 ## Resolved issues
 
@@ -150,11 +136,15 @@ Statusは次の意味で使用します。
 | RES-020 | runner実行認証をbody読込前へ移し、8 KiB上限、pool readiness、problem revision相互検証を追加 | `07545a5` | runner security・boundary・container manager・Compose静的test |
 | RES-021 | server生成request IDとallowlist型JSON eventでbackend・runner・DB保存を紐付け、利用者dataの非記録を検証 | `45d5482` | structured logging・public API・runner・DB boundary test |
 | RES-022 | 第三者analytics・外部fontを削除し、frontendのscript・通信を同一originへ制限するCSPを追加 | `872bacf` | frontend unit/build、nginx静的test・HTTPS smoke |
+| RES-023 | sandbox・base・DB imageをSHA-256 digestで固定し、tag移動による未検証artifactへの差替えを防止 | この変更 | runtime image pin静的test、image build、Docker統合test |
+| RES-024 | sandbox imageの`VOLUME`宣言と作成後の予期しないmountを拒否し、削除時に匿名volumeも回収 | この変更 | container manager unit、Docker baseline test |
+| RES-025 | frontend nginx設定をimageへ組み込み、hostからのwritable bind mountを削除 | この変更 | Compose静的test、frontend image build |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
-RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020、RES-021、RES-022は、
+RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020、RES-021、RES-022、
+RES-023、RES-024、RES-025は、
 記載した範囲では解決済みです。
-daemon単独のsandbox有効期限、可変image等の残存経路は、
+daemon単独のsandbox有効期限等の残存経路は、
 別のtracker issueとして追跡しています。
 
 ## Open issue details

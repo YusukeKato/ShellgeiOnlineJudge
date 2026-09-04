@@ -10,6 +10,6 @@ backend/public
 backend_data*
 deploy/public
 deploy/tls
-frontend/build
+frontend/dist
 frontend/node_modules
 nohup.out

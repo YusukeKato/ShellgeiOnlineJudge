@@ -11,7 +11,10 @@ import docker
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_IMAGE_ID = "theoldmoon0602/shellgeibot"
+DEFAULT_IMAGE_ID = (
+    "theoldmoon0602/shellgeibot:latest@"
+    "sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36"
+)
 DEFAULT_POOL_SIZE = 3
 DOCKER_API_TIMEOUT_SECONDS = 15
 MANAGED_LABEL = "com.shellgei-online-judge.sandbox"
@@ -19,6 +22,7 @@ OWNER_LABEL = "com.shellgei-online-judge.owner"
 INSTANCE_LABEL = "com.shellgei-online-judge.runner-instance"
 DEFAULT_SANDBOX_OWNER_ID = "shellgei-online-judge"
 SANDBOX_OWNER_ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,62}")
+PINNED_IMAGE_PATTERN = re.compile(r"[^@\s]+@sha256:[0-9a-f]{64}")
 SANDBOX_CONTAINER_NAME_PREFIX = "soj-sandbox"
 SANDBOX_WORK_DIRECTORY = "/work"
 SANDBOX_HOME_DIRECTORY = "/tmp/home"
@@ -51,6 +55,14 @@ class CgroupResourceLimitsRequiredError(RuntimeError):
     """Raised when required cgroup resource limits cannot be enforced."""
 
 
+class SandboxImageConfigurationError(RuntimeError):
+    """Raised when the sandbox image declares an unsafe filesystem volume."""
+
+
+class SandboxMountConfigurationError(RuntimeError):
+    """Raised when Docker creates an unexpected sandbox mount."""
+
+
 class ContainerManager:
     def __init__(
         self,
@@ -62,6 +74,8 @@ class ContainerManager:
     ) -> None:
         if pool_size < 1:
             raise ValueError("pool_size must be at least 1")
+        if PINNED_IMAGE_PATTERN.fullmatch(image_id) is None:
+            raise ValueError("image_id must include a sha256 digest")
         if SANDBOX_OWNER_ID_PATTERN.fullmatch(owner_id) is None:
             raise ValueError("owner_id must contain only safe label characters")
         # Defer connecting to Docker until startup initializes the pool. This keeps
@@ -81,6 +95,7 @@ class ContainerManager:
         self._shutting_down = False
         self._initialized = False
         self._degraded = False
+        self._image_validated = False
 
     def _mark_degraded(self) -> None:
         """shutdown中でなければpoolを再起動が必要な劣化状態として記録する。"""
@@ -149,6 +164,56 @@ class ContainerManager:
             },
         }
 
+    @staticmethod
+    def _validate_sandbox_image(image: Any) -> None:
+        """入力imageをinspectし、永続・匿名volumeを生成するVOLUME宣言がなければ返す。"""
+        config = image.attrs.get("Config")
+        if not isinstance(config, dict):
+            raise SandboxImageConfigurationError(
+                "sandbox image configuration is unavailable"
+            )
+        if config.get("Volumes") not in (None, {}):
+            raise SandboxImageConfigurationError(
+                "sandbox image must not declare filesystem volumes"
+            )
+
+    def _ensure_sandbox_image(self, client: Any) -> None:
+        """固定digestのimageを取得またはpullし、安全なmetadataを一度だけ検証する。"""
+        if self._image_validated:
+            return
+        try:
+            image = client.images.get(self.image_id)
+        except docker.errors.ImageNotFound:
+            image = client.images.pull(self.image_id)
+        self._validate_sandbox_image(image)
+        self._image_validated = True
+
+    @staticmethod
+    def _validate_container_mounts(container: Any) -> None:
+        """作成済みcontainerをinspectし、許可していないbind・volume・mountを拒否する。"""
+        container.reload()
+        attributes = container.attrs
+        host_config = attributes.get("HostConfig")
+        container_config = attributes.get("Config")
+        if not isinstance(host_config, dict) or not isinstance(container_config, dict):
+            raise SandboxMountConfigurationError(
+                "sandbox container configuration is unavailable"
+            )
+        if (
+            attributes.get("Mounts")
+            or host_config.get("Binds")
+            or host_config.get("Mounts")
+            or host_config.get("VolumesFrom")
+            or container_config.get("Volumes")
+        ):
+            raise SandboxMountConfigurationError(
+                "sandbox container has an unexpected mount or volume"
+            )
+        if host_config.get("Tmpfs") != SANDBOX_TMPFS:
+            raise SandboxMountConfigurationError(
+                "sandbox container tmpfs configuration does not match the allowlist"
+            )
+
     def _owned_container_filters(self) -> dict[str, list[str]]:
         return {
             "label": [
@@ -170,7 +235,7 @@ class ContainerManager:
         for container in stale_containers:
             try:
                 with self._cleanup_lock:
-                    container.remove(force=True)
+                    container.remove(force=True, v=True)
             except docker.errors.NotFound:
                 continue
             except Exception as exc:
@@ -213,6 +278,8 @@ class ContainerManager:
             with self.lock:
                 if self._shutting_down:
                     raise RuntimeError("container manager is shutting down")
+            client = self._get_client()
+            self._ensure_sandbox_image(client)
             if not self._slots.acquire(blocking=False):
                 raise ContainerCapacityError("managed container capacity reached")
 
@@ -221,24 +288,12 @@ class ContainerManager:
                 self._pending_names.add(container_name)
 
             try:
-                client = self._get_client()
-            except Exception:
-                self._forget_pending_name(container_name)
-                raise
-            try:
-                try:
-                    container = client.containers.create(
-                        self.image_id,
-                        name=container_name,
-                        **self._container_options(),
-                    )
-                except docker.errors.ImageNotFound:
-                    client.images.pull(self.image_id)
-                    container = client.containers.create(
-                        self.image_id,
-                        name=container_name,
-                        **self._container_options(),
-                    )
+                container = client.containers.create(
+                    self.image_id,
+                    name=container_name,
+                    **self._container_options(),
+                )
+                self._validate_container_mounts(container)
             except Exception:
                 if self._cleanup_pending_container(
                     container_name,
@@ -335,7 +390,7 @@ class ContainerManager:
                 )
                 return False
             try:
-                container.remove(force=True)
+                container.remove(force=True, v=True)
             except docker.errors.NotFound:
                 return True
             except Exception as exc:
@@ -364,7 +419,7 @@ class ContainerManager:
                 )
 
         try:
-            container.remove(force=True)
+            container.remove(force=True, v=True)
         except docker.errors.NotFound:
             self._forget_removed_container(container)
             return True

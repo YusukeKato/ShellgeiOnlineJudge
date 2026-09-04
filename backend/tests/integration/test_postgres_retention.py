@@ -37,7 +37,10 @@ pytestmark = [
     ),
 ]
 
-POSTGRES_IMAGE = "postgres:15-alpine"
+POSTGRES_IMAGE = (
+    "postgres:15-alpine@"
+    "sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b"
+)
 POSTGRES_USER = "soj_retention_test"
 POSTGRES_PASSWORD = "soj_retention_test_password"
 POSTGRES_DATABASE = "soj_retention_test"
@@ -313,5 +316,5 @@ def test_postgres_migration_repository_retention_and_recovery(
         if database_engine is not None:
             database_engine.dispose()
         if container is not None:
-            container.remove(force=True)
+            container.remove(force=True, v=True)
         client.close()

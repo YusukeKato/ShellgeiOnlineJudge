@@ -25,7 +25,10 @@ pytestmark = [
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 FRONTEND_NGINX_CONFIG = REPOSITORY_ROOT / "frontend" / "nginx" / "default.conf"
-NGINX_IMAGE = "nginx:alpine"
+NGINX_IMAGE = (
+    "nginx:alpine@"
+    "sha256:db35bfc6b2951e7f8a72db5db120288c127ffaeeb4a6d4b95a26fead017d5913"
+)
 
 
 def _available_loopback_port() -> int:
@@ -243,7 +246,7 @@ def test_non_executing_requests_do_not_consume_a_shared_nginx_start_budget(
     finally:
         for container in reversed(containers):
             try:
-                container.remove(force=True)
+                container.remove(force=True, v=True)
             except docker.errors.DockerException:
                 pass
         if network is not None:

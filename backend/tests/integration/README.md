@@ -10,9 +10,12 @@ Docker統合テストは実際のsandboxコンテナを生成・削除するた�
 次のイメージを、rootless daemonへ事前にpullしてください。
 
 ```sh
-docker pull theoldmoon0602/shellgeibot
-docker pull postgres:15-alpine
-docker pull nginx:alpine
+docker pull \
+  theoldmoon0602/shellgeibot:latest@sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36
+docker pull \
+  postgres:15-alpine@sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b
+docker pull \
+  nginx:alpine@sha256:db35bfc6b2951e7f8a72db5db120288c127ffaeeb4a6d4b95a26fead017d5913
 ```
 
 リポジトリのルートから、rootless socketを指定して実行します。
@@ -27,6 +30,7 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - 接続先daemonがrootlessであること
 - cgroup v2によるCPU・メモリ・PID制限が実際に反映されていること
 - 基本的なDocker隔離設定
+- sandbox imageの`VOLUME`宣言がなく、実containerに予期しないmountがないこと
 - 動的sandboxのlogging driverが`none`であること
 - sandboxの待機PID 1のstdin、stdout、stderrが`/dev/null`であること
 - 同じownerの旧sandboxをrunner起動時に回収すること

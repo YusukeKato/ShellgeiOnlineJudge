@@ -8,6 +8,7 @@ import pytest
 
 from models.execution import ExecutionStatus
 from scripts.container_manager import (
+    DEFAULT_IMAGE_ID,
     INSTANCE_LABEL,
     MANAGED_LABEL,
     OWNER_LABEL,
@@ -78,7 +79,14 @@ def test_real_container_has_required_baseline_isolation() -> None:
         container.reload()
         host_config = container.attrs["HostConfig"]
         container_config = container.attrs["Config"]
+        image = manager.client.images.get(DEFAULT_IMAGE_ID)
 
+        assert image.attrs["Config"].get("Volumes") in (None, {})
+        assert container.attrs.get("Mounts") == []
+        assert host_config.get("Binds") in (None, [])
+        assert host_config.get("Mounts") in (None, [])
+        assert host_config.get("VolumesFrom") in (None, [])
+        assert container_config.get("Volumes") in (None, {})
         assert host_config["ReadonlyRootfs"] is True
         assert host_config["NetworkMode"] == "none"
         assert host_config["IpcMode"] == "none"

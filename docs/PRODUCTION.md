@@ -425,6 +425,24 @@ webrootなどへ変更するか、更新時の安全な停止・再開方法を�
 本番ホスト上でfork bomb、ディスク枯渇、daemon停止、大量コンテナ生成など、極端な負荷条件を扱う耐性試験を実行してはいけません。
 これらは使い捨てVMでのみ実施します。
 
+### image digestの更新
+
+runtime image referenceの正本は各Dockerfile、`docker-compose.yml`、
+`backend/scripts/container_manager.py`です。通常のdeployでは固定済みdigestを
+`--pull`しても同じartifactが取得され、tagの移動だけでは内容が変わりません。
+
+imageを更新するときだけ、次の順序で候補を確認します。
+
+1. rootless Dockerへ更新候補のtagをpullする
+2. `docker image inspect --format '{{json .RepoDigests}}' IMAGE:TAG`でregistry digestを取得する
+3. 該当するDockerfile、Compose、sandbox定数、統合test fixtureを同じ変更で更新する
+4. 基本検査、image build、rootless Docker統合test、全問題回帰testを実行する
+5. 検証したdigestと結果をreviewし、commit後に本番へ反映する
+
+候補tagをそのまま本番設定へ記載してはいけません。SBOM、署名検証、脆弱性scanは
+未導入のため、残存するsupply chain対策は
+[セキュリティ課題tracker](./security/README.md)で追跡します。
+
 ## 7. 初回デプロイ
 
 デプロイユーザーのshellで実行します。
@@ -432,7 +450,8 @@ webrootなどへ変更するか、更新時の安全な停止・再開方法を�
 ```sh
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
-docker pull theoldmoon0602/shellgeibot
+docker pull \
+  theoldmoon0602/shellgeibot:latest@sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36
 ./deploy/rootless-compose.sh config --quiet
 ./deploy/rootless-compose.sh build --pull
 ./deploy/rootless-compose.sh up -d --remove-orphans
@@ -602,6 +621,9 @@ printf 'compose config exit=%s\n' "$?"
 ./deploy/rootless-compose.sh logs --tail=100 db runner backend frontend
 ```
 
+`frontend/nginx/default.conf`はfrontend imageへ組み込み、hostからmountしません。
+この設定を変更した場合はfrontend imageを再buildし、containerを再作成してください。
+
 単一host構成では、containerの再作成中に短時間の応答断が発生する可能性があります。
 更新のために`down`を先に実行する必要はありません。
 backendもrequest受付前に同じmigrationを確認します。明示migrationが失敗した場合は
@@ -753,7 +775,8 @@ PostgreSQLの整合性が保証される方法でバックアップしてくだ�
 - 同時実行数とrunnerの開始頻度はrunnerプロセス単位です。
   runnerのreplicaを増やすと合計上限も増えるため、現在は1 instanceに限定します。
   複数frontendまたは複数hostでは、外側の共有された受付制御が必要です。
-- sandboxイメージはtag参照です。更新時は全問題回帰テストを行い、digest固定、署名検証、SBOM、脆弱性スキャンを導入してください。
+- sandboxを含むruntime imageはdigest固定です。更新時は
+  [image digestの更新](#image-digestの更新)に従ってください。
 - Composeだけでは、DDoS、分散リクエスト、ホストディスク枯渇を完全には防げません。外側のロードバランサー、firewall、監視、容量制限も必要です。
 - rootless Dockerはcontainer escapeの影響を軽減しますが、任意コマンド実行サービスの完全な隔離境界ではありません。
 

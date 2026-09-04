@@ -6,7 +6,7 @@ x-service-logging: &service-logging
 
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:15-alpine@sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b
     container_name: soj-db
     restart: always
     environment:
@@ -102,7 +102,6 @@ services:
       # rootless Dockerで利用できる非特権ポートを既定値にする。
       - "${HTTPS_BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-8443}:443"
     volumes:
-      - ./frontend/nginx/default.conf:/etc/nginx/conf.d/default.conf
       # rootless daemonユーザーが読める証明書ファイルを指定する。
       - ${TLS_CERTIFICATE_PATH:-./deploy/tls/fullchain.pem}:/etc/nginx/tls/fullchain.pem:ro
       - ${TLS_PRIVATE_KEY_PATH:-./deploy/tls/privkey.pem}:/etc/nginx/tls/privkey.pem:ro

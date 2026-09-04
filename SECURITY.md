@@ -59,9 +59,13 @@ privileged modeなどのDocker optionを受け付けません。
 - 削除に失敗したコンテナ
 
 削除に失敗した場合は実行可能数を減らし、上限を超える代替コンテナを生成しません。
+container削除時は関連する匿名volumeも同時に削除します。
 
 sandboxコンテナには次の設定を適用します。
 
+- sandbox imageをSHA-256 digestで固定
+- image metadataに`VOLUME`宣言がないことを作成前に検証
+- 作成後のDocker inspectでbind、volume、allowlist外mountがないことを検証
 - rootless Docker daemon上で実行
 - `network_mode=none`
 - `ipc_mode=none`
@@ -532,9 +536,13 @@ hash、header、query、bodyをaccess log、error log、WAF event、分析基盤
 
 ## 依存関係とイメージの制約
 
-sandboxイメージとbase imageはtagで参照しており、digestを固定していません。
+sandbox、Python、Node.js、nginx、PostgreSQLのimageは、可読なtagと
+SHA-256 digestを併記して同一artifactへ固定します。sandbox managerはdigestのない
+image referenceを拒否し、固定imageがlocalにない場合だけ同じdigestをpullします。
+imageの更新方法は[本番運用の「image digestの更新」](./docs/PRODUCTION.md#image-digestの更新)を
+正本とします。
 
-次のsupply chain対策も構成されていません。
+次のsupply chain対策はまだ構成されていません。
 
 - SBOM生成
 - 署名検証
@@ -552,5 +560,5 @@ sandboxイメージとbase imageはtagで参照しており、digestを固定し
 - 外側proxyで実際のclient単位に共有するrate・connection制限
 - 複数frontend replica・複数hostで共有する受付制御
 - runnerとは独立したsandbox期限強制の必要性評価
-- イメージのdigest固定、SBOM、署名検証、脆弱性scan
+- イメージのSBOM、署名検証、脆弱性scan
 - runnerを別hostまたは使い捨てVMへ配置する追加隔離

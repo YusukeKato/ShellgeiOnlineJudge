@@ -10,6 +10,7 @@ from scripts.container_manager import (
     CgroupResourceLimitsRequiredError,
     ContainerCapacityError,
     ContainerManager,
+    DEFAULT_IMAGE_ID,
     INSTANCE_LABEL,
     MANAGED_LABEL,
     OWNER_LABEL,
@@ -21,6 +22,8 @@ from scripts.container_manager import (
     SANDBOX_PIDS_LIMIT,
     SANDBOX_TMPFS,
     SANDBOX_WORK_DIRECTORY,
+    SandboxImageConfigurationError,
+    SandboxMountConfigurationError,
 )
 
 
@@ -52,7 +55,13 @@ class FakeContainer:
         self.remove_delay = 0.0
         self.active_remove_calls = 0
         self.max_active_remove_calls = 0
+        self.remove_volume_flags: list[bool] = []
         self._remove_state_lock = threading.Lock()
+        self.attrs: dict[str, Any] = {}
+
+    def reload(self) -> None:
+        # fakeでは作成時のinspect属性を保持しているため、daemonとの同期処理を行わない。
+        return None
 
     def exec_run(self, command: list[str]) -> FakeExecResult:
         assert command[:2] == ["/bin/sh", "-c"]
@@ -70,8 +79,9 @@ class FakeContainer:
         if self.start_error is not None:
             raise self.start_error
 
-    def remove(self, force: bool = False) -> None:
+    def remove(self, force: bool = False, v: bool = False) -> None:
         assert force is True
+        self.remove_volume_flags.append(v)
         with self._remove_state_lock:
             self.active_remove_calls += 1
             self.max_active_remove_calls = max(
@@ -103,6 +113,12 @@ class FakeContainers:
         self.external: list[FakeContainer] = []
         self.list_calls: list[dict[str, Any]] = []
         self.cgroup_exit_code = 0
+        self.mounts: list[dict[str, Any]] = []
+        self.host_binds: list[str] | None = None
+        self.host_mounts: list[dict[str, Any]] | None = None
+        self.volumes_from: list[str] | None = None
+        self.container_volumes: dict[str, Any] | None = None
+        self.actual_tmpfs: dict[str, str] | None = None
         self.cgroup_output = (
             f"{SANDBOX_MEMORY_LIMIT_BYTES}\n{SANDBOX_PIDS_LIMIT}\n{SANDBOX_CPU_MAX}\n"
         ).encode("ascii")
@@ -119,6 +135,16 @@ class FakeContainers:
         container.labels = kwargs["labels"]
         container.start_error = self.start_error
         container.remove_error = self.created_remove_error
+        container.attrs = {
+            "Mounts": list(self.mounts),
+            "HostConfig": {
+                "Binds": self.host_binds,
+                "Mounts": self.host_mounts,
+                "VolumesFrom": self.volumes_from,
+                "Tmpfs": self.actual_tmpfs or kwargs["tmpfs"],
+            },
+            "Config": {"Volumes": self.container_volumes},
+        }
         self.created.append(container)
         self.create_kwargs.append({"image_id": image_id, **kwargs})
         if self.create_error_after_creation is not None:
@@ -149,12 +175,29 @@ class FakeContainers:
         raise docker.errors.NotFound("container not found")
 
 
+class FakeImage:
+    def __init__(self) -> None:
+        self.attrs: dict[str, Any] = {"Config": {"Volumes": None}}
+
+
 class FakeImages:
     def __init__(self) -> None:
+        self.image = FakeImage()
+        self.get_calls: list[str] = []
         self.pull_calls: list[str] = []
+        self.get_error: Exception | None = None
 
-    def pull(self, image_id: str) -> None:
+    def get(self, image_id: str) -> FakeImage:
+        # 入力referenceを記録し、必要なtestでは未取得imageの例外を再現する。
+        self.get_calls.append(image_id)
+        if self.get_error is not None:
+            raise self.get_error
+        return self.image
+
+    def pull(self, image_id: str) -> FakeImage:
+        # pull対象を記録し、取得後にinspect可能な同じfake imageを返す。
         self.pull_calls.append(image_id)
+        return self.image
 
 
 class FakeDockerClient:
@@ -278,9 +321,76 @@ def test_pool_initialization_rejects_unenforced_container_limits() -> None:
     assert client.closed is True
 
 
+def test_manager_rejects_an_image_reference_without_a_digest() -> None:
+    # tagや名前だけのimageを受け付けず、起動前にsha256 digest固定を必須にする。
+    with pytest.raises(ValueError, match="sha256 digest"):
+        ContainerManager(image_id="test-image", pool_size=1)
+
+
+def test_pool_initialization_rejects_image_declared_volumes() -> None:
+    # image metadataにVOLUMEがある場合、匿名volumeを作成する前にpool起動を拒否する。
+    client = FakeDockerClient()
+    client.images.image.attrs["Config"]["Volumes"] = {"/unexpected": {}}
+    manager = ContainerManager(client=client, pool_size=1)
+
+    with pytest.raises(SandboxImageConfigurationError, match="filesystem volumes"):
+        manager.initialize_pool()
+
+    assert client.images.get_calls == [DEFAULT_IMAGE_ID]
+    assert client.containers.created == []
+    assert client.closed is True
+
+
+def test_pool_initialization_pulls_and_validates_a_missing_pinned_image() -> None:
+    # 固定digestがlocalにない場合だけ同じreferenceをpullし、metadata検証後に作成する。
+    client = FakeDockerClient()
+    client.images.get_error = docker.errors.ImageNotFound("missing image")
+    manager = ContainerManager(client=client, pool_size=1)
+
+    manager.initialize_pool()
+
+    assert client.images.get_calls == [DEFAULT_IMAGE_ID]
+    assert client.images.pull_calls == [DEFAULT_IMAGE_ID]
+    assert len(client.containers.created) == 1
+    manager.shutdown_pool()
+
+
+@pytest.mark.parametrize(
+    "unexpected_configuration",
+    ["mount", "bind", "mount_spec", "volumes_from", "container_volume", "tmpfs"],
+)
+def test_pool_initialization_rejects_unexpected_container_mounts(
+    unexpected_configuration: str,
+) -> None:
+    # Docker inspectにallowlist外のmount・volumeまたは異なるtmpfsがあればcontainerを破棄する。
+    client = FakeDockerClient()
+    if unexpected_configuration == "mount":
+        client.containers.mounts = [{"Type": "volume", "Destination": "/unexpected"}]
+    elif unexpected_configuration == "bind":
+        client.containers.host_binds = ["/host:/unexpected:rw"]
+    elif unexpected_configuration == "mount_spec":
+        client.containers.host_mounts = [{"Target": "/unexpected"}]
+    elif unexpected_configuration == "volumes_from":
+        client.containers.volumes_from = ["other:rw"]
+    elif unexpected_configuration == "container_volume":
+        client.containers.container_volumes = {"/unexpected": {}}
+    else:
+        client.containers.actual_tmpfs = {"/tmp": "rw,size=1G"}
+    manager = ContainerManager(client=client, pool_size=1)
+
+    with pytest.raises(SandboxMountConfigurationError):
+        manager.initialize_pool()
+
+    container = client.containers.created[0]
+    assert container.removed is True
+    assert container.remove_volume_flags == [True]
+    assert manager.managed_count == 0
+    assert client.closed is True
+
+
 def test_manager_never_creates_more_than_hard_capacity() -> None:
     client = FakeDockerClient()
-    manager = ContainerManager(client=client, image_id="test-image", pool_size=2)
+    manager = ContainerManager(client=client, image_id=DEFAULT_IMAGE_ID, pool_size=2)
     manager.initialize_pool()
 
     first = manager.get_container()
@@ -372,6 +482,10 @@ def test_shutdown_removes_warm_containers_and_closes_client() -> None:
         assert SANDBOX_INIT_COMMAND.endswith(
             "exec sleep infinity </dev/null >/dev/null 2>&1"
         )
+    assert all(
+        container.remove_volume_flags == [True]
+        for container in client.containers.created
+    )
 
 
 def test_pool_initialization_fails_closed_when_container_creation_fails() -> None:

@@ -1,5 +1,5 @@
 # --- Build Stage ---
-FROM node:22 AS builder
+FROM node:22@sha256:0557ac14e0d45d02ed563067b82856ca5e7aa3437fa28d98d4350ea9c3d9494a AS builder
 
 WORKDIR /app
 
@@ -30,7 +30,7 @@ RUN yarn typecheck
 RUN yarn build
 
 # --- Serve Stage ---
-FROM nginx:alpine
+FROM nginx:alpine@sha256:db35bfc6b2951e7f8a72db5db120288c127ffaeeb4a6d4b95a26fead017d5913
 
 # ビルド成果物をNginxの公開ディレクトリにコピー
 COPY --from=builder /app/dist /usr/share/nginx/html
