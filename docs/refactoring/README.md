@@ -173,7 +173,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-018 | P2 | Completed | C | Add safe structured logging and request correlation | R3-015 | `45d5482` |
 | R3-019 | P1 | Completed | D | Introduce typed frontend API client | R3-005, R3-016 | `82a19be` |
 | R3-020 | P1 | Completed | D | Model frontend submission state and cancellation safely | R3-019 | `bc6e60c` |
-| R3-021 | P2 | Review | D | Consolidate frontend toolchain after behavior coverage | R3-020 | - |
+| R3-021 | P2 | Completed | D | Consolidate frontend toolchain after behavior coverage | R3-020 | `872bacf` |
 | R3-022 | P1 | Planned | E | Pin runtime artifacts and harden mounts and configuration | R3-013 | - |
 | R3-023 | P1 | Planned | E | Split production backend and runner images | R3-017, R3-022 | - |
 | R3-024 | P1 | Planned | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | - |
@@ -457,19 +457,18 @@ They are planning aids, not acceptance criteria.
 
 ### R3-021: Consolidate frontend toolchain after behavior coverage
 
-- Priority / Status: P2 / `Review`
+- Priority / Status: P2 / `Completed`
 - Goal: behavior testを先に確保した後、維持可能なbuild/test/lint/typecheck構成へ統合し、必要ならdeprecatedなCRAから移行する
 - Main files/components: frontend package/build config、test setup、Dockerfile、frontend documentation
 - Dependencies: R3-020、Analytics/Google Fonts/CSPのreview gate
 - Risk: Medium。build artifact、environment variable、nginx配信、browser behaviorが変わり得る
 - Expected tests: format、lint、typecheck、unit/component test、production build、nginx smoke
 - Size: M
-- Completion: commit `-` / date 2026-09-04 / CRAをVite、JestをVitestへ移行し、
+- Completion: commit `872bacfe4aef87ab9812afbfe7c4b6fa5defe652` / date 2026-09-04 / CRAをVite、JestをVitestへ移行し、
   ESLint 10のflat config、TypeScript型検査、CI、Docker buildを同じtoolchainへ統合。
   `REACT_APP_*`を`VITE_*`へ移し、Google AnalyticsとGoogle Fontsを削除して
   same-origin CSPを追加。frontend test 26件、format、lint、typecheck、production build、
-  Python非Docker test 495件、ruff、format、mypy、Compose設定、rootless実nginx smokeが成功。
-  依頼者review後にcommitを記録する
+  Python非Docker test 495件、ruff、format、mypy、Compose設定、rootless実nginx smokeが成功
 
 ## Phase E — Runtime / Supply Chain / E2E
 
@@ -563,7 +562,7 @@ They are planning aids, not acceptance criteria.
 | --- | --- | --- | --- | --- |
 | runnerを専用hostまたは使い捨てVMへ分離するか | Open | R3-023の最終設計、またはv3 release scope確定 | - | - |
 | runner process外の独立reaperを導入するか | Open | R3-024のrecovery acceptance確定 | - | - |
-| Analytics / Google Fontsを維持するか、CSPをどう設定するか | Decided | R3-021 | Google Analyticsと外部Google Fontsを削除し、script・style・font・API通信を同一originに限定するCSPを適用する。実行結果画像の`data:`だけを追加許可する | commandと結果を扱うbrowserから第三者への自動送信経路をなくし、外部resource障害と情報漏えい時の影響を減らす。2026-09-04決定、この変更で実装 |
+| Analytics / Google Fontsを維持するか、CSPをどう設定するか | Decided | R3-021 | Google Analyticsと外部Google Fontsを削除し、script・style・font・API通信を同一originに限定するCSPを適用する。実行結果画像の`data:`だけを追加許可する | commandと結果を扱うbrowserから第三者への自動送信経路をなくし、外部resource障害と情報漏えい時の影響を減らす。2026-09-04決定、commit `872bacf` |
 | reference solutionをpublic frontend/API artifactに含めるか | Decided | R3-007 | 現行どおりpublic problem detail APIで公開する | 既存APIは`answer`をすでに公開しているためR3-016以前の互換性を維持し、v3では`reference_solution`として保持する。2026-08-30決定、commit `4d25fa8` |
 | execution logの利用目的、保持期間、privacy、backup方針 | Decided | R3-014 | 投稿ID発行、障害・security・不正利用調査だけに使用し、365日かつ最新10,000件以内で保持する。IP address、HTTP header、User-Agent、画像artifact等は保存せず、backupも暗号化・アクセス制限した障害復旧用途に限定して同じ保持期間を超えて残さない | 漏えい時の影響を抑えるため個人特定につながるrequest情報と不要なbinaryを永続化せず、既存の保持上限とcommand・上限付き出力の互換性は維持する。2026-09-01決定 |
 | imageをbyte exact、canonicalized、pixel比較のどれで判定するか | Open | R3-011 | - | - |
@@ -676,3 +675,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-03 | R3-020 submission state and cancellation completed; moved to `Review` | - |
 | 2026-09-03 | R3-020 approved and recorded as `Completed` | `bc6e60c` |
 | 2026-09-04 | R3-021 frontend toolchain and browser CSP completed; moved to `Review` | - |
+| 2026-09-04 | R3-021 approved and recorded as `Completed` | `872bacf` |
