@@ -4,6 +4,7 @@ from pathlib import Path
 NGINX_CONFIG = (
     Path(__file__).resolve().parents[2] / "frontend" / "nginx" / "default.conf"
 )
+FRONTEND_INDEX = Path(__file__).resolve().parents[2] / "frontend" / "index.html"
 
 
 def _active_directives() -> set[str]:
@@ -76,3 +77,30 @@ def test_nginx_does_not_persist_request_or_client_logs() -> None:
 
     assert "access_log off;" in directives
     assert "error_log /dev/null;" in directives
+
+
+def test_nginx_restricts_frontend_content_to_the_same_origin() -> None:
+    # CSPでscript・API通信・fontを同一originへ限定し、画像data URLだけを追加許可することを確認する。
+    directives = _active_directives()
+
+    assert (
+        "add_header Content-Security-Policy \"default-src 'self'; base-uri 'self'; "
+        "connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; "
+        "img-src 'self' data:; manifest-src 'self'; object-src 'none'; script-src 'self'; "
+        "style-src 'self'\" always;"
+    ) in directives
+
+
+def test_frontend_index_does_not_load_third_party_code_or_fonts() -> None:
+    # Vite entry以外のscriptとGoogleのanalytics・web font URLがHTMLへ再導入されないことを確認する。
+    index = FRONTEND_INDEX.read_text(encoding="utf-8")
+
+    assert index.count("<script") == 1
+    assert '<script type="module" src="/src/main.tsx"></script>' in index
+    for forbidden_origin in (
+        "googletagmanager.com",
+        "google-analytics.com",
+        "fonts.googleapis.com",
+        "fonts.gstatic.com",
+    ):
+        assert forbidden_origin not in index

@@ -1,5 +1,5 @@
-import React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import Playground from "./tsx/playground";
 
@@ -90,7 +90,7 @@ const defaultFetchResponse = async (url, options) => {
 };
 
 describe("playground default problem", () => {
-  const fetchMock = jest.fn();
+  const fetchMock = vi.fn();
 
   beforeEach(() => {
     // 問題一覧・問題詳細・投稿APIをURL別に応答させ、初期表示と送信内容を外部通信なしで確認する。

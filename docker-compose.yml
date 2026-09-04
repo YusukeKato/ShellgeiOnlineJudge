@@ -88,14 +88,14 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
       args:
-        REACT_APP_SOJ_URL: ${REACT_APP_SOJ_URL:-https://shellgei-online-judge.com}
-        REACT_APP_UPDATE_DATE: ${REACT_APP_UPDATE_DATE:-}
-        REACT_APP_VERSION: ${REACT_APP_VERSION:-}
-        REACT_APP_X_URL: ${REACT_APP_X_URL:-}
-        REACT_APP_GITHUB_REPO_URL: ${REACT_APP_GITHUB_REPO_URL:-}
-        REACT_APP_GITHUB_AUTHOR_URL: ${REACT_APP_GITHUB_AUTHOR_URL:-}
-        REACT_APP_BLOG_URL: ${REACT_APP_BLOG_URL:-}
-        REACT_APP_MIXI2_URL: ${REACT_APP_MIXI2_URL:-}
+        VITE_SOJ_URL: ${VITE_SOJ_URL:-https://shellgei-online-judge.com}
+        VITE_UPDATE_DATE: ${VITE_UPDATE_DATE:-}
+        VITE_VERSION: ${VITE_VERSION:-}
+        VITE_X_URL: ${VITE_X_URL:-}
+        VITE_GITHUB_REPO_URL: ${VITE_GITHUB_REPO_URL:-}
+        VITE_GITHUB_AUTHOR_URL: ${VITE_GITHUB_AUTHOR_URL:-}
+        VITE_BLOG_URL: ${VITE_BLOG_URL:-}
+        VITE_MIXI2_URL: ${VITE_MIXI2_URL:-}
     container_name: soj-frontend
     restart: always
     ports:

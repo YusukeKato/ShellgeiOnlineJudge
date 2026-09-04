@@ -1,5 +1,5 @@
-import React from "react";
 import { render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { submitSolution } from "./api/client";
 import { judgeResult } from "./functions/judge_result";
@@ -41,11 +41,11 @@ const executeSubmission = async (shellgei, problemId = "STANDARD-00000001") => {
 
 describe("typed frontend API and display behavior", () => {
   // v3 API契約の検証と、既存画面への明示的な変換をこのsuiteで確認する。
-  const fetchMock = jest.fn();
+  const fetchMock = vi.fn();
 
   beforeEach(() => {
     // 各テストを実時間やネットワークへ依存させないよう、timerとfetchをmockへ置き換える。
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     Object.defineProperty(globalThis, "fetch", {
       configurable: true,
       writable: true,
@@ -55,10 +55,10 @@ describe("typed frontend API and display behavior", () => {
 
   afterEach(() => {
     // timer、fetch mock、spyを初期状態へ戻し、後続テストへの状態漏れを防ぐ。
-    jest.clearAllTimers();
-    jest.useRealTimers();
+    vi.clearAllTimers();
+    vi.useRealTimers();
     fetchMock.mockReset();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test("returns a validated typed submission response", async () => {
@@ -66,7 +66,7 @@ describe("typed frontend API and display behavior", () => {
     fetchMock.mockResolvedValue({
       ok: true,
       headers: new Headers({ "X-Request-ID": "a".repeat(32) }),
-      json: jest.fn().mockResolvedValue(submissionResponse()),
+      json: vi.fn().mockResolvedValue(submissionResponse()),
     });
 
     await expect(
@@ -93,7 +93,7 @@ describe("typed frontend API and display behavior", () => {
     // 画像だけを生成したv3応答で、空の標準出力とtyped artifactが画面表示まで失われないことを確認する。
     fetchMock.mockResolvedValue({
       ok: true,
-      json: jest.fn().mockResolvedValue(
+      json: vi.fn().mockResolvedValue(
         submissionResponse({
           submission_id: 43,
           execution: {
@@ -121,7 +121,7 @@ describe("typed frontend API and display behavior", () => {
     // 空の標準出力をerror扱いせず、正解表示とBase64画像を画面用setterへ渡すことを確認する。
     fetchMock.mockResolvedValue({
       ok: true,
-      json: jest.fn().mockResolvedValue(
+      json: vi.fn().mockResolvedValue(
         submissionResponse({
           submission_id: 44,
           execution: {
@@ -150,7 +150,7 @@ describe("typed frontend API and display behavior", () => {
     // 画像未生成による不正解も有効な応答として扱い、通信error表示に置換しないことを確認する。
     fetchMock.mockResolvedValue({
       ok: true,
-      json: jest.fn().mockResolvedValue(
+      json: vi.fn().mockResolvedValue(
         submissionResponse({
           submission_id: 45,
           verdict: "wrong_image",
@@ -178,12 +178,12 @@ describe("typed frontend API and display behavior", () => {
 
   test("shows a failed HTTP request as an error instead of a verdict", async () => {
     // v3 HTTP失敗ではverdictがないため、誤って不正解へ変換せずerror内容を各表示へ渡すことを確認する。
-    jest.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     fetchMock.mockResolvedValue({
       ok: false,
       status: 503,
       headers: new Headers({ "X-Request-ID": "b".repeat(32) }),
-      json: jest.fn().mockResolvedValue({
+      json: vi.fn().mockResolvedValue({
         api_version: 3,
         code: "runner_unavailable",
         message: "Runner is unavailable",
@@ -204,7 +204,7 @@ describe("typed frontend API and display behavior", () => {
       ok: false,
       status: 429,
       headers: new Headers({ "X-Request-ID": "c".repeat(32) }),
-      json: jest.fn().mockResolvedValue({
+      json: vi.fn().mockResolvedValue({
         api_version: 3,
         code: "runner_busy",
         message: "Runner capacity is temporarily exhausted",
@@ -228,7 +228,7 @@ describe("typed frontend API and display behavior", () => {
   test("returns a typed timeout error after 20 seconds", async () => {
     // APIが応答しない場合に20秒でtimeout種別のApiClientErrorを返すことを確認する。
     // timeout時に想定されるerror logは、このテスト中だけ出力しない。
-    jest.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     // resolveもrejectもしないPromiseで、応答しないfetchを再現する。
     let fetchSignal;
     fetchMock.mockImplementation((_url, options) => {
@@ -241,7 +241,7 @@ describe("typed frontend API and display behavior", () => {
       shellgei: "sleep 30",
       problem_id: "STANDARD-00000001",
     });
-    jest.advanceTimersByTime(20_000);
+    vi.advanceTimersByTime(20_000);
 
     await expect(result).rejects.toMatchObject({
       name: "ApiClientError",
@@ -253,7 +253,7 @@ describe("typed frontend API and display behavior", () => {
 
   test("maps a submission timeout to the visible timeout state", async () => {
     // 20秒応答しない提出をfailed stateへ変換し、結果・判定・command欄へtimeoutを表示する。
-    jest.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     fetchMock.mockReturnValue(new Promise(() => undefined));
     const prepared = prepareSubmission(1000, "sleep 30", "STANDARD-00000001");
     if (prepared.kind !== "running") {
@@ -261,7 +261,7 @@ describe("typed frontend API and display behavior", () => {
     }
     const result = submit(SOJ_URL, prepared, new AbortController().signal);
 
-    jest.advanceTimersByTime(20_000);
+    vi.advanceTimersByTime(20_000);
 
     const state = await result;
     expect(state).toEqual({ kind: "failed", message: "Timeout: 20.0s" });
@@ -297,7 +297,7 @@ describe("typed frontend API and display behavior", () => {
     // backend契約にないverdictを含む成功responseを受理せず、契約違反errorへ変換することを確認する。
     fetchMock.mockResolvedValue({
       ok: true,
-      json: jest.fn().mockResolvedValue(submissionResponse({ verdict: "future_verdict" })),
+      json: vi.fn().mockResolvedValue(submissionResponse({ verdict: "future_verdict" })),
     });
 
     await expect(
@@ -309,7 +309,7 @@ describe("typed frontend API and display behavior", () => {
     // JPEG/GIF以外のartifact MIMEを含むresponseを契約違反として拒否し、DOMへdata URLを渡さない。
     fetchMock.mockResolvedValue({
       ok: true,
-      json: jest
+      json: vi
         .fn()
         .mockResolvedValue(
           submissionResponse({ artifact: { data: "svg-data", media_type: "image/svg+xml" } }),
@@ -332,7 +332,7 @@ describe("typed frontend API and display behavior", () => {
     // 問題文の連結、空値のNULL表示、画像URLの組み立てを確認する。
     fetchMock.mockResolvedValue({
       ok: true,
-      json: jest.fn().mockResolvedValue({
+      json: vi.fn().mockResolvedValue({
         title_ja: "日本語タイトル",
         statement_ja: "日本語本文",
         title_en: "English title",

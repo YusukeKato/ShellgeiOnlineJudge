@@ -180,12 +180,12 @@ const AboutPage: React.FC<AboutPageProps> = ({
         <h2>その他 / OTHERS</h2>
         <h3>注意事項 / DISCLAIMER</h3>
         <p>
-          このウェブサイトではGoogle AnalyticsとGoogle Search Consoleを利用しています。
+          このウェブサイトは第三者のアクセス解析JavaScriptを読み込みません。
           このウェブサイトの利用によって生じる損害等について一切責任を負いません。
           実行されたコマンド等の情報は記録されます。
         </p>
         <p>
-          This website uses Google Analytics and Google Search Console. We are not responsible for
+          This website does not load third-party analytics JavaScript. We are not responsible for
           any damages caused by the use of this website. Information about executed commands will be
           recorded.
         </p>

@@ -385,8 +385,19 @@ Docker build contextから次を除外します。
 - Git履歴
 - Python・Node.jsのcacheと生成物
 
-frontendのbuildへ渡す環境変数は、ブラウザへ公開される`REACT_APP_*`だけです。
-`REACT_APP_*`へ秘密情報を設定してはいけません。
+frontendのbuildへ渡す環境変数は、ブラウザへ公開される`VITE_*`だけです。
+`VITE_*`へ秘密情報を設定してはいけません。
+
+## frontendのbrowser境界
+
+frontendはGoogle Analytics等の第三者JavaScriptや外部web fontを読み込みません。
+nginxのContent Security Policyはscript、style、font、API通信を同一originだけに限定し、
+実行結果のJPEG/GIF表示に必要な`data:`画像だけを追加で許可します。object埋め込みと
+他siteからのframe埋め込みも拒否します。
+
+このため、本番buildの`VITE_SOJ_URL`はfrontendと同一originにしてください。
+異なるoriginを指定してもbrowserがAPI通信を拒否します。利用者が明示的に操作する
+外部linkはこの制約の対象外です。
 
 ## runnerとDocker socketの権限
 

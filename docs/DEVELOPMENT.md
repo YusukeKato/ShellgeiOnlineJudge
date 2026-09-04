@@ -25,7 +25,8 @@ rootless Docker自体も完全なsandboxではありません。
 - Docker Engine、Docker Compose plugin、rootless Docker
 - OpenSSL（開発用TLS証明書の生成に使用）
 
-frontendをホスト上で直接検査する場合だけ、Node.js 22とYarnも必要です。
+frontendをホスト上で直接検査する場合だけ、Node.js 22系（22.22.2以上）と
+Yarn 1.22.22も必要です。
 Composeでビルドするだけなら、ホストへのNode.jsの導入は不要です。
 
 Ubuntu系では、基本ツールを次のように導入できます。
@@ -180,7 +181,7 @@ DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
 SANDBOX_OWNER_ID=shellgei-online-judge-development
 RUNNER_SHARED_SECRET=64文字のランダム16進数
 SERVER_URL=https://localhost:8443
-REACT_APP_SOJ_URL=https://localhost:8443
+VITE_SOJ_URL=https://localhost:8443
 ```
 
 ### 共通する環境変数の条件
@@ -262,7 +263,7 @@ CIは、[前提環境](#1-前提環境)に記載したすべてのPython version
 
 ### frontendをホストで検査する場合
 
-Node.js 22とYarnが利用できる環境で実行します。
+Node.js 22系（22.22.2以上）とYarn 1.22.22が利用できる環境で実行します。
 依存関係の導入方法は
 [Node.js公式ダウンロードページ](https://nodejs.org/en/download/)を参照してください。
 
@@ -271,7 +272,8 @@ cd frontend
 yarn install --frozen-lockfile
 yarn format:check
 yarn lint
-CI=true yarn test --watchAll=false
+yarn typecheck
+yarn test
 yarn build
 cd ..
 ```

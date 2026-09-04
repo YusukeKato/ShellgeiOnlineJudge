@@ -13,9 +13,9 @@ pre {
 
 .code-font {
   font-family:
-    monospace, "Noto Sans JP", "Meiryo", "Hiragino Maru Gothic ProN W4", "Hiragino Mincho ProN",
-    "Verdana", "Times New Roman", "YuMincho", "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho",
-    serif, sans-serif;
+    monospace, "Meiryo", "Hiragino Maru Gothic ProN W4", "Hiragino Mincho ProN", "Verdana",
+    "Times New Roman", "YuMincho", "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif,
+    sans-serif;
   font-weight: 600;
   font-size: 1rem;
 }
@@ -38,9 +38,9 @@ pre {
 
 textarea {
   font-family:
-    monospace, "Noto Sans JP", "Meiryo", "Hiragino Maru Gothic ProN W4", "Hiragino Mincho ProN",
-    "Verdana", "Times New Roman", "YuMincho", "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho",
-    serif, sans-serif;
+    monospace, "Meiryo", "Hiragino Maru Gothic ProN W4", "Hiragino Mincho ProN", "Verdana",
+    "Times New Roman", "YuMincho", "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif,
+    sans-serif;
   font-optical-sizing: auto;
   font-weight: 500;
   font-size: 1rem;

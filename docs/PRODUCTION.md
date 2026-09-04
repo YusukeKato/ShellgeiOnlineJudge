@@ -239,7 +239,7 @@ TLS_CERTIFICATE_PATH=/home/soj/certificates/fullchain.pem
 TLS_PRIVATE_KEY_PATH=/home/soj/certificates/privkey.pem
 
 SERVER_URL=https://example.com
-REACT_APP_SOJ_URL=https://example.com
+VITE_SOJ_URL=https://example.com
 ```
 
 開発・本番に共通する値の整合条件は、
@@ -248,7 +248,8 @@ REACT_APP_SOJ_URL=https://example.com
 
 - `.env`をGitへ追加しない
 - `RUNNER_SHARED_SECRET`にはDBパスワードとは異なる値を使用する
-- `REACT_APP_*`はfrontendのJavaScriptへ埋め込まれる公開値なので、秘密情報を設定しない
+- frontend build変数の公開範囲と同一origin条件は、
+  [frontendのbrowser境界](../SECURITY.md#frontendのbrowser境界)に従う
 - `DOCKER_SOCKET_PATH`はrunnerへmountするデプロイユーザー自身のrootless socketを指定する
 - `SERVER_URL`はCORSの許可originなので、公開URLのschemeとhostを正確に指定し、末尾に`/`を付けない
 - 実行ログの保持値を変更する場合は、どちらも1以上の整数にする
@@ -575,7 +576,7 @@ git diff --name-status "${SOJ_PREVIOUS_COMMIT}"..HEAD
 | Markdownなど文書だけ | Gitの更新だけ。Composeのbuild・再起動は不要 |
 | backend、runner、frontend、問題データ | 設定検査、build、`up -d`、動作確認 |
 | Dockerfile、Compose、依存関係 | 設定・環境変数を確認し、build、`up -d`、動作確認 |
-| `REACT_APP_*` | frontendへbuild時に埋め込まれるため再buildが必要 |
+| `VITE_*` | frontendへbuild時に埋め込まれるため再buildが必要 |
 | host側nginx、firewall、証明書運用 | リポジトリ外の設定へ別途反映 |
 
 判断できない場合は、再デプロイが必要な変更として扱います。

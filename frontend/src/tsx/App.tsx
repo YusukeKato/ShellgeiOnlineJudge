@@ -10,16 +10,16 @@ import "../css/nav.css";
 
 const App: React.FC = () => {
   /* SOJ URLs */
-  const x_url: string = process.env.REACT_APP_X_URL || "";
-  const soj_url: string = process.env.REACT_APP_SOJ_URL || "";
-  const github_repository_url: string = process.env.REACT_APP_GITHUB_REPO_URL || "";
-  const github_author_url: string = process.env.REACT_APP_GITHUB_AUTHOR_URL || "";
-  const blog_url: string = process.env.REACT_APP_BLOG_URL || "";
-  const mixi2_url: string = process.env.REACT_APP_MIXI2_URL || "";
+  const x_url: string = import.meta.env.VITE_X_URL || "";
+  const soj_url: string = import.meta.env.VITE_SOJ_URL || "";
+  const github_repository_url: string = import.meta.env.VITE_GITHUB_REPO_URL || "";
+  const github_author_url: string = import.meta.env.VITE_GITHUB_AUTHOR_URL || "";
+  const blog_url: string = import.meta.env.VITE_BLOG_URL || "";
+  const mixi2_url: string = import.meta.env.VITE_MIXI2_URL || "";
 
   /* SOJ Info */
-  const update_date: string = process.env.REACT_APP_UPDATE_DATE || "";
-  const current_version: string = process.env.REACT_APP_VERSION || "";
+  const update_date: string = import.meta.env.VITE_UPDATE_DATE || "";
+  const current_version: string = import.meta.env.VITE_VERSION || "";
 
   return (
     <Router>

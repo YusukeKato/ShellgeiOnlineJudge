@@ -105,7 +105,8 @@ frontendを変更した場合の基本検査は次のとおりです。
 cd frontend
 yarn format:check
 yarn lint
-CI=true yarn test --watchAll=false
+yarn typecheck
+yarn test
 yarn build
 ```
 

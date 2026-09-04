@@ -94,11 +94,6 @@ Statusは次の意味で使用します。
     tool・metadataを信頼する
   - 関連: `backend/scripts/container_manager.py`、`docker-compose.yml`
   - 次: image digest固定、予期しないmount拒否、volume cleanupを追加
-- `SOJ-016` — Medium / P2 / Deferred
-  - 概要: 第三者JavaScriptとCSP不足により、
-    command/result DOMの影響範囲が広い
-  - 関連: `frontend/public/index.html`、`frontend/nginx/default.conf`
-  - 次: analytics方針とCSPをbrowser E2E込みで設計
 - `SOJ-017` — Low / P2 / Open
   - 概要: frontend nginx設定がhostからread-write mountされる
   - 関連: `docker-compose.yml`
@@ -123,8 +118,8 @@ Statusは次の意味で使用します。
 
 - Open: 3件
 - Partially resolved: 4件
-- Deferred: 5件
-- Severity: High 0件、Medium 9件、Low 3件
+- Deferred: 4件
+- Severity: High 0件、Medium 8件、Low 3件
 
 ## Resolved issues
 
@@ -154,9 +149,10 @@ Statusは次の意味で使用します。
 | RES-019 | text token衝突と画像先頭除外を解消し、schema指定artifactのMIME検証と全画素比較へ分離 | `91fdbad`、`7947640` | text/image judge unit、全問題Docker回帰 |
 | RES-020 | runner実行認証をbody読込前へ移し、8 KiB上限、pool readiness、problem revision相互検証を追加 | `07545a5` | runner security・boundary・container manager・Compose静的test |
 | RES-021 | server生成request IDとallowlist型JSON eventでbackend・runner・DB保存を紐付け、利用者dataの非記録を検証 | `45d5482` | structured logging・public API・runner・DB boundary test |
+| RES-022 | 第三者analytics・外部fontを削除し、frontendのscript・通信を同一originへ制限するCSPを追加 | この変更 | frontend unit/build、nginx静的test・HTTPS smoke |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
-RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020、RES-021は、
+RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020、RES-021、RES-022は、
 記載した範囲では解決済みです。
 daemon単独のsandbox有効期限、可変image等の残存経路は、
 別のtracker issueとして追跡しています。
@@ -208,9 +204,8 @@ daemon単独のsandbox有効期限、可変image等の残存経路は、
 - SOJ-011は、runtime image、migration、DB roleを同時に整理する必要があります。
   小さなsecurity patchとは別phaseにします。
 
-### Product・browser方針が必要
+### Product方針が必要
 
-- SOJ-016は、Google Analytics、Google Fonts、CSPの要件決定が必要です。
 - SOJ-021の非公開脆弱性報告窓口は、運用判断が必要です。
 
 ### CI・運用基盤が必要
@@ -229,9 +224,10 @@ Deferredは不要という意味ではありません。
 - Repository guarantees:
   - Compose frontendは既定で`127.0.0.1:8443`だけに公開します。
   - 内部nginxはTLS 1.2/1.3、body・connection・proxy timeoutを設定します。
+  - frontendは第三者script・外部fontを読み込まず、CSPで同一originへ制限します。
 - Development environment verified:
   - repositoryのnginx設定testとlocal smoke testがあります。
-  - rootless Docker上の実nginxで、共有実行開始枠がないことを確認しています。
+  - rootless Docker上の実nginxで、CSP、Vite asset配信、第三者script不在を確認しています。
 - Production verification required:
   - 公開443のTLS設定、証明書更新、HSTS、Host allowlist
   - upstream証明書検証、実client単位rate/connection limit、XFF trust
