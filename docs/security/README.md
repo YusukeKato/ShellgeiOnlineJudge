@@ -136,9 +136,9 @@ Statusは次の意味で使用します。
 | RES-020 | runner実行認証をbody読込前へ移し、8 KiB上限、pool readiness、problem revision相互検証を追加 | `07545a5` | runner security・boundary・container manager・Compose静的test |
 | RES-021 | server生成request IDとallowlist型JSON eventでbackend・runner・DB保存を紐付け、利用者dataの非記録を検証 | `45d5482` | structured logging・public API・runner・DB boundary test |
 | RES-022 | 第三者analytics・外部fontを削除し、frontendのscript・通信を同一originへ制限するCSPを追加 | `872bacf` | frontend unit/build、nginx静的test・HTTPS smoke |
-| RES-023 | sandbox・base・DB imageをSHA-256 digestで固定し、tag移動による未検証artifactへの差替えを防止 | この変更 | runtime image pin静的test、image build、Docker統合test |
-| RES-024 | sandbox imageの`VOLUME`宣言と作成後の予期しないmountを拒否し、削除時に匿名volumeも回収 | この変更 | container manager unit、Docker baseline test |
-| RES-025 | frontend nginx設定をimageへ組み込み、hostからのwritable bind mountを削除 | この変更 | Compose静的test、frontend image build |
+| RES-023 | sandbox・base・DB imageをSHA-256 digestで固定し、tag移動による未検証artifactへの差替えを防止 | `eff33ca` | runtime image pin静的test、image build、Docker統合test |
+| RES-024 | sandbox imageの`VOLUME`宣言と作成後の予期しないmountを拒否し、削除時に匿名volumeも回収 | `eff33ca` | container manager unit、Docker baseline test |
+| RES-025 | frontend nginx設定をimageへ組み込み、hostからのwritable bind mountを削除 | `eff33ca` | Compose静的test、frontend image build |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
 RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020、RES-021、RES-022、

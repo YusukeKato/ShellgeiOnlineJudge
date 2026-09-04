@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 6
 - Pending (`Ready` + `Planned`): 6
 - In Progress: 0
-- Review: 1
-- Completed: 20
+- Review: 0
+- Completed: 21
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -174,7 +174,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-019 | P1 | Completed | D | Introduce typed frontend API client | R3-005, R3-016 | `82a19be` |
 | R3-020 | P1 | Completed | D | Model frontend submission state and cancellation safely | R3-019 | `bc6e60c` |
 | R3-021 | P2 | Completed | D | Consolidate frontend toolchain after behavior coverage | R3-020 | `872bacf` |
-| R3-022 | P1 | Review | E | Pin runtime artifacts and harden mounts and configuration | R3-013 | - |
+| R3-022 | P1 | Completed | E | Pin runtime artifacts and harden mounts and configuration | R3-013 | `eff33ca` |
 | R3-023 | P1 | Planned | E | Split production backend and runner images | R3-017, R3-022 | - |
 | R3-024 | P1 | Planned | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | - |
 | R3-025 | P2 | Planned | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | - |
@@ -474,14 +474,18 @@ They are planning aids, not acceptance criteria.
 
 ### R3-022: Pin runtime artifacts and harden mounts and configuration
 
-- Priority / Status: P1 / `Review`
+- Priority / Status: P1 / `Completed`
 - Goal: imageをdigestで固定し、sandboxの予期しないmount/volumeを拒否し、nginx設定等のwritable bind mountをなくす
 - Main files/components: Compose、Dockerfiles、ContainerManager validation、nginx configuration、security documentation
 - Dependencies: R3-013
 - Risk: High。image更新手順、rootless runtime、sandbox startupを変更する
 - Expected tests: Compose静的test、image inspect、mount/volume rejection、rootless Docker baseline/full regression
 - Size: M
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `eff33ca96d6865055fb421c7de7ea43da62c2ce7` / date 2026-09-04 / sandbox、Python、Node.js、nginx、PostgreSQL imageをdigest固定し、
+  sandbox imageの`VOLUME`と作成後の予期しないmountをfail-closedで拒否。
+  frontend nginx設定をimageへ組み込み、匿名volume cleanupと更新手順を追加。
+  Python test 506件、frontend test 26件、image build、Compose設定、rootless Docker test 8件、
+  全92問回帰が成功
 
 ### R3-023: Split production backend and runner images
 
@@ -678,3 +682,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-04 | R3-021 approved and recorded as `Completed` | `872bacf` |
 | 2026-09-04 | R3-022 runtime artifact pinning and mount hardening started | - |
 | 2026-09-04 | R3-022 implementation and planned tests completed; moved to `Review` | - |
+| 2026-09-04 | R3-022 approved and recorded as `Completed` | `eff33ca` |
