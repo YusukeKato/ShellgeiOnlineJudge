@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 4
 - Pending (`Ready` + `Planned`): 4
 - In Progress: 0
-- Review: 1
-- Completed: 24
+- Review: 0
+- Completed: 25
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -176,7 +176,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-021 | P2 | Completed | D | Consolidate frontend toolchain after behavior coverage | R3-020 | `872bacf` |
 | R3-022 | P1 | Completed | E | Pin runtime artifacts and harden mounts and configuration | R3-013 | `eff33ca` |
 | R3-023 | P1 | Completed | E | Split production backend and runner images | R3-017, R3-022 | `aacda56` |
-| R3-024 | P1 | Review | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | - |
+| R3-024 | P1 | Completed | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | `48a0670` |
 | R3-025 | P2 | Planned | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | - |
 | R3-026 | P3 | Planned | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | - |
 | R3-027 | P3 | Planned | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | - |
@@ -526,7 +526,7 @@ They are planning aids, not acceptance criteria.
 
 ### R3-024: Add full rootless Compose E2E regression
 
-- Priority / Status: P1 / `Review`
+- Priority / Status: P1 / `Completed`
 - Goal: frontend/nginxからbackend、runner、rootless Docker、PostgreSQLまでの実経路を自動検証する
 - Main files/components: `backend/tests/compose_support.py`、`test_compose_e2e.py`、browser専用Dockerfile/script、任意のPoetry e2e group、integration documentation
 - Dependencies: R3-016、R3-017、R3-023。recoveryは既存のrunner再起動と起動時回収を対象とする
@@ -545,7 +545,7 @@ They are planning aids, not acceptance criteria.
   backend/runner/frontend/browserの4 imageをbuildし、rootless wrapper経由のCompose設定検査も成功。
   最終cleanup順序の補強後もCompose基本5件が成功し、専用資源の残存がないことを確認した。
   独立reaper・本番host・外側proxy・破壊的耐性試験は対象外。既存のFastAPI/Python・React Routerの警告は残る。
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `48a067086315f9fe06697dbcfd357568483d8ebf` / date 2026-09-05 / 依頼者のreview承認後にcommit済み。独立reaperとCI整備は今回の対象外として維持する
 
 ### R3-025: Harden CI and software supply-chain checks
 
@@ -689,7 +689,7 @@ Git履歴から分からないpriority、scope、順序、review gateの変更�
 | 2026-09-05 | R3-027 | R3-028追加後もrelease対象が古いID範囲で打ち切られないよう、依存関係の表記を自身以外の全release対象unitへ整合 | - |
 | 2026-09-05 | R3-023 | 次unitの実装依頼に基づき、現行配置で本番image・依存・OS userを分離する範囲を確定。専用host/VMとDB role分離は運用・migration設計が別途必要なためSOJ-006・SOJ-011へ残し、frontendを含むCompose全体E2EはR3-024へ維持 | `aacda56` |
 | 2026-09-05 | R3-029 | 依頼者の将来実施希望により、責務別package整理とfile単位COPY解消を独立unitとして追加。R3-026の不要資産削除とは分け、R3-023・R3-024の回帰基準を前提とする。今回のR3-023実装には含めない | `aacda56` |
-| 2026-09-05 | R3-024 | 次unitの実装依頼に基づき、既存Composeの実経路・停止復帰・browser・全問題回帰を対象とした。独立reaperは権限境界と運用設計を伴うためSOJ-002へ維持し、R3-025のCI整備は含めない | - |
+| 2026-09-05 | R3-024 | 次unitの実装依頼に基づき、既存Composeの実経路・停止復帰・browser・全問題回帰を対象とした。独立reaperは権限境界と運用設計を伴うためSOJ-002へ維持し、R3-025のCI整備は含めない | `48a0670` |
 
 ## Tracker history
 
@@ -741,3 +741,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-05 | R3-028 approved and recorded as `Completed` | `eb9e458` |
 | 2026-09-05 | R3-023 split runtime images, non-root execution, and planned tests completed; moved to `Review` | - |
 | 2026-09-05 | R3-023 approved and recorded as `Completed`; R3-029 remains `Planned` | `aacda56` |
+| 2026-09-05 | R3-024 approved and recorded as `Completed` | `48a0670` |

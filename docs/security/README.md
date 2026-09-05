@@ -18,8 +18,8 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `50198eb`とR3-024の未commit差分
-- commit subject: `docs: complete split runtime images tracker`
+- 確認対象commit: `48a067086315f9fe06697dbcfd357568483d8ebf`
+- commit subject: `test: add full rootless Compose and browser E2E regression`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
 - 直近の実行検証: R3-024差分で実ComposeのTLS proxy・提出・保存・認証/revision拒否・
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 50198eb
+git diff 48a0670
 ```
 
 ## Current security status
@@ -138,7 +138,7 @@ Statusは次の意味で使用します。
 | RES-023 | sandbox・base・DB imageをSHA-256 digestで固定し、tag移動による未検証artifactへの差替えを防止 | `eff33ca` | runtime image pin静的test、image build、Docker統合test |
 | RES-024 | sandbox imageの`VOLUME`宣言と作成後の予期しないmountを拒否し、削除時に匿名volumeも回収 | `eff33ca` | container manager unit、Docker baseline test |
 | RES-025 | frontend nginx設定をimageへ組み込み、hostからのwritable bind mountを削除 | `eff33ca` | Compose静的test、frontend image build |
-| RES-026 | SOJ-013: revision拒否と実行・判定・保存を実Composeで検証し、DB/runner停止復帰・browser E2Eを追加 | R3-024（未commit） | Compose E2E、隔離設定・cleanup test |
+| RES-026 | SOJ-013: revision拒否と実行・判定・保存を実Composeで検証し、DB/runner停止復帰・browser E2Eを追加 | `48a0670` | Compose E2E、隔離設定・cleanup test |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
 RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020、RES-021、RES-022、
