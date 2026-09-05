@@ -26,17 +26,17 @@ stderr規則違反を固定文言で説明し、それ以外やreason未指定�
 提出画面は`idle`、`running`、`succeeded`、`failed`、`validation_error`を区別する
 単一stateを使用します。`succeeded`は検証済み提出responseの受信成功であり、実行成功や
 正解を意味しません。同じ問題・commandの実行中の再送は無視し、内容が異なる新しい
-提出では以前の通信を中断します。提出timeout、component破棄、問題選択変更では
-`AbortController`で通信を停止し、responseの到着順にかかわらず最新requestだけを
-画面へ反映します。
+提出では以前の提出通信を中断します。提出timeoutやcomponent破棄でも
+`AbortController`で提出通信を停止し、最新の提出responseだけを画面へ反映します。
+問題詳細の取得は独立して管理し、選択変更時に以前の詳細取得を中断して最新の選択だけを
+反映します。選択変更だけでは進行中の提出を中断せず、結果には提出時のproblem IDを保持します。
 
 ## 開発とテスト
 
 Node.js、Yarn、静的検査、テスト、buildの手順は、
 [開発環境の構築・テスト・起動](../docs/DEVELOPMENT.md)を参照してください。
 
-Node.js 22系（22.22.2以上）とYarn 1.22.22を前提とします。開発serverと
-production buildにはVite、component testにはVitestとjsdom、型検査にはTypeScript、
+開発serverとproduction buildにはVite、component testにはVitestとjsdom、型検査にはTypeScript、
 lintにはESLint flat configを使用します。build時の`VITE_*`は
 ブラウザへ公開される値です。設定条件とsecurity上の制約は
 [SECURITY.md](../SECURITY.md#frontendのbrowser境界)を参照してください。

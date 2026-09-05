@@ -16,12 +16,14 @@ request bodyや接続の制限は
 }
 ```
 
-`shellgei`は1文字以上1,000文字以下のUTF-8文字列です。CRLFとCRはLFへ
-正規化します。NULと不正Unicodeは拒否します。`problem_id`は1文字以上64文字以下で、
+`shellgei`は1文字以上1,000文字以下のUTF-8文字列です。CRを除去するため、
+CRLFはLFになり、単独のCRは削除されます。NULと不正Unicodeは拒否します。
+`problem_id`は1文字以上64文字以下で、
 ASCII英数字をhyphenで区切った形式だけを受け付けます。未知fieldは拒否します。
 
-処理がrunnerまで到達した場合は、正解・不正解・実行失敗にかかわらずHTTP 200で
-次の型付きresponseを返します。
+検証済みの実行結果と判定結果を取得できた場合は、正解・不正解・実行失敗にかかわらず
+HTTP 200で次の型付きresponseを返します。受付拒否やrunner応答を取得・検証できない
+場合の扱いは[HTTP statusとerror](#http-statusとerror)を参照してください。
 
 ```json
 {
@@ -77,11 +79,12 @@ ASCII英数字をhyphenで区切った形式だけを受け付けます。未知
 
 画像artifactは`media_type`と`data`だけを返します。MIMEは`image/jpeg`または
 `image/gif`、Base64 dataは1,000,000文字以下です。runner内部の取得pathは公開しません。
-response全体は1,025,000 bytes以下です。
+HTTP 200のresponse全体は1,025,000 bytes以下です。
 
 ## HTTP statusとerror
 
-use caseを開始できない場合は、内部例外やcommandを含まないerrorを返します。
+404・429・503は、内部例外やcommandを含まない固定のerrorを返します。
+422はFastAPIの標準validation error形式で、`detail`に拒否した入力値を含む場合があります。
 
 | Status | `code` | Meaning |
 | --- | --- | --- |
@@ -100,14 +103,18 @@ use caseを開始できない場合は、内部例外やcommandを含まないer
 }
 ```
 
-提出requestとresponseには利用者のcommand・出力を含むため、成功・error・422のすべてに
-`Cache-Control: no-store`と`X-Content-Type-Options: nosniff`を付与します。
+提出requestとresponseには利用者のcommand・出力を含むため、backendが返す
+200・404・422・429・503には`Cache-Control: no-store`と
+`X-Content-Type-Options: nosniff`を付与します。
 
-提出APIのすべてのresponseに、backendがリクエストごとに生成した
+これらの提出responseに、backendがリクエストごとに生成した
 128-bitの小文字16進数`X-Request-ID`を付与します。browserからも読めるよう
 CORSのexpose headerに含めます。clientが送信した`X-Request-ID`は信頼・再利用せず、
 必ずserver側で新しい値へ置き換えます。問い合わせ時には、responseのこの値を
 対象requestの特定に使用できます。
+
+予期しない未処理例外による500や、前段proxyが生成する応答は、上記のtyped error形式と
+header付与の保証対象外です。
 
 ## legacy submission API
 
@@ -115,17 +122,29 @@ CORSのexpose headerに含めます。clientが送信した`X-Request-ID`は信�
 requestは同じ`ShellgeiData`形式で、responseは`output`、文字列の`id`、JSTの`date`、
 Base64 `image`、`image_media_type`、数字文字列の`judge`を返します。
 
-legacy APIではrunner混雑・停止もHTTP 200と`judge: "4"`へ変換します。新規clientは、
+legacy APIではrunner混雑・停止もHTTP 200と`judge: "4"`へ変換します。
+未登録problemは404、request schema違反は422です。
+
+- `id`はDB保存不能時やrunner混雑・停止時に`"-1"`となる。DB保存不能時も実行・判定結果は返す
+- 画像がない場合は`image: ""`、`image_media_type: null`を返す
+- `judge`は`accepted`を`"1"`、`wrong_image`を`"2"`、`wrong_answer`を`"3"`へ変換し、
+  `wrong_text_and_image`・`execution_failure`・`judge_error`を`"4"`へまとめる
+
+新規clientは、
 HTTP status、typed verdict、分離出力を利用できるv3 APIを使用してください。
 標準frontendもv3 APIを使用し、受信JSONを実行時に検証してから表示へ変換します。
-legacy APIにも`Cache-Control: no-store`と`X-Content-Type-Options: nosniff`を付与します。
-`X-Request-ID`の生成・応答規則もv3 APIと同じです。
+legacy APIの200・404・422にも`Cache-Control: no-store`と
+`X-Content-Type-Options: nosniff`を付与します。`X-Request-ID`の生成・応答規則と
+未処理例外・前段proxyの制約もv3 APIと同じです。
 
 ## problem API
 
 問題一覧`GET /api/problems`は、`id`、`category`、`title_ja`、`title_en`を持つ配列を
 返します。問題詳細`GET /api/problems/{problem_id}`は、`title_ja`、`statement_ja`、
-`title_en`、`statement_en`、`input`、`expected_output`、`image`を返します。
+`title_en`、`statement_en`、`input`、`expected_output`、`answer`、`image`を返します。
+各fieldは文字列です。`answer`はschema v3の`reference_solution`を公開する参照解答で、
+現在のfrontendの問題表示には使用しません。`input`は`input.txt` fixtureの内容、
+`image`は全問題で表示用JPEGの相対URLです。
 これらは現在versionなしの互換endpointです。frontendのAPI clientは受信した全表示fieldを
 実行時に型検証します。将来versioningする場合は、既存endpointの互換性と移行期間を
 別途定義します。

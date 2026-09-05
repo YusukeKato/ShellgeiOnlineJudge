@@ -203,10 +203,13 @@ VITE_SOJ_URL=https://localhost:8443
 backendは起動時にDBを最新revisionへ自動migrationします。SQLiteを使うforward・rollback・
 失敗時のrevision検査は通常の非Docker test、一時PostgreSQLを使うtransactional DDL検査は
 Docker統合テストに含まれます。開発DBの現在schemaを明示的にheadへ進める場合は、
-backendが使用する`DATABASE_URL`を設定して次を実行します。
+対象DBへホストから接続できる`DATABASE_URL`を環境変数に設定し、リポジトリrootから
+次を実行します。CLIの接続設定は[backend文書](../backend/README.md#実行ログとdb-migration)を参照してください。
 
 ```sh
+cd backend
 poetry run python -m scripts.database_migrations head
+cd ..
 ```
 
 rollback commandと本番backup条件は

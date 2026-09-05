@@ -31,10 +31,10 @@ Internet
     -> 127.0.0.1:8443
       -> frontend（nginx）
         -> backend（FastAPI）
-          -> runner API（認証付き内部network）
-            -> rootless Docker socket
-              -> sandbox containers（networkなし、リソース制限あり）
-      -> PostgreSQL（127.0.0.1:5432）
+          |-> runner API（認証付き内部network）
+          |   -> rootless Docker socket
+          |     -> sandbox containers（networkなし、リソース制限あり）
+          `-> PostgreSQL（内部接続はdb:5432、host公開は127.0.0.1:5432のみ）
 ```
 
 backendにはDocker socketをmountしません。
@@ -488,8 +488,11 @@ import sys
 with open(sys.argv[1], encoding="utf-8") as response_file:
     response = json.load(response_file)
 assert response["api_version"] == 3
+assert response["execution"]["status"] == "completed"
 assert response["execution"]["stdout"] == "smoke-ok"
-print("sandbox smoke test: ok")
+assert response["persistence"] == "saved"
+assert type(response["submission_id"]) is int and response["submission_id"] > 0
+print("sandbox and persistence smoke test: ok")
 ' "${SOJ_SMOKE_RESPONSE}"
 
 rm -f -- "${SOJ_SMOKE_RESPONSE}"

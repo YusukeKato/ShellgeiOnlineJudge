@@ -10,6 +10,7 @@ Docker統合テストは実際のsandboxコンテナを生成・削除するた�
 次のイメージを、rootless daemonへ事前にpullしてください。
 
 ```sh
+export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
 docker pull \
   theoldmoon0602/shellgeibot:latest@sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36
 docker pull \
@@ -52,7 +53,8 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - 実nginxで、sandboxを開始しないrequestが
   正常requestと共有の実行開始枠を消費しないこと
 - 実nginxで、client指定のHostを内部upstream名へ置き換え、
-  `Forwarded`、`X-Forwarded-*`、`X-Real-IP`をbackendへ転送しないこと
+  [HTTPの制約](../../../SECURITY.md#ネットワークとhttpの制約)で指定したforwarded headerを
+  backendへ転送しないこと
 
 現在登録されている全問題の回帰テストには、追加の明示指定が必要です。
 この回帰ではschema v3の全92問から`reference_solution`を読み、実sandboxで実行します。

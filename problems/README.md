@@ -21,12 +21,17 @@ problem IDには、次の条件があります。
 
 backendとrunnerは起動時に`v3/`の全YAMLと`image/`の全JPEG・判定用GIFを1回だけ読み、
 schema、ID集合、画像形式・上限、`manifest.json`のrevisionを検証します。
-1件でも欠損、破損、不一致があれば起動せず、request処理中は検証済みの不変な
-problem repositoryだけを参照します。
+この検査で欠損や不一致を検出すると起動せず、request処理中は不変なproblem repositoryを
+参照します。起動時の画像検査はbyte上限とJPEG/GIFの先頭・末尾markerの確認に限定され、
+完全decodeによる破損検出は行いません。markerを満たす破損画像は起動時検査を通過し得るため、
+正解画像の更新時には実際のdecodeと画像問題回帰も確認してください。
+
+text問題にも表示用JPEGを配置する必要があります。現在の87枚は同一の白画像ですが、
+repositoryのID集合検査と問題詳細APIが依存しているため、単独では削除できません。
 
 ## Legacy YAMLフィールド（移行baseline）
 
-現在の問題データは、次の文字列フィールドを持ちます。
+移行元の`yaml_data/`は、次の文字列フィールドを持ちます。
 
 | フィールド | 用途 |
 | --- | --- |
@@ -35,7 +40,7 @@ problem repositoryだけを参照します。
 | `statement_ja` / `statement_en` | 日本語・英語の問題文 |
 | `input` | 実行時にコマンドへ渡す入力データ |
 | `expected_output` | 正解とする標準出力 |
-| `answer` | UIに表示する解答例 |
+| `answer` | 参照解答。v3の`reference_solution`へ移行する |
 
 画像を生成する問題では、コマンドから
 `media/output.jpg`または`media/output.gif`へ出力します。
@@ -67,10 +72,12 @@ schema v3の実行可能な型定義は
 
 画像問題は`judge.comparison: exact_pixels`を必須とします。runnerは
 `judge.artifact.path`で指定された1fileだけを取得し、同じdirectoryの別JPEG/GIFを
-候補として探索しません。欠損、上限超過、Base64破損、宣言MIMEとJPEG/GIF形式の不一致、
-decode上限超過を拒否します。正解画像と提出画像をRGBAへdecodeし、寸法、frame数、
-全画素が完全一致する場合だけ正解です。JPEG品質やmetadata等、表示画素へ影響しない
-encoder差は判定に使用しません。
+候補として探索しません。runnerは問題別の取得byte上限を適用し、judgeは欠損、
+Base64破損、宣言MIMEとJPEG/GIF形式の不一致、decode上限超過を拒否します。
+pure image judge単体では問題別のbyte上限を再検証しません。
+正解画像と提出画像をRGBAへdecodeし、寸法、frame数、全画素が完全一致する場合だけ
+正解です。metadata等の画素へ影響しないencoder差は判定に使用しませんが、
+JPEG品質変更や再圧縮によって画素が変わる場合は不正解になります。
 
 旧方式のようにBase64先頭28文字を無条件に除外せず、画像headerと形式を検証してから
 全画素を比較します。画像生成toolやdecoderを変更するときは、5画像問題のrootless
@@ -129,9 +136,11 @@ poetry run python -m scripts.problem_migration \
 ## Problem data revision
 
 `v3/manifest.json`はmanifest/schema version、問題数、64文字のSHA-256
-`revision`を保持します。revisionはID順に並べた全92問について、型検証後の
-problem definitionをcanonical JSON化した値と、対応する正解JPEGのSHA-256から
-決定的に算出します。YAMLの書式だけを変えて意味が同じ場合はrevisionは変わりません。
+`revision`を保持します。revisionはID順に並べた全問題について、型検証後の
+problem definitionと各recordの`answer_image`のSHA-256をcanonical JSON化して
+決定的に算出します。`answer_image`は通常JPEG、GIF問題では判定用GIFです。
+GIF問題の表示用JPEGは起動時検査の対象ですが、revisionの対象には含まれません。
+YAMLの書式だけを変えて意味が同じ場合はrevisionは変わりません。
 
 問題定義または正解画像を意図して変更した後は、backend directoryからmanifestを
 再生成し、問題dataとmanifestを同じ変更としてreviewしてください。
@@ -143,9 +152,10 @@ poetry run python -m scripts.problem_manifest \
   --output ../problems/v3/manifest.json
 ```
 
-生成処理自体も全YAML・JPEGを検証します。backendとrunnerは、それぞれ起動時に
-checked-in manifestを再計算結果と照合します。両service間でrevisionを通信して
-照合するreadiness protocolは、runner境界の後続refactoringで扱います。
+生成処理も上記の起動時検査と同じ検証を使用します。backendとrunnerは、それぞれ起動時に
+checked-in manifestを再計算結果と照合します。実行requestとresponseでもrevisionを
+相互検証し、不一致を拒否します。通信契約とreadinessは
+[内部runner protocol](../backend/README.md#内部runner-protocol)を参照してください。
 
 ## 検査
 

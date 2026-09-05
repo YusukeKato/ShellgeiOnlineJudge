@@ -42,8 +42,9 @@ backendからrunnerへ送る実行内容のfieldは次の2つだけです。
 - shell command
 - problem ID
 
-internal protocolの検証用metadataとして、protocol versionと起動時に
-検証した全problem dataのSHA-256 revisionも送信します。
+internal protocolの検証用metadataとして、protocol version、problem dataのSHA-256
+revision、backend生成のrequest IDも送信します。revisionの対象と算出方法は
+[問題データ](./problems/README.md#problem-data-revision)を参照してください。
 runner APIは共有secretで認証し、イメージ名、mount、capability、device、
 privileged modeなどのDocker optionを受け付けません。
 
@@ -270,7 +271,8 @@ Docker clientのHTTP timeoutは15秒です。
 - ThreadPoolExecutorのworker数
 - sandbox実行slot数
 
-対応するPythonは3.12、3.13、3.14です。thread上のDocker実行、内部runner通信、
+対応Python versionは[開発環境](./docs/DEVELOPMENT.md#1-前提環境)を参照してください。
+thread上のDocker実行、内部runner通信、
 実行ログ保存の完了は、event loopのexecutor完了通知だけに依存せず、
 上限付きの短い間隔でthread futureの状態を確認します。
 requestのcancelや外側timeout後も、実際のworker終了までは実行slotを解放しません。
@@ -339,7 +341,8 @@ commandや出力には利用者が自ら入力した機密情報が含まれる�
 置き換えます。利用者へ返す実行結果は変更しません。
 実行ログの追加、retention、commit、rollback、closeはrequestのevent loop外の
 worker threadで処理し、commitを含む処理に失敗した場合はrollbackしてsessionを閉じます。
-保存に失敗しても実行・判定結果は返し、保存IDは`-1`とします。
+保存に失敗しても実行・判定結果は返します。保存不能時のID・statusの表現は、
+v3とlegacyで異なるため[Public API](./docs/API.md)を参照してください。
 
 schemaは`soj_schema_migrations`でversion管理し、backendはrequest受付前にheadまで
 migrationします。既存のversionなし実行ログ表はlegacy baselineとして認識し、
@@ -488,8 +491,8 @@ runnerは認証、JSON schema、problem ID、登録済みproblemを検証した�
 FastAPIは、JSONをparseした後のshell commandとproblem IDを検証します。
 nginxの16 KiB制限は、その前段でrequest bodyを拒否します。
 
-frontend nginxは、受信した`X-Forwarded-For`をbackendへ引き継ぎません。
-`Forwarded`、`X-Forwarded-*`、`X-Real-IP`をbackendへ転送せず、
+frontend nginxは、受信した`Forwarded`、`X-Forwarded-For`、`X-Forwarded-Host`、
+`X-Forwarded-Port`、`X-Forwarded-Proto`、`X-Real-IP`をbackendへ転送せず、
 backend向けのHostもclient指定値ではなく内部upstream名へ置き換えます。
 backendのUvicornはproxy headerを解釈せず、FastAPIはHostを
 `backend`、`localhost`、`127.0.0.1`に限定します。
@@ -502,11 +505,11 @@ ID・タイトルが不正な場合はbackendを起動しません。
 `/api/problems`にはETagと`Cache-Control: public, max-age=300`を付与します。
 
 提出APIのrequestとresponseには利用者のcommand・出力が含まれます。
-`/api/shellgei`と`/api/v3/submissions`の成功・error・validation responseには、
+`/api/shellgei`と`/api/v3/submissions`の成功・処理済みerror・validation responseには、
 `Cache-Control: no-store`と`X-Content-Type-Options: nosniff`を付与します。
-v3 APIは内部Docker error文字列とartifact取得pathを返さず、公開response全体を
-1,025,000 bytes以下に制限します。fieldとHTTP statusの正本は
-[Public API](./docs/API.md)を参照してください。
+v3の型付き提出結果には内部Docker error文字列とartifact取得pathを含めず、HTTP 200の
+response全体を1,025,000 bytes以下に制限します。field、HTTP status、未処理例外・前段proxyの応答に
+関する制約の正本は[Public API](./docs/API.md)を参照してください。
 
 実際のclient単位のrequest頻度、burst、同時接続数は、
 接続元を確認できるホスト側reverse proxy、load balancer、

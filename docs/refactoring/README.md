@@ -28,7 +28,6 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - In Progress: 0
 - Review: 0
 - Completed: 23
-- Done: 0
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -143,13 +142,12 @@ cleanup、documentation、obsolete asset、release整合などの低優先度項
 - `In Progress`: 実装または検証中
 - `Review`: Codexによる実装と予定したtestが完了し、依頼者のreview待ち
 - `Completed`: 依頼者が承認し、対象commitが作成済み
-- `Done`: R3-028の依頼で指定された実装・検査完了状態。未commit・依頼者のdiff review待ちであり、`Completed`とは区別する
 - `Blocked`: 外部条件や未解決の判断により進行できず、解除条件を記録済み
 - `Deferred`: 実施を意図的に後回しとし、理由と再評価条件を記録済み
 - `Superseded`: 別unitまたは変更後の計画に置き換えられ、置換先と理由を記録済み
 
 依頼者のreview前に`Completed`へ変更しません。
-Codexが実装とtestを終えた時点は通常`Review`です。R3-028は依頼者の指定により`Done`を使用します。
+Codexが実装とtestを終えた時点は`Review`です。
 
 ## Roadmap overview
 
@@ -181,7 +179,7 @@ Codexが実装とtestを終えた時点は通常`Review`です。R3-028は依頼
 | R3-024 | P1 | Planned | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | - |
 | R3-025 | P2 | Planned | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | - |
 | R3-026 | P3 | Planned | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | - |
-| R3-027 | P3 | Planned | F | Establish canonical v3.0.0 version and release documentation | R3-001--R3-026 release scope | - |
+| R3-027 | P3 | Planned | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | - |
 | R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
 
 Size estimates use `XS` (under about 100 changed lines), `S` (100--250),
@@ -243,7 +241,7 @@ They are planning aids, not acceptance criteria.
 - Risk: Low。production behaviorは変えないが、誤判定を期待値として固定しないよう「既知の不具合」を明示する
 - Expected tests: judge truth table、problem corpus検査、frontend mock response、既存non-Docker test
 - Size: M
-- Completion: commit `79ca954` / date 2026-08-28 / legacy problem corpus, judge behavior, frontend API/display behavior, and known defects characterized
+- Completion: commit `79ca954e3f23ce851aae1812637d5bf5b2371fd0` / date 2026-08-28 / legacy problem corpus, judge behavior, frontend API/display behavior, and known defects characterized
 
 ## Phase B — Domain / Problem / Judge
 
@@ -256,7 +254,7 @@ They are planning aids, not acceptance criteria.
 - Risk: Medium。既存problemの暗黙的な意味を誤って変換しないこと
 - Expected tests: valid/invalid schema、duplicate/extra/missing field、path/size/image制約、pilot problem回帰
 - Size: M
-- Completion: commit `e710670` / date 2026-08-30 / typed schema v3, strict YAML validation, deterministic legacy migration, and three pilot problems introduced without changing the production read path
+- Completion: commit `e7106708320b9a29066c26bed081fcb655493f1c` / date 2026-08-30 / typed schema v3, strict YAML validation, deterministic legacy migration, and three pilot problems introduced without changing the production read path
 
 ### R3-007: Migrate all problem definitions to schema v3
 
@@ -267,7 +265,7 @@ They are planning aids, not acceptance criteria.
 - Risk: Medium。差分量が大きく、問題文や正解データの意図しない変更を見落としやすい
 - Expected tests: 全problem schema検証、移行前後semantic manifest、代表実行、全問題回帰
 - Size: L
-- Completion: commit `4d25fa8` / date 2026-08-30 / all 92 problems migrated deterministically with legacy semantic equality and rootless Docker answer regression verified
+- Completion: commit `4d25fa8f19b790a5951a06ae0858c794417b3ea2` / date 2026-08-30 / all 92 problems migrated deterministically with legacy semantic equality and rootless Docker answer regression verified
 
 ### R3-008: Introduce immutable ProblemRepo and manifest digest
 
@@ -278,7 +276,7 @@ They are planning aids, not acceptance criteria.
 - Risk: Medium。cache lifetime、startup failure、backend/runner間のdata不一致を正しく扱う必要がある
 - Expected tests: startup validation、immutable lookup、missing/corrupt data、manifest digest一致/不一致
 - Size: M
-- Completion: commit `6360c34` / date 2026-08-30 / startup-validated immutable problem repository, canonical manifest revision, and v3 production read path introduced
+- Completion: commit `6360c343aa4d61771794d0fdb8fe2a29006f28ca` / date 2026-08-30 / startup-validated immutable problem repository, canonical manifest revision, and v3 production read path introduced
 
 ### R3-009: Introduce typed runner execution protocol
 
@@ -289,7 +287,7 @@ They are planning aids, not acceptance criteria.
 - Risk: Medium。public backendとrunnerを同時に移行し、size limitと認証を維持する必要がある
 - Expected tests: serialization、unknown field/version、response size、timeout/unavailable、互換移行境界
 - Size: M
-- Completion: commit `62dadf6` / date 2026-08-30 / versioned strict request/response models, typed ExecutionResult, and RunnerGateway introduced without changing the public API
+- Completion: commit `62dadf668a17dc1f43bdd73cd91c1d03eb594b54` / date 2026-08-30 / versioned strict request/response models, typed ExecutionResult, and RunnerGateway introduced without changing the public API
 
 ### R3-010: Extract pure text judge and typed JudgeResult
 
@@ -300,7 +298,7 @@ They are planning aids, not acceptance criteria.
 - Risk: High。現在の誤ったacceptを含む判定結果が変わるため、意図したbreaking changeの確認が必要
 - Expected tests: whitespace truth table、token literal、empty/`NULL`、non-zero exit、stderr、timeout/truncation、全text problem回帰
 - Size: M
-- Completion: commit `91fdbad` / date 2026-08-30 / pure typed text judge, collision-free comparison, explicit execution policies, and legacy public code mapping introduced
+- Completion: commit `91fdbad3e958a0dfcc6069a0da8cd90bef325f6c` / date 2026-08-30 / pure typed text judge, collision-free comparison, explicit execution policies, and legacy public code mapping introduced
 
 ### R3-011: Separate and correct image judging
 
@@ -311,8 +309,8 @@ They are planning aids, not acceptance criteria.
 - Risk: High。既存5画像問題、JPEG/GIF、表示MIME、正規化方針へ影響する
 - Expected tests: exact/corrupt/header-only差分、JPEG/GIF MIME、missing/multiple artifact、5画像問題回帰
 - Size: M--L
-- Decision: JPEG encoder metadataの差を許容しつつ表示内容を厳密に比較するため、形式検証後の寸法・frame数・RGBA画素完全一致を採用。schema指定pathだけを取得し、複数候補から暗黙選択しない
-- Completion: commit `7947640` / date 2026-08-30 / schema-selected typed artifacts, strict JPEG/GIF validation, exact-pixel judging, MIME-aware public response and frontend display introduced
+- Decision: 比較方式の決定と理由は[review gate一覧](#open-decisions--review-gates)、現行判定規則は[問題データ](../../problems/README.md#schema-v3)を参照
+- Completion: commit `7947640e9ae452c8a41c33391fcc222aee9af5a4` / date 2026-08-30 / schema-selected typed artifacts, strict JPEG/GIF validation, exact-pixel judging, MIME-aware public response and frontend display introduced
 
 ## Phase C — Execution / Application / API
 
@@ -325,7 +323,7 @@ They are planning aids, not acceptance criteria.
 - Risk: High。Docker lifecycleとsecurity invariantを変更するため、timeout/例外時も必ずfresh containerを破棄する必要がある
 - Expected tests: fake Docker unit、create/start/exec/capture/cleanup failure、concurrency、Docker lifecycle integration
 - Size: M
-- Completion: commit `370e5b8` / date 2026-08-31 / `SandboxPreparer`、
+- Completion: commit `370e5b8da6cd50a322a5b43ddc162bb0ba1674e4` / date 2026-08-31 / `SandboxPreparer`、
   `SandboxOutputCapturer`、`ExecutionWatchdog`、`SandboxCleanup`、
   `SandboxExecutor`へ責務を分離し、timeout側killの完了後に停止済み返却する同期を追加。
   fake Docker failure unit、Python 3.14の非Docker 418件、rootless Docker integration
@@ -340,7 +338,7 @@ They are planning aids, not acceptance criteria.
 - Risk: High。memory/output limit、background process、binary data、cleanup順序の回帰を避ける
 - Expected tests: exit/stderr分離、invalid UTF-8、NUL、byte/character limit、timeout、background writer、Docker/full regression
 - Size: M--L
-- Completion: commit `97315a6` / date 2026-09-01 / internal runner protocolをversion 3へ更新し、
+- Completion: commit `97315a6c7da671dc4c5ff9a6441210443bf69d97` / date 2026-09-01 / internal runner protocolをversion 3へ更新し、
   status、stdout、stderr、exit code、timeout、切り詰め、所要時間、binary artifactを
   分離して取得する`ExecutionResult`を導入。既存public APIでは互換表示へ変換し、
   typed judgeへ構造化結果を直接渡す。Python 3.14の非Docker 428件、rootless Docker
@@ -355,7 +353,7 @@ They are planning aids, not acceptance criteria.
 - Risk: Medium--High。既存volume/data migrationとrollback、保持policyに影響する
 - Expected tests: forward/rollback migration、transaction failure、retention、real PostgreSQL integration
 - Size: M
-- Completion: commit `b7cb6f9` / date 2026-09-01 / `ExecutionLogRepo`とartifact・request情報を
+- Completion: commit `b7cb6f90833801573689973ecabf257bdfdcd0d3` / date 2026-09-01 / `ExecutionLogRepo`とartifact・request情報を
   受け取らないtyped保存entry、version table・advisory lock付きforward/rollback migrationを
   導入。legacy列を保持して構造化実行・判定列を追加し、backend起動前migration、同一transactionの
   retention、失敗時rollbackを実装。request単位のnginx/Uvicorn access logも無効化した。
@@ -371,7 +369,7 @@ They are planning aids, not acceptance criteria.
 - Risk: Medium。error mappingと保存順序を維持しつつ、infrastructure failureをwrong answerから分離する
 - Expected tests: fake portsによるsuccess/not-found/busy/timeout/judge/persistence failure、call ordering
 - Size: M
-- Completion: commit `105ec70` / date 2026-09-01 / `SubmissionResult`、ProblemRepo・
+- Completion: commit `105ec70e3594bcafb2699f9aa950c0bcc389368e` / date 2026-09-01 / `SubmissionResult`、ProblemRepo・
   RunnerGateway・Judge・ExecutionLogRepoのport、`SubmitSolutionService`を導入。
   problem確認、実行、判定、保存の順序をHTTP handlerから分離し、未登録、runner混雑・停止、
   timeout、judge例外、保存失敗をfake port testで検証。既存public response形式を維持し、
@@ -403,8 +401,10 @@ They are planning aids, not acceptance criteria.
 - Expected tests: unauthorized large body、body limit、degraded pool、protocol/data digest mismatch、restart behavior
 - Size: M
 - Completion: commit `07545a5573208084f8a505fbad44b0f872826336` / date 2026-09-03 / 実行requestをASGI middlewareでbody読込前に
-  Bearer認証し、認証後bodyを8 KiBへ制限。backendとrunnerの問題定義・画像全体の
-  SHA-256 revisionをrequest/responseで相互検証し、不一致を実行前にfail-closedとした。
+  Bearer認証し、認証後bodyを8 KiBへ制限。backendとrunnerのproblem dataの
+  SHA-256 revisionをrequest/responseで相互検証し、requestの不一致は実行前に拒否し、
+  responseの不一致も受理しないようにした。
+  revisionの算出対象は[問題データ](../../problems/README.md#problem-data-revision)を参照。
   livenessとreadinessを分離し、pool削除・補充失敗後は再起動まで非readyを維持する。
   Compose healthcheckをreadinessへ変更し、Python非Docker test 473件、
   rootless Docker test 8件、Compose設定検査、ruff、format、mypyが成功。
@@ -557,7 +557,7 @@ They are planning aids, not acceptance criteria.
 - Priority / Status: P3 / `Planned`
 - Goal: versionの正本を決め、API/UI/package/image/release metadataを`3.0.0`へ揃え、migration・deployment・rollback・release noteを完成させる
 - Main files/components: version metadata、frontend display、OCI label、README、development/production/security/problem docs、update history
-- Dependencies: v3 release scopeに含めるR3-001--R3-026が`Completed`、または未完了unitのdefer判断が承認済み
+- Dependencies: 自身を除く全release対象unit（R3-028を含む）が`Completed`、または未完了unitのdefer判断が承認済み
 - Risk: Low。version表記漏れとrelease artifact不一致を防ぐ
 - Expected tests: canonical version assertion、API/UI/OCI consistency、documentation commands、全基本検査、rootless Compose E2E/full regression
 - Size: S
@@ -587,8 +587,8 @@ They are planning aids, not acceptance criteria.
 | runner process外の独立reaperを導入するか | Open | R3-024のrecovery acceptance確定 | - | - |
 | Analytics / Google Fontsを維持するか、CSPをどう設定するか | Decided | R3-021 | Google Analyticsと外部Google Fontsを削除し、script・style・font・API通信を同一originに限定するCSPを適用する。実行結果画像の`data:`だけを追加許可する | commandと結果を扱うbrowserから第三者への自動送信経路をなくし、外部resource障害と情報漏えい時の影響を減らす。2026-09-04決定、commit `872bacf` |
 | reference solutionをpublic frontend/API artifactに含めるか | Decided | R3-007 | 現行どおりpublic problem detail APIで公開する | 既存APIは`answer`をすでに公開しているためR3-016以前の互換性を維持し、v3では`reference_solution`として保持する。2026-08-30決定、commit `4d25fa8` |
-| execution logの利用目的、保持期間、privacy、backup方針 | Decided | R3-014 | 投稿ID発行、障害・security・不正利用調査だけに使用し、365日かつ最新10,000件以内で保持する。IP address、HTTP header、User-Agent、画像artifact等は保存せず、backupも暗号化・アクセス制限した障害復旧用途に限定して同じ保持期間を超えて残さない | 漏えい時の影響を抑えるため個人特定につながるrequest情報と不要なbinaryを永続化せず、既存の保持上限とcommand・上限付き出力の互換性は維持する。2026-09-01決定 |
-| imageをbyte exact、canonicalized、pixel比較のどれで判定するか | Open | R3-011 | - | - |
+| execution logの利用目的、保持期間、privacy、backup方針 | Decided | R3-014 | 投稿ID発行、障害・security・不正利用調査に用途を限定し、保存対象とretention・backup policyを明示する。現行仕様は[実行ログとDockerログ](../../SECURITY.md#実行ログとdockerログ)を参照 | 漏えい時の影響を抑えるため個人特定につながるrequest情報と不要なbinaryを永続化せず、既存の保持上限とcommand・上限付き出力の互換性は維持する。2026-09-01決定、commit `b7cb6f9` |
+| imageをbyte exact、canonicalized、pixel比較のどれで判定するか | Decided | R3-011 | `exact_pixels`を採用。現行規則は[問題データ](../../problems/README.md#schema-v3)を参照 | encoder metadataの差を許容しつつ、decode後の画素の差を見逃さないため。2026-08-30決定、commit `7947640` |
 
 判断時は、該当行のstatusを`Decided`にし、決定内容、理由、日付、関連commitまたはissueを
 `Decision`と`Rationale`へ記録します。v3範囲外とする判断も、無言で削除せず理由を残します。
@@ -627,12 +627,12 @@ security課題のseverity、詳細な防御、残存リスクは
 
 1. 実装と文書同期を完了する
 2. expected testsを実行し、未実行/skip/環境制約を報告する
-3. statusを`In Progress`から`Review`（R3-028は`Done`）へ変更する
+3. statusを`In Progress`から`Review`へ変更する
 4. `Completion`はcommit前のため`-`のままとし、review対象差分を提示する
 
 ### Completing a unit
 
-依頼者のreview承認とcommit完了後にだけ`Review`（R3-028は`Done`）から`Completed`へ変更します。
+依頼者のreview承認とcommit完了後にだけ`Review`から`Completed`へ変更します。
 overviewと詳細の両方を更新し、`Completion`へfull commit hash、completion date、
 必要なら短い互換性/残存リスクnoteを記録します。
 
@@ -653,7 +653,8 @@ Git履歴から分からないpriority、scope、順序、review gateの変更�
 
 | Date | Affected units | Change and rationale | Commit |
 | --- | --- | --- | --- |
-| 2026-09-05 | R3-028 | typed化後も実行失敗・判定エラーを不正解へ変換する表示が残るため、frontend限定の修正unitを追加。依頼者指定のDoneは実装・検査完了、未commit・diff review待ちを表す | - |
+| 2026-09-05 | R3-028 | typed化後も実行失敗・判定エラーを不正解へ変換する表示が残るため、frontend限定の修正unitを追加。依頼者指定でreview前に一時使用したDoneは実装・検査完了、未commitを表し、承認・commit後はCompletedへ移行 | `eb9e458` |
+| 2026-09-05 | R3-027 | R3-028追加後もrelease対象が古いID範囲で打ち切られないよう、依存関係の表記を自身以外の全release対象unitへ整合 | - |
 
 ## Tracker history
 
@@ -702,3 +703,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-04 | R3-022 runtime artifact pinning and mount hardening started | - |
 | 2026-09-04 | R3-022 implementation and planned tests completed; moved to `Review` | - |
 | 2026-09-04 | R3-022 approved and recorded as `Completed` | `eff33ca` |
+| 2026-09-05 | R3-028 approved and recorded as `Completed` | `eb9e458` |

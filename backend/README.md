@@ -37,7 +37,7 @@ backendからrunnerへの実行境界は、`scripts/runner_protocol.py`の
 `RunnerGateway`、`RunnerExecutionRequest`、`RunnerExecutionResponse`と、
 `models/execution.py`の`ExecutionResult`を正本とします。requestとresponseは
 `protocol_version: 3`、backend生成の`request_id`、起動時検証済み
-全problem dataのSHA-256 `problem_revision`を必須とし、
+problem dataのSHA-256 `problem_revision`を必須とし、
 未知version、未知field、欠落field、文字列・画像上限超過を拒否します。
 
 requestは`protocol_version`、`request_id`、`problem_revision`、`shellgei`、
@@ -53,12 +53,9 @@ artifactはproblem schemaと一致する`path`、`media_type`、Base64 `data`を
 `/internal/health`はprocessのliveness、`/internal/ready`はproblem revisionと
 sandbox poolのreadinessを返します。認証、body上限、readinessのsecurity上の
 保証は[SECURITY.md](../SECURITY.md#runnerとdocker-socketの権限)を参照してください。
-公開APIと既存DB logへ渡すときだけ、構造化結果を従来の結合済み表示文字列へ変換します。
-
-既存`/api/shellgei`は画像dataに加えて`image_media_type`を返します。画像がない場合は
-空文字列と`null`、現在の画像問題では`image/jpeg`を返します。新しい
-`/api/v3/submissions`はtyped verdict・execution・artifactとHTTP statusを返します。
-外部contractは[Public API](../docs/API.md)を正本とします。
+legacy submission APIとDBの互換列には結合済み出力・数字判定codeをmappingします。
+v3 submission APIとDBの構造化列は分離した実行・判定情報を保持します。
+公開field・HTTP status・legacy互換性の正本は[Public API](../docs/API.md)です。
 
 ## 提出use case
 
@@ -80,16 +77,24 @@ wrong answerへ変換しません。
 保存しません。利用目的、保持期間、backupを含むsecurity仕様は
 [実行ログとDockerログ](../SECURITY.md#実行ログとdockerログ)を正本とします。
 
-backendは起動時に`head`まで自動migrationします。開発時に明示して確認する場合は、
-リポジトリrootから次を実行します。
+backendは起動時に`head`まで自動migrationします。ホスト上でCLIを使用する場合は、
+対象DBの`DATABASE_URL`を設定し、リポジトリrootから`backend`へ移動して実行します。
+CLIは`.env`を自動読込しません。ホストからComposeのDBへ接続する場合は、
+内部service名`db`ではなくホストから到達できる接続先を環境変数に設定してください。
 
 ```sh
+cd backend
 poetry run python -m scripts.database_migrations head
+```
+
+構造化列をrollbackする場合も、同じ`backend` directoryで次を実行します。
+実行前に整合性のあるbackupを取得し、backendからの書き込みを停止してください。
+
+```sh
 poetry run python -m scripts.database_migrations 0001_legacy_execution_logs
 ```
 
-2行目は構造化列をrollbackする操作です。実行前に整合性のあるbackupを取得し、
-backendからの書き込みを停止してください。本番手順は
+本番手順は
 [更新デプロイとロールバック](../docs/PRODUCTION.md#8-更新デプロイ)を参照してください。
 
 text判定は`ExecutionResult`から`TextJudgeInput`へ必要項目だけを渡し、

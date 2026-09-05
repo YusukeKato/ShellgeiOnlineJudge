@@ -8,7 +8,7 @@
 この文書は、security modelやsandbox仕様そのものの正本ではありません。
 現在の仕様は[SECURITY.md](../../SECURITY.md)、
 本番構成と運用手順は[本番運用](../PRODUCTION.md)を参照してください。
-今回の監査で確認した根拠と検証結果は、
+初回監査時の根拠と検証結果は、
 [2026-08-23監査記録](./audit-2026-08-23.md)に保存しています。
 
 この文書より、現在のコード、設定、テスト、実環境を優先します。
@@ -16,12 +16,14 @@
 
 ## Current baseline
 
-- 最終確認日: 2026-08-24
+- 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `0d49505e0b9df2978255031e178ecc77dba30140`
-- commit subject: `fix: cache problem catalog at startup`
+- 確認対象commit: `cf8ea96157c04c1a1efb278faba590034dfd3881`
+- commit subject: `docs: complete frontend failure display tracker`
 - 今回の変更開始時のworktree: clean
-- 対象: repository、rootless Docker開発環境、保存済みimage
+- 対象: repositoryのコード・設定・文書・テストの照合
+- 直近の実行検証: `7911f3c`でPython静的検査・非Docker test・rootless Docker統合/全問題回帰、
+  `eb9e458`でfrontend基本5検査。以後のcommitはtracker更新のみ
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
 baseline以降に変更がある場合は、先に差分を確認してください。
@@ -29,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 0d49505e0b9df2978255031e178ecc77dba30140..HEAD
+git diff cf8ea96157c04c1a1efb278faba590034dfd3881..HEAD
 ```
 
 ## Current security status
@@ -127,7 +129,7 @@ Statusは次の意味で使用します。
 | RES-011 | 動的sandboxのDockerログを無効化し、待機PID 1のstdioを`/dev/null`へ分離 | `41d31c8` | container manager unit、Docker baseline test |
 | RES-012 | owner単位の起動時回収、create/start失敗追跡、shutdown競合防止を実装 | `71dad03` | container manager unit、Docker restart test |
 | RES-013 | 問題一覧を起動時に検証・JSON化し、HTTP cacheを追加 | `0d49505` | problem catalog unit、backend startup test |
-| RES-014 | nginxの共有実行開始枠を廃止し、検証後のrunnerを開始頻度の正本に限定 | この変更 | nginx静的test、実nginx integration test |
+| RES-014 | nginxの共有実行開始枠を廃止し、検証後のrunnerを開始頻度の正本に限定 | `7c4ef54` | nginx静的test、実nginx integration test |
 | RES-015 | backendからprivate runnerへのHTTP通信で環境proxyの継承を明示的に無効化 | `74a1a74` | runner boundary test、基本Python検査 |
 | RES-016 | slash自動redirectを無効化し、backendのHostとforwarded headerの信頼境界を固定 | `6061ebc` | ASGI boundary test、nginx静的test、基本Python検査 |
 | RES-017 | 実行ログ保存をevent loop外へ分離し、NUL正規化、DB timeout、rollbackと失敗後の回復を実装 | `3843e37` | persistence unit、PostgreSQL lock failure/recovery integration test |
@@ -227,10 +229,14 @@ Deferredは不要という意味ではありません。
 ### rootless Docker、kernel、runtime isolation
 
 - Repository guarantees:
-  - wrapperとrunnerがrootful、TCP Docker、cgroup不備をfail-closedで拒否します。
+  - wrapperはlocal Unix socket以外とrootful daemonを拒否します。
+  - Composeはrunnerの接続先をUnix socketへ固定し、runnerはrootless・cgroup条件と
+    sandboxの制限実効値を検査します。
+  - runner単体には接続先schemeを拒否する検査はなく、Compose外でもlocal rootless
+    Unix socketを明示する運用が必要です。
 - Development environment verified:
-  - Docker 29.7.2、rootless、cgroup v2、systemd driver
-  - builtin seccomp有効、capability 0、`no-new-privileges=1`、swap 0
+  - 直近のDocker統合testでrootless・cgroup v2・systemd、resource制限と隔離設定を確認。
+    検証内容は[Docker統合テスト](../../backend/tests/integration/README.md)を参照します。
 - Production verification required:
   - Docker、containerd、runc、kernelのversionとsecurity update
   - cgroup delegation、builtin seccomp、AppArmor/SELinuxの実状態
@@ -255,7 +261,8 @@ Deferredは不要という意味ではありません。
   - `.env`、TLS key、Git履歴はDocker build contextから除外します。
   - runner secretはbackendとrunnerだけへ渡します。
 - Development environment verified:
-  - tracked fileと99 commitsの簡易pattern scanで高確度secret候補は0件でした。
+  - [初回監査](./audit-2026-08-23.md)でtracked fileと当時の99 commitsを簡易pattern scan済み。
+    現在のHEADまで継続scanできているという意味ではありません。
 - Production verification required:
   - secret生成・rotation・保管、`.env` mode、backup暗号化
   - GitHub token権限、branch protection、secret scanning、push protection
@@ -275,7 +282,14 @@ Deferredは不要という意味ではありません。
     stdout/stderr・終了code分離、invalid UTF-8、NUL、文字数上限、所要時間、
     実行slot、kill完了待ち、background cleanup
 - `backend/tests/test_runner_boundary.py`
-  - secret、version付き固定schema、response上限、backend/runner分離
+  - secret、version付き固定schema、response上限、backend/runner分離、
+    problem revision・request ID不一致の拒否
+- `backend/tests/test_runner_http_security.py`
+  - body読込前の認証、認証後body上限、HTTP framing
+- `backend/tests/test_public_api_v3.py`、`test_http_boundary.py`
+  - v3 DTO・HTTP status、内部error非公開、Host・slash・security header
+- `backend/tests/test_database_migrations.py`、`test_execution_log_retention.py`
+  - migration、retention、NUL、commit失敗時rollback、非同期保存・保存失敗時の応答
 - `backend/tests/test_runner_protocol.py`
   - version 3 request/response JSON往復、未知version・field、構造化resultの
     status整合性・不変性・合計上限
@@ -294,11 +308,15 @@ Deferredは不要という意味ではありません。
   - 実containerの起動時回収、filesystem、resource、logging、
     isolation、stdout/stderr・終了code、timeout、画像、状態分離
 - `backend/tests/integration/test_postgres_retention.py`
-  - 実PostgreSQLの期間・件数制限
+  - 実PostgreSQLのmigration・transactional DDL rollback、期間・件数制限、
+    NUL保存、lock timeoutとrollback後の再保存
 - `backend/tests/integration/test_full_problem_regression.py`
   - 現在の92問の正解commandとjudge互換性
+- `frontend/src/legacy_behavior.test.jsx`、`playground.test.jsx`
+  - typed API検証、正解・不正解・実行失敗・判定エラー表示、timeout、abort、
+    二重送信と問題選択・提出responseの競合
 
-実行条件とコマンドは、
+非Docker検査は[開発手順](../DEVELOPMENT.md#6-テスト)、Dockerの実行条件とコマンドは、
 [Docker統合テスト](../../backend/tests/integration/README.md)を参照してください。
 
 ### 不足しているtest
@@ -307,8 +325,7 @@ Deferredは不要という意味ではありません。
 - Docker create応答timeoutとdaemon停止を使うfailure test
 - 実Composeのfrontend -> backend -> runner -> Docker -> DB E2E
 - 外側proxyを含むpublic Host allowlistとsecurity header
-- DB停止、lock、timeout、commit失敗、NUL、rollback後の回復
-- backend/runner間のproblem revision不一致
+- 実Compose経路でのDB停止・復帰とpublic API応答
 - dependency、container image、secret、workflowの継続scan
 - 外側proxyと複数送信元を含む負荷・公平性test
 
@@ -319,14 +336,10 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 
 再開時は、現在のコードでseverityと成立条件を再確認したうえで進めます。
 
-```text
-Next
-  R3-014: ExecutionLogRepoとdatabase migrationを導入
-    ↓
-Later
-  revision照合、権限分離、E2E、browser、
-  CI、運用基盤を改善
-```
+実装順序・依存関係・未決定のreview gateは
+[リファクタリングtracker](../refactoring/README.md#roadmap-overview)を参照してください。
+この文書では[未解決security課題](#open--partially-resolved--deferred)と
+本番環境での確認事項を管理し、完了済みunitを次作業として再掲しません。
 
 Highとして確定したOpen課題はありません。
 以降はMedium以下を1項目ずつ、または密接に関連する
