@@ -85,6 +85,47 @@ fork bomb、ディスク枯渇、大量コンテナ生成、Docker daemon停止�
 手順をその場で安全に実行するために必要なコマンド列は再掲できますが、
 説明や値を重複させず、正本変更時に不整合が生じない構成を優先してください。
 
+## コマンド実行と承認
+
+依頼された調査・実装・検証の範囲で、ローカルで完結する非破壊的なコマンドは、
+逐次承認を求めず実行して構いません。テストや静的解析の実行ごとに確認する必要はありません。
+コマンド名の固定許可リストではなく、実際の操作対象と副作用で判断してください。
+
+| 判断 | 基準 |
+| --- | --- |
+| 承認不要 | local + non-destructive + repository-scoped + inspection/testing |
+| 事前確認が必要 | 外部ネットワークアクセス、リポジトリ外の既存資源への変更、data lossの可能性、Git historyまたはremoteへの変更 |
+
+承認不要の例には、`find`、`grep`、`rg`、ファイル内容の読み取り、`ruff`、`mypy`、`pytest`、
+frontendのformat・lint・typecheck・test・build、既存のテスト・検証スクリプトを含みます。
+Docker / Docker Composeを利用する既存テストと、テスト専用資源の作成・cleanupも対象です。
+既存のrootless要件、sandbox制限、耐性試験の実行条件は引き続き守ってください。
+Git操作は末尾の「Git操作」に従ってください。
+
+安全性が不明な場合は実行せず、実行したい操作、対象範囲、必要な理由を説明して確認してください。
+
+### 外部ネットワーク
+
+依頼者の明示的な許可がない限り、外部ネットワークへアクセスしないでください。
+外部アクセスには、`curl` / `wget`、dependencyやpackageのdownload、`apt install`、
+`pip install`、新規package取得を伴う`poetry install` / `npm install` / `yarn install`、
+Docker image pull、`git fetch` / `git pull` / `git push`、GitHubその他のremote serviceへの
+アクセスを含みます。
+
+既にローカルにあるdependency、Docker image、cacheを利用した検証は構いません。
+テスト・build・スクリプト経由の自動downloadや暗黙のimage pullも外部アクセスに含めて判断し、
+必要になった場合は実行前に理由を説明して確認してください。
+
+### リポジトリ外の資源とcleanup
+
+依頼者の明示的な許可なしに、対象リポジトリ外の既存ファイルやディレクトリを
+削除・移動・上書き・変更しないでください。
+特に`rm`、`rm -rf`、`mv`、`truncate`、cleanup script等は、実行前に対象範囲を確認してください。
+
+今回の作業やテスト自身が作成した一時ファイル・container・volume・network等は、
+path、専用名、owner label等で安全に識別できる場合に限り、追加承認なしでcleanupして構いません。
+`/tmp`等でも、今回自分が作成したもの以外を削除しないでください。
+
 ## 検査とテスト
 
 変更範囲に対応するテストを追加または更新し、実行可能な検査を実施してください。
@@ -133,6 +174,12 @@ Compose構成を変更した場合は、rootless確認を含む補助スクリ�
 
 ## Git操作
 
+- `git status`、`git diff`、`git log`、`git show`、`git grep`、`git ls-files`等の
+  ローカルで完結する読み取り専用操作は承認不要です。
 - コミットは、依頼者から明示的な承認または依頼があった場合だけ実行してください。
 - pushは依頼者が行うため、明示的に依頼されない限り実行しないでください。
+- 依頼者の明示的な指示なしに、`reset`による変更破棄、`checkout` / `restore`による
+  未コミット変更の破棄、`rebase`、history rewrite、tagの作成・削除、branchの削除、
+  `git clean`を行わないでください。
+- 作業後のdiffは依頼者のレビュー用に保持してください。
 - コミット前に対象ファイルと差分を提示し、関連する変更だけを含めてください。
