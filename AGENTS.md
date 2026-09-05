@@ -94,7 +94,9 @@ fork bomb、ディスク枯渇、大量コンテナ生成、Docker daemon停止�
 | 判断 | 基準 |
 | --- | --- |
 | 承認不要 | local + non-destructive + repository-scoped + inspection/testing |
-| 事前確認が必要 | 外部ネットワークアクセス、リポジトリ外の既存資源への変更、data lossの可能性、Git historyまたはremoteへの変更 |
+| 承認不要 | 依頼された作業に必要な外部情報の調査・読み取り・ダウンロード |
+| 事前確認が必要 | リポジトリ外の既存資源への変更、data lossの可能性、remoteへの書き込み・公開・削除 |
+| レビュー後に実行 | 変更のcommit。依頼者によるdiffのレビューと明示的なcommit指示を待つ |
 
 承認不要の例には、`find`、`grep`、`rg`、ファイル内容の読み取り、`ruff`、`mypy`、`pytest`、
 frontendのformat・lint・typecheck・test・build、既存のテスト・検証スクリプトを含みます。
@@ -106,15 +108,20 @@ Git操作は末尾の「Git操作」に従ってください。
 
 ### 外部ネットワーク
 
-依頼者の明示的な許可がない限り、外部ネットワークへアクセスしないでください。
-外部アクセスには、`curl` / `wget`、dependencyやpackageのdownload、`apt install`、
-`pip install`、新規package取得を伴う`poetry install` / `npm install` / `yarn install`、
-Docker image pull、`git fetch` / `git pull` / `git push`、GitHubその他のremote serviceへの
-アクセスを含みます。
+依頼された調査・実装・検証に必要な、外部情報の調査・読み取り・ダウンロードは、
+外部ネットワークを使用する場合も逐次承認を求めず実行して構いません。
+Web検索、公式ドキュメント・リリース情報の参照、GitHub等の読み取り専用API、
+`curl` / `wget`による取得、dependency・package・検証ツール・脆弱性DBのdownload、
+Docker image pull、`git fetch` / `git pull`等を含みます。
 
 既にローカルにあるdependency、Docker image、cacheを利用した検証は構いません。
-テスト・build・スクリプト経由の自動downloadや暗黙のimage pullも外部アクセスに含めて判断し、
-必要になった場合は実行前に理由を説明して確認してください。
+テスト・build・スクリプトや`pip` / `poetry` / `npm` / `yarn`等による依存取得も、
+同じ基準で判断してください。取得物の保存・installには、下記のリポジトリ外の資源の
+保護ルールを適用します。`apt install`等によるシステム環境の変更や、
+リポジトリ外の既存環境の変更が必要な場合は、事前に確認してください。
+
+remoteへの書き込み・公開・削除や、非公開のソースコード・秘密情報の外部送信は、
+依頼者の明示的な許可がある場合だけ実行してください。Git操作は末尾の規則に従います。
 
 ### リポジトリ外の資源とcleanup
 
@@ -176,10 +183,15 @@ Compose構成を変更した場合は、rootless確認を含む補助スクリ�
 
 - `git status`、`git diff`、`git log`、`git show`、`git grep`、`git ls-files`等の
   ローカルで完結する読み取り専用操作は承認不要です。
-- コミットは、依頼者から明示的な承認または依頼があった場合だけ実行してください。
-- pushは依頼者が行うため、明示的に依頼されない限り実行しないでください。
-- 依頼者の明示的な指示なしに、`reset`による変更破棄、`checkout` / `restore`による
-  未コミット変更の破棄、`rebase`、history rewrite、tagの作成・削除、branchの削除、
-  `git clean`を行わないでください。
-- 作業後のdiffは依頼者のレビュー用に保持してください。
-- コミット前に対象ファイルと差分を提示し、関連する変更だけを含めてください。
+- `git fetch` / `git pull`を含む、依頼範囲内のローカルGit操作は承認不要です。
+  リモートからの取得と、リモートへの変更を区別してください。
+- `git pull`は原則として`--ff-only`を使用し、レビュー前のmerge commit生成を避けてください。
+  fast-forwardできない場合は、差分を調査し、必要な統合内容をレビュー対象にしてください。
+- Git操作の事前承認は、push、force push、リモートbranch・tagの作成・削除等、
+  リモートを変更する操作に必要です。pushは依頼者が行うため、明示的に依頼されない限り実行しないでください。
+- commitは別途レビューを必要とします。変更・テストの完了後に対象ファイルとdiffを提示し、
+  依頼者のレビューと明示的なcommit指示を待ってください。変更直後の自動commitや、
+  過去の変更へのcommit承認を新しい変更へ流用することはしないでください。
+- 未コミット変更や未追跡ファイルを保持し、`reset`、`checkout` / `restore`、`git clean`等で
+  依頼と無関係な変更やレビュー待ちのdiffを破棄しないでください。
+- commitにはレビュー済みの関連する変更だけを含めてください。
