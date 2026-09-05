@@ -38,16 +38,16 @@ provenance jobだけに`id-token: write`と`attestations: write`を付与しま�
 | actionlintとCI policy test | YAML、expression、Action入力、権限・固定SHA・timeout・署名job境界 | 構文・policy違反 |
 | Gitleaks | shallowでない取得済みGit履歴の全refと、現在の作業tree | secret検出またはtool障害 |
 | Syft | Poetry/Yarnのlock file、本番backend・runner・frontend・派生DB、固定digestのsandbox | inventory作成失敗、空inventory、Python/frontendの片側欠落 |
-| Grype | 同じSyft inventoryを脆弱性DBと照合 | 修正版のあるHigh/Critical、DB取得・読込失敗、scan失敗、未知のreport形式 |
+| Grype | 同じSyft inventoryを脆弱性DBと照合 | 下記の期限付き例外を除く修正版のあるHigh/Critical、DB取得・読込失敗、scan失敗、未知のreport形式 |
 
 secret出力は全量redactし、secretを含み得る生のreportをartifactへ追加しません。
 lock fileのscanには開発・任意groupも含めます。ローカルvenvやcacheはinventoryへ混入させず、
 Pythonとfrontendの両方が収録されていることを確認します。
 
-脆弱性reportには低severityや未修正のものも含む全件を残します。必須検査の停止対象は
+脆弱性reportには低severityや未修正のものも含む全件を残します。例外適用前の停止対象は
 `High` / `Critical`かつGrypeのfix stateが`fixed`の検出です。未修正の脆弱性が安全であることを
 意味せず、運用上の評価は別途必要です。包括的なignore、既存検出の自動baseline化、
-期限のない例外は設けていません。検出は終了code 2、tool障害は非0で失敗します。
+期限のない例外は設けていません。例外適用後も停止対象が残れば終了code 2、tool障害は非0で失敗します。
 壊れた・欠落したreportを「脆弱性なし」と扱いません。
 Grype標準のmatcherによる除外は`ignoredMatches`へ残ります。例えばsandbox内の
 kernel header packageに対する間接matchの除外であり、ホストkernelの脆弱性評価を代替しません。
@@ -59,6 +59,37 @@ DBは各jobで更新してから使用し、失敗時に古いDBへfallbackし�
 
 合成secret、既知の脆弱package、破損SBOMを使うfixtureで、実scannerが所定の失敗を返すことを
 確認します。合成値は一時fileへ作成し、追跡対象のsourceや例外リストにsecretを追加しません。
+
+### Python runtimeの期限付き例外
+
+Pythonの公式修正情報とNVDのversion範囲に不一致がある検出だけを、
+[`ci/python-runtime-exceptions.json`](../ci/python-runtime-exceptions.json)で管理します。
+対象CVE、根拠URL、package、実version、実装fileのhash、確認日・失効日はこのfileが正本です。
+これは修正済み実装に対する誤検出の扱いであり、未修正脆弱性のリスク受容には使用しません。
+
+適用には次のすべてを必要とします。
+
+- 対象が本番backendまたはrunnerで、scan対象がimmutable image IDであること
+- GrypeのCVE・namespace・package名・型・version・PURLとinstall pathが一致すること
+- UTC日付が確認日以降、失効日より前であること。有効期間は最大31日で、自動延長しないこと
+- 同じimage IDのPythonとExpatの実version、およびPython実行file・共有library・
+  cookies実装・XML拡張moduleのSHA-256がすべて一致すること
+
+実装確認は非root・networkなし・read-only・capability削除・資源上限付きの専用containerで行います。
+socketやhost fileをmountせず、終了・timeout・例外時にそのcontainerを回収します。
+確認障害や不完全なpolicyはCIを失敗させます。期限切れ、別version、別path、hash不一致は
+例外を適用せず、元の停止対象を維持します。hashは確認済みLinux amd64の実装に限定され、
+別architectureや再buildされたbinaryへ自動的に適用しません。
+
+Grype JSONは一切書き換えません。summaryの`blocking_before_exceptions`、`exceptions`、
+`blocking`で元の停止対象・適用数・適用後の停止対象を区別します。
+`backend.python-exceptions.json`と`runner.python-exceptions.json`へ評価時のpolicy、
+対象ID、実装確認結果、適用したmatchを保存し、build recordのhash対象にも含めます。
+source・frontend・DB・sandboxにはこの例外を適用しません。
+
+失効前に公式advisoryと最新DBを再確認し、不一致が解消されれば例外を削除します。
+継続が必要な場合も、根拠・実image・hashを再検証して差分をreviewします。
+日付だけの自動更新や、検出を消す目的での対象拡張は行いません。
 
 ## Rootless image検証
 
@@ -84,9 +115,9 @@ sandboxの展開には大きな一時領域が必要です。小さなtmpfsを�
 source/runtimeのscanを開始した場合は、検出でjobが失敗してもreportを保存します。
 保存期間と対象pathはworkflowで固定し、workspace全体やhidden fileをuploadしません。
 
-- 各対象のSyft JSON、CycloneDX JSON、Grype JSON、検出数summary
+- 各対象のSyft JSON、CycloneDX JSON、Grype JSON、検出数summaryとPython例外の評価記録
 - scanした本番4 imageの`runtime.tar`。image IDでexportするため、元のtagを保持する保証はありません
-- `build-record.json`: 検査時のcheckout commit、dirty状態、image ID、外部image reference、tool manifestと生成fileのSHA-256
+- `build-record.json`: 検査時のcheckout commit、dirty状態、image ID、外部image reference、tool manifest・Python例外policy・生成fileのSHA-256
 
 localのbuild recordは検査対象を追跡する未署名の記録です。既存imageを渡した場合、
 そのimageが記録中のcheckout commitからbuildされたことまでは証明しません。

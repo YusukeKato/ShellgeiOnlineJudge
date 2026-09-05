@@ -4,16 +4,178 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
+
+import docker
 
 from scripts.container_manager import DEFAULT_IMAGE_ID
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PYTHON_EXCEPTION_POLICY = ROOT / "ci/python-runtime-exceptions.json"
+PYTHON_RUNTIME_FILES = (
+    "/usr/local/bin/python3.12",
+    "/usr/local/lib/libpython3.12.so.1.0",
+    "/usr/local/lib/python3.12/http/cookies.py",
+    "/usr/local/lib/python3.12/lib-dynload/pyexpat.cpython-312-x86_64-linux-gnu.so",
+    "/usr/local/lib/python3.12/lib-dynload/_elementtree.cpython-312-x86_64-linux-gnu.so",
+)
+
+
+def utc_today() -> date:
+    """CIのtimezoneに左右されないUTC日付で例外の失効を判定する。"""
+    return datetime.now(timezone.utc).date()
+
+
+def load_python_exception_policy() -> dict[str, Any]:
+    """根拠・有限期限・実装hashを必須とし、不完全な例外設定はCI障害として拒否する。"""
+    policy = json.loads(PYTHON_EXCEPTION_POLICY.read_text())
+    if policy["schema_version"] != 1:
+        raise ValueError("unknown Python exception policy schema")
+    duration = date.fromisoformat(policy["expires_on"]) - date.fromisoformat(
+        policy["reviewed_on"]
+    )
+    if not 0 < duration.days <= 31:
+        raise ValueError("Python exception review period must be at most 31 days")
+    if set(policy["artifact"]) != {"name", "version", "type", "purl"} or not all(
+        isinstance(value, str) and value for value in policy["artifact"].values()
+    ):
+        raise ValueError("invalid Python exception artifact")
+    if not policy["id"] or policy["namespace"] != "nvd:cpe":
+        raise ValueError("invalid Python exception identity")
+    runtime = policy["runtime"]
+    if set(runtime) != {"python", "expat", "files"} or any(
+        not isinstance(runtime[key], list)
+        or len(runtime[key]) != 3
+        or any(type(part) is not int or part < 0 for part in runtime[key])
+        for key in ("python", "expat")
+    ):
+        raise ValueError("invalid Python exception runtime")
+    if set(runtime["files"]) != set(PYTHON_RUNTIME_FILES) or not all(
+        isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest)
+        for digest in runtime["files"].values()
+    ):
+        raise ValueError("invalid Python exception file hashes")
+    items = policy["vulnerabilities"]
+    if not items or len({item["id"] for item in items}) != len(items):
+        raise ValueError("empty or duplicate Python exception vulnerabilities")
+    for item in items:
+        if (
+            not re.fullmatch(r"CVE-\d{4}-\d{4,}", item["id"])
+            or not item["reason"]
+            or not item["evidence"]
+            or not all(url.startswith("https://") for url in item["evidence"])
+        ):
+            raise ValueError("Python exception requires advisory evidence")
+    return policy
+
+
+def inspect_python_runtime(image_id: str) -> dict[str, Any]:
+    """scan対象IDのPython・Expat・実装hashを隔離containerで読み、timeoutや例外でも回収する。"""
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", image_id):
+        raise ValueError("Python inspection requires an immutable image ID")
+    if not os.environ.get("DOCKER_HOST", "").startswith("unix://"):
+        raise RuntimeError("set DOCKER_HOST to a local rootless Unix socket")
+    script = """
+import hashlib, json, pathlib, pyexpat, sys
+files = {}
+for name in json.loads(sys.argv[1]):
+    path = pathlib.Path(name)
+    files[name] = hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+print(json.dumps(dict(python=list(sys.version_info[:3]), expat=list(pyexpat.version_info), files=files)))
+"""
+    client = docker.from_env(timeout=30)
+    try:
+        if "name=rootless" not in client.info()["SecurityOptions"]:
+            raise RuntimeError("rootful Docker is not allowed")
+        container = client.containers.create(
+            image_id,
+            entrypoint="/usr/local/bin/python3.12",
+            command=["-I", "-c", script, json.dumps(PYTHON_RUNTIME_FILES)],
+            working_dir="/",
+            user="10001:10001",
+            network_mode="none",
+            read_only=True,
+            cap_drop=["ALL"],
+            security_opt=["no-new-privileges:true"],
+            pids_limit=16,
+            mem_limit="64m",
+            memswap_limit="64m",
+            nano_cpus=500_000_000,
+        )
+        try:
+            container.start()
+            if container.wait(timeout=30)["StatusCode"] != 0:
+                raise RuntimeError("Python runtime inspection failed")
+            result = json.loads(container.logs(stdout=True, stderr=False))
+            if not isinstance(result, dict):
+                raise ValueError("invalid Python runtime inspection result")
+            return result
+        finally:
+            container.remove(force=True, v=True)
+    finally:
+        client.close()
+
+
+def python_runtime_exceptions(
+    blocked: list[dict[str, Any]], source: str, target: str, reports: Path
+) -> list[dict[str, Any]]:
+    """本番Pythonの期限付き例外を実装hashまで照合し、元reportを変更せず適用記録と対象を返す。"""
+    if target not in {"backend", "runner"}:
+        return []
+    if not re.fullmatch(r"docker:sha256:[0-9a-f]{64}", source):
+        raise ValueError("Python exceptions require the scanned immutable image ID")
+    policy = load_python_exception_policy()
+    today = utc_today()
+    active = (
+        date.fromisoformat(policy["reviewed_on"])
+        <= today
+        < date.fromisoformat(policy["expires_on"])
+    )
+    ids = {item["id"] for item in policy["vulnerabilities"]}
+    candidates = [
+        match
+        for match in blocked
+        if match["vulnerability"].get("id") in ids
+        and match["vulnerability"].get("namespace") == policy["namespace"]
+        and all(
+            match.get("artifact", {}).get(key) == value
+            for key, value in policy["artifact"].items()
+        )
+        and {
+            location["path"]
+            for location in match.get("artifact", {}).get("locations", [])
+        }
+        == set(PYTHON_RUNTIME_FILES[:2])
+    ]
+    record: dict[str, Any] = {
+        "policy": policy,
+        "evaluated_on": today.isoformat(),
+        "source": source,
+        "status": "unverified" if active and candidates else "not-applicable",
+        "applied": [],
+    }
+    if not active:
+        record["status"] = "inactive"
+    path = reports / f"{target}.python-exceptions.json"
+    # probe障害時も適用していないことと評価時のpolicyをartifactへ残す。
+    path.write_text(json.dumps(record, indent=2) + "\n")
+    exempted = []
+    if active and candidates:
+        record["runtime"] = inspect_python_runtime(source.removeprefix("docker:"))
+        record["status"] = "runtime-mismatch"
+        if record["runtime"] == policy["runtime"]:
+            exempted = candidates
+            record["status"] = "applied"
+            record["applied"] = candidates
+        path.write_text(json.dumps(record, indent=2) + "\n")
+    return exempted
 
 
 def run(command: list[str], *, expected: tuple[int, ...] = (0,)) -> int:
@@ -27,7 +189,7 @@ def run(command: list[str], *, expected: tuple[int, ...] = (0,)) -> int:
 
 
 def scan(tools: Path, source: str, reports: Path, name: str) -> bool:
-    """同じinventoryからSBOMと全脆弱性reportを作り、修正版のあるHigh/CriticalでFalseを返す。"""
+    """SBOMと全検出を保存し、検証済み期限付き例外を除く修正可能なHigh/CriticalでFalseを返す。"""
     sbom = reports / f"{name}.syft.json"
     run(
         [
@@ -52,15 +214,18 @@ def scan(tools: Path, source: str, reports: Path, name: str) -> bool:
     run([str(tools / "grype"), f"sbom:{sbom}", "-o", "json", "--file", str(report)])
     result = json.loads(report.read_text())
     blocked = blocking_findings(result)
+    exempted = python_runtime_exceptions(blocked, source, name, reports)
     summary = {
         "target": name,
         "packages": len(inventory["artifacts"]),
         "findings": len(result["matches"]),
-        "blocking": len(blocked),
+        "blocking_before_exceptions": len(blocked),
+        "exceptions": len(exempted),
+        "blocking": len(blocked) - len(exempted),
     }
     (reports / f"{name}.summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(json.dumps(summary), flush=True)
-    return not blocked
+    return len(blocked) == len(exempted)
 
 
 def blocking_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
@@ -176,6 +341,9 @@ def write_record(
         "external_image_references": external or {},
         "tool_manifest_sha256": hashlib.sha256(
             (ROOT / "ci/tools.json").read_bytes()
+        ).hexdigest(),
+        "python_exception_policy_sha256": hashlib.sha256(
+            PYTHON_EXCEPTION_POLICY.read_bytes()
         ).hexdigest(),
         "files": files,
     }

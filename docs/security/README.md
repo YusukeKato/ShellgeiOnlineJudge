@@ -18,11 +18,11 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `6b59c19`
-- commit subject: `security: remediate PostgreSQL image dependencies for SOJ-022`
+- 確認対象commit: `d436217`とSOJ-022のPython判定review待ち差分
+- commit subject: `docs: record approved PostgreSQL remediation and baseline`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の実行検証: SOJ-022の派生DB build・scan、既存volumeの更新・復帰互換性と回帰検査。
+- 直近の実行検証: SOJ-022のPython実装確認・期限付き例外・実scannerとruntime境界検査。
   変更範囲と結果は[SOJ-022の是正記録](#soj-022依存imageの是正記録)を参照
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
@@ -31,13 +31,14 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 6b59c19
+git diff d436217
 ```
 
 ## Current security status
 
 - SOJ-022のアプリ依存・nginx・派生DB更新でlock file、frontend・DB imageの停止対象は0件です。
-  backend・runnerのscanner判定不一致とsandboxの残存検出により、image側のCI gateは失敗します。
+  backend・runnerは修正済みPythonの期限付き例外を各3件適用し、適用後の停止対象は0件です。
+  sandboxの残存検出により、image側のCI gateは引き続き失敗します。
   scannerのseverityとサービスでの悪用可能性は区別し、残存項目はSOJ-022で追跡します。
 - インターネット公開には、外側proxyまたはWAFの
   実client単位の受付制御を別途確認する必要があります。
@@ -90,10 +91,10 @@ Statusは次の意味で使用します。
   - 次: 実CIとOIDC署名を確認し、required checks・workflow変更のreview保護を設定する。
     bootstrapの間接依存・第三者imageの供給元検証とpromotion方針を整備する
 - `SOJ-022` — High/Critical（scanner分類） / P1 / Partially resolved
-  - 概要: アプリ依存・nginx・派生DBの停止対象を是正。Pythonの判定不一致とsandboxの検出が残る
-  - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、`deploy/postgres/Dockerfile`、runtime image
+  - 概要: アプリ依存・nginx・派生DBを是正。Pythonは実装確認付きの期限付き例外で扱い、sandboxの検出が残る
+  - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、`deploy/postgres/Dockerfile`、`ci/python-runtime-exceptions.json`、runtime image
   - 確認: [是正記録](#soj-022依存imageの是正記録)に変更範囲、検出比較、未解決範囲を記載
-  - 次: sandboxの修正版候補を検証し、Pythonのscanner判定と公式修正情報の不一致を解消する。
+  - 次: sandboxの修正版候補を検証し、Python例外の期限前に公式advisory・DBと実装を再確認する。
     本番反映とGitHub上のCI確認は未実施
 - `SOJ-020` — Low / P3 / Deferred
   - 概要: DBをloopback公開し、Compose外では弱いfallback URLがある
@@ -118,7 +119,7 @@ Statusは次の意味で使用します。
 2026-09-05、依頼者の次の対策実装依頼に対し、CIを停止させるP1課題を優先しました。
 アプリ依存・nginxの是正は依頼者のreview承認後、`cb044c7`でcommit済みです。
 派生DBの是正は依頼者のreview承認後、`6b59c19`でcommit済みです。
-sandboxとscanner判定の残存課題があるため、
+Pythonの期限付き例外は`Review`です。sandboxと期限付きで扱うscanner判定の残存課題があるため、
 SOJ-022全体を`Resolved`にはしていません。R3-029等のpackage再配置は今回の範囲外です。
 
 ### 更新と互換性
@@ -153,17 +154,32 @@ R3-025と同じ固定scannerと、2026-09-05に取得した同一の脆弱性DB�
 sandboxは固定digestを維持し、既存SBOMを同じDBで再照合しています。
 停止条件の正本は[CI文書](../CI.md#scannerと停止条件)です。
 
-| 対象 | 更新前の停止対象 | 更新後の停止対象 |
-| --- | ---: | ---: |
-| Python / frontend lock file | 12 | 0 |
-| backend image | 6 | 3 |
-| runner image | 8 | 3 |
-| frontend image | 20 | 0 |
-| PostgreSQL | 42 | 0 |
-| sandbox | 248 | 248 |
+| 対象 | 依存・image更新前 | 依存・image更新後 | Python例外適用後 |
+| --- | ---: | ---: | ---: |
+| Python / frontend lock file | 12 | 0 | 0 |
+| backend image | 6 | 3 | 0 |
+| runner image | 8 | 3 | 0 |
+| frontend image | 20 | 0 | 0 |
+| PostgreSQL | 42 | 0 | 0 |
+| sandbox | 248 | 248 | 248 |
 
 対象ごとのmatch数であり、重複を除いたCVE数ではありません。source scanは終了code 2から0へ改善しました。
 image側は残存検出によりCIを停止します。低severity・未修正の検出を含め、全脆弱性がなくなったという意味ではありません。
+
+### Python判定と内蔵Expatの検査（Review）
+
+backend・runnerの各3件はPythonの公式修正情報とNVDのversion範囲の不一致です。
+例外の対象・根拠・期限・実装hashは[`ci/python-runtime-exceptions.json`](../../ci/python-runtime-exceptions.json)、
+適用条件と失効時の挙動は[CIの期限付き例外](../CI.md#python-runtimeの期限付き例外)を正本とします。
+現行の固定image、Python対応範囲、アプリ依存lockを維持しています。
+Grypeのraw検出はbackend 193件・runner 194件のまま保持し、そのうち各3件を例外へ分類しました。
+包括的なignoreやscanner自体のfilterは追加していません。
+
+Python 3.13.15の公式image候補もbuild・scanしました。停止対象は各0件でしたが、
+実binaryのExpatが2.8.2で、現行2.8.3に含まれる
+[CVE-2026-72522の修正](https://blog.hartwork.org/posts/expat-2-8-3-released/)が欠けるため採用しませんでした。
+Syftはこの内蔵Expatをpackageとして識別しておらず、scan成功だけではこの後退を検出できません。
+本番runtime統合testへPythonとExpatの実version検査を追加し、この更新候補を拒否できるようにしました。
 
 ### 回帰検査
 
@@ -189,13 +205,27 @@ image側は残存検出によりCIを停止します。低severity・未修正�
 - frontendのコード・依存・imageは変更していないため、基本5検査は前回の成功結果を維持し、今回は再実行しない。
 - rootless Compose設定検査とactionlintが成功。GitHub上のCI・署名実行、本番DBへの反映は未実施。
 
+Pythonの期限付き例外（今回）:
+
+- 新しい例外testで実装前のREDを確認。期限切れ、未知CVE、別namespace・package・path、
+  version/hash不一致、確認障害、rootful拒否、timeout時のcontainer回収、raw report保持を検証した。
+- Python 3.14のruff・format・mypy・非Docker 573件が成功。
+- 同じ固定scanner・DBで現行の両imageを再scanし、実version・5 fileのhash照合と各3件の例外適用を確認した。
+  適用記録とpolicy hashを含むbuild recordを生成。実scannerの合成secret・脆弱package・破損SBOM fixtureも成功。
+- 採用する現行imageでrootless runtime統合4件が成功。非root・収録境界・socket補助group・内部通信・判定・DB保存を含む。
+- 不採用の3.13候補では全Docker 20件（Compose・直接sandboxの全92問、browserを含む）が成功したが、
+  追加したExpat下限検査には不合格となる。これを採用imageの全回帰結果には数えない。
+- 最終差分はCI判定・検査と文書に限定され、frontendの基本5検査と採用imageの全Docker回帰は再実行していない。
+  採用image・依存・API・sandboxは前回検証済みのものを維持。GitHub上のCI・署名・本番反映は未実施。
+
 ### 残存項目
 
 - backend・runnerの各3件は`CVE-2026-3644`、`CVE-2026-4224`、`CVE-2026-7210`です。
   [Python 3.12.14の公式修正情報](https://www.python.org/downloads/release/python-31214/)と、
   [Expat修正条件を含む公式リリース説明](https://blog.python.org/2026/08/python-31214-31116-31021/)を確認しました。
   実imageはPython 3.12.14／Expat 2.8.3であり、修正済みversionに対するscanner判定の不一致です。
-  自動除外や期限なしの例外は追加していないため、DB側の反映または根拠付きの例外設計が必要です。
+  期限付き例外でCIの停止対象から区別していますが、NVD側の判定が訂正されたことを意味しません。
+  期限前に再評価し、DB側で不一致が解消した場合は例外を削除してください。
 - sandboxは多数の言語runtime・配布済みbinaryを含みます。個別toolの更新と問題互換性の検証が必要です。
   更新候補`sha256:1916181574c13e207836852d673bcf367c8293b7b556acbcaf0bc3f2f660d6b2`を
   registryからSBOM化して比較しましたが、停止対象は248から245件への減少にとどまり、

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "SOJ-022-python-3.12.14",
+  "reviewed_on": "2026-09-05",
+  "expires_on": "2026-10-05",
+  "artifact": {
+    "name": "python",
+    "version": "3.12.14",
+    "type": "binary",
+    "purl": "pkg:generic/python@3.12.14"
+  },
+  "namespace": "nvd:cpe",
+  "runtime": {
+    "python": [
+      3,
+      12,
+      14
+    ],
+    "expat": [
+      2,
+      8,
+      3
+    ],
+    "files": {
+      "/usr/local/bin/python3.12": "0e6475dfda68a9b2d93501449fc47593ca169010e8f4881577b97463fd0c1263",
+      "/usr/local/lib/libpython3.12.so.1.0": "3fe617fbb51016e797db0faadc464a08d76704232ee4a3a97d1de729994df1bd",
+      "/usr/local/lib/python3.12/http/cookies.py": "6387f676095ae5374943eff99fbcd2d9c681172c00209fadf54c311cf7228149",
+      "/usr/local/lib/python3.12/lib-dynload/pyexpat.cpython-312-x86_64-linux-gnu.so": "7219e9cbccfa01caa6dd6324fe9490cc1cd6f5982e63845655ac33eea83829a8",
+      "/usr/local/lib/python3.12/lib-dynload/_elementtree.cpython-312-x86_64-linux-gnu.so": "c2f7119fce28f635c108237749b2d37038eab2b3af5b8b0cb1bbb78ca54e5ffc"
+    }
+  },
+  "vulnerabilities": [
+    {
+      "id": "CVE-2026-3644",
+      "reason": "Python 3.12.14のhttp.cookies.Morsel修正済み実装。NVDのversion範囲に3.12系列の修正版が欠落している。",
+      "evidence": [
+        "https://www.python.org/downloads/release/python-31214/",
+        "https://github.com/python/cpython/issues/145599"
+      ]
+    },
+    {
+      "id": "CVE-2026-4224",
+      "reason": "Python 3.12.14のElementDeclHandlerの再帰修正済み実装。NVDのversion範囲に3.12系列の修正版が欠落している。",
+      "evidence": [
+        "https://www.python.org/downloads/release/python-31214/",
+        "https://github.com/python/cpython/issues/145986"
+      ]
+    },
+    {
+      "id": "CVE-2026-7210",
+      "reason": "Python 3.12.14のhash-flooding対策とExpat 2.8.3を確認済み。両方の更新を必要とする修正条件を満たす。",
+      "evidence": [
+        "https://www.python.org/downloads/release/python-31214/",
+        "https://github.com/python/cpython/issues/149018"
+      ]
+    }
+  ]
+}

@@ -62,16 +62,21 @@ def _restrictions(service: str) -> dict[str, Any]:
 def test_production_image_contains_only_its_runtime_boundary(
     runtime_client: Any, service: str
 ) -> None:
-    # 実imageを非root・read-onlyでimportし、不要package・逆側コード・開発資産の不在を確認する。
+    # 実imageのPython/Expat修正版、非root import、不要package・逆側コード・開発資産の不在を確認する。
     script = """
 import importlib
 import importlib.metadata
 import json
 import os
+import pyexpat
+import sys
 from pathlib import Path
 from scripts.problem_repository import load_problem_repository
 
 service = os.environ['SOJ_TEST_SERVICE']
+# SOJ-022の修正版を維持し、scannerが取りこぼす内蔵ExpatのCVE-2026-72522も再導入しない。
+assert sys.version_info[:3] >= (3, 12, 14)
+assert pyexpat.version_info >= (2, 8, 3)
 importlib.import_module('main' if service == 'backend' else 'runner_main')
 load_problem_repository()
 assert os.getuid() == os.getgid() == 10001

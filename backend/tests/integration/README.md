@@ -88,7 +88,7 @@ SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_RUNTIME_IMAGE_TESTS=1 \
   poetry run pytest backend/tests/integration/test_runtime_images.py
 ```
 
-実imageの非root起動、不要package・逆側コードの不在、問題data読込、socket補助groupの
+実imageのPython・Expat修正版、非root起動、不要package・逆側コードの不在、問題data読込、socket補助groupの
 必要性を確認します。一時的なbackend・runner・PostgreSQLを内部networkへ配置し、
 Composeと同じ実行制限でtext/image判定とDB保存まで検証します。test ownerだけの
 sandbox・container・networkを終了時に回収し、本番volumeや公開portは使用しません。
