@@ -21,13 +21,14 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Baseline commit subject: `docs: update maintenance history`
 - Baseline date: 2026-08-25
 - Overall status: `Implementation`
-- Total refactoring units: 27
+- Total refactoring units: 28
 - Ready: 0
-- Planned: 6
-- Pending (`Ready` + `Planned`): 6
+- Planned: 5
+- Pending (`Ready` + `Planned`): 5
 - In Progress: 0
 - Review: 0
-- Completed: 21
+- Completed: 22
+- Done: 1
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -142,12 +143,13 @@ cleanup、documentation、obsolete asset、release整合などの低優先度項
 - `In Progress`: 実装または検証中
 - `Review`: Codexによる実装と予定したtestが完了し、依頼者のreview待ち
 - `Completed`: 依頼者が承認し、対象commitが作成済み
+- `Done`: R3-028の依頼で指定された実装・検査完了状態。未commit・依頼者のdiff review待ちであり、`Completed`とは区別する
 - `Blocked`: 外部条件や未解決の判断により進行できず、解除条件を記録済み
 - `Deferred`: 実施を意図的に後回しとし、理由と再評価条件を記録済み
 - `Superseded`: 別unitまたは変更後の計画に置き換えられ、置換先と理由を記録済み
 
 依頼者のreview前に`Completed`へ変更しません。
-Codexが実装とtestを終えた時点は`Review`です。
+Codexが実装とtestを終えた時点は通常`Review`です。R3-028は依頼者の指定により`Done`を使用します。
 
 ## Roadmap overview
 
@@ -180,6 +182,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-025 | P2 | Planned | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | - |
 | R3-026 | P3 | Planned | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | - |
 | R3-027 | P3 | Planned | F | Establish canonical v3.0.0 version and release documentation | R3-001--R3-026 release scope | - |
+| R3-028 | P1 | Done | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | - |
 
 Size estimates use `XS` (under about 100 changed lines), `S` (100--250),
 `M` (250--600), and `L` (over 600 or a large mechanical data migration).
@@ -470,6 +473,22 @@ They are planning aids, not acceptance criteria.
   same-origin CSPを追加。frontend test 26件、format、lint、typecheck、production build、
   Python非Docker test 495件、ruff、format、mypy、Compose設定、rootless実nginx smokeが成功
 
+### R3-028: Distinguish execution failures and judge errors in frontend results
+
+- Priority / Status: P1 / `Done`
+- Goal: backendが区別した実行失敗・判定エラーをfrontendで不正解へ潰さず表示する
+- Main files/components: `frontend/src/functions/judge_result.tsx`、`submit.tsx`、`legacy_behavior.test.jsx`、frontend README、legacy behavior文書
+- Dependencies: R3-019、R3-020
+- Scope: 既存public APIのverdict・reasonを固定表示文言へmappingする。backend、API schema、受付・通信・非同期stateは変更しない
+- Expected tests: 旧失敗表示の期待値変更でRED、API clientからDOMまでの実行失敗・判定エラー・timeout・出力上限、終了code許容問題、未知reason拒否、frontend基本5検査
+- Risk: Low。利用者向け判定文言が変わるため、HTTP応答成功と実行成功を混同しない
+- Size: S
+- Completion: commit `-` / implementation date `2026-09-05` / 未commit・依頼者のdiff review待ち。
+  表示期待値の修正後、実装前に9件のREDを確認。rootless Dockerの既存builder
+  （Node.js 22.23.2 / Yarn 1.22.22）で現ソースを一時コピーし、frontend test 35件、
+  format、lint、typecheck、production buildが成功。二重送信・abort・response raceの
+  既存testも成功。backend contract・sandbox変更がないためPython/Docker問題回帰は未実行
+
 ## Phase E — Runtime / Supply Chain / E2E
 
 ### R3-022: Pin runtime artifacts and harden mounts and configuration
@@ -590,7 +609,7 @@ security課題のseverity、詳細な防御、残存リスクは
 | Problem loading | list、detail、runner input、judge expected dataが別々にYAML/imageを読む | R3-008 |
 | Public API | handlerがvalidation、runner呼出し、judge、DB保存、retention、response生成を編成する | R3-015、R3-016 |
 | Database | synchronous DB処理がasync request pathを塞ぎ、NUL、stall、rollback/migration境界が弱い | R3-003、R3-014 |
-| Frontend contract | raw tuple/`any`/magic verdictに依存し、infrastructure errorをwrong answerとして表示し得る | R3-019、R3-020 |
+| Frontend contract | raw tuple/`any`/magic verdictに依存し、infrastructure errorをwrong answerとして表示し得る | R3-019、R3-020、R3-028 |
 | Frontend async | client-side timeoutがfetchをabortせず、duplicate submissionとselection/response raceがある | R3-020 |
 | Runtime matrix | 宣言範囲に含むPython 3.14でtimeout/concurrency testが失敗し、CIとproduction Pythonも異なる | R3-004 |
 | Versioning | product baseline、tag、Python package、frontend package、UI環境変数にversion driftがある | R3-027 |
@@ -608,12 +627,12 @@ security課題のseverity、詳細な防御、残存リスクは
 
 1. 実装と文書同期を完了する
 2. expected testsを実行し、未実行/skip/環境制約を報告する
-3. statusを`In Progress`から`Review`へ変更する
+3. statusを`In Progress`から`Review`（R3-028は`Done`）へ変更する
 4. `Completion`はcommit前のため`-`のままとし、review対象差分を提示する
 
 ### Completing a unit
 
-依頼者のreview承認とcommit完了後にだけ`Review`から`Completed`へ変更します。
+依頼者のreview承認とcommit完了後にだけ`Review`（R3-028は`Done`）から`Completed`へ変更します。
 overviewと詳細の両方を更新し、`Completion`へfull commit hash、completion date、
 必要なら短い互換性/残存リスクnoteを記録します。
 
@@ -634,7 +653,7 @@ Git履歴から分からないpriority、scope、順序、review gateの変更�
 
 | Date | Affected units | Change and rationale | Commit |
 | --- | --- | --- | --- |
-| - | - | No roadmap changes after initial recording | - |
+| 2026-09-05 | R3-028 | typed化後も実行失敗・判定エラーを不正解へ変換する表示が残るため、frontend限定の修正unitを追加。依頼者指定のDoneは実装・検査完了、未commit・diff review待ちを表す | - |
 
 ## Tracker history
 

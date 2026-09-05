@@ -25,9 +25,12 @@ backendではstrict xfail、frontendでは後続unitの修正対象として追�
 
 - frontendはverdict文字列に`1`が含まれるだけで正解表示にする
 - frontend timeoutは進行中の`fetch`を中断しない
-- infrastructure errorとjudge errorをtyped stateで区別せず、不正解表示へ変換し得る
 
 text置換tokenと`NULL`の衝突はR3-010、画像先頭除外はR3-011で修正し、
 通常の成功testへ変更しました。frontendのtupleと判定code部分一致はR3-019で型付き境界へ
 移行しました。fetch中断、二重送信防止、最新responseの選択と非同期UI stateは
 R3-020で対応しました。
+
+実行失敗・判定エラーを不正解表示へ変換する挙動はR3-028で修正しました。
+旧表示を期待するtestを修正してREDを確認後、API responseからDOMまでの回帰testで
+区別を確認しています。現在の表示仕様は[frontend README](../../frontend/README.md)を参照してください。

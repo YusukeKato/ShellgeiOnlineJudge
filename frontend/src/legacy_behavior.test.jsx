@@ -357,11 +357,110 @@ describe("typed frontend API and display behavior", () => {
     ["wrong_answer", "不正解 / Incorrect ...😭..."],
     ["wrong_image", "不正解 / Incorrect ...😭..."],
     ["wrong_text_and_image", "不正解 / Incorrect ...😭..."],
-    ["execution_failure", "不正解 / Incorrect ...😭..."],
-    ["judge_error", "不正解 / Incorrect ...😭..."],
+    ["execution_failure", "実行失敗: コマンドの実行に失敗しました / Command execution failed"],
+    ["judge_error", "判定エラー: 判定処理でエラーが発生しました / Judging failed"],
   ])("maps typed verdict %s to its display label", (verdict, label) => {
-    // v3の各判定enumが画面上の正解・不正解文言へ変換されることを確認する。
-    expect(judgeResult(verdict)).toBe(label);
+    // reasonがない契約内の値でも、正解・不正解・実行失敗・判定エラーを区別する。
+    expect(judgeResult(verdict, null)).toBe(label);
+  });
+
+  test.each([
+    [
+      "timed_out",
+      "execution_failure",
+      { status: "timed_out", exit_code: null, timed_out: true },
+      "実行失敗: 実行がタイムアウトしました / Execution timed out",
+    ],
+    [
+      "output_truncated",
+      "execution_failure",
+      { status: "output_limit", exit_code: null, truncated: true },
+      "実行失敗: 出力上限を超えました / Output limit exceeded",
+    ],
+    [
+      "execution_error",
+      "execution_failure",
+      { status: "error", exit_code: null },
+      "実行失敗: コマンドの実行に失敗しました / Command execution failed",
+    ],
+    [
+      "non_zero_exit",
+      "execution_failure",
+      { exit_code: 1 },
+      "実行失敗: コマンドが非0の終了コードで終了しました / Command exited with a non-zero status",
+    ],
+    [
+      "stderr_not_empty",
+      "execution_failure",
+      { stderr: "diagnostic" },
+      "実行失敗: 許可されていない標準エラー出力がありました / Standard error output is not allowed",
+    ],
+    [
+      "invalid_problem_id",
+      "judge_error",
+      {},
+      "判定エラー: 判定処理でエラーが発生しました / Judging failed",
+    ],
+    [
+      "problem_not_found",
+      "judge_error",
+      {},
+      "判定エラー: 判定処理でエラーが発生しました / Judging failed",
+    ],
+  ])(
+    "renders the API failure reason %s distinctly from wrong answers",
+    async (reason, verdict, execution, label) => {
+      // backendが構築するstatus・reasonの組合せをAPI clientからDOMまで通し、不正解と区別する。
+      // 判定欄は固定文言だけを表示し、出力や内部識別用のreasonをそのまま表示しない。
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(
+          submissionResponse({
+            verdict,
+            reason,
+            execution: { ...submissionResponse().execution, ...execution },
+          }),
+        ),
+      });
+
+      const state = await executeSubmission("test command");
+      expect(state.kind).toBe("succeeded");
+      render(<SojResult submissionState={state} defaultImage="default-image" />);
+
+      expect(document.querySelector("#result-text")?.textContent).toBe(label);
+      expect(screen.queryByText("不正解 / Incorrect ...😭...")).not.toBeInTheDocument();
+    },
+  );
+
+  test("preserves accepted verdicts when the problem permits a non-zero exit", async () => {
+    // exit_codeをignoreする問題の正解を、frontendが終了codeだけで実行失敗へ再判定しない。
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: vi
+        .fn()
+        .mockResolvedValue(
+          submissionResponse({ execution: { ...submissionResponse().execution, exit_code: 1 } }),
+        ),
+    });
+
+    const state = await executeSubmission("test command");
+    expect(submissionDisplay(state, "default-image").verdict).toBe("正解 / Correct !!😄!!");
+  });
+
+  test("rejects an unknown reason before it reaches display mapping", async () => {
+    // API契約外の自由文reasonを表示層へ渡さず、既存clientが契約違反として拒否する。
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: vi
+        .fn()
+        .mockResolvedValue(
+          submissionResponse({ verdict: "judge_error", reason: "internal detail /host/private" }),
+        ),
+    });
+
+    await expect(
+      submitSolution(SOJ_URL, { shellgei: "true", problem_id: "STANDARD-00000001" }),
+    ).rejects.toMatchObject({ kind: "invalid_response" });
   });
 
   test("renders the response values without changing their text", () => {

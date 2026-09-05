@@ -174,7 +174,7 @@ export const submissionDisplay = (
   const image = artifact === null ? null : imageDataUrl(artifact.data, artifact.media_type);
   return {
     output: executionOutput(state.response.execution),
-    verdict: judgeResult(state.response.verdict),
+    verdict: judgeResult(state.response.verdict, state.response.reason),
     image: image ?? defaultImage,
     commandStatus:
       "SHELLGEI ID: " +

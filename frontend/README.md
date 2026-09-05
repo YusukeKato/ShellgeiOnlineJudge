@@ -16,8 +16,16 @@
 受け取り、verdict、execution、artifact MIME等を実行時に検証してから画面表示用の値へ
 変換します。public API contractの正本は[API仕様](../docs/API.md)です。
 
+判定欄は`verdict`に従って正解・不正解・実行失敗・判定エラーを区別します。
+実行失敗では、安全な`reason` enumに応じてtimeout、出力上限、非0終了code、
+stderr規則違反を固定文言で説明し、それ以外やreason未指定時は一般的な実行失敗を表示します。
+判定エラーにも固定文言を使用し、reasonの生値や内部例外を表示へ組み込みません。
+`execution.status`や終了codeからfrontend独自の再判定は行いません。
+具体的な表示mappingは[`judge_result.tsx`](./src/functions/judge_result.tsx)を参照してください。
+
 提出画面は`idle`、`running`、`succeeded`、`failed`、`validation_error`を区別する
-単一stateを使用します。同じ問題・commandの実行中の再送は無視し、内容が異なる新しい
+単一stateを使用します。`succeeded`は検証済み提出responseの受信成功であり、実行成功や
+正解を意味しません。同じ問題・commandの実行中の再送は無視し、内容が異なる新しい
 提出では以前の通信を中断します。提出timeout、component破棄、問題選択変更では
 `AbortController`で通信を停止し、responseの到着順にかかわらず最新requestだけを
 画面へ反映します。
