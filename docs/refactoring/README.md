@@ -709,7 +709,7 @@ Git履歴から分からないpriority、scope、順序、review gateの変更�
 | 2026-09-05 | R3-024 | 次unitの実装依頼に基づき、既存Composeの実経路・停止復帰・browser・全問題回帰を対象とした。独立reaperは権限境界と運用設計を伴うためSOJ-002へ維持し、R3-025のCI整備は含めない | `48a0670` |
 | 2026-09-05 | R3-025 | 既存CIを維持して検査・候補生成・main限定provenanceを構成。実scanで検出した依存/image更新はSOJ-022へ記録し、既存検出を自動除外しない。GitHubのremote設定変更・署名実行・本番promotionは依頼者による反映後の確認とする | - |
 | 2026-09-05 | SOJ-022 | 次の対策実装依頼に対し、CI停止の原因となるP1の依存是正を優先。アプリ依存・nginx更新と残存image課題はsecurity trackerで管理し、R3-029・R3-026の範囲は維持する | `cb044c7` |
-| 2026-09-05 | SOJ-022 | アプリ依存是正に続きDB imageを独立単位で是正。公式PostgreSQL 15からOpenSSL・gosuだけを更新し、既存volume互換性とCIのscan対象一致を検証する。R3 package再配置・DB role分離は含めない | - |
+| 2026-09-05 | SOJ-022 | アプリ依存是正に続きDB imageを独立単位で是正。公式PostgreSQL 15からOpenSSL・gosuだけを更新し、既存volume互換性とCIのscan対象一致を検証する。R3 package再配置・DB role分離は含めない | `6b59c19` |
 
 ## Tracker history
 

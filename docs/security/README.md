@@ -18,8 +18,8 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `a2c6564`とSOJ-022のDB是正review待ち差分
-- commit subject: `docs: record approved SOJ-022 remediation and baseline`
+- 確認対象commit: `6b59c19`
+- commit subject: `security: remediate PostgreSQL image dependencies for SOJ-022`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
 - 直近の実行検証: SOJ-022の派生DB build・scan、既存volumeの更新・復帰互換性と回帰検査。
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff a2c6564
+git diff 6b59c19
 ```
 
 ## Current security status
@@ -117,7 +117,8 @@ Statusは次の意味で使用します。
 
 2026-09-05、依頼者の次の対策実装依頼に対し、CIを停止させるP1課題を優先しました。
 アプリ依存・nginxの是正は依頼者のreview承認後、`cb044c7`でcommit済みです。
-派生DBの是正は`Review`です。sandboxとscanner判定の残存課題があるため、
+派生DBの是正は依頼者のreview承認後、`6b59c19`でcommit済みです。
+sandboxとscanner判定の残存課題があるため、
 SOJ-022全体を`Resolved`にはしていません。R3-029等のpackage再配置は今回の範囲外です。
 
 ### 更新と互換性
@@ -137,7 +138,7 @@ framework全体の依存を修正版へ更新しています。urllib3はDocker 
 cryptographyは開発用の間接依存、flatted・browserslistはfrontendの検査・build依存です。
 到達性の違いを理由とした検出除外は追加していません。
 
-### 派生DBの是正（Review）
+### 派生DBの是正
 
 公式PostgreSQL 15 baseを維持し、OpenSSLとgosuのbuildを更新しました。
 実装・固定値・更新時の制約は[PostgreSQL派生image](../PRODUCTION.md#postgresql派生image)を正本とします。
@@ -177,7 +178,7 @@ image側は残存検出によりCIを停止します。低severity・未修正�
 - actionlintとlock整合性検査が成功。GitHub-hosted上のworkflow、OIDC署名、
   required checksと本番への反映は実行していません。
 
-派生DBの是正（今回）:
+派生DBの是正（`6b59c19`）:
 
 - Dockerfileの固定base・Composeのbuild対象を検証するtestと、E2EのDB image指定testで実装前のREDを確認。
 - Python 3.14のruff・format・mypy・非Docker 542件が成功。
