@@ -100,7 +100,7 @@ const AboutPage: React.FC<AboutPageProps> = ({
             >
               ShellgeiBot-Image
             </a>
-            を利用しています
+            を旧sandboxで利用していました
           </li>
           <li>
             <a href="https://github.com/jiro4989/websh" target="_blank" rel="noopener noreferrer">

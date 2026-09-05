@@ -14,6 +14,8 @@ from typing import Any
 
 import docker
 
+from soj_shared.version import APP_VERSION
+
 
 ROOT = Path(__file__).resolve().parents[1]
 PYTHON_EXCEPTION_POLICY = ROOT / "ci/python-runtime-exceptions.json"
@@ -327,6 +329,7 @@ def write_record(
         with path.open("rb") as stream:
             files[path.name] = hashlib.file_digest(stream, "sha256").hexdigest()
     record = {
+        "product_version": APP_VERSION,
         "source_commit": commit,
         "worktree_dirty": dirty,
         "image_ids": image_ids,

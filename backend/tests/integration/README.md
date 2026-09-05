@@ -35,6 +35,8 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 
 テストでは下記を確認します。
 
+- 本番5 imageのOCI versionラベルと、ブラウザのversion表示が製品versionの正本と一致すること
+
 - 接続先daemonがrootlessであること
 - cgroup v2によるCPU・メモリ・PID制限が実際に反映されていること
 - 独自Ubuntu imageの必要コマンド、sudo・Go等の不在、setuid/setgidの除去、loopbackのみのnetwork、

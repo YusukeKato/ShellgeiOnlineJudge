@@ -1,5 +1,7 @@
 # SHELLGEI ONLINE JUDGE: frontend
 
+製品version・v3移行の概要は[リリース準備](../docs/RELEASE.md)を参照してください。
+
 `frontend` directoryには、ReactとTypeScriptによるブラウザ向けUIがあります。
 本番用buildは、同じserviceに含まれるnginxから配信します。
 

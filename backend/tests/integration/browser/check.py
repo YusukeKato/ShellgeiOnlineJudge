@@ -1,6 +1,7 @@
 """test専用container内のChromiumで実frontendの提出と表示を検証する。"""
 
 import json
+import os
 
 # 任意group未導入でも通常の型検査を妨げず、導入時には実際の型情報で検査する。
 from playwright.sync_api import Page, expect, sync_playwright  # type: ignore[import-not-found]
@@ -52,6 +53,12 @@ def main() -> None:
         assert page.locator("img#result-image").evaluate(
             "image => image.complete && image.naturalWidth > 0"
         )
+        page.get_by_role("link", name="ABOUT & INFO", exact=True).click()
+        expect(
+            page.get_by_text(
+                f"version: {os.environ['SOJ_EXPECTED_VERSION']}", exact=True
+            )
+        ).to_be_visible()
         assert not errors
         browser.close()
         print(json.dumps({"submission_ids": ids}))

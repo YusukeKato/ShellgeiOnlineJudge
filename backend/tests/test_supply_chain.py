@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 import ci.supply_chain as supply_chain
+from soj_shared.version import APP_VERSION
 from ci.install_tools import extract_binary
 from ci.supply_chain import blocking_findings, write_record
 
@@ -133,6 +134,7 @@ def test_build_record_hashes_artifacts_and_records_source(tmp_path: Path) -> Non
     write_record(tmp_path, {"backend": "sha256:" + "a" * 64})
     result = json.loads((tmp_path / "build-record.json").read_text())
     assert result["files"]["runtime.tar"] == hashlib.sha256(payload).hexdigest()
+    assert result["product_version"] == APP_VERSION
     assert len(result["source_commit"]) == 40
     assert isinstance(result["worktree_dirty"], bool)
     assert result["image_ids"]["backend"].startswith("sha256:")

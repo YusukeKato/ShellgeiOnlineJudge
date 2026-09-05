@@ -11,6 +11,7 @@ import docker
 import pytest
 import yaml
 
+from soj_shared.version import APP_VERSION
 from soj_runner.container_manager import OWNER_LABEL
 from soj_shared.problem_repository import build_problem_repository
 from tests.postgres_support import database_image
@@ -347,3 +348,20 @@ def _remove_owned_sandboxes(client: Any, owner: str) -> None:
             all=True, filters={"label": f"{OWNER_LABEL}={owner}"}
         ):
             cleanup.callback(sandbox.remove, force=True, v=True)
+
+
+@pytest.mark.parametrize("service", ["backend", "runner", "frontend", "db", "sandbox"])
+def test_runtime_image_product_version(runtime_client: Any, service: str) -> None:
+    """実際の本番5 imageが製品versionの正本と同じOCI labelを持つことを確認する。"""
+    references = {
+        "backend": os.getenv("SOJ_BACKEND_RUNTIME_IMAGE"),
+        "runner": os.getenv("SOJ_RUNNER_RUNTIME_IMAGE"),
+        "frontend": os.getenv("SOJ_COMPOSE_FRONTEND_IMAGE"),
+        "db": database_image(),
+        "sandbox": os.getenv("SANDBOX_IMAGE_ID"),
+    }
+    image = runtime_client.images.get(references[service])
+    assert (
+        image.attrs["Config"]["Labels"]["org.opencontainers.image.version"]
+        == APP_VERSION
+    )

@@ -1,6 +1,8 @@
 import os
 from contextlib import asynccontextmanager
 
+from soj_shared.version import APP_VERSION
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import RequestResponseEndpoint
@@ -38,7 +40,7 @@ async def lifespan(app: FastAPI):
         close_execution_log_repository()
 
 
-app = FastAPI(lifespan=lifespan, redirect_slashes=False)
+app = FastAPI(version=APP_VERSION, lifespan=lifespan, redirect_slashes=False)
 
 server_url = os.getenv("SERVER_URL", "https://shellgei-online-judge.com")
 origins = [

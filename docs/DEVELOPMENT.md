@@ -1,5 +1,7 @@
 # 開発環境の構築・テスト・起動
 
+製品version・v3移行の概要は[リリース準備](./RELEASE.md)を参照してください。
+
 この文書は、開発用PCでShellgeiOnlineJudgeをテストし、Docker Composeで起動するまでの手順を説明します。
 ローカル開発環境とDockerを使用しない検査手順は、この文書を正本とします。
 

@@ -16,13 +16,13 @@
 
 ## Current baseline
 
-- 最終コード照合日: 2026-09-05
+- 最終コード照合日: 2026-09-06
 - branch: `main`
-- 確認対象commit: `403b206`と今回のSOJ-022未commit差分
-- commit subject: `docs: record approved SOJ-020 database hardening`
+- 確認対象commit: `34a9041`
+- commit subject: `security: build dedicated Ubuntu sandbox and scan all runtime images (SOJ-022)`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の変更: SOJ-022の独自sandbox・libuuid是正と、同じimage IDを使うCI・runner設定。review待ち、未commit
+- 直近の変更: SOJ-022の独自sandbox・libuuid是正と、同じimage IDを使うCI・runner設定。review承認後にcommit済み
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
 baseline以降に変更がある場合は、先に差分を確認してください。
@@ -30,7 +30,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 403b206
+git diff 34a9041
 ```
 
 ## Current security status
@@ -241,7 +241,7 @@ ID設定と更新手順は[本番運用](../PRODUCTION.md#sandbox専用image)を
   ImageMagickのdelegate・format・resourceも制限します。Docker側の既存制限は維持しています。
 - `SANDBOX_IMAGE_ID`は必須で、旧imageへのfallbackはありません。
   CIは独自sandboxもbuild・scan・archiveに含め、同じIDを実行テストへ渡します。
-- frontend・DBで再現した各4件のlibuuid検出への固定更新も、同じ未commit差分に保持しています。
+- frontend・DBで再現した各4件のlibuuid検出への固定更新も、同じ是正commitに含めています。
   source packageのutil-linuxに由来するscanner分類であり、個別serviceからの悪用可能性とは区別します。
 - 新しい検出除外や例外、停止条件の緩和は追加していません。
 
@@ -277,7 +277,8 @@ imageはDocker inspectのSizeで630,300,114 bytes。ShellGeiDataの収録・更�
   日本語画像を目視確認し、Go compiler不在と既存の隔離・画像policyも確認した。
 - 最終5 imageを同じDBでscanし、検査したIDのarchiveとbuild recordを再生成。
   archiveのOCI indexと全image IDの一致、recordのfile hashを確認した。
-- GitHub上のworkflow・署名、本番反映、commit・pushは未実施です。
+- 独自sandbox・libuuidの是正はreview承認後に`34a9041`でcommit済みです。
+  GitHub上のworkflow・署名と本番反映は未確認です。
 
 ## Resolved issues
 

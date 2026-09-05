@@ -1,6 +1,8 @@
 import logging
 from contextlib import asynccontextmanager
 
+from soj_shared.version import APP_VERSION
+
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
 
@@ -56,6 +58,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(
+    version=APP_VERSION,
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,

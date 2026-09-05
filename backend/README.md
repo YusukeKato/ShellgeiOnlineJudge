@@ -1,5 +1,7 @@
 # SHELLGEI ONLINE JUDGE: backend
 
+製品version・v3移行の概要は[リリース準備](../docs/RELEASE.md)を参照してください。
+
 `backend` directoryには、FastAPIによる公開Web API、内部runner API、
 問題の判定、実行ログの保存、sandboxコンテナの管理を行うPythonコードがあります。
 

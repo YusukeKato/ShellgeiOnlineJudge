@@ -23,18 +23,18 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 29
 - Ready: 0
-- Planned: 1
-- Pending (`Ready` + `Planned`): 1
+- Planned: 0
+- Pending (`Ready` + `Planned`): 0
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 28
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
 
 `2.8.0`は今回の計画で宣言されたproduct baselineです。
-repository内には複数の古いversion表記が残っているため、canonical versionの確立は
-R3-027で行います。このtracker作成時にはversion表記を変更しません。
+製品versionの正本・転記先・更新手順はR3-027で整備し、
+[リリース準備](../RELEASE.md)に記載しています。
 
 ## Goals
 
@@ -179,7 +179,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-024 | P1 | Completed | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | `48a0670` |
 | R3-025 | P2 | Completed | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | `7b779b3` |
 | R3-026 | P3 | Completed | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | `ef4cb22` |
-| R3-027 | P3 | Planned | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | - |
+| R3-027 | P3 | Review | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | - |
 | R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
 | R3-029 | P2 | Completed | F | Organize shared, backend, and runner packages | R3-023, R3-024 | `b71663e` |
 
@@ -618,14 +618,26 @@ They are planning aids, not acceptance criteria.
 
 ### R3-027: Establish canonical v3.0.0 version and release documentation
 
-- Priority / Status: P3 / `Planned`
+- Priority / Status: P3 / `Review`
 - Goal: versionの正本を決め、API/UI/package/image/release metadataを`3.0.0`へ揃え、migration・deployment・rollback・release noteを完成させる
 - Main files/components: version metadata、frontend display、OCI label、README、development/production/security/problem docs、update history
 - Dependencies: 自身を除く全release対象unit（R3-028・R3-029を含む）が`Completed`、または未完了unitのdefer判断が承認済み
 - Risk: Low。version表記漏れとrelease artifact不一致を防ぐ
 - Expected tests: canonical version assertion、API/UI/OCI consistency、documentation commands、全基本検査、rootless Compose E2E/full regression
 - Size: S
-- Completion: commit `-` / date `-` / note `-`
+- Implementation: `backend/soj_shared/version.json`を製品versionの正本とし、両APIとViteから読み取る。
+  package metadata・本番5 imageのOCI labelを同じ値へ揃え、build recordへ`product_version`を追加。
+  `VITE_VERSION`を廃止し、旧環境変数の影響を受けない画面表示へ変更。
+  [リリース準備](../RELEASE.md)に変更概要、version更新、移行・復帰先、公開前確認を集約した。
+- Review validation: 2026-09-06、version整合性testのREDを確認後、実装してGREEN。
+  ruff・format・mypy（106 source file）と非Docker646件、frontend基本5検査・36件が成功。
+  rootless Docker36件が成功し、全92問の直接sandbox/Compose回帰、DB移行・復帰、browserを確認。
+  frontendの謝辞文言を最終調整した後、基本5検査とbrowser・本番5 imageのOCI label確認6件を再実行して成功。
+  2026-09-05取得の同じ脆弱性DBで最終5 imageを検査し、既存Python例外適用後の停止対象は0件。
+  最終archiveのimage ID・全file hash・build recordの`product_version: 3.0.0`を照合した。
+  文書のローカル参照先151件と`git diff --check`を確認。依存lock・API/protocol/schemaの契約値は維持。
+  GitHub上のCI・署名・required checks、本番反映、タグ・Release公開は未実施。
+- Completion: commit `-` / date `-` / note review待ち
 
 ## Known design decisions
 

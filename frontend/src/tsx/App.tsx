@@ -19,7 +19,7 @@ const App: React.FC = () => {
 
   /* SOJ Info */
   const update_date: string = import.meta.env.VITE_UPDATE_DATE || "";
-  const current_version: string = import.meta.env.VITE_VERSION || "";
+  const current_version: string = __APP_VERSION__;
 
   return (
     <Router>

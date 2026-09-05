@@ -117,7 +117,7 @@ source/runtimeのscanを開始した場合は、検出でjobが失敗してもre
 
 - 各対象のSyft JSON、CycloneDX JSON、Grype JSON、検出数summaryとPython例外の評価記録
 - scanした本番5 imageの`runtime.tar`。image IDでexportするため、元のtagを保持する保証はありません
-- `build-record.json`: 検査時のcheckout commit、dirty状態、image ID、外部image reference、tool manifest・Python例外policy・生成fileのSHA-256
+- `build-record.json`: 製品version、検査時のcheckout commit、dirty状態、image ID、外部image reference、tool manifest・Python例外policy・生成fileのSHA-256
 
 localのbuild recordは検査対象を追跡する未署名の記録です。既存imageを渡した場合、
 そのimageが記録中のcheckout commitからbuildされたことまでは証明しません。
@@ -130,7 +130,7 @@ artifactの存在だけで検査成功や本番適合を判断しないでくだ
 1. 対象commitの基本CI・Supply Chain CI・必要なreviewがすべて成功していること。
 2. 対象runからartifactを取得し、GitHub CLIの`gh attestation verify FILE --repo YusukeKato/ShellgeiOnlineJudge`
    で署名を検証する。結果のworkflow、source commit、refも承認対象と一致すること。
-3. build recordのfile hashとimage IDを照合する。frontendはE2E用の同一origin設定でbuildしているため、
+3. build recordの`product_version`・file hash・image IDと実imageのversionラベルを照合する。frontendはE2E用の同一origin設定でbuildしているため、
    本番の`VITE_*`等への適合も確認する。再buildした別の生成物へ元の署名を流用しないこと。
 4. 本番反映は[本番運用](./PRODUCTION.md)に従い、依頼者が承認した対象だけを扱うこと。
 

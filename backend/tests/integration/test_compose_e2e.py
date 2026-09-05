@@ -10,6 +10,7 @@ import docker
 import pytest
 
 from tests.compose_support import ComposeStack, ROOT
+from soj_shared.version import APP_VERSION
 from soj_shared.problem_repository import build_problem_repository
 
 
@@ -136,6 +137,7 @@ def test_private_runner_rejects_authentication_and_revision_mismatch(
     before = {container.id for container in stack.sandboxes()}
     script = """
 import json, os, urllib.request, urllib.error
+from soj_shared.version import APP_VERSION
 from soj_shared.problem_repository import load_problem_repository
 from soj_shared.runner_protocol import RUNNER_PROTOCOL_VERSION, RUNNER_EXECUTE_PATH
 repository = load_problem_repository()
@@ -226,6 +228,7 @@ def test_browser_submissions_and_display(stack: ComposeStack) -> None:
         stack.browser_image,
         name=f"{stack.project}-browser",
         init=True,
+        environment={"SOJ_EXPECTED_VERSION": APP_VERSION},
         network=f"{stack.project}_frontend_backend",
         shm_size="256m",
         cap_drop=["ALL"],

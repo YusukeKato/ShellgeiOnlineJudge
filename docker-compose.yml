@@ -123,7 +123,6 @@ services:
       args:
         VITE_SOJ_URL: ${VITE_SOJ_URL:-https://shellgei-online-judge.com}
         VITE_UPDATE_DATE: ${VITE_UPDATE_DATE:-}
-        VITE_VERSION: ${VITE_VERSION:-}
         VITE_X_URL: ${VITE_X_URL:-}
         VITE_GITHUB_REPO_URL: ${VITE_GITHUB_REPO_URL:-}
         VITE_GITHUB_AUTHOR_URL: ${VITE_GITHUB_AUTHOR_URL:-}

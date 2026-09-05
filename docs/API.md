@@ -1,5 +1,8 @@
 # Public API
 
+OpenAPIの`info.version`は[製品versionの正本](./RELEASE.md#バージョンの正本)に従います。
+responseの`api_version: 3`はAPI互換性を表し、製品versionとは別です。
+
 この文書は、ShellgeiOnlineJudgeの外部公開HTTP API contractの正本です。
 request bodyや接続の制限は
 [セキュリティモデルと制約](../SECURITY.md#ネットワークとhttpの制約)、
