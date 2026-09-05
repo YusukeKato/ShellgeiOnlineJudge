@@ -18,12 +18,12 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `5f8fe00`とSOJ-020のreview差分
-- commit subject: `docs: record approved R3-026 cleanup`
+- 確認対象commit: `17e8ee7`
+- commit subject: `security: remove database host exposure and require explicit URL (SOJ-020)`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
 - 直近の変更: SOJ-020のDB host port廃止と接続URL必須化。
-  [実装と検証記録](#soj-020-dbのhost-port廃止と接続設定の必須化)を参照。実装・検証完了、review待ち・未commit
+  [実装と検証記録](#soj-020-dbのhost-port廃止と接続設定の必須化)を参照。依頼者のreview承認後に`17e8ee7`でcommit済み
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
 baseline以降に変更がある場合は、先に差分を確認してください。
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 5f8fe00
+git diff 17e8ee7
 ```
 
 ## Current security status
@@ -267,7 +267,7 @@ Pythonの期限付き例外（`4120a76`）:
 | RES-025 | frontend nginx設定をimageへ組み込み、hostからのwritable bind mountを削除 | `eff33ca` | Compose静的test、frontend image build |
 | RES-026 | SOJ-013: revision拒否と実行・判定・保存を実Composeで検証し、DB/runner停止復帰・browser E2Eを追加 | `48a0670` | Compose E2E、隔離設定・cleanup test |
 | RES-027 | SOJ-011: DB管理serviceと最小権限app roleを分離し、backendはschema・権限を読み取り検証 | `4eec07b` | 実PostgreSQLの禁止操作・旧行保持・rollback、Compose全問題・保存回帰 |
-| RES-028 | SOJ-020: DBのhost portを廃止し、backendの明示DB URLと安全な設定診断を必須化 | review待ち・未commit | DB設定process test、Compose port静的test・実port非公開・全問題/保存E2E |
+| RES-028 | SOJ-020: DBのhost portを廃止し、backendの明示DB URLと安全な設定診断を必須化 | `17e8ee7` | DB設定process test、Compose port静的test・実port非公開・全問題/保存E2E |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
 RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020、RES-021、RES-022、
@@ -303,7 +303,7 @@ Status: Resolved（依頼者のreview承認後に`4eec07b`でcommit済み）。
 
 ### SOJ-020: DBのhost port廃止と接続設定の必須化
 
-Status: `Resolved`（2026-09-05、実装・検証完了、依頼者のreview・commit指示待ち）。
+Status: `Resolved`（2026-09-05、依頼者のreview承認後に`17e8ee7`でcommit済み）。
 SOJ-011で内部network上の管理serviceが整ったため、DB管理手段を理由とする延期を解除しました。
 
 - ComposeのDB port公開を廃止し、backendの既定DB URLを削除しました。
