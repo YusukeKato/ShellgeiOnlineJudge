@@ -48,8 +48,8 @@ repositoryのID集合検査と問題詳細APIが依存しているため、単�
 ## Schema v3
 
 schema v3の実行可能な型定義は
-[`backend/models/problem.py`](../backend/models/problem.py)、読込とYAML変換は
-[`backend/scripts/problem_schema.py`](../backend/scripts/problem_schema.py)にあります。
+[`backend/soj_shared/models/problem.py`](../backend/soj_shared/models/problem.py)、読込とYAML変換は
+[`backend/soj_shared/problem_schema.py`](../backend/soj_shared/problem_schema.py)にあります。
 未知field、必須field不足、YAMLの重複key、version不一致は拒否します。
 
 最上位fieldは次のとおりです。
@@ -86,7 +86,7 @@ Docker回帰を実行してください。
 ### Text判定
 
 text判定の仕様と期待出力、構造化された実行結果を受け取る純粋関数は、
-[`backend/scripts/judge.py`](../backend/scripts/judge.py)を正本とします。
+[`backend/soj_backend/judge.py`](../backend/soj_backend/judge.py)を正本とします。
 比較時はCRを除去し、末尾に連続するspaceとnewlineを無視します。途中のspace、
 newline、tab、`NULL`等のliteral文字列は区別し、画像は判定に使用しません。
 
@@ -122,7 +122,7 @@ legacy YAMLを1問移行する場合はbackend directoryから実行します。
 ```sh
 cd backend
 migration_output_dir="$(mktemp -d)"
-poetry run python -m scripts.problem_migration \
+poetry run python -m soj_tools.problem_migration \
   ../problems/yaml_data/STANDARD-00000001.yaml \
   "${migration_output_dir}/STANDARD-00000001.yaml"
 ```
@@ -147,7 +147,7 @@ YAMLの書式だけを変えて意味が同じ場合はrevisionは変わりま�
 
 ```sh
 cd backend
-poetry run python -m scripts.problem_manifest \
+poetry run python -m soj_tools.problem_manifest \
   ../problems/v3 ../problems/image \
   --output ../problems/v3/manifest.json
 ```

@@ -11,22 +11,22 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session, sessionmaker
 
-import scripts.database_migrations as migration_module
-from migrations.versions import v0001_legacy_execution_logs
-from models.execution import ExecutionResult, ExecutionStatus
-from models.execution_log import ExecutionLogEntry
-from models.model_db import ExecutionLog
-from scripts.database_migrations import (
+import soj_backend.database_migrations as migration_module
+from soj_backend.migrations.versions import v0001_legacy_execution_logs
+from soj_shared.models.execution import ExecutionResult, ExecutionStatus
+from soj_backend.models.execution_log import ExecutionLogEntry
+from soj_backend.models.model_db import ExecutionLog
+from soj_backend.database_migrations import (
     DatabaseMigration,
     DatabaseMigrationError,
     migrate_database,
 )
-from scripts.execution_log_repository import (
+from soj_backend.execution_log_repository import (
     ExecutionLogRepo,
     ExecutionLogRepositoryError,
 )
-from scripts.execution_log_retention import prune_execution_logs
-from scripts.judge import JudgeResult, JudgeVerdict
+from soj_backend.execution_log_retention import prune_execution_logs
+from soj_backend.judge import JudgeResult, JudgeVerdict
 from tests.postgres_support import database_image
 
 

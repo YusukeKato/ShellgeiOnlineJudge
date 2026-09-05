@@ -6,8 +6,8 @@ from pathlib import Path
 import docker
 import pytest
 
-from models.execution import ExecutionStatus
-from scripts.container_manager import (
+from soj_shared.models.execution import ExecutionStatus
+from soj_runner.container_manager import (
     DEFAULT_IMAGE_ID,
     INSTANCE_LABEL,
     MANAGED_LABEL,
@@ -17,8 +17,8 @@ from scripts.container_manager import (
     SANDBOX_WORK_DIRECTORY,
     ContainerManager,
 )
-from scripts.run_shellgei import ShellgeiDockerClient
-from scripts.problem_repository import build_problem_repository
+from soj_runner.run_shellgei import ShellgeiDockerClient
+from soj_shared.problem_repository import build_problem_repository
 
 
 pytestmark = [

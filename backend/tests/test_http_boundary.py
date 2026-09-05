@@ -1,7 +1,7 @@
 import asyncio
 from pathlib import Path
 
-import main as backend_main
+import soj_backend.main as backend_main
 from starlette.types import Message, Scope
 
 
@@ -92,6 +92,6 @@ def test_backend_runtime_disables_proxy_header_parsing() -> None:
     dockerfile = BACKEND_DOCKERFILE.read_text(encoding="utf-8")
 
     assert (
-        'CMD ["uvicorn", "main:app", "--host", "0.0.0.0", '
+        'CMD ["uvicorn", "soj_backend.main:app", "--host", "0.0.0.0", '
         '"--port", "8000", "--no-proxy-headers", "--no-access-log"]' in dockerfile
     )

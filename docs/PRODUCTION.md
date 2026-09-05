@@ -433,7 +433,7 @@ webrootなどへ変更するか、更新時の安全な停止・再開方法を�
 ### image digestの更新
 
 外部image referenceの正本は各Dockerfileと
-`backend/scripts/container_manager.py`です。通常のdeployでは固定済みdigestを
+`backend/soj_runner/container_manager.py`です。通常のdeployでは固定済みdigestを
 `--pull`しても同じartifactが取得され、tagの移動だけでは内容が変わりません。
 
 imageを更新するときだけ、次の順序で候補を確認します。
@@ -649,7 +649,7 @@ printf 'compose config exit=%s\n' "$?"
 ```sh
 ./deploy/rootless-compose.sh build --pull
 ./deploy/rootless-compose.sh run --rm --no-deps backend \
-  python -m scripts.database_migrations head
+  python -m soj_backend.database_migrations head
 ./deploy/rootless-compose.sh up -d --remove-orphans
 ./deploy/rootless-compose.sh ps
 ./deploy/rootless-compose.sh logs --tail=100 db runner backend frontend
@@ -687,7 +687,7 @@ frontendとbackendを停止し、現在のbackend imageでlegacy revisionへ戻�
 ```sh
 ./deploy/rootless-compose.sh stop frontend backend
 ./deploy/rootless-compose.sh run --rm --no-deps backend \
-  python -m scripts.database_migrations 0001_legacy_execution_logs
+  python -m soj_backend.database_migrations 0001_legacy_execution_logs
 ```
 
 このrollbackは構造化列だけを削除し、従来の`output`、`judge`を含むlegacy列と行を残します。

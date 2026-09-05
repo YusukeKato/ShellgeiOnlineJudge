@@ -2,9 +2,9 @@ import pytest
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Connection
 
-import scripts.database_migrations as migration_module
-from migrations.versions import v0001_legacy_execution_logs
-from scripts.database_migrations import (
+import soj_backend.database_migrations as migration_module
+from soj_backend.migrations.versions import v0001_legacy_execution_logs
+from soj_backend.database_migrations import (
     DatabaseMigration,
     DatabaseMigrationError,
     migrate_database,

@@ -5,10 +5,10 @@ from pathlib import Path
 
 import yaml
 
-from models.execution import ExecutionResult, ExecutionStatus
-from scripts.judge import JudgeVerdict, ShellgeiJudge
-from scripts.problem_repository import build_problem_repository
-from scripts.runner_protocol import ExecutionArtifact
+from soj_shared.models.execution import ExecutionResult, ExecutionStatus
+from soj_backend.judge import JudgeVerdict, ShellgeiJudge
+from soj_shared.problem_repository import build_problem_repository
+from soj_shared.runner_protocol import ExecutionArtifact
 
 
 PROBLEMS_DIR = Path(__file__).resolve().parents[2] / "problems"

@@ -14,7 +14,7 @@ from typing import Any
 
 import docker
 
-from scripts.container_manager import DEFAULT_IMAGE_ID
+from soj_runner.container_manager import DEFAULT_IMAGE_ID
 
 
 ROOT = Path(__file__).resolve().parents[1]

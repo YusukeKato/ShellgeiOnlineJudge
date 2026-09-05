@@ -33,7 +33,7 @@ services:
       target: runner
     container_name: soj-runner
     restart: always
-    command: ["uvicorn", "runner_main:app", "--host", "0.0.0.0", "--port", "8001", "--no-proxy-headers", "--no-access-log"]
+    command: ["uvicorn", "soj_runner.main:app", "--host", "0.0.0.0", "--port", "8001", "--no-proxy-headers", "--no-access-log"]
     volumes:
       # Docker socketは外部HTTPを処理しないrunnerだけにマウントする。
       - ${DOCKER_SOCKET_PATH:?Set DOCKER_SOCKET_PATH to the rootless Docker socket}:/run/docker.sock

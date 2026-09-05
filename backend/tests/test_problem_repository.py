@@ -5,10 +5,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-import main as backend_main
-import scripts.problem_repository as problem_repository_module
-from models.problem import ProblemDefinitionV3
-from scripts.problem_repository import (
+import soj_backend.main as backend_main
+import soj_shared.problem_repository as problem_repository_module
+from soj_shared.models.problem import ProblemDefinitionV3
+from soj_shared.problem_repository import (
     ProblemRepositoryError,
     build_problem_manifest,
     build_problem_repository,
@@ -16,7 +16,7 @@ from scripts.problem_repository import (
     load_problem_repository,
     render_problem_manifest,
 )
-from scripts.problem_schema import dump_problem_definition, load_problem_definition
+from soj_shared.problem_schema import dump_problem_definition, load_problem_definition
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]

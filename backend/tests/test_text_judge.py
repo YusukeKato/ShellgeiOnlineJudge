@@ -1,13 +1,13 @@
 import pytest
 from pydantic import ValidationError
 
-from models.problem import (
+from soj_shared.models.problem import (
     ExecutionSpecification,
     ExitCodePolicy,
     StderrPolicy,
     TextJudgeSpecification,
 )
-from scripts.judge import (
+from soj_backend.judge import (
     JudgeReason,
     JudgeResult,
     JudgeVerdict,

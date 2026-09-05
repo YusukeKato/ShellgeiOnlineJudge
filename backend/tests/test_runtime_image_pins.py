@@ -3,7 +3,7 @@ from pathlib import Path
 
 import yaml
 
-from scripts.container_manager import DEFAULT_IMAGE_ID
+from soj_runner.container_manager import DEFAULT_IMAGE_ID
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]

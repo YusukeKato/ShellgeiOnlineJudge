@@ -3,7 +3,7 @@ import asyncio
 import pytest
 from pydantic import ValidationError
 
-from scripts.runner_protocol import (
+from soj_shared.runner_protocol import (
     MAX_CAPTURED_OUTPUT_CHARS,
     MAX_RUNNER_IMAGE_BASE64_CHARS,
     RUNNER_PROTOCOL_VERSION,

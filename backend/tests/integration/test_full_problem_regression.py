@@ -3,11 +3,11 @@ import os
 from pathlib import Path
 
 import pytest
-from scripts.problem_schema import load_problem_definition
-from scripts.problem_repository import build_problem_repository
-from scripts.container_manager import ContainerManager
-from scripts.judge import JudgeVerdict, ShellgeiJudge
-from scripts.run_shellgei import ShellgeiDockerClient
+from soj_shared.problem_schema import load_problem_definition
+from soj_shared.problem_repository import build_problem_repository
+from soj_runner.container_manager import ContainerManager
+from soj_backend.judge import JudgeVerdict, ShellgeiJudge
+from soj_runner.run_shellgei import ShellgeiDockerClient
 
 
 pytestmark = [

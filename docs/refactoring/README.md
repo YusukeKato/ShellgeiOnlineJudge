@@ -23,10 +23,10 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 29
 - Ready: 0
-- Planned: 3
-- Pending (`Ready` + `Planned`): 3
+- Planned: 2
+- Pending (`Ready` + `Planned`): 2
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 26
 - Blocked: 0
 - Deferred: 0
@@ -181,7 +181,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-026 | P3 | Planned | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | - |
 | R3-027 | P3 | Planned | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | - |
 | R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
-| R3-029 | P2 | Planned | F | Organize shared, backend, and runner packages | R3-023, R3-024 | - |
+| R3-029 | P2 | Review | F | Organize shared, backend, and runner packages | R3-023, R3-024 | - |
 
 Size estimates use `XS` (under about 100 changed lines), `S` (100--250),
 `M` (250--600), and `L` (over 600 or a large mechanical data migration).
@@ -193,7 +193,7 @@ They are planning aids, not acceptance criteria.
 
 - Priority / Status: P1 / `Completed`
 - Goal: private runnerへの固定内部HTTP通信が`HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY`等を継承しないようにし、credentialとrequestの外部proxy送信を防ぐ
-- Main files/components: `backend/scripts/runner_client.py`、`backend/tests/test_runner_boundary.py`、security tracker
+- Main files/components: `backend/soj_backend/runner_client.py`、`backend/tests/test_runner_boundary.py`、security tracker
 - Dependencies: なし
 - Risk: Low。内部clientに限定するが、timeout、Bearer認証、response size上限を維持する必要がある
 - Expected tests: proxy環境変数を設定した境界test、runner client既存test、ruff、format、mypy、non-Docker pytest
@@ -204,7 +204,7 @@ They are planning aids, not acceptance criteria.
 
 - Priority / Status: P1 / `Completed`
 - Goal: trailing-slash redirect、Host、forwarded headerの信頼境界を明示し、外側proxy配下でも安全なURLを生成する
-- Main files/components: `backend/main.py`、`frontend/nginx/default.conf`、public API test、運用文書
+- Main files/components: `backend/soj_backend/main.py`、`frontend/nginx/default.conf`、public API test、運用文書
 - Dependencies: R3-001
 - Risk: Medium。既存URL、reverse proxy、health checkとの互換性を確認する
 - Expected tests: ASGI redirect/Host test、nginx静的test、可能なら実nginx integration test
@@ -215,7 +215,7 @@ They are planning aids, not acceptance criteria.
 
 - Priority / Status: P1 / `Completed`
 - Goal: NUL等の保存不能値、DB stall、commit失敗がevent loop停止やrollback漏れを起こさない境界を先に整える
-- Main files/components: `backend/api/api_shellgei.py`、`backend/scripts/database.py`、retention処理、DB test
+- Main files/components: `backend/soj_backend/api/api_shellgei.py`、`backend/soj_backend/database.py`、retention処理、DB test
 - Dependencies: なし
 - Risk: Medium--High。保存内容とHTTP応答、既存DBのtransaction behaviorへ影響する
 - Expected tests: SQLite unit、NUL正規化、timeout/rollback、実PostgreSQL failure/recovery integration test
@@ -226,7 +226,7 @@ They are planning aids, not acceptance criteria.
 
 - Priority / Status: P1 / `Completed`
 - Goal: 宣言するPython対応範囲、CI、production imageを一致させ、Python 3.14で確認されたtimeout/concurrency差異を解消または明示的に対象外とする
-- Main files/components: `pyproject.toml`、CI workflow、`backend/scripts/run_shellgei.py`、関連test、開発文書
+- Main files/components: `pyproject.toml`、CI workflow、`backend/soj_runner/run_shellgei.py`、関連test、開発文書
 - Dependencies: なし
 - Risk: Medium。support policyまたは並行実行のcleanup timingを変更する可能性がある
 - Expected tests: 対応Python matrix、concurrency/timeout test、基本Python検査一式
@@ -579,15 +579,21 @@ They are planning aids, not acceptance criteria.
 
 ### R3-029: Organize shared, backend, and runner packages
 
-- Priority / Status: P2 / `Planned`
+- Priority / Status: P2 / `Review`
 - Goal: `scripts/`・`models/`へ混在している共有・backend専用・runner専用コードを責務別のdirectory/packageへ整理し、Dockerfileのfile単位COPY列挙をdirectory単位のCOPYへ置き換える
 - Main files/components: `backend/`のpackage構成・import、`backend/Dockerfile`、entrypoint、migration CLI、test・CI設定、backend/development/production文書
 - Dependencies: R3-023、R3-024。image境界と実Compose経路の回帰基準を確保してから移動する
-- Scope: directory名・配置は着手時にimport依存を調査して決める。共有packageが専用API・DB・Docker実装へ依存しない境界を明示し、必要なmodel分離とimport修正を行う。不要資産の削除はR3-026と区別する
+- Scope: `soj_shared`・`soj_backend`・`soj_runner`へ実装を配置し、問題整備CLIは本番外の`soj_tools`へ分ける。共有logから提出結果・judgeへの依存を外すためstatus enumを分離し、共通request検証とbackend専用responseも分ける。判定とPillowをbackendへ限定する。旧helperの削除はR3-026と区別する
 - Acceptance: file追加ごとにDockerfileの列挙を修正せずに済み、各imageへ逆側の専用コードやtestが混入しない。公開API、runner protocol、判定、DB schema、sandbox制限を維持する
 - Risk: Medium。import漏れ、循環import、問題dataの相対path、起動・migration commandの破損を防ぐ
 - Expected tests: packageのimport方向・収録境界、両本番imageのbuild/import/非root起動、migration CLI、基本Python検査、rootless Compose E2E・Docker統合・全問題回帰、文書commandとlink検査
 - Size: M--L
+- Review validation: 2026-09-05、境界test 4件のREDからGREENを確認。Python 3.14のruff・format・mypyと非Docker 577件、rootless Docker 20件（Compose・直接sandboxの全92問、browser、停止復帰、migration・DB保存）が成功。
+  最終imageを再build後、全module import・非root・収録境界・DB保存の4件も再実行して成功した。
+  公開OpenAPIと内部protocolのschemaは変更前snapshotと一致し、新CLIが生成するmanifestも既存fileと一致した。
+  両imageの同一DB scanはPython例外適用後の停止対象0件を維持。actionlint、rootless Compose config、文書link、secret scanが成功。
+  frontendのコード・依存を変更していないため基本5検査は再実行せず、検証済みfrontend・browser imageをCompose E2Eで使用した。
+  GitHub上のCI・署名、本番反映は未実施。旧内部Python module名には互換shimを設けず、運用commandを新module名へ更新する。
 - Completion: commit `-` / date `-` / note `-`
 
 ### R3-026: Remove obsolete code, assets, scripts, and dependencies
@@ -711,6 +717,7 @@ Git履歴から分からないpriority、scope、順序、review gateの変更�
 | 2026-09-05 | SOJ-022 | 次の対策実装依頼に対し、CI停止の原因となるP1の依存是正を優先。アプリ依存・nginx更新と残存image課題はsecurity trackerで管理し、R3-029・R3-026の範囲は維持する | `cb044c7` |
 | 2026-09-05 | SOJ-022 | アプリ依存是正に続きDB imageを独立単位で是正。公式PostgreSQL 15からOpenSSL・gosuだけを更新し、既存volume互換性とCIのscan対象一致を検証する。R3 package再配置・DB role分離は含めない | `6b59c19` |
 | 2026-09-05 | SOJ-022 | Pythonの判定不一致を実装hash確認付きの期限付き例外で扱う。3.13候補は内蔵Expatの修正後退で不採用とし、runtime検査を補強。R3-029等の配置整理は含めない | `4120a76` |
+| 2026-09-05 | R3-029 | 依存unit完了後の次項目として責務別package整理を実施。共有status/requestを分離し、判定とPillowをbackendへ限定。起動・migration・問題CLIのmodule名を更新し、公開API・内部protocol・DB・sandbox仕様を維持する。SOJ-022のsandbox是正とR3-026の旧資産削除は継続課題として分ける | - |
 
 ## Tracker history
 

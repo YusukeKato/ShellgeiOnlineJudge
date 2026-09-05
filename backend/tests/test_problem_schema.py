@@ -4,15 +4,15 @@ from pathlib import Path
 import pytest
 import yaml
 
-from models.problem import MAX_ARTIFACT_BYTES, MAX_FIXTURE_BYTES
-from scripts.problem_migration import (
+from soj_shared.models.problem import MAX_ARTIFACT_BYTES, MAX_FIXTURE_BYTES
+from soj_tools.problem_migration import (
     ProblemMigrationError,
     main as migration_main,
     migrate_legacy_file,
     migrate_legacy_mapping,
     write_migrated_problem,
 )
-from scripts.problem_schema import (
+from soj_shared.problem_schema import (
     MAX_PROBLEM_SCHEMA_FILE_BYTES,
     ProblemSchemaError,
     dump_problem_definition,

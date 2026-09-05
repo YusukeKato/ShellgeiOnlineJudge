@@ -10,23 +10,20 @@ import pytest
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
-import api.api_shellgei as api_shellgei
-import runner_main
-import scripts.runner_client as runner_client_module
-from models.model_shellgei import ShellgeiData
-from models.submission import (
-    SubmissionPersistenceStatus,
-    SubmissionResult,
-    SubmissionStatus,
-)
-from scripts.judge import JudgeResult, JudgeVerdict
-from scripts.runner_client import (
+import soj_backend.api.api_shellgei as api_shellgei
+import soj_runner.main as runner_main
+import soj_backend.runner_client as runner_client_module
+from soj_shared.submission_request import ShellgeiData
+from soj_shared.submission_status import SubmissionPersistenceStatus, SubmissionStatus
+from soj_backend.models.submission import SubmissionResult
+from soj_backend.judge import JudgeResult, JudgeVerdict
+from soj_backend.runner_client import (
     RUNNER_BASE_URL,
     RunnerBusyError,
     RunnerClient,
     RunnerUnavailableError,
 )
-from scripts.runner_protocol import (
+from soj_shared.runner_protocol import (
     RUNNER_EXECUTE_PATH,
     RUNNER_PROTOCOL_VERSION,
     ExecutionArtifact,
@@ -39,7 +36,7 @@ from scripts.runner_protocol import (
     RunnerReadinessStatus,
     get_runner_shared_secret,
 )
-from scripts.structured_logging import SAFE_EVENT_LOGGER_NAME
+from soj_shared.structured_logging import SAFE_EVENT_LOGGER_NAME
 
 
 VALID_SECRET = "a" * 64

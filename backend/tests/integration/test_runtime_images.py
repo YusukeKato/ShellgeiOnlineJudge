@@ -11,8 +11,8 @@ import docker
 import pytest
 import yaml
 
-from scripts.container_manager import OWNER_LABEL
-from scripts.problem_repository import build_problem_repository
+from soj_runner.container_manager import OWNER_LABEL
+from soj_shared.problem_repository import build_problem_repository
 from tests.postgres_support import database_image
 
 
@@ -68,23 +68,32 @@ import importlib
 import importlib.metadata
 import json
 import os
+import pkgutil
 import pyexpat
 import sys
 from pathlib import Path
-from scripts.problem_repository import load_problem_repository
+from soj_shared.problem_repository import load_problem_repository
 
 service = os.environ['SOJ_TEST_SERVICE']
 # SOJ-022の修正版を維持し、scannerが取りこぼす内蔵ExpatのCVE-2026-72522も再導入しない。
 assert sys.version_info[:3] >= (3, 12, 14)
 assert pyexpat.version_info >= (2, 8, 3)
-importlib.import_module('main' if service == 'backend' else 'runner_main')
+package = importlib.import_module('soj_backend' if service == 'backend' else 'soj_runner')
+shared = importlib.import_module('soj_shared')
+for base in (shared, package):
+    for module in pkgutil.walk_packages(base.__path__, base.__name__ + '.'):
+        importlib.import_module(module.name)
 load_problem_repository()
 assert os.getuid() == os.getgid() == 10001
 assert not os.access('/app/backend', os.W_OK)
 assert not Path('/run/docker.sock').exists()
 assert not Path('tests').exists()
+assert not list(Path('/app/backend').rglob('test_*.py'))
 assert not Path('problems/yaml_data').exists()
 assert not Path('/build').exists()
+assert not Path('soj_tools').exists()
+assert not Path('scripts').exists()
+assert not Path('models').exists()
 assert not list(Path('/app').rglob('poetry.lock'))
 assert not list(Path('/app').rglob('pyproject.toml'))
 assert 'CapEff:\\t0000000000000000' in Path('/proc/self/status').read_text()
@@ -93,17 +102,14 @@ assert not packages.intersection({'poetry', 'pytest', 'ruff', 'mypy', 'gunicorn'
 assert not any(name.startswith('types-') for name in packages)
 if service == 'backend':
     assert 'docker' not in packages
-    assert {'sqlalchemy', 'psycopg2-binary'} <= packages
-    assert not Path('runner_main.py').exists()
-    assert not Path('scripts/container_manager.py').exists()
-    assert not Path('scripts/sandbox_executor.py').exists()
+    assert {'sqlalchemy', 'psycopg2-binary', 'pillow'} <= packages
+    assert not Path('soj_runner').exists()
+    assert importlib.util.find_spec('soj_runner') is None
 else:
     assert 'docker' in packages
-    assert not packages.intersection({'sqlalchemy', 'psycopg2-binary'})
-    assert not Path('main.py').exists()
-    assert not Path('api').exists()
-    assert not Path('migrations').exists()
-    assert not Path('scripts/database.py').exists()
+    assert not packages.intersection({'sqlalchemy', 'psycopg2-binary', 'pillow'})
+    assert not Path('soj_backend').exists()
+    assert importlib.util.find_spec('soj_backend') is None
 print(json.dumps({'service': service, 'uid': os.getuid(), 'packages': sorted(packages)}))
 """
     output = runtime_client.containers.run(

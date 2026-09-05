@@ -5,9 +5,9 @@ from types import SimpleNamespace
 
 import pytest
 
-import api.api_shellgei as api_shellgei
-from scripts.problem_catalog import build_problem_catalog
-from scripts.problem_schema import load_problem_definition
+import soj_backend.api.api_shellgei as api_shellgei
+from soj_shared.problem_catalog import build_problem_catalog
+from soj_shared.problem_schema import load_problem_definition
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]

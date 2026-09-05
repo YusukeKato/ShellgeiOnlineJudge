@@ -15,7 +15,7 @@ from typing import Any
 
 import yaml
 
-from scripts.container_manager import OWNER_LABEL
+from soj_runner.container_manager import OWNER_LABEL
 from tests.postgres_support import database_image
 
 

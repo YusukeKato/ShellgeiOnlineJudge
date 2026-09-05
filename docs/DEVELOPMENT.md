@@ -239,7 +239,7 @@ Docker統合テストに含まれます。開発DBの現在schemaを明示的に
 
 ```sh
 cd backend
-poetry run python -m scripts.database_migrations head
+poetry run python -m soj_backend.database_migrations head
 cd ..
 ```
 

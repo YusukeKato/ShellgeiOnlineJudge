@@ -13,7 +13,7 @@ def test_runtime_dependency_groups_separate_docker_database_and_development() ->
         name: set(group["dependencies"]) for name, group in poetry["group"].items()
     }
 
-    assert groups["backend"] == {"sqlalchemy", "psycopg2-binary"}
+    assert groups["backend"] == {"sqlalchemy", "psycopg2-binary", "pillow"}
     assert groups["runner"] == {"docker"}
     assert {"pytest", "ruff", "mypy"} <= groups["dev"]
     assert groups["legacy"] == {"gunicorn", "pytz"}

@@ -5,8 +5,8 @@ from typing import Any
 import docker
 import pytest
 
-import scripts.container_manager as container_manager_module
-from scripts.container_manager import (
+import soj_runner.container_manager as container_manager_module
+from soj_runner.container_manager import (
     CgroupResourceLimitsRequiredError,
     ContainerCapacityError,
     ContainerManager,

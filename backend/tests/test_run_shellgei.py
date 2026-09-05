@@ -8,16 +8,16 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-import scripts.run_shellgei as run_shellgei_module
-from models.execution import ExecutionResult, ExecutionStatus
-from scripts.container_manager import SANDBOX_WORK_DIRECTORY
-from scripts.run_shellgei import (
+import soj_runner.run_shellgei as run_shellgei_module
+from soj_shared.models.execution import ExecutionResult, ExecutionStatus
+from soj_runner.container_manager import SANDBOX_WORK_DIRECTORY
+from soj_runner.run_shellgei import (
     MAX_IMAGE_BYTES,
     SandboxBusyError,
     ShellgeiDockerClient,
 )
-from scripts.problem_repository import build_problem_repository
-from scripts.sandbox_executor import (
+from soj_shared.problem_repository import build_problem_repository
+from soj_runner.sandbox_executor import (
     EXECUTION_ARCHIVE_ENVIRONMENT,
     EXECUTION_ARCHIVE_EXTRACT_COMMAND,
 )

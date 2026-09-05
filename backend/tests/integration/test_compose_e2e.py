@@ -10,7 +10,7 @@ import docker
 import pytest
 
 from tests.compose_support import ComposeStack, ROOT
-from scripts.problem_repository import build_problem_repository
+from soj_shared.problem_repository import build_problem_repository
 
 
 pytestmark = [
@@ -81,8 +81,8 @@ def db_rows(stack: ComposeStack, ids: list[int]) -> list[dict[str, Any]]:
     script = """
 import json, sys
 from sqlalchemy import select
-from scripts.database import SessionLocal
-from models.model_db import ExecutionLog
+from soj_backend.database import SessionLocal
+from soj_backend.models.model_db import ExecutionLog
 with SessionLocal() as session:
     rows = session.execute(select(ExecutionLog).where(ExecutionLog.id.in_(json.loads(sys.argv[1])))).scalars()
     print(json.dumps([{'id': row.id, 'verdict': row.verdict, 'status': row.execution_status} for row in rows]))
@@ -132,8 +132,8 @@ def test_private_runner_rejects_authentication_and_revision_mismatch(
     before = {container.id for container in stack.sandboxes()}
     script = """
 import json, os, urllib.request, urllib.error
-from scripts.problem_repository import load_problem_repository
-from scripts.runner_protocol import RUNNER_PROTOCOL_VERSION, RUNNER_EXECUTE_PATH
+from soj_shared.problem_repository import load_problem_repository
+from soj_shared.runner_protocol import RUNNER_PROTOCOL_VERSION, RUNNER_EXECUTE_PATH
 repository = load_problem_repository()
 payload = dict(protocol_version=RUNNER_PROTOCOL_VERSION, request_id='a'*32,
                problem_revision=repository.revision, shellgei='echo test', problem_id='STANDARD-00000001')

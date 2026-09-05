@@ -23,33 +23,19 @@ RUN groupadd --gid 10001 soj \
     && useradd --uid 10001 --gid 10001 --no-create-home --home-dir /tmp --shell /usr/sbin/nologin soj
 WORKDIR /app/backend
 
-# import境界に必要な共有moduleと現行問題dataだけを収録する。所有者はrootのままにする。
-COPY backend/models/__init__.py backend/models/execution.py backend/models/model_shellgei.py \
-     backend/models/problem.py backend/models/submission.py ./models/
-COPY backend/scripts/__init__.py backend/scripts/async_thread.py backend/scripts/input_validation.py \
-     backend/scripts/judge.py backend/scripts/problem_catalog.py backend/scripts/problem_repository.py \
-     backend/scripts/problem_schema.py backend/scripts/request_context.py backend/scripts/runner_protocol.py \
-     backend/scripts/structured_logging.py ./scripts/
+# 専用API・DB・Docker実装へ依存しない共有packageと問題dataを収録する。所有者はrootのままにする。
+COPY backend/soj_shared/ ./soj_shared/
 COPY problems/v3/ ./problems/v3/
 COPY problems/image/ ./problems/image/
 USER 10001:10001
 
 FROM runtime-common AS runner
 COPY --from=runner-dependencies /opt/venv /opt/venv
-COPY backend/runner_main.py ./
-COPY backend/scripts/admission_control.py backend/scripts/container_manager.py backend/scripts/execution_archive.py \
-     backend/scripts/run_shellgei.py backend/scripts/runner_http_security.py backend/scripts/sandbox_executor.py \
-     backend/scripts/sandbox_limits.py ./scripts/
-CMD ["uvicorn", "runner_main:app", "--host", "0.0.0.0", "--port", "8001", "--no-proxy-headers", "--no-access-log"]
+COPY backend/soj_runner/ ./soj_runner/
+CMD ["uvicorn", "soj_runner.main:app", "--host", "0.0.0.0", "--port", "8001", "--no-proxy-headers", "--no-access-log"]
 
 # 最終stageを公開backendとし、target未指定の既存buildも公開API用imageを生成する。
 FROM runtime-common AS backend
 COPY --from=backend-dependencies /opt/venv /opt/venv
-COPY backend/main.py ./
-COPY backend/api/ ./api/
-COPY backend/migrations/ ./migrations/
-COPY backend/models/execution_log.py backend/models/model_db.py backend/models/public_api.py ./models/
-COPY backend/scripts/database.py backend/scripts/database_migrations.py backend/scripts/execution_log_repository.py \
-     backend/scripts/execution_log_retention.py backend/scripts/request_correlation.py backend/scripts/runner_client.py \
-     backend/scripts/submit_solution.py ./scripts/
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--no-proxy-headers", "--no-access-log"]
+COPY backend/soj_backend/ ./soj_backend/
+CMD ["uvicorn", "soj_backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-proxy-headers", "--no-access-log"]

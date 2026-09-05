@@ -18,12 +18,12 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `4120a76`
-- commit subject: `security: verify and expire Python scan exceptions for SOJ-022`
+- 確認対象commit: `66bbc24`とR3-029のpackage再配置review待ち差分
+- commit subject: `docs: record approved Python scan exceptions and baseline`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の実行検証: SOJ-022のPython実装確認・期限付き例外・実scannerとruntime境界検査。
-  変更範囲と結果は[SOJ-022の是正記録](#soj-022依存imageの是正記録)を参照
+- 直近の変更: R3-029の責務別package再配置。共有から専用実装への依存を外し、判定・Pillowをbackendへ限定。
+  検証結果は[リファクタリングtracker](../refactoring/README.md#r3-029-organize-shared-backend-and-runner-packages)を参照
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
 baseline以降に変更がある場合は、先に差分を確認してください。
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 4120a76
+git diff 66bbc24
 ```
 
 ## Current security status
@@ -69,7 +69,7 @@ Statusは次の意味で使用します。
 - `SOJ-002` — Medium / P1 / Partially resolved
   - 概要: 起動時回収とDocker失敗時の追跡は実装したが、
     daemon単独のsandbox有効期限はない
-  - 関連: `backend/scripts/container_manager.py`、`backend/runner_main.py`
+  - 関連: `backend/soj_runner/container_manager.py`、`backend/soj_runner/main.py`
   - 次: runner再起動・回収失敗の監視と、独立した期限強制の要否を判断
 - `SOJ-006` — Medium / P1 / Deferred
   - 概要: runner侵害時の影響が同一daemon上のDB、frontend、TLS鍵へ及ぶ
@@ -82,7 +82,7 @@ Statusは次の意味で使用します。
 - `SOJ-012` — Medium / P2 / Partially resolved
   - 概要: DB行数・Docker service logは制限したが、host I/O、
     DB volume、image cacheにquotaがない
-  - 関連: `docker-compose.yml`、`backend/scripts/execution_log_retention.py`
+  - 関連: `docker-compose.yml`、`backend/soj_backend/execution_log_retention.py`
   - 次: 専用filesystem、I/O制御、quota、監視を本番設計へ追加
 - `SOJ-019` — Medium / P2 / Partially resolved
   - 概要: CI権限・timeout・Action SHA、secret/依存/image scan、SBOMとmain限定provenanceを構成した。
@@ -98,13 +98,13 @@ Statusは次の意味で使用します。
     本番反映とGitHub上のCI確認は未実施
 - `SOJ-020` — Low / P3 / Deferred
   - 概要: DBをloopback公開し、Compose外では弱いfallback URLがある
-  - 関連: `docker-compose.yml`、`backend/scripts/database.py`
+  - 関連: `docker-compose.yml`、`backend/soj_backend/database.py`
   - 次: 本番port非公開化と設定fail-closedを検討
 - `SOJ-021` — Low / P3 / Partially resolved
   - 概要: command/output保持の目的・最小field・backup方針は確定したが、
     非公開脆弱性報告手順は未整備
-  - 関連: `backend/models/execution_log.py`、
-    `backend/scripts/execution_log_repository.py`、`SECURITY.md`
+  - 関連: `backend/soj_backend/models/execution_log.py`、
+    `backend/soj_backend/execution_log_repository.py`、`SECURITY.md`
   - 次: security contactと非公開報告手順を決定
 
 現在の未解決trackerは次の内訳です。
@@ -173,7 +173,7 @@ backend・runnerの各3件はPythonの公式修正情報とNVDのversion範囲�
 例外の対象・根拠・期限・実装hashは[`ci/python-runtime-exceptions.json`](../../ci/python-runtime-exceptions.json)、
 適用条件と失効時の挙動は[CIの期限付き例外](../CI.md#python-runtimeの期限付き例外)を正本とします。
 現行の固定image、Python対応範囲、アプリ依存lockを維持しています。
-Grypeのraw検出はbackend 193件・runner 194件のまま保持し、そのうち各3件を例外へ分類しました。
+`4120a76`の検証ではGrypeのraw検出をbackend 193件・runner 194件のまま保持し、そのうち各3件を例外へ分類しました。
 包括的なignoreやscanner自体のfilterは追加していません。
 
 Python 3.13.15の公式image候補もbuild・scanしました。停止対象は各0件でしたが、

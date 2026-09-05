@@ -7,19 +7,16 @@ import pytest
 from fastapi import HTTPException
 from pydantic import TypeAdapter, ValidationError
 
-import api.api_shellgei as api_shellgei
-from api.api_shellgei import post_shellgei
-from main import app
-from models.execution import ExecutionResult, ExecutionStatus
-from models.model_shellgei import MAX_SHELLGEI_CHARS, ShellgeiData
-from models.submission import (
-    SubmissionPersistenceStatus,
-    SubmissionResult,
-    SubmissionStatus,
-)
-from scripts.input_validation import MAX_PROBLEM_ID_CHARS, ProblemId
-from scripts.judge import JudgeReason, JudgeVerdict, ShellgeiJudge
-from scripts.run_shellgei import ShellgeiDockerClient
+import soj_backend.api.api_shellgei as api_shellgei
+from soj_backend.api.api_shellgei import post_shellgei
+from soj_backend.main import app
+from soj_shared.models.execution import ExecutionResult, ExecutionStatus
+from soj_shared.submission_request import MAX_SHELLGEI_CHARS, ShellgeiData
+from soj_shared.submission_status import SubmissionPersistenceStatus, SubmissionStatus
+from soj_backend.models.submission import SubmissionResult
+from soj_shared.input_validation import MAX_PROBLEM_ID_CHARS, ProblemId
+from soj_backend.judge import JudgeReason, JudgeVerdict, ShellgeiJudge
+from soj_runner.run_shellgei import ShellgeiDockerClient
 
 
 PROBLEMS_DIR = Path(__file__).resolve().parents[2] / "problems" / "yaml_data"

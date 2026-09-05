@@ -7,18 +7,19 @@ from zoneinfo import ZoneInfo
 import pytest
 from starlette.types import Message, Scope
 
-import api.api_shellgei as api_shellgei
-import main as backend_main
-from models.execution import ExecutionArtifact, ExecutionResult, ExecutionStatus
-from models.public_api import MAX_PUBLIC_SUBMISSION_RESPONSE_BYTES
-from models.submission import (
-    SubmissionPersistenceStatus,
-    SubmissionResult,
-    SubmissionStatus,
+import soj_backend.api.api_shellgei as api_shellgei
+import soj_backend.main as backend_main
+from soj_shared.models.execution import (
+    ExecutionArtifact,
+    ExecutionResult,
+    ExecutionStatus,
 )
-from scripts.judge import JudgeReason, JudgeResult, JudgeVerdict
-from scripts.request_context import current_request_id
-from scripts.structured_logging import SAFE_EVENT_LOGGER_NAME
+from soj_backend.models.public_api import MAX_PUBLIC_SUBMISSION_RESPONSE_BYTES
+from soj_shared.submission_status import SubmissionPersistenceStatus, SubmissionStatus
+from soj_backend.models.submission import SubmissionResult
+from soj_backend.judge import JudgeReason, JudgeResult, JudgeVerdict
+from soj_shared.request_context import current_request_id
+from soj_shared.structured_logging import SAFE_EVENT_LOGGER_NAME
 
 
 PROBLEM_ID = "STANDARD-00000001"

@@ -1,4 +1,4 @@
-from scripts.sandbox_limits import BoundedByteBuffer
+from soj_runner.sandbox_limits import BoundedByteBuffer
 
 
 def test_bounded_buffer_never_stores_more_than_limit() -> None:

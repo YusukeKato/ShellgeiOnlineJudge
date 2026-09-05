@@ -5,12 +5,12 @@ from typing import cast
 import pytest
 from starlette.types import Message, Receive, Scope, Send
 
-from models.model_shellgei import MAX_SHELLGEI_CHARS
-from scripts.runner_http_security import (
+from soj_shared.submission_request import MAX_SHELLGEI_CHARS
+from soj_runner.runner_http_security import (
     RUNNER_REQUEST_BODY_LIMIT_BYTES,
     RunnerRequestSecurityMiddleware,
 )
-from scripts.runner_protocol import (
+from soj_shared.runner_protocol import (
     RUNNER_EXECUTE_PATH,
     RUNNER_PROTOCOL_VERSION,
     RunnerExecutionRequest,

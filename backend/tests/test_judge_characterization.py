@@ -4,12 +4,16 @@ from types import MappingProxyType
 
 import pytest
 
-from models.problem import ExecutionSpecification, TextJudgeSpecification
-from models.execution import ExecutionArtifact, ExecutionResult, ExecutionStatus
-from scripts.judge import JudgeReason, JudgeResult, JudgeVerdict, ShellgeiJudge
-from scripts.problem_catalog import build_problem_catalog
-from scripts.problem_repository import ProblemRecord, ProblemRepository
-from scripts.problem_schema import load_problem_definition
+from soj_shared.models.problem import ExecutionSpecification, TextJudgeSpecification
+from soj_shared.models.execution import (
+    ExecutionArtifact,
+    ExecutionResult,
+    ExecutionStatus,
+)
+from soj_backend.judge import JudgeReason, JudgeResult, JudgeVerdict, ShellgeiJudge
+from soj_shared.problem_catalog import build_problem_catalog
+from soj_shared.problem_repository import ProblemRecord, ProblemRepository
+from soj_shared.problem_schema import load_problem_definition
 
 
 TEXT_PROBLEM_ID = "STANDARD-00000001"

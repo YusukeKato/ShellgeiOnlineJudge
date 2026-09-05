@@ -9,34 +9,35 @@ from pydantic import ValidationError
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-import api.api_shellgei as api_shellgei
-import main as backend_main
-from models.execution_log import ExecutionLogEntry
-from models.model_db import ExecutionLog
-from models.model_shellgei import ShellgeiData
-from models.submission import (
-    SubmissionPersistenceStatus,
-    SubmissionResult,
-    SubmissionStatus,
-)
-from scripts.database import (
+import soj_backend.api.api_shellgei as api_shellgei
+import soj_backend.main as backend_main
+from soj_backend.models.execution_log import ExecutionLogEntry
+from soj_backend.models.model_db import ExecutionLog
+from soj_shared.submission_request import ShellgeiData
+from soj_shared.submission_status import SubmissionPersistenceStatus, SubmissionStatus
+from soj_backend.models.submission import SubmissionResult
+from soj_backend.database import (
     _engine_options,
     _positive_integer_from_env as _database_positive_integer_from_env,
 )
-from scripts.execution_log_retention import (
+from soj_backend.execution_log_retention import (
     DEFAULT_EXECUTION_LOG_RETENTION_DAYS,
     _positive_integer_from_env,
     prune_execution_logs,
 )
-from scripts.execution_log_repository import (
+from soj_backend.execution_log_repository import (
     ExecutionLogRepo,
     ExecutionLogRepositoryError,
     normalize_execution_log_text,
     save_execution_log_async,
 )
-from scripts.judge import JudgeResult, JudgeVerdict
-from scripts.runner_protocol import ExecutionArtifact, ExecutionResult, ExecutionStatus
-from scripts.structured_logging import SAFE_EVENT_LOGGER_NAME
+from soj_backend.judge import JudgeResult, JudgeVerdict
+from soj_shared.runner_protocol import (
+    ExecutionArtifact,
+    ExecutionResult,
+    ExecutionStatus,
+)
+from soj_shared.structured_logging import SAFE_EVENT_LOGGER_NAME
 
 
 def _database_session() -> Session:

@@ -109,7 +109,7 @@ jobs:
         run: poetry run python ci/supply_chain.py runtime --tools "$RUNNER_TEMP/soj-tools" --reports "$RUNNER_TEMP/runtime-reports"
       - name: Pull verified infrastructure images
         run: |
-          poetry run python -c 'import subprocess; from scripts.container_manager import DEFAULT_IMAGE_ID; from tests.postgres_support import upstream_postgres_image; refs = [DEFAULT_IMAGE_ID, upstream_postgres_image()]; [subprocess.run(["docker", "pull", ref], check=True) for ref in refs]'
+          poetry run python -c 'import subprocess; from soj_runner.container_manager import DEFAULT_IMAGE_ID; from tests.postgres_support import upstream_postgres_image; refs = [DEFAULT_IMAGE_ID, upstream_postgres_image()]; [subprocess.run(["docker", "pull", ref], check=True) for ref in refs]'
       - name: Full Compose regression and image boundary checks
         env:
           SOJ_RUN_DOCKER_TESTS: "1"

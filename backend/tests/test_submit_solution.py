@@ -4,19 +4,16 @@ from typing import cast
 
 import pytest
 
-from models.execution import ExecutionResult, ExecutionStatus
-from models.execution_log import ExecutionLogEntry
-from models.submission import (
-    SubmissionPersistenceStatus,
-    SubmissionStatus,
-)
-from scripts.execution_log_repository import ExecutionLogRepositoryError
-from scripts.judge import JudgeReason, JudgeResult, JudgeVerdict
-from scripts.problem_repository import ProblemRecord
-from scripts.request_context import bind_request_id, current_request_id
-from scripts.runner_protocol import RunnerBusyError, RunnerUnavailableError
-from scripts.submit_solution import SubmitSolutionService
-from scripts.structured_logging import SAFE_EVENT_LOGGER_NAME
+from soj_shared.models.execution import ExecutionResult, ExecutionStatus
+from soj_backend.models.execution_log import ExecutionLogEntry
+from soj_shared.submission_status import SubmissionPersistenceStatus, SubmissionStatus
+from soj_backend.execution_log_repository import ExecutionLogRepositoryError
+from soj_backend.judge import JudgeReason, JudgeResult, JudgeVerdict
+from soj_shared.problem_repository import ProblemRecord
+from soj_shared.request_context import bind_request_id, current_request_id
+from soj_shared.runner_protocol import RunnerBusyError, RunnerUnavailableError
+from soj_backend.submit_solution import SubmitSolutionService
+from soj_shared.structured_logging import SAFE_EVENT_LOGGER_NAME
 
 
 PROBLEM_ID = "STANDARD-00000001"

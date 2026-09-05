@@ -2,7 +2,7 @@ import io
 import tarfile
 from concurrent.futures import ThreadPoolExecutor
 
-from scripts.execution_archive import build_execution_archive
+from soj_runner.execution_archive import build_execution_archive
 
 
 def read_archive(stream: io.BytesIO) -> dict[str, str]:

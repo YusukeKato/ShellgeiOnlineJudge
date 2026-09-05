@@ -4,13 +4,13 @@ from io import BytesIO
 import pytest
 from PIL import Image
 
-from models.problem import (
+from soj_shared.models.problem import (
     ImageArtifactSpecification,
     ImageJudgeSpecification,
     ImageMediaType,
 )
-from scripts.judge import JudgeReason, JudgeVerdict, judge_image
-from scripts.runner_protocol import ExecutionArtifact
+from soj_backend.judge import JudgeReason, JudgeVerdict, judge_image
+from soj_shared.runner_protocol import ExecutionArtifact
 
 
 def _image_bytes(

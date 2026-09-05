@@ -5,13 +5,13 @@ from types import SimpleNamespace
 import pytest
 from fastapi import HTTPException
 
-import runner_main
-from scripts.admission_control import (
+import soj_runner.main as runner_main
+from soj_runner.admission_control import (
     DEFAULT_SANDBOX_START_BURST,
     DEFAULT_SANDBOX_START_RATE_PER_SECOND,
     SandboxStartRateLimiter,
 )
-from scripts.runner_protocol import RUNNER_PROTOCOL_VERSION, RunnerExecutionRequest
+from soj_shared.runner_protocol import RUNNER_PROTOCOL_VERSION, RunnerExecutionRequest
 
 
 TEST_PROBLEM_REVISION = "a" * 64

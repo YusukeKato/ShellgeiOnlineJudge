@@ -4,13 +4,13 @@ import logging
 import pytest
 from pydantic import ValidationError
 
-from scripts.request_context import (
+from soj_shared.request_context import (
     REQUEST_ID_PATTERN,
     bind_request_id,
     current_request_id,
     new_request_id,
 )
-from scripts.structured_logging import (
+from soj_shared.structured_logging import (
     LogComponent,
     LogEvent,
     SAFE_EVENT_LOGGER_NAME,
