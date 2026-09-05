@@ -20,14 +20,14 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Baseline commit: `991ef334f2785cce81a2e33206ec1f00f3487c9b`
 - Baseline commit subject: `docs: update maintenance history`
 - Baseline date: 2026-08-25
-- Overall status: `Implementation`
+- Overall status: `Implementation complete; release verification pending`
 - Total refactoring units: 29
 - Ready: 0
 - Planned: 0
 - Pending (`Ready` + `Planned`): 0
 - In Progress: 0
-- Review: 1
-- Completed: 28
+- Review: 0
+- Completed: 29
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -179,7 +179,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-024 | P1 | Completed | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | `48a0670` |
 | R3-025 | P2 | Completed | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | `7b779b3` |
 | R3-026 | P3 | Completed | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | `ef4cb22` |
-| R3-027 | P3 | Review | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | - |
+| R3-027 | P3 | Completed | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | `c7b2b52` |
 | R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
 | R3-029 | P2 | Completed | F | Organize shared, backend, and runner packages | R3-023, R3-024 | `b71663e` |
 
@@ -618,7 +618,7 @@ They are planning aids, not acceptance criteria.
 
 ### R3-027: Establish canonical v3.0.0 version and release documentation
 
-- Priority / Status: P3 / `Review`
+- Priority / Status: P3 / `Completed`
 - Goal: versionの正本を決め、API/UI/package/image/release metadataを`3.0.0`へ揃え、migration・deployment・rollback・release noteを完成させる
 - Main files/components: version metadata、frontend display、OCI label、README、development/production/security/problem docs、update history
 - Dependencies: 自身を除く全release対象unit（R3-028・R3-029を含む）が`Completed`、または未完了unitのdefer判断が承認済み
@@ -637,7 +637,7 @@ They are planning aids, not acceptance criteria.
   最終archiveのimage ID・全file hash・build recordの`product_version: 3.0.0`を照合した。
   文書のローカル参照先151件と`git diff --check`を確認。依存lock・API/protocol/schemaの契約値は維持。
   GitHub上のCI・署名・required checks、本番反映、タグ・Release公開は未実施。
-- Completion: commit `-` / date `-` / note review待ち
+- Completion: commit `c7b2b5286ca077e19cc732fec106fd728987b5d6` / date `2026-09-06` / note 依頼者のreview承認後にcommit。公開前の環境確認はリリース準備文書・security trackerで管理
 
 ## Known design decisions
 
@@ -795,3 +795,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-05 | R3-029 approved and recorded as `Completed` | `b71663e` |
 | 2026-09-05 | R3-026 obsolete code, assets, scripts, and dependencies removed after reference audit; planned validation passed; moved to `Review` | - |
 | 2026-09-05 | R3-026 approved and recorded as `Completed` | `ef4cb22` |
+| 2026-09-06 | R3-027 approved and recorded as `Completed`; all 29 R3 units complete; hosted verification and production release remain pending | `c7b2b52` |
