@@ -18,8 +18,8 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `944356e`とSOJ-011のDB権限分離review待ち差分
-- commit subject: `docs: record approved SOJ-002 monitoring baseline`
+- 確認対象commit: `4eec07b`
+- commit subject: `feat: separate database maintenance and runtime privileges (SOJ-011)`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
 - 直近の変更: SOJ-011のDB管理用credential・通常実行roleの分離。backend起動時のDDLを廃止。
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 944356e
+git diff 4eec07b
 ```
 
 ## Current security status
@@ -50,7 +50,7 @@ git diff 944356e
 - backendからDocker socketを外し、認証付き内部runnerへ分離した設計は有効です。
   ただし、runnerと他serviceは同じrootless daemonとVMを共有しています。
 - R3-023の非root image分離に加え、SOJ-011でDB管理処理を独立serviceへ分離しました。
-  通常roleの最小権限とbackend起動時の読み取り検証を実装済みです（review待ち、本番移行は未実施）。
+  通常roleの最小権限とbackend起動時の読み取り検証を実装済みです（`4eec07b`でcommit済み、本番移行は未実施）。
 - 本番の外側proxy、kernel、LSM、filesystem quota、監視、backup等は
   repositoryだけでは確認できません。
 
@@ -266,7 +266,7 @@ Pythonの期限付き例外（`4120a76`）:
 | RES-024 | sandbox imageの`VOLUME`宣言と作成後の予期しないmountを拒否し、削除時に匿名volumeも回収 | `eff33ca` | container manager unit、Docker baseline test |
 | RES-025 | frontend nginx設定をimageへ組み込み、hostからのwritable bind mountを削除 | `eff33ca` | Compose静的test、frontend image build |
 | RES-026 | SOJ-013: revision拒否と実行・判定・保存を実Composeで検証し、DB/runner停止復帰・browser E2Eを追加 | `48a0670` | Compose E2E、隔離設定・cleanup test |
-| RES-027 | SOJ-011: DB管理serviceと最小権限app roleを分離し、backendはschema・権限を読み取り検証 | review待ち | 実PostgreSQLの禁止操作・旧行保持・rollback、Compose全問題・保存回帰 |
+| RES-027 | SOJ-011: DB管理serviceと最小権限app roleを分離し、backendはschema・権限を読み取り検証 | `4eec07b` | 実PostgreSQLの禁止操作・旧行保持・rollback、Compose全問題・保存回帰 |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
 RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020、RES-021、RES-022、
@@ -277,7 +277,7 @@ daemon単独のsandbox有効期限等の残存経路は、
 
 ### SOJ-011: DB runtime roleの分離
 
-Status: Resolved（review待ち）。
+Status: Resolved（依頼者のreview承認後に`4eec07b`でcommit済み）。
 
 2026-09-05、repository上の権限分離を実装・検証しました。本番DBの変更は実施していません。
 
