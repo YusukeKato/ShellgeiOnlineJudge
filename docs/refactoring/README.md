@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 2
 - Pending (`Ready` + `Planned`): 2
 - In Progress: 0
-- Review: 1
-- Completed: 26
+- Review: 0
+- Completed: 27
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -181,7 +181,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-026 | P3 | Planned | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | - |
 | R3-027 | P3 | Planned | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | - |
 | R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
-| R3-029 | P2 | Review | F | Organize shared, backend, and runner packages | R3-023, R3-024 | - |
+| R3-029 | P2 | Completed | F | Organize shared, backend, and runner packages | R3-023, R3-024 | `b71663e` |
 
 Size estimates use `XS` (under about 100 changed lines), `S` (100--250),
 `M` (250--600), and `L` (over 600 or a large mechanical data migration).
@@ -579,7 +579,7 @@ They are planning aids, not acceptance criteria.
 
 ### R3-029: Organize shared, backend, and runner packages
 
-- Priority / Status: P2 / `Review`
+- Priority / Status: P2 / `Completed`
 - Goal: `scripts/`・`models/`へ混在している共有・backend専用・runner専用コードを責務別のdirectory/packageへ整理し、Dockerfileのfile単位COPY列挙をdirectory単位のCOPYへ置き換える
 - Main files/components: `backend/`のpackage構成・import、`backend/Dockerfile`、entrypoint、migration CLI、test・CI設定、backend/development/production文書
 - Dependencies: R3-023、R3-024。image境界と実Compose経路の回帰基準を確保してから移動する
@@ -594,7 +594,7 @@ They are planning aids, not acceptance criteria.
   両imageの同一DB scanはPython例外適用後の停止対象0件を維持。actionlint、rootless Compose config、文書link、secret scanが成功。
   frontendのコード・依存を変更していないため基本5検査は再実行せず、検証済みfrontend・browser imageをCompose E2Eで使用した。
   GitHub上のCI・署名、本番反映は未実施。旧内部Python module名には互換shimを設けず、運用commandを新module名へ更新する。
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `b71663e` / date `2026-09-05` / note 依頼者のレビュー承認後にcommit。検証結果は上記参照
 
 ### R3-026: Remove obsolete code, assets, scripts, and dependencies
 
@@ -717,7 +717,7 @@ Git履歴から分からないpriority、scope、順序、review gateの変更�
 | 2026-09-05 | SOJ-022 | 次の対策実装依頼に対し、CI停止の原因となるP1の依存是正を優先。アプリ依存・nginx更新と残存image課題はsecurity trackerで管理し、R3-029・R3-026の範囲は維持する | `cb044c7` |
 | 2026-09-05 | SOJ-022 | アプリ依存是正に続きDB imageを独立単位で是正。公式PostgreSQL 15からOpenSSL・gosuだけを更新し、既存volume互換性とCIのscan対象一致を検証する。R3 package再配置・DB role分離は含めない | `6b59c19` |
 | 2026-09-05 | SOJ-022 | Pythonの判定不一致を実装hash確認付きの期限付き例外で扱う。3.13候補は内蔵Expatの修正後退で不採用とし、runtime検査を補強。R3-029等の配置整理は含めない | `4120a76` |
-| 2026-09-05 | R3-029 | 依存unit完了後の次項目として責務別package整理を実施。共有status/requestを分離し、判定とPillowをbackendへ限定。起動・migration・問題CLIのmodule名を更新し、公開API・内部protocol・DB・sandbox仕様を維持する。SOJ-022のsandbox是正とR3-026の旧資産削除は継続課題として分ける | - |
+| 2026-09-05 | R3-029 | 依存unit完了後の次項目として責務別package整理を実施。共有status/requestを分離し、判定とPillowをbackendへ限定。起動・migration・問題CLIのmodule名を更新し、公開API・内部protocol・DB・sandbox仕様を維持する。SOJ-022のsandbox是正とR3-026の旧資産削除は継続課題として分ける | `b71663e` |
 
 ## Tracker history
 
@@ -771,3 +771,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-05 | R3-023 approved and recorded as `Completed`; R3-029 remains `Planned` | `aacda56` |
 | 2026-09-05 | R3-024 approved and recorded as `Completed` | `48a0670` |
 | 2026-09-05 | R3-025 approved and recorded as `Completed`; vulnerability remediation and hosted verification remain tracked separately | `7b779b3` |
+| 2026-09-05 | R3-029 approved and recorded as `Completed` | `b71663e` |

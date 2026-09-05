@@ -18,8 +18,8 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `66bbc24`とR3-029のpackage再配置review待ち差分
-- commit subject: `docs: record approved Python scan exceptions and baseline`
+- 確認対象commit: `b71663e`
+- commit subject: `refactor: organize shared backend and runner packages (R3-029)`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
 - 直近の変更: R3-029の責務別package再配置。共有から専用実装への依存を外し、判定・Pillowをbackendへ限定。
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 66bbc24
+git diff b71663e
 ```
 
 ## Current security status
