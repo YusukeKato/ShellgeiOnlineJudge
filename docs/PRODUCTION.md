@@ -232,6 +232,7 @@ MIGRATION_DATABASE_URL=postgresql://soj_user:管理用の十分に長いラン�
 DATABASE_URL=postgresql://soj_app:通常用の別の十分に長いランダム値@db:5432/soj_db
 
 DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
+# SANDBOX_IMAGE_IDは「sandbox専用image」のbuild・検証後に設定する。
 SANDBOX_OWNER_ID=shellgei-online-judge-production
 RUNNER_SHARED_SECRET=runner認証用の64文字のランダム16進数
 
@@ -434,15 +435,14 @@ webrootなどへ変更するか、更新時の安全な停止・再開方法を�
 
 ### image digestの更新
 
-外部image referenceの正本は各Dockerfileと
-`backend/soj_runner/container_manager.py`です。通常のdeployでは固定済みdigestを
+外部image referenceの正本は各Dockerfileです。通常のdeployでは固定済みdigestを
 `--pull`しても同じartifactが取得され、tagの移動だけでは内容が変わりません。
 
 imageを更新するときだけ、次の順序で候補を確認します。
 
 1. rootless Dockerへ更新候補のtagをpullする
 2. `docker image inspect --format '{{json .RepoDigests}}' IMAGE:TAG`でregistry digestを取得する
-3. 該当するDockerfile、Compose、sandbox定数、統合test fixtureを同じ変更で更新する
+3. 該当するDockerfile、Compose、統合test fixtureを同じ変更で更新する
 4. 基本検査、image build、rootless Docker統合test、全問題回帰testを実行する
 5. 検証したdigestと結果をreviewし、commit後に本番へ反映する
 
@@ -451,17 +451,40 @@ mainの検査成功時に登録するprovenanceの検証方法は[CI文書](./CI
 検査失敗時にもreport artifactを保存するため、artifactの存在だけでdeploy対象を判断しません。
 第三者imageの供給元署名等の残存対策は[セキュリティ課題tracker](./security/README.md)で追跡します。
 
+### sandbox専用image
+
+`deploy/sandbox/Dockerfile`で公式Ubuntuをベースにした独自sandboxをbuildします。
+収録するコマンド・問題data・画像policyと互換性の正本は
+[sandbox文書](../deploy/sandbox/README.md)です。現在の問題に必要なコマンドとShellGeiDataを収録し、
+ShellgeiBotImageには依存しません。textimgのbuild用Go環境は実行用imageへ含めません。
+
+runnerには`SANDBOX_IMAGE_ID`の指定が必須です。build/load済みimageの
+`sha256:...` ID、または配布先の`name@sha256:...`だけを受け付けます。
+未設定やtagだけの指定は起動を拒否します。local IDが存在しない場合はpullせず失敗します。
+上流の未修正imageへfallbackする既定値はありません。
+
+```sh
+docker build --file deploy/sandbox/Dockerfile --tag soj-sandbox:local .
+export SANDBOX_IMAGE_ID="$(docker image inspect soj-sandbox:local --format '{{.Id}}')"
+```
+
+取得したIDを`.env`の同名変数へ保存してください。上記exportはそのshell内だけで有効です。
+更新時も先に候補をbuild・scan・全問題回帰検証し、承認したIDへ設定を切り替えてrunnerを再作成します。
+旧imageは復帰判断が終わるまで保持します。CIで検査済みarchiveをloadする場合は、
+[署名・build recordの照合](./CI.md#生成物と検証promotion)後に記録されたIDを使用します。
+imageのbuildは実行時のnetwork・mount・資源制限を緩和しません。
+
 ### PostgreSQL派生image
 
 ComposeのDBは[`deploy/postgres/Dockerfile`](../deploy/postgres/Dockerfile)からbuildします。
 `soj-db:local`はそのローカルimage名です。公式PostgreSQL imageへ戻すと、今回是正した
-OpenSSL・gosuの脆弱性が再導入されるため、通常の起動・更新ではこのbuildを使用してください。
+OpenSSL・gosu・libuuidの停止対象が再導入されるため、通常の起動・更新ではこのbuildを使用してください。
 `pull_policy: never`で同名imageのregistry取得を禁止します。起動前に明示的なbuildが必要です。
 
 PostgreSQLのメジャーバージョン、公式entrypoint、`PGDATA`、既存のDB role・credentialを継承し、
-OpenSSLだけをAlpineの固定package versionへ更新します。gosuは同じ公式sourceを修正版Goで
+OpenSSLとlibuuidをAlpineの固定package versionへ更新します。gosuは同じ公式sourceを修正版Goで
 再buildし、通常の非root PostgreSQL起動を維持します。Go・PostgreSQLのimage digest、
-gosu archiveのSHA-256、OpenSSLのversionはDockerfileを正本とします。
+gosu archiveのSHA-256、更新packageのversionはDockerfileを正本とします。
 Go compiler・source・build用cacheはDB runtime imageへ収録しません。
 
 gosuはarchiveのchecksumと`go.sum`を検証し、moduleは`-mod=readonly`でbuildします。
@@ -480,8 +503,8 @@ DB初期化を更新手順に使用しないでください。旧imageへの復�
 ```sh
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
-docker pull \
-  theoldmoon0602/shellgeibot:latest@sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36
+docker build --file deploy/sandbox/Dockerfile --tag soj-sandbox:local .
+export SANDBOX_IMAGE_ID="$(docker image inspect soj-sandbox:local --format '{{.Id}}')"
 ./deploy/rootless-compose.sh config --quiet
 ./deploy/rootless-compose.sh --profile maintenance build --pull
 ./deploy/rootless-compose.sh up -d db
@@ -684,6 +707,7 @@ printf 'compose config exit=%s\n' "$?"
 通常用roleのpassword・権限を更新するため、既存backend/frontendは先に停止します。
 
 ```sh
+# sandbox更新を含む場合は上記の候補検証後、.envのSANDBOX_IMAGE_IDも更新する。
 ./deploy/rootless-compose.sh stop frontend backend
 ./deploy/rootless-compose.sh --profile maintenance build --pull
 ./deploy/rootless-compose.sh run --rm --no-deps migrate

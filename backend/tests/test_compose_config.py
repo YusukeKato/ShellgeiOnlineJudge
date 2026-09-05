@@ -162,3 +162,20 @@ def test_migration_credentials_are_only_available_to_manual_maintenance_service(
     assert any(
         value.startswith("MIGRATION_DATABASE_URL=") for value in migrate["environment"]
     )
+
+
+def test_only_runner_requires_an_explicit_sandbox_image() -> None:
+    # image設定をpublic backendへ渡さず、runnerだけで必須化する。
+    services = yaml.safe_load(COMPOSE_FILE.read_text())["services"]
+    for name, service in services.items():
+        values = [
+            value
+            for value in service.get("environment", [])
+            if value.startswith("SANDBOX_IMAGE_ID=")
+        ]
+        if name == "runner":
+            assert values == [
+                "SANDBOX_IMAGE_ID=${SANDBOX_IMAGE_ID:?Build sandbox and set its immutable image ID}"
+            ]
+        else:
+            assert values == []

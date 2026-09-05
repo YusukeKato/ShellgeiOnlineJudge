@@ -92,6 +92,8 @@ jobs:
       - name: Validate rootless daemon and build current targets
         run: |
           poetry run python -c 'from ci.supply_chain import rootless; rootless()'
+          docker build --file deploy/sandbox/Dockerfile --tag soj-sandbox:ci .
+          printf 'SANDBOX_IMAGE_ID=%s\n' "$(docker image inspect soj-sandbox:ci --format '{{.Id}}')" >> "$GITHUB_ENV"
           docker build --file backend/Dockerfile --target backend --tag soj-backend:ci .
           docker build --file backend/Dockerfile --target runner --tag soj-runner:ci .
           docker build --file frontend/Dockerfile --build-arg VITE_SOJ_URL= --tag soj-frontend:ci .
@@ -106,10 +108,10 @@ jobs:
           "$RUNNER_TEMP/soj-tools/grype" db update
       - name: Scan runtime images and prepare candidate archive
         id: scan
-        run: poetry run python ci/supply_chain.py runtime --tools "$RUNNER_TEMP/soj-tools" --reports "$RUNNER_TEMP/runtime-reports"
+        run: poetry run python ci/supply_chain.py runtime --tools "$RUNNER_TEMP/soj-tools" --reports "$RUNNER_TEMP/runtime-reports" --sandbox "$SANDBOX_IMAGE_ID"
       - name: Pull verified infrastructure images
         run: |
-          poetry run python -c 'import subprocess; from soj_runner.container_manager import DEFAULT_IMAGE_ID; from tests.postgres_support import upstream_postgres_image; refs = [DEFAULT_IMAGE_ID, upstream_postgres_image()]; [subprocess.run(["docker", "pull", ref], check=True) for ref in refs]'
+          poetry run python -c 'import subprocess; from tests.postgres_support import upstream_postgres_image; refs = [upstream_postgres_image()]; [subprocess.run(["docker", "pull", ref], check=True) for ref in refs]'
       - name: Full Compose regression and image boundary checks
         env:
           SOJ_RUN_DOCKER_TESTS: "1"
@@ -123,7 +125,7 @@ jobs:
           SOJ_COMPOSE_BROWSER_IMAGE: soj-browser:ci
           SOJ_BACKEND_RUNTIME_IMAGE: soj-backend:ci
           SOJ_RUNNER_RUNTIME_IMAGE: soj-runner:ci
-        run: poetry run pytest backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_runtime_images.py backend/tests/integration/test_postgres_image.py
+        run: poetry run pytest backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_runtime_images.py backend/tests/integration/test_postgres_image.py backend/tests/integration/test_sandbox_tools.py
       - name: Retain runtime inventory and candidate for review
         if: ${{ always() && steps.scan.outcome != 'skipped' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

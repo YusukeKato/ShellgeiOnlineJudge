@@ -8,7 +8,7 @@ SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-j
 
 ## 謝辞
 
-- [シェル芸botのDockerイメージ](https://github.com/theoremoon/ShellgeiBot-Image)を利用しています
+- 旧sandboxで[シェル芸botのDockerイメージ](https://github.com/theoremoon/ShellgeiBot-Image)を利用していました。現在の構成は[独自sandbox文書](./deploy/sandbox/README.md)を参照してください
 - [jiro4989/websh](https://github.com/jiro4989/websh)のシステム構成を参考にしています
 
 ## ドキュメント
@@ -24,6 +24,7 @@ SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-j
 | [v3.0.0リファクタリング計画](./docs/refactoring/README.md) | 開発者 | v3の設計方針、作業unit、優先順位、進捗、完了commit |
 | [v3移行前のbehavior baseline](./docs/refactoring/legacy-behavior.md) | 開発者 | 移行前の回帰基準と、v3で修正した旧挙動の対応記録 |
 | [Docker統合テスト](./backend/tests/integration/README.md) | 開発者 | Dockerテストの実行条件、コマンド、検証範囲 |
+| [sandbox image](./deploy/sandbox/README.md) | 開発者・運用者 | 独自Ubuntu imageの収録コマンド、問題data、画像policy、互換性 |
 | [問題データ](./problems/README.md) | 問題作成者 | YAMLと正解画像の仕様 |
 | [backend](./backend/README.md) / [frontend](./frontend/README.md) | 開発者 | 各componentの責務と主な配置 |
 | [deploy](./deploy/README.md) | 開発者・運用者 | デプロイ補助スクリプト |

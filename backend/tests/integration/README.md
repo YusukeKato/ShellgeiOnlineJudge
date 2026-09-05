@@ -7,12 +7,13 @@ Docker統合テストは実際のsandboxコンテナを生成・削除するた�
 隔離されたrootless Docker環境でのみ実行してください。
 本番ホストや共有CI runnerでは実行しないでください。
 
-次のイメージを、rootless daemonへ事前にpullしてください。
+次のイメージを、rootless daemonへ事前にbuild・取得してください。
+sandboxの指定・更新方針は[本番運用](../../../docs/PRODUCTION.md#sandbox専用image)を参照してください。
 
 ```sh
 export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
-docker pull \
-  theoldmoon0602/shellgeibot:latest@sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36
+docker build --file deploy/sandbox/Dockerfile --tag soj-sandbox:local .
+export SANDBOX_IMAGE_ID="$(docker image inspect soj-sandbox:local --format '{{.Id}}')"
 docker pull \
   postgres:15-alpine@sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b
 docker pull \
@@ -36,6 +37,9 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 
 - 接続先daemonがrootlessであること
 - cgroup v2によるCPU・メモリ・PID制限が実際に反映されていること
+- 独自Ubuntu imageの必要コマンド、sudo・Go等の不在、setuid/setgidの除去、loopbackのみのnetwork、
+  ImageMagickの許可形式・寸法制限、textimgの日本語・ANSI色・画像出力、
+  ShellGeiDataの追加directoryとrevision記録（`test_sandbox_tools.py`）
 - 基本的なDocker隔離設定
 - sandbox imageの`VOLUME`宣言がなく、実containerに予期しないmountがないこと
 - 動的sandboxのlogging driverが`none`であること

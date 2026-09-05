@@ -64,7 +64,8 @@ container削除時は関連する匿名volumeも同時に削除します。
 
 sandboxコンテナには次の設定を適用します。
 
-- sandbox imageをSHA-256 digestで固定
+- sandbox imageを必須の`SANDBOX_IMAGE_ID`で指定し、SHA-256のimmutable ID/referenceだけを許可
+  （build・更新手順は[本番運用](./docs/PRODUCTION.md#sandbox専用image)を参照）
 - image metadataに`VOLUME`宣言がないことを作成前に検証
 - 作成後のDocker inspectでbind、volume、allowlist外mountがないことを検証
 - rootless Docker daemon上で実行
@@ -90,6 +91,10 @@ sandboxコンテナには次の設定を適用します。
 - 管理用label `com.shellgei-online-judge.sandbox=true`
 
 sandbox内のコマンドはコンテナ内rootとして動きます。
+独自Ubuntu imageは収録対象を明示したコマンドを追加し、sudo等を収録せず、
+通常fileのsetuid/setgid属性を除去します。ImageMagickにも追加policyを適用します。
+収録内容・画像policy・互換性の正本は[sandbox文書](./deploy/sandbox/README.md)です。
+コマンドの省略や画像policyを、任意コード実行に対するDockerの隔離の代替とはしません。
 
 通常のcommandと問題入力は`/work`に配置します。
 working directoryも`/work`です。

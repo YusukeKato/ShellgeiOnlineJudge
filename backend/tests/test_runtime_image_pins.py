@@ -3,8 +3,6 @@ from pathlib import Path
 
 import yaml
 
-from soj_runner.container_manager import DEFAULT_IMAGE_ID
-
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 COMPOSE_FILE = REPOSITORY_ROOT / "docker-compose.yml"
@@ -33,7 +31,7 @@ def test_runtime_and_sandbox_images_are_pinned_by_digest() -> None:
         *_dockerfile_base_images(REPOSITORY_ROOT / "backend" / "Dockerfile"),
         *_dockerfile_base_images(REPOSITORY_ROOT / "frontend" / "Dockerfile"),
         *_dockerfile_base_images(REPOSITORY_ROOT / "deploy/postgres/Dockerfile"),
-        DEFAULT_IMAGE_ID,
+        *_dockerfile_base_images(REPOSITORY_ROOT / "deploy/sandbox/Dockerfile"),
     ]
 
     assert len(set(image_references)) == 6

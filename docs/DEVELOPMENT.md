@@ -227,6 +227,7 @@ daemon移設やUID/GID mappingを変更した場合は再確認します。値�
 - `DATABASE_OPERATION_TIMEOUT_SECONDS`は1以上の整数にする
 - `RUNNER_SHARED_SECRET`には`openssl rand -hex 32`で生成した値を設定する
 - runnerとbackendへ同じ`RUNNER_SHARED_SECRET`が渡される
+- `SANDBOX_IMAGE_ID`は[独自sandboxのbuild手順](./PRODUCTION.md#sandbox専用image)に従って設定する
 - `SANDBOX_OWNER_ID`は同じDocker daemon上の他環境と重複させない
 - `DOCKER_SOCKET_GID`には上記手順で確認したcontainer内のsocket GIDを設定する
 - URLの予約文字を含むパスワードは、両DB URL側でpercent-encodingする
@@ -344,12 +345,13 @@ Composeのfrontendイメージをビルドすることでも、本番用の`yarn
 
 ## 7. Composeでの起動
 
-rootless daemonへsandboxイメージをpullし、設定検査後に起動します。
+rootless daemonで独自sandboxをbuildし、immutable IDを指定して起動します。
+設定の保存と更新方針は[本番のsandbox手順](./PRODUCTION.md#sandbox専用image)を参照してください。
 
 ```sh
 export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
-docker pull \
-  theoldmoon0602/shellgeibot:latest@sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36
+docker build --file deploy/sandbox/Dockerfile --tag soj-sandbox:local .
+export SANDBOX_IMAGE_ID="$(docker image inspect soj-sandbox:local --format '{{.Id}}')"
 ./deploy/rootless-compose.sh config --quiet
 ./deploy/rootless-compose.sh --profile maintenance build
 ./deploy/rootless-compose.sh up -d db
@@ -412,13 +414,12 @@ docker info --format '{{json .SecurityOptions}}'
 
 ### runnerがsandboxイメージを見つけられない
 
-rootfulとrootlessのイメージは共有されません。rootless socketを指定した同じshellでpullしてください。
+rootfulとrootlessのイメージは共有されません。rootless socketを指定した同じshellでbuildし、設定したIDが存在することを確認してください。
 
 ```sh
-docker pull \
-  theoldmoon0602/shellgeibot:latest@sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36
-docker image inspect \
-  theoldmoon0602/shellgeibot:latest@sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36
+docker build --file deploy/sandbox/Dockerfile --tag soj-sandbox:local .
+export SANDBOX_IMAGE_ID="$(docker image inspect soj-sandbox:local --format '{{.Id}}')"
+docker image inspect "$SANDBOX_IMAGE_ID"
 ```
 
 ### TLSファイルのmountに失敗する

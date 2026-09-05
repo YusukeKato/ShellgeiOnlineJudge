@@ -8,10 +8,15 @@
 - [Docker統合テスト](../backend/tests/integration/README.md)
 - [セキュリティモデルと制約](../SECURITY.md)
 
-## 補助スクリプト
+## image構成
+
+`sandbox/Dockerfile`は現在の問題向けの独自Ubuntu imageをbuildします。
+収録内容と互換性は[sandbox文書](./sandbox/README.md)を参照してください。
 
 `postgres/Dockerfile`は本番DBの派生imageをbuildします。
 構成・更新方針は[PostgreSQL派生image](../docs/PRODUCTION.md#postgresql派生image)を正本とします。
+
+## 補助スクリプト
 
 `rootless-compose.sh`は次の処理を行います。
 

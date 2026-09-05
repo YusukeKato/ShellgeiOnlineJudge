@@ -45,6 +45,14 @@ repositoryのID集合検査と問題詳細APIが依存しているため、単�
 画像を生成する問題では、コマンドから
 `media/output.jpg`または`media/output.gif`へ出力します。
 
+## sandboxに収録する参照data
+
+問題の一部は`input.txt`以外に`/ShellGeiData`の公開dataを参照します。
+収録範囲、取得元・build時の最新revisionの記録方法、利用条件は
+[sandbox文書](../deploy/sandbox/README.md#収録するもの)を正本とします。
+ShellGeiData以外のdataを使う問題を追加する場合はsandbox構成も更新してください。
+新規問題と公開data更新の互換性は、全問題回帰で確認してください。
+
 ## Schema v3
 
 schema v3の実行可能な型定義は

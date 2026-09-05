@@ -167,6 +167,7 @@ class ComposeStack:
             "DATABASE_URL": f"postgresql://e2e_app:{os.urandom(32).hex()}@db:5432/e2e",
             "RUNNER_SHARED_SECRET": secret,
             "SANDBOX_OWNER_ID": project,
+            "SANDBOX_IMAGE_ID": os.environ["SANDBOX_IMAGE_ID"],
             "DOCKER_SOCKET_PATH": socket,
             "DOCKER_SOCKET_GID": gid,
             "TLS_CERTIFICATE_PATH": str(cert),

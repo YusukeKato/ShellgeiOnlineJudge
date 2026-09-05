@@ -345,12 +345,13 @@ def test_pool_initialization_pulls_and_validates_a_missing_pinned_image() -> Non
     # 固定digestがlocalにない場合だけ同じreferenceをpullし、metadata検証後に作成する。
     client = FakeDockerClient()
     client.images.get_error = docker.errors.ImageNotFound("missing image")
-    manager = ContainerManager(client=client, pool_size=1)
+    image_id = "test/sandbox@sha256:" + "c" * 64
+    manager = ContainerManager(client=client, image_id=image_id, pool_size=1)
 
     manager.initialize_pool()
 
-    assert client.images.get_calls == [DEFAULT_IMAGE_ID]
-    assert client.images.pull_calls == [DEFAULT_IMAGE_ID]
+    assert client.images.get_calls == [image_id]
+    assert client.images.pull_calls == [image_id]
     assert len(client.containers.created) == 1
     manager.shutdown_pool()
 
@@ -705,3 +706,37 @@ def test_release_and_shutdown_serialize_container_cleanup() -> None:
     assert shutdown_thread.is_alive() is False
     assert container.max_active_remove_calls == 1
     assert manager.managed_count == 0
+
+
+def test_missing_sandbox_configuration_fails_before_container_creation() -> None:
+    # 設定省略時に旧imageへfallbackせず、sandboxを作成する前に拒否する。
+    client = FakeDockerClient()
+    manager = ContainerManager(client=client, image_id=None, pool_size=1)
+    with pytest.raises(SandboxImageConfigurationError, match="SANDBOX_IMAGE_ID"):
+        manager.initialize_pool()
+    assert client.containers.created == []
+    assert client.images.pull_calls == []
+
+
+def test_local_sandbox_id_is_used_without_registry_pull() -> None:
+    # build済みのimmutable IDを使用し、同名tagの更新に影響されない。
+    client = FakeDockerClient()
+    image_id = "sha256:" + "b" * 64
+    manager = ContainerManager(client=client, image_id=image_id, pool_size=1)
+    manager.initialize_pool()
+    assert client.images.get_calls == [image_id]
+    assert client.images.pull_calls == []
+    manager.shutdown_pool()
+
+
+def test_missing_local_sandbox_id_does_not_pull() -> None:
+    # local IDが見つからない場合はregistryへ問い合わせず、build/loadを要求する。
+    client = FakeDockerClient()
+    client.images.get_error = docker.errors.ImageNotFound("missing")
+    manager = ContainerManager(
+        client=client, image_id="sha256:" + "b" * 64, pool_size=1
+    )
+    with pytest.raises(SandboxImageConfigurationError, match="build or load"):
+        manager.initialize_pool()
+    assert client.images.pull_calls == []
+    assert client.containers.created == []

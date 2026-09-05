@@ -20,12 +20,9 @@ from soj_runner.sandbox_identity import (
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_IMAGE_ID = (
-    "theoldmoon0602/shellgeibot:latest@"
-    "sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36"
-)
+DEFAULT_IMAGE_ID = os.getenv("SANDBOX_IMAGE_ID")
 DOCKER_API_TIMEOUT_SECONDS = 15
-PINNED_IMAGE_PATTERN = re.compile(r"[^@\s]+@sha256:[0-9a-f]{64}")
+PINNED_IMAGE_PATTERN = re.compile(r"(?:[^@\s]+@)?sha256:[0-9a-f]{64}")
 SANDBOX_CONTAINER_NAME_PREFIX = "soj-sandbox"
 SANDBOX_WORK_DIRECTORY = "/work"
 SANDBOX_HOME_DIRECTORY = "/tmp/home"
@@ -59,7 +56,7 @@ class CgroupResourceLimitsRequiredError(RuntimeError):
 
 
 class SandboxImageConfigurationError(RuntimeError):
-    """Raised when the sandbox image declares an unsafe filesystem volume."""
+    """sandbox imageの指定不足、不在または安全でないmetadataを通知する。"""
 
 
 class SandboxMountConfigurationError(RuntimeError):
@@ -70,14 +67,14 @@ class ContainerManager:
     def __init__(
         self,
         client: Any | None = None,
-        image_id: str = DEFAULT_IMAGE_ID,
+        image_id: str | None = DEFAULT_IMAGE_ID,
         pool_size: int = DEFAULT_POOL_SIZE,
         owner_id: str = DEFAULT_SANDBOX_OWNER_ID,
         instance_id: str | None = None,
     ) -> None:
         if pool_size < 1:
             raise ValueError("pool_size must be at least 1")
-        if PINNED_IMAGE_PATTERN.fullmatch(image_id) is None:
+        if image_id is not None and PINNED_IMAGE_PATTERN.fullmatch(image_id) is None:
             raise ValueError("image_id must include a sha256 digest")
         if SANDBOX_OWNER_ID_PATTERN.fullmatch(owner_id) is None:
             raise ValueError("owner_id must contain only safe label characters")
@@ -181,12 +178,18 @@ class ContainerManager:
             )
 
     def _ensure_sandbox_image(self, client: Any) -> None:
-        """固定digestのimageを取得またはpullし、安全なmetadataを一度だけ検証する。"""
+        """設定済みimmutable imageだけを検証する。local IDがなければpullせず失敗する。"""
         if self._image_validated:
             return
+        if self.image_id is None:
+            raise SandboxImageConfigurationError("SANDBOX_IMAGE_ID is required")
         try:
             image = client.images.get(self.image_id)
         except docker.errors.ImageNotFound:
+            if self.image_id.startswith("sha256:"):
+                raise SandboxImageConfigurationError(
+                    "build or load the configured sandbox image before startup"
+                ) from None
             image = client.images.pull(self.image_id)
         self._validate_sandbox_image(image)
         self._image_validated = True
@@ -332,6 +335,8 @@ class ContainerManager:
 
     def initialize_pool(self) -> None:
         """Synchronously create the complete warm pool or fail startup."""
+        if self.image_id is None:
+            raise SandboxImageConfigurationError("SANDBOX_IMAGE_ID is required")
         logger.info("Initializing container pool (%s)", self.pool_size)
         try:
             self._reconcile_stale_containers()

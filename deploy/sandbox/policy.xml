@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<policymap>
+  <!-- Dockerの上限に加え、画像処理単位のcache・寸法・threadも制限する。 -->
+  <policy domain="resource" name="thread" value="1"/>
+  <policy domain="resource" name="memory" value="64MiB"/>
+  <policy domain="resource" name="map" value="0"/>
+  <policy domain="resource" name="disk" value="16MiB"/>
+  <policy domain="resource" name="width" value="4KP"/>
+  <policy domain="resource" name="height" value="4KP"/>
+  <policy domain="resource" name="area" value="4MP"/>
+  <policy domain="resource" name="list-length" value="32"/>
+  <policy domain="resource" name="time" value="8"/>
+  <!-- 外部program・filter・間接file読み取りは問題の解答に不要。 -->
+  <policy domain="delegate" rights="none" pattern="*"/>
+  <policy domain="filter" rights="none" pattern="*"/>
+  <policy domain="path" rights="none" pattern="@*"/>
+  <!-- xc:による画像生成、判定形式、PNGとpipe用MIFFだけを許可する。 -->
+  <policy domain="coder" rights="none" pattern="*"/>
+  <policy domain="coder" rights="read|write" pattern="{XC,JPEG,JPG,JPE,PNG,GIF,MIFF}"/>
+</policymap>

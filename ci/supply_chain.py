@@ -14,8 +14,6 @@ from typing import Any
 
 import docker
 
-from soj_runner.container_manager import DEFAULT_IMAGE_ID
-
 
 ROOT = Path(__file__).resolve().parents[1]
 PYTHON_EXCEPTION_POLICY = ROOT / "ci/python-runtime-exceptions.json"
@@ -289,11 +287,10 @@ def rootless() -> None:
 
 
 def runtime_scan(tools: Path, reports: Path, products: dict[str, str]) -> bool:
-    """DBを含む本番4 imageと正本のsandboxをscanし、配布候補archiveとhash記録を作る。"""
+    """sandboxを含むbuild済み本番5 imageをscanし、配布候補archiveとhash記録を作る。"""
+    if set(products) != {"backend", "runner", "frontend", "db", "sandbox"}:
+        raise ValueError("all five production images must be scanned")
     rootless()
-    external = {
-        "sandbox": DEFAULT_IMAGE_ID,
-    }
     ids = {}
     ok = True
     for name, reference in products.items():
@@ -306,15 +303,10 @@ def runtime_scan(tools: Path, reports: Path, products: dict[str, str]) -> bool:
         )
         ids[name] = result.stdout.strip()
         ok = scan(tools, f"docker:{ids[name]}", reports, name) and ok
-    # 大きなsandboxをdaemonから再exportせず、正本の固定digestから直接inventoryを作る。
-    for name, reference in external.items():
-        if "@sha256:" not in reference:
-            raise ValueError("infrastructure images must be digest pinned")
-        ok = scan(tools, f"registry:{reference}", reports, name) and ok
     archive = reports / "runtime.tar"
     # scanしたimmutable IDを指定し、並行したtag更新が保存内容へ影響しないようにする。
     run(["docker", "save", "--output", str(archive), *(ids[name] for name in products)])
-    write_record(reports, ids, external)
+    write_record(reports, ids)
     return ok
 
 
@@ -402,6 +394,7 @@ def main() -> None:
     parser.add_argument("--runner", default="soj-runner:ci")
     parser.add_argument("--frontend", default="soj-frontend:ci")
     parser.add_argument("--db", default="soj-db:ci")
+    parser.add_argument("--sandbox", default="soj-sandbox:ci")
     args = parser.parse_args()
     args.reports.mkdir(parents=True, exist_ok=False)
     os.environ.setdefault("SYFT_CACHE_DIR", str(args.reports.parent / "syft-cache"))
@@ -424,7 +417,7 @@ def main() -> None:
             args.reports,
             {
                 name: getattr(args, name)
-                for name in ("backend", "runner", "frontend", "db")
+                for name in ("backend", "runner", "frontend", "db", "sandbox")
             },
         )
     raise SystemExit(0 if ok else 2)

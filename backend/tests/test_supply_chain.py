@@ -12,12 +12,14 @@ from ci.install_tools import extract_binary
 from ci.supply_chain import blocking_findings, write_record
 
 
+@pytest.mark.parametrize("blocked_product", ["db", "sandbox"])
 def test_runtime_scan_records_and_archives_the_built_database(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, blocked_product: str
 ) -> None:
-    # DBだけの検出でも失敗し、scan済みDBのIDをarchive・recordへ含める。古い公式DBのregistry scanへ戻さない。
+    # DBまたはsandboxだけの検出でも失敗し、scanした全5 imageのIDをarchive・recordへ含める。
     products = {
-        name: f"soj-{name}:review" for name in ("backend", "runner", "frontend", "db")
+        name: f"soj-{name}:review"
+        for name in ("backend", "runner", "frontend", "db", "sandbox")
     }
     sources = []
     commands = []
@@ -30,9 +32,9 @@ def test_runtime_scan_records_and_archives_the_built_database(
         )
 
     def scan_image(tools: Path, source: str, reports: Path, name: str) -> bool:
-        """scan対象を記録し、DBだけに停止対象がある状態を返す。"""
+        """scan対象を記録し、指定されたimageだけに停止対象がある状態を返す。"""
         sources.append(source)
-        return name != "db"
+        return name != blocked_product
 
     monkeypatch.setattr(supply_chain, "rootless", lambda: None)
     monkeypatch.setattr(supply_chain.subprocess, "run", inspect_image)
@@ -48,11 +50,8 @@ def test_runtime_scan_records_and_archives_the_built_database(
     ids = [record["image_ids"][name] for name in products]
     assert set(record["image_ids"]) == set(products)
     assert set(commands[0][4:]) == set(ids)
-    assert sources == [
-        *("docker:" + image for image in ids),
-        "registry:" + supply_chain.DEFAULT_IMAGE_ID,
-    ]
-    assert set(record["external_image_references"]) == {"sandbox"}
+    assert sources == ["docker:" + image for image in ids]
+    assert record["external_image_references"] == {}
 
 
 def archive(*, link: bool = False) -> bytes:
@@ -138,3 +137,9 @@ def test_build_record_hashes_artifacts_and_records_source(tmp_path: Path) -> Non
     assert isinstance(result["worktree_dirty"], bool)
     assert result["image_ids"]["backend"].startswith("sha256:")
     assert "signature" not in result
+
+
+def test_runtime_scan_rejects_missing_sandbox(tmp_path: Path) -> None:
+    # 更新したsandboxをscan対象から落とした呼出しは、Docker操作より前に拒否する。
+    with pytest.raises(ValueError, match="all five"):
+        supply_chain.runtime_scan(tmp_path, tmp_path, {"backend": "test"})

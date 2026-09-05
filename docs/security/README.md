@@ -18,12 +18,11 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `17e8ee7`
-- commit subject: `security: remove database host exposure and require explicit URL (SOJ-020)`
+- 確認対象commit: `403b206`と今回のSOJ-022未commit差分
+- commit subject: `docs: record approved SOJ-020 database hardening`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の変更: SOJ-020のDB host port廃止と接続URL必須化。
-  [実装と検証記録](#soj-020-dbのhost-port廃止と接続設定の必須化)を参照。依頼者のreview承認後に`17e8ee7`でcommit済み
+- 直近の変更: SOJ-022の独自sandbox・libuuid是正と、同じimage IDを使うCI・runner設定。review待ち、未commit
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
 baseline以降に変更がある場合は、先に差分を確認してください。
@@ -31,14 +30,15 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 17e8ee7
+git diff 403b206
 ```
 
 ## Current security status
 
 - SOJ-022のアプリ依存・nginx・派生DB更新でlock file、frontend・DB imageの停止対象は0件です。
   backend・runnerは修正済みPythonの期限付き例外を各3件適用し、適用後の停止対象は0件です。
-  sandboxの残存検出により、image側のCI gateは引き続き失敗します。
+  独自sandboxとlibuuidの是正後、ローカル検査で全5 imageの停止対象は0件です。
+  GitHub上のCIと本番反映は未確認です。
   scannerのseverityとサービスでの悪用可能性は区別し、残存項目はSOJ-022で追跡します。
 - インターネット公開には、外側proxyまたはWAFの
   実client単位の受付制御を別途確認する必要があります。
@@ -87,10 +87,10 @@ Statusは次の意味で使用します。
   - 次: 実CIとOIDC署名を確認し、required checks・workflow変更のreview保護を設定する。
     bootstrapの間接依存・第三者imageの供給元検証とpromotion方針を整備する
 - `SOJ-022` — High/Critical（scanner分類） / P1 / Partially resolved
-  - 概要: アプリ依存・nginx・派生DBを是正。Pythonは実装確認付きの期限付き例外で扱い、sandboxの検出が残る
-  - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、`deploy/postgres/Dockerfile`、`ci/python-runtime-exceptions.json`、runtime image
+  - 概要: アプリ依存とsandboxを含む本番imageの停止対象を是正。Pythonは実装確認付きの期限付き例外で扱う
+  - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、`deploy/postgres/Dockerfile`、`ci/python-runtime-exceptions.json`、`deploy/sandbox/`、runtime image
   - 確認: [是正記録](#soj-022依存imageの是正記録)に変更範囲、検出比較、未解決範囲を記載
-  - 次: sandboxの修正版候補を検証し、Python例外の期限前に公式advisory・DBと実装を再確認する。
+  - 次: Python例外の期限前に公式advisory・DBと実装を再確認し、更新imageをreviewする。
     本番反映とGitHub上のCI確認は未実施
 - `SOJ-021` — Low / P3 / Partially resolved
   - 概要: command/output保持の目的・最小field・backup方針は確定したが、
@@ -114,7 +114,7 @@ SOJ-020は下記の実装・検証により`Resolved`としました。未解決
 アプリ依存・nginxの是正は依頼者のreview承認後、`cb044c7`でcommit済みです。
 派生DBの是正は依頼者のreview承認後、`6b59c19`でcommit済みです。
 Pythonの期限付き例外は依頼者のreview承認後、`4120a76`でcommit済みです。
-sandboxと期限付きで扱うscanner判定の残存課題があるため、
+期限付きで扱うPythonのscanner判定と実CI・本番確認が残るため、
 SOJ-022全体を`Resolved`にはしていません。R3-029等のpackage再配置は今回の範囲外です。
 
 ### 更新と互換性
@@ -146,7 +146,7 @@ DBの停止対象42件は0件になりました。Medium 3件（BusyBox系）と
 
 R3-025と同じ固定scannerと、2026-09-05に取得した同一の脆弱性DBで比較しました。
 アプリ3 imageは`cb044c7`の依存更新時に再buildし、DBは今回のDockerfileからbuildした派生imageです。
-sandboxは固定digestを維持し、既存SBOMを同じDBで再照合しています。
+この表は独自sandbox導入前の検証記録です。今回の比較は下記「独自sandboxの是正」を参照してください。
 停止条件の正本は[CI文書](../CI.md#scannerと停止条件)です。
 
 | 対象 | 依存・image更新前 | 依存・image更新後 | Python例外適用後 |
@@ -159,7 +159,7 @@ sandboxは固定digestを維持し、既存SBOMを同じDBで再照合してい�
 | sandbox | 248 | 248 | 248 |
 
 対象ごとのmatch数であり、重複を除いたCVE数ではありません。source scanは終了code 2から0へ改善しました。
-image側は残存検出によりCIを停止します。低severity・未修正の検出を含め、全脆弱性がなくなったという意味ではありません。
+当時のimage側は残存検出によりCIを停止しました。低severity・未修正の検出を含め、全脆弱性がなくなったという意味ではありません。
 
 ### Python判定と内蔵Expatの検査
 
@@ -221,17 +221,63 @@ Pythonの期限付き例外（`4120a76`）:
   実imageはPython 3.12.14／Expat 2.8.3であり、修正済みversionに対するscanner判定の不一致です。
   期限付き例外でCIの停止対象から区別していますが、NVD側の判定が訂正されたことを意味しません。
   期限前に再評価し、DB側で不一致が解消した場合は例外を削除してください。
-- sandboxは多数の言語runtime・配布済みbinaryを含みます。個別toolの更新と問題互換性の検証が必要です。
-  更新候補`sha256:1916181574c13e207836852d673bcf367c8293b7b556acbcaf0bc3f2f660d6b2`を
-  registryからSBOM化して比較しましたが、停止対象は248から245件への減少にとどまり、
-  `jackson-core`の`GHSA-r7wm-3cxj-wff9`が新たに検出されました。
-  この候補は今回採用せず、現行digestと問題互換性を維持しています。
-  候補のコマンド実行・全問題回帰は未実施で、採用時に改めて検証が必要です。
-  2026-09-05の次P1項目着手時にregistryのlatestを再照合し、同じ候補digestであることを確認しました。
-  新しい候補はなく、この再照合ではscan・依存更新を実施していません。個別toolの再buildは別単位とし、
-  同じP1のSOJ-002のホスト監視整備を先行しました。
-  SOJ-020着手時にもregistryを再照合し、同じ候補digestであることを確認しました。
-  今回はsandboxのscan・差替えを実施せず、個別toolの是正を残件として維持しています。
+- 低severity・未修正の検出は引き続きreportに残します。sandboxで実行できる任意コードと
+  host kernelの境界は、scannerの成功だけで安全性を保証できません。
+- GitHub上のCI、署名・required checks、本番promotionは未実施です。
+
+### 独自sandboxの是正
+
+依頼者の方針に従い、ShellgeiBotImageの全toolを保守する方式から、公式Ubuntuをbaseとする
+独自imageへ切り替えました。現在の全92問とrunnerが必要とするpackage、ShellGeiData、
+依頼者指定のtextimgと日本語fontを収録します。Go compilerはtextimgのbuild用stageだけで使用し、
+依存lockもtextimg専用の1組に限定しています。
+構成・互換性の正本は[sandbox文書](../../deploy/sandbox/README.md)、
+ID設定と更新手順は[本番運用](../PRODUCTION.md#sandbox専用image)を参照してください。
+
+- base digestを固定。ShellGeiDataはbuild時の最新commit全体を収録し、そのrevisionを記録。
+  Ubuntuの署名済みrepositoryで更新を適用し、
+  完成したimageをimmutable IDでscan・実行・archiveに使用します。
+- 実行用imageに不要な言語・開発環境、sudo・ping等を導入せず、setuid/setgid属性を除去。
+  ImageMagickのdelegate・format・resourceも制限します。Docker側の既存制限は維持しています。
+- `SANDBOX_IMAGE_ID`は必須で、旧imageへのfallbackはありません。
+  CIは独自sandboxもbuild・scan・archiveに含め、同じIDを実行テストへ渡します。
+- frontend・DBで再現した各4件のlibuuid検出への固定更新も、同じ未commit差分に保持しています。
+  source packageのutil-linuxに由来するscanner分類であり、個別serviceからの悪用可能性とは区別します。
+- 新しい検出除外や例外、停止条件の緩和は追加していません。
+
+同じ固定scanner・2026-09-05取得DBでの停止対象match数:
+
+| 対象 | 是正前 | 独自sandbox導入後 |
+| --- | ---: | ---: |
+| sandbox | 248 | 0 |
+| frontend | 4 | 0 |
+| 派生DB | 4 | 0 |
+| backend / runner | 各3（既存例外後0） | 各3（既存例外後0） |
+
+独自sandboxのinventoryは155 package、全検出は729 matchです。High/Criticalはなく、
+Medium以下の未修正・wont-fix検出をraw reportへ残しています。
+全脆弱性の解消や、ホストkernelを含む安全性を保証する結果ではありません。
+imageはDocker inspectのSizeで630,300,114 bytes。ShellGeiDataの収録・更新仕様は上記の正本を参照してください。
+
+今回の検証:
+
+- 新しい不要コマンドの不在testが旧imageのGoを検出してREDとなることを確認。
+  初回の独自imageではJPGの別名がpolicyに不足し、画像問題が失敗。許可を修正し、
+  正解画像・問題data・judgeを変更せず回帰確認しています。
+- ruff・format・mypy、非Docker 645件が成功。mypyでは作業用`backend_data*`
+  （venv・取得物）だけを除外し、対象source 104 fileを検査。
+- frontend基本5検査・35件、source scan・scanner fixtureの成功結果は直前の同じ差分の検証から維持。
+  今回はfrontendのcode・依存・imageを追加変更していません。
+- 独自sandboxを指定したrootless Docker 31件がすべて成功。Compose・直接sandbox両経路の全92問、
+  browser、認証・revision拒否、DB・runnerの停止復帰、隔離・資源制限と必要コマンド・画像policyを含む。
+- ShellGeiDataの追加directory・revision記録のtestは旧imageでRED、新imageで成功。
+  上流の最新HEADと記録revisionが一致し、全788 entryのpath・file内容・symlinkをarchiveと照合。
+  cacheありの再buildでもGitの最新HEADを再確認することをログで確認した。
+- textimgの追加testは未収録imageでRED、追加後は日本語・ANSI色・PNG pipe・JPEG/GIF保存が成功。
+  日本語画像を目視確認し、Go compiler不在と既存の隔離・画像policyも確認した。
+- 最終5 imageを同じDBでscanし、検査したIDのarchiveとbuild recordを再生成。
+  archiveのOCI indexと全image IDの一致、recordのfile hashを確認した。
+- GitHub上のworkflow・署名、本番反映、commit・pushは未実施です。
 
 ## Resolved issues
 
@@ -529,7 +575,7 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 この文書では[未解決security課題](#open--partially-resolved--deferred)と
 本番環境での確認事項を管理し、完了済みunitを次作業として再掲しません。
 
-SOJ-022のscanner検出を優先して評価し、検査を停止させる依存・imageの更新範囲を決めてください。
+SOJ-022のPython例外を期限前に再評価し、GitHubの実CIと承認済みimageの本番反映を確認してください。
 その他の課題も1項目ずつ、または密接に関連する小さな単位で差分をレビューして進めてください。
 
 ## 作業再開手順

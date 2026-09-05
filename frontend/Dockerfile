@@ -32,6 +32,9 @@ RUN yarn build
 # --- Serve Stage ---
 FROM nginx:alpine@sha256:72ba65eb42c10344912a84ff42408db7d34f2feb642204570ab8fc5ffd29f1d3
 
+# baseを維持し、util-linux由来の検出に対応するlibraryだけを固定更新する。
+RUN apk add --no-cache --upgrade libuuid=2.42.3-r0
+
 # ビルド成果物をNginxの公開ディレクトリにコピー
 COPY --from=builder /app/dist /usr/share/nginx/html
 

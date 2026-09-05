@@ -267,6 +267,7 @@ def test_split_images_execute_judge_and_persist_through_private_networks(
             environment={
                 "DOCKER_HOST": "unix:///run/docker.sock",
                 "SANDBOX_OWNER_ID": owner,
+                "SANDBOX_IMAGE_ID": os.environ["SANDBOX_IMAGE_ID"],
                 "RUNNER_SHARED_SECRET": secret,
             },
             volumes=_socket_binding(),
