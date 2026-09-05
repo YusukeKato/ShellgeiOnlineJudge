@@ -13,21 +13,31 @@ include = "backend"
 python = ">=3.12,<3.15"
 fastapi = "^0.116.1"
 uvicorn = "^0.35.0"
-gunicorn = "^23.0.0"
-docker = "^7.1.0"
-pytz = "^2025.2"
 pydantic = "^2.11.7"
+pyyaml = "^6.0.3"
+# 構造化logが参照する判定modelも画像moduleをimportするため、両runtimeに必要。
+pillow = "^12.3.0"
+
+[tool.poetry.group.backend.dependencies]
+sqlalchemy = "^2.0.47"
+psycopg2-binary = "^2.9.11"
+
+[tool.poetry.group.runner.dependencies]
+docker = "^7.1.0"
+
+[tool.poetry.group.dev.dependencies]
 pytest = "^8.4.2"
 ruff = "^0.12.12"
 mypy = "^1.17.1"
 types-requests = "^2.32.4.20250809"
 types-docker = "^7.1.0.20250822"
 types-pytz = "^2025.2.0.20250809"
-sqlalchemy = "^2.0.47"
-psycopg2-binary = "^2.9.11"
-pyyaml = "^6.0.3"
 types-pyyaml = "^6.0.12"
-pillow = "^12.3.0"
+
+# 旧補助依存の削除判断はR3-026で行い、本番imageには含めない。
+[tool.poetry.group.legacy.dependencies]
+gunicorn = "^23.0.0"
+pytz = "^2025.2"
 
 [tool.mypy]
 mypy_path = "backend"

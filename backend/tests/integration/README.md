@@ -67,6 +67,29 @@ SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_FULL_REGRESSION=1 \
   poetry run pytest -m full_regression
 ```
 
+## 本番runtime imageの検証
+
+`test_runtime_images.py`は追加の明示flagと、検証対象としてbuild済みの2つのimageを
+必要とします。上記のrootless環境を確認したうえで、リポジトリrootから実行します。
+
+```sh
+export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
+docker build --file backend/Dockerfile --target backend --tag soj-backend:runtime-test .
+docker build --file backend/Dockerfile --target runner --tag soj-runner:runtime-test .
+SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_RUNTIME_IMAGE_TESTS=1 \
+  SOJ_BACKEND_RUNTIME_IMAGE=soj-backend:runtime-test \
+  SOJ_RUNNER_RUNTIME_IMAGE=soj-runner:runtime-test \
+  poetry run pytest backend/tests/integration/test_runtime_images.py
+```
+
+実imageの非root起動、不要package・逆側コードの不在、問題data読込、socket補助groupの
+必要性を確認します。一時的なbackend・runner・PostgreSQLを内部networkへ配置し、
+Composeと同じ実行制限でtext/image判定とDB保存まで検証します。test ownerだけの
+sandbox・container・networkを終了時に回収し、本番volumeや公開portは使用しません。
+frontend/nginx、browser、Compose全体の起動・障害回復E2EはR3-024の対象です。
+
+## 対象外の耐性試験
+
 下記のテストは含めません。
 
 - fork bomb

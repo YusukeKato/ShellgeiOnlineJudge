@@ -26,12 +26,15 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+      target: runner
     container_name: soj-runner
     restart: always
-    command: ["uvicorn", "runner_main:app", "--host", "0.0.0.0", "--port", "8001", "--no-access-log"]
+    command: ["uvicorn", "runner_main:app", "--host", "0.0.0.0", "--port", "8001", "--no-proxy-headers", "--no-access-log"]
     volumes:
       # Docker socketは外部HTTPを処理しないrunnerだけにマウントする。
       - ${DOCKER_SOCKET_PATH:?Set DOCKER_SOCKET_PATH to the rootless Docker socket}:/run/docker.sock
+    group_add:
+      - ${DOCKER_SOCKET_GID:?Set DOCKER_SOCKET_GID to the socket group inside the rootless container}
     environment:
       - TZ=Asia/Tokyo
       - DOCKER_HOST=unix:///run/docker.sock
@@ -62,6 +65,7 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+      target: backend
     container_name: soj-backend
     restart: always
     environment:
@@ -72,6 +76,13 @@ services:
       - EXECUTION_LOG_RETENTION_DAYS=${EXECUTION_LOG_RETENTION_DAYS:-365}
       - EXECUTION_LOG_MAX_ROWS=${EXECUTION_LOG_MAX_ROWS:-10000}
       - RUNNER_SHARED_SECRET=${RUNNER_SHARED_SECRET:?Set RUNNER_SHARED_SECRET to a random value}
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16M,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       db:
         condition: service_started

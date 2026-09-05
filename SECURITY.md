@@ -406,6 +406,24 @@ nginxのContent Security Policyはscript、style、font、API通信を同一orig
 異なるoriginを指定してもbrowserがAPI通信を拒否します。利用者が明示的に操作する
 外部linkはこの制約の対象外です。
 
+## backend・runnerの実行権限
+
+backendとrunnerは別の本番imageを使用し、いずれもcontainer内のUID/GID
+`10001:10001`で起動します。コード・依存・問題dataはroot所有とし、Composeは
+両serviceへread-only root、`cap_drop: ALL`、`no-new-privileges`、容量制限付きの
+`/tmp` tmpfsを適用します。build toolとtest・開発依存はruntime imageに含めません。
+収録内容と依存境界は[backend文書](./backend/README.md#本番runtime-image)を参照してください。
+
+runnerには、rootless namespace内で実測したDocker socketのGIDだけを補助groupとして
+追加します。backendへは追加しません。GIDを未設定ならCompose設定検査で拒否し、
+誤ったGIDでsocketへ接続できなければrunnerはpoolを初期化できず起動に失敗します。
+socketの所有者やpermissionを変更して接続を許可する方式ではありません。
+設定手順は[開発文書](./docs/DEVELOPMENT.md#runner用socket-groupの設定)を参照してください。
+
+この非root化はbackend・runner processのOS権限に対する制限です。
+sandbox内の実行user、runnerのDocker API操作権限、DB runtime roleは変えていません。
+backendは起動時migrationのため既存のDB権限を使い、DB owner/app role分離は未対応です。
+
 ## runnerとDocker socketの権限
 
 rootless Docker socketは、外部HTTP requestを処理しないrunnerだけにmountします。

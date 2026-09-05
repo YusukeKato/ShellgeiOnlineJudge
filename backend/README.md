@@ -31,6 +31,31 @@
 problem schema、manifest revision、移行・更新手順は、
 [問題データ](../problems/README.md)を参照してください。
 
+## 本番runtime image
+
+`backend/Dockerfile`は`backend`と`runner`の独立した最終targetを持ち、Composeが
+serviceごとに選択します。target未指定の場合は`backend`をbuildします。
+現在は共有・専用コードが同じdirectoryに混在するため、COPY対象をfile単位で列挙しています。
+責務別packageへの整理とdirectory単位COPYへの移行は
+[R3-029](../docs/refactoring/README.md#r3-029-organize-shared-backend-and-runner-packages)で追跡します。
+
+| 対象 | 収録するもの | 収録しないもの |
+| --- | --- | --- |
+| 共通 | API framework、typed model、問題repository・判定module、schema v3と画像data | Poetry、pytest、ruff、mypy、型stub、test、legacy問題data |
+| backend | 公開API、runner HTTP client、DB driver・repository・migration | Docker SDK、sandbox実行・管理module、runner endpoint |
+| runner | 内部API、Docker SDK、sandbox実行・管理module | 公開API、DB driver・repository・migration |
+
+共有の構造化logが判定modelを参照するため、画像libraryのPillowは両targetに必要です。
+Poetryは固定versionでbuild stageにだけ導入し、`poetry.lock`から`main,backend`または
+`main,runner`の依存を専用venvへinstallします。旧補助packageは`legacy` groupへ残し、
+削除判断はR3-026へ分離しています。ホストの通常の`poetry install`は開発用groupも導入します。
+
+実行UID、read-only filesystem、socket権限は
+[SECURITY.md](../SECURITY.md#backendrunnerの実行権限)、socket GIDの設定方法は
+[開発手順](../docs/DEVELOPMENT.md#runner用socket-groupの設定)を正本とします。
+本番container内にはPoetryがないため、運用commandは`python -m scripts.database_migrations`
+のように実行します。imageの検証方法は[Docker統合テスト](./tests/integration/README.md#本番runtime-imageの検証)を参照してください。
+
 ## 内部runner protocol
 
 backendからrunnerへの実行境界は、`scripts/runner_protocol.py`の

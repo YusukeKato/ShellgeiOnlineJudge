@@ -18,12 +18,12 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `cf8ea96157c04c1a1efb278faba590034dfd3881`
-- commit subject: `docs: complete frontend failure display tracker`
+- 確認対象commit: `83fbe90078b74a7f8da7c5668248c7f30415f2b3`とR3-023の未commit差分
+- commit subject: `docs: align repository documentation with current behavior`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の実行検証: `7911f3c`でPython静的検査・非Docker test・rootless Docker統合/全問題回帰、
-  `eb9e458`でfrontend基本5検査。以後のcommitはtracker更新のみ
+- 直近の実行検証: R3-023差分でPython静的検査・非Docker test・rootless Docker統合/全問題回帰・
+  分離した本番imageの非root/依存/socket/実行/判定/保存検査。frontend基本5検査は`eb9e458`で実施済み
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
 baseline以降に変更がある場合は、先に差分を確認してください。
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff cf8ea96157c04c1a1efb278faba590034dfd3881..HEAD
+git diff 83fbe90078b74a7f8da7c5668248c7f30415f2b3
 ```
 
 ## Current security status
@@ -48,6 +48,8 @@ git diff cf8ea96157c04c1a1efb278faba590034dfd3881..HEAD
   現在のrootless開発環境で実効値を確認しています。
 - backendからDocker socketを外し、認証付き内部runnerへ分離した設計は有効です。
   ただし、runnerと他serviceは同じrootless daemonとVMを共有しています。
+- R3-023ではbackend・runnerを用途別の非root imageへ分離しました。
+  DB runtime roleの権限は維持しているため、SOJ-011は部分解決です。
 - 本番の外側proxy、kernel、LSM、filesystem quota、監視、backup等は
   repositoryだけでは確認できません。
 
@@ -72,10 +74,10 @@ Statusは次の意味で使用します。
   - 概要: runner侵害時の影響が同一daemon上のDB、frontend、TLS鍵へ及ぶ
   - 関連: `docker-compose.yml`
   - 次: runner専用hostまたは使い捨てVMへ分離
-- `SOJ-011` — Medium / P2 / Deferred
-  - 概要: backend containerとDB runtime roleの権限が大きい
+- `SOJ-011` — Medium / P2 / Partially resolved
+  - 概要: backend・runnerの非root化、runtime依存分離、read-only化は実装したが、DB runtime roleの権限が大きい
   - 関連: `backend/Dockerfile`、`docker-compose.yml`
-  - 次: non-root最小imageとDB owner/app role分離を設計
+  - 次: migration実行者と常時稼働backendのDB owner/app role・credential分離を設計
 - `SOJ-012` — Medium / P2 / Partially resolved
   - 概要: DB行数・Docker service logは制限したが、host I/O、
     DB volume、image cacheにquotaがない
@@ -105,8 +107,8 @@ Statusは次の意味で使用します。
 現在の未解決trackerは次の内訳です。
 
 - Open: 0件
-- Partially resolved: 4件
-- Deferred: 4件
+- Partially resolved: 5件
+- Deferred: 3件
 - Severity: High 0件、Medium 6件、Low 2件
 
 ## Resolved issues
@@ -187,14 +189,19 @@ daemon単独のsandbox有効期限等の残存経路は、
 
 残存リスクを踏まえ、SOJ-002はMedium、P1、Partially resolvedとします。
 
+### SOJ-011: DB runtime roleの分離
+
+R3-023のOS user・image分離後も、backendは起動時migrationのため既存のDB roleを
+使用します。migration用の資格情報を常時稼働backendへ渡さない構成、既存volumeの
+権限移行、rollback手順を合わせて設計する必要があります。SOJ-006の同一daemon上の
+影響範囲も、このimage分離だけでは解消しません。
+
 ## Deferred issues
 
 ### Architecture変更が必要
 
 - SOJ-006は、runnerを専用hostまたは使い捨てVMへ移す必要があります。
   現在の内部HTTPは平文・固定URLであり、そのまま別hostへ公開してはいけません。
-- SOJ-011は、runtime image、migration、DB roleを同時に整理する必要があります。
-  小さなsecurity patchとは別phaseにします。
 
 ### Product方針が必要
 
@@ -312,6 +319,8 @@ Deferredは不要という意味ではありません。
     NUL保存、lock timeoutとrollback後の再保存
 - `backend/tests/integration/test_full_problem_regression.py`
   - 現在の92問の正解commandとjudge互換性
+- `backend/tests/integration/test_runtime_images.py`
+  - build済み本番imageの非root・依存境界・socket group、内部network上の実行・判定・DB保存
 - `frontend/src/legacy_behavior.test.jsx`、`playground.test.jsx`
   - typed API検証、正解・不正解・実行失敗・判定エラー表示、timeout、abort、
     二重送信と問題選択・提出responseの競合

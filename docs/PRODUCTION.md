@@ -244,6 +244,9 @@ VITE_SOJ_URL=https://example.com
 
 開発・本番に共通する値の整合条件は、
 [共通する環境変数の条件](./DEVELOPMENT.md#共通する環境変数の条件)を参照してください。
+初回deployと既存構成からの移行時には、
+[runner用socket groupの設定](./DEVELOPMENT.md#runner用socket-groupの設定)に従って
+`DOCKER_SOCKET_GID`を実測し、`.env`へ追加してください。未設定ではComposeが設定検査を拒否します。
 本番固有の注意点は次のとおりです。
 
 - `.env`をGitへ追加しない
@@ -607,6 +610,9 @@ git diff --name-status "${SOJ_PREVIOUS_COMMIT}"..HEAD
 
 「6. 本番反映前の検証」を完了したcommitを使用します。
 まず、rootless daemonと本番`.env`を含むCompose設定を検査します。
+backend/runner image分離前の構成から更新する場合は、先に上記のsocket GID設定を追加します。
+Composeは両serviceの専用targetをbuildし、非root・read-onlyで再作成します。
+DB schema・roleの変更はこのimage分離には含まれず、既存volumeを引き続き使用します。
 
 ```sh
 ./deploy/rootless-compose.sh config --quiet

@@ -105,3 +105,20 @@ def test_runner_healthcheck_uses_pool_readiness_endpoint() -> None:
 
     assert "/internal/ready" in healthcheck[-1]
     assert "/internal/health" not in healthcheck[-1]
+
+
+def test_runtime_services_use_separate_targets_and_read_only_filesystems() -> None:
+    # 公開APIとrunnerを別targetでbuildし、両方のroot filesystemと権限を制限する。
+    services = yaml.safe_load(COMPOSE_FILE.read_text(encoding="utf-8"))["services"]
+
+    for name in ("backend", "runner"):
+        service = services[name]
+        assert service["build"]["target"] == name
+        assert service["read_only"] is True
+        assert service["cap_drop"] == ["ALL"]
+        assert service["security_opt"] == ["no-new-privileges:true"]
+        assert service["tmpfs"] == ["/tmp:rw,noexec,nosuid,nodev,size=16M,mode=1777"]
+    assert "group_add" not in services["backend"]
+    assert services["runner"]["group_add"] == [
+        "${DOCKER_SOCKET_GID:?Set DOCKER_SOCKET_GID to the socket group inside the rootless container}"
+    ]

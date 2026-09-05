@@ -158,6 +158,10 @@ poetry run python --version
 poetry run pytest --version
 ```
 
+依存は共有・backend・runner・開発・旧補助のgroupに分けています。
+ホストでの`poetry install`は全groupを導入し、本番imageの収録対象は
+[backend文書](../backend/README.md#本番runtime-image)を参照してください。
+
 ## 4. 開発用の環境変数
 
 環境変数の一覧と既定値は[`.env.example`](../.env.example)を正本とします。
@@ -184,6 +188,31 @@ SERVER_URL=https://localhost:8443
 VITE_SOJ_URL=https://localhost:8443
 ```
 
+### runner用socket groupの設定
+
+`DOCKER_SOCKET_GID`には、rootless container内から見たsocketのGIDを設定します。
+ホストでの`stat`のGIDとは一致しない場合があるため、Compose起動前に次の手順で確認します。
+先にbuildするrunner imageは検査にも使用します。下記ではsocketの属性だけを読み、
+runner serverやsandboxは起動しません。
+
+```sh
+export DOCKER_HOST="unix://${XDG_RUNTIME_DIR:?}/docker.sock"
+case "$(docker info --format '{{json .SecurityOptions}}')" in
+    *name=rootless*) ;;
+    *) echo 'rootless Docker is required' >&2; exit 1 ;;
+esac
+docker build --file backend/Dockerfile --target runner --tag soj-runner:socket-check .
+docker run --rm --network none --user 0:0 --read-only \
+  --cap-drop ALL --security-opt no-new-privileges \
+  --mount "type=bind,src=${DOCKER_HOST#unix://},dst=/run/docker.sock,readonly" \
+  soj-runner:socket-check python -c 'import os; print(os.stat("/run/docker.sock").st_gid)'
+```
+
+出力された整数を`.env`の`DOCKER_SOCKET_GID`へ設定してください。
+`DOCKER_SOCKET_PATH`も同じsocket pathに合わせます。上の`--user 0:0`は属性読取り用の
+一時containerだけに適用し、実際のrunnerはimage既定の非root userで動かします。
+daemon移設やUID/GID mappingを変更した場合は再確認します。値が空ならComposeは拒否します。
+
 ### 共通する環境変数の条件
 
 開発環境と本番環境に共通する環境変数の条件は次のとおりです。
@@ -193,6 +222,7 @@ VITE_SOJ_URL=https://localhost:8443
 - `RUNNER_SHARED_SECRET`には`openssl rand -hex 32`で生成した値を設定する
 - runnerとbackendへ同じ`RUNNER_SHARED_SECRET`が渡される
 - `SANDBOX_OWNER_ID`は同じDocker daemon上の他環境と重複させない
+- `DOCKER_SOCKET_GID`には上記手順で確認したcontainer内のsocket GIDを設定する
 - URLの予約文字を含むパスワードは、`DATABASE_URL`側でpercent-encodingする
 - TLS証明書の配置を変える場合は、`TLS_CERTIFICATE_PATH`と
   `TLS_PRIVATE_KEY_PATH`を合わせる
