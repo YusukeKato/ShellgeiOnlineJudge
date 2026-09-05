@@ -179,8 +179,9 @@ printf '%s\n' "${XDG_RUNTIME_DIR}/docker.sock"
 `1000`は実際のUIDへ置き換えてください。
 
 ```dotenv
-POSTGRES_PASSWORD=開発専用のパスワード
-DATABASE_URL=postgresql://soj_user:開発専用のパスワード@db:5432/soj_db
+POSTGRES_PASSWORD=管理専用のパスワード
+MIGRATION_DATABASE_URL=postgresql://soj_user:管理専用のパスワード@db:5432/soj_db
+DATABASE_URL=postgresql://soj_app:通常実行専用の別パスワード@db:5432/soj_db
 
 DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
 SANDBOX_OWNER_ID=shellgei-online-judge-development
@@ -218,33 +219,32 @@ daemon移設やUID/GID mappingを変更した場合は再確認します。値�
 
 開発環境と本番環境に共通する環境変数の条件は次のとおりです。
 
-- `POSTGRES_PASSWORD`と`DATABASE_URL`内のパスワードを一致させる
+- `POSTGRES_USER`・`POSTGRES_PASSWORD`と`MIGRATION_DATABASE_URL`の管理資格情報を一致させる
+- `DATABASE_URL`は別の専用ユーザー・別passwordとし、両URLは同じhost・port・DBを指す
+- 管理CLIは明示的なPostgreSQL URL（`postgresql`または`postgresql+psycopg2`）を要求し、query optionを受け付けない
+- 通常用role名は小文字英字またはunderscoreで始まる小文字英数字/underscoreの63文字以内とし、`pg_`で始めない
 - `DATABASE_OPERATION_TIMEOUT_SECONDS`は1以上の整数にする
 - `RUNNER_SHARED_SECRET`には`openssl rand -hex 32`で生成した値を設定する
 - runnerとbackendへ同じ`RUNNER_SHARED_SECRET`が渡される
 - `SANDBOX_OWNER_ID`は同じDocker daemon上の他環境と重複させない
 - `DOCKER_SOCKET_GID`には上記手順で確認したcontainer内のsocket GIDを設定する
-- URLの予約文字を含むパスワードは、`DATABASE_URL`側でpercent-encodingする
+- URLの予約文字を含むパスワードは、両DB URL側でpercent-encodingする
 - TLS証明書の配置を変える場合は、`TLS_CERTIFICATE_PATH`と
   `TLS_PRIVATE_KEY_PATH`を合わせる
 
 実行ログの保持仕様は、
 [SECURITY.mdの「実行ログとDockerログ」](../SECURITY.md#実行ログとdockerログ)を参照してください。
 
-backendは起動時にDBを最新revisionへ自動migrationします。SQLiteを使うforward・rollback・
-失敗時のrevision検査は通常の非Docker test、一時PostgreSQLを使うtransactional DDL検査は
-Docker統合テストに含まれます。開発DBの現在schemaを明示的にheadへ進める場合は、
-対象DBへホストから接続できる`DATABASE_URL`を環境変数に設定し、リポジトリrootから
-次を実行します。CLIの接続設定は[backend文書](../backend/README.md#実行ログとdb-migration)を参照してください。
+backendはDBを自動migrationせず、準備済みschemaと通常実行roleを起動時に検証します。
+ホストからDBを準備する場合は、`MIGRATION_DATABASE_URL`と`DATABASE_URL`を設定し、
+次をrepository rootから実行してください。
 
 ```sh
-cd backend
-poetry run python -m soj_backend.database_migrations head
-cd ..
+PYTHONPATH=backend poetry run python -m soj_backend.database_admin head
 ```
 
-rollback commandと本番backup条件は
-[backendの実行ログとDB migration](../backend/README.md#実行ログとdb-migration)を参照してください。
+CLIと権限設定の契約は[backendの実行ログとDB migration](../backend/README.md#実行ログとdb-migration)、
+既存環境の移行・rollbackは[本番運用](./PRODUCTION.md#8-更新デプロイ)を参照してください。
 
 ## 5. 開発用TLS証明書
 
@@ -328,7 +328,12 @@ export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
 docker pull \
   theoldmoon0602/shellgeibot:latest@sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36
 ./deploy/rootless-compose.sh config --quiet
-./deploy/rootless-compose.sh up -d --build
+./deploy/rootless-compose.sh --profile maintenance build
+./deploy/rootless-compose.sh up -d db
+./deploy/rootless-compose.sh exec db sh -c 'pg_isready -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+# pg_isreadyがaccepting connections（終了0）になるまで確認してから次へ進む。
+./deploy/rootless-compose.sh run --rm --no-deps migrate
+./deploy/rootless-compose.sh up -d
 ./deploy/rootless-compose.sh ps
 ```
 

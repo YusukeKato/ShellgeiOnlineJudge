@@ -10,7 +10,7 @@ from starlette.responses import Response
 
 from soj_backend.api import api_shellgei
 from soj_backend.database import engine
-from soj_backend.database_migrations import migrate_database
+from soj_backend.database_access import validate_runtime_database
 from soj_backend.execution_log_repository import (
     close_execution_log_repository,
     execution_log_repo,
@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     """
     runner_client.validate_configuration()
     load_problem_repository()
-    migrate_database(engine)
+    validate_runtime_database(engine)
     execution_log_repo.prune()
     try:
         yield

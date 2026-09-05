@@ -22,7 +22,7 @@ public DTO・内部protocolのfieldとschema名は維持しています。
 
 内部Pythonの旧module名への互換shimは設けていません。ComposeとDockerfileの起動先は
 `soj_backend.main:app`・`soj_runner.main:app`です。手動の起動・運用scriptも新module名へ揃えてください。
-DB migration CLIは`soj_backend.database_migrations`、問題整備CLIは
+DB管理CLIは`soj_backend.database_admin`、問題整備CLIは
 `soj_tools.problem_migration`・`soj_tools.problem_manifest`です。
 
 ## 開発とテスト
@@ -61,7 +61,7 @@ Poetryは固定versionでbuild stageにだけ導入し、`poetry.lock`から`mai
 実行UID、read-only filesystem、socket権限は
 [SECURITY.md](../SECURITY.md#backendrunnerの実行権限)、socket GIDの設定方法は
 [開発手順](../docs/DEVELOPMENT.md#runner用socket-groupの設定)を正本とします。
-本番container内にはPoetryがないため、運用commandは`python -m soj_backend.database_migrations`
+本番container内にはPoetryがないため、運用commandは`python -m soj_backend.database_admin`
 のように実行します。imageの検証方法は[Docker統合テスト](./tests/integration/README.md#本番runtime-imageの検証)を参照してください。
 
 ## 内部runner protocol
@@ -110,25 +110,35 @@ wrong answerへ変換しません。
 保存しません。利用目的、保持期間、backupを含むsecurity仕様は
 [実行ログとDockerログ](../SECURITY.md#実行ログとdockerログ)を正本とします。
 
-backendは起動時に`head`まで自動migrationします。ホスト上でCLIを使用する場合は、
-対象DBの`DATABASE_URL`を設定し、リポジトリrootから`backend`へ移動して実行します。
-CLIは`.env`を自動読込しません。ホストからComposeのDBへ接続する場合は、
-内部service名`db`ではなくホストから到達できる接続先を環境変数に設定してください。
+backendは起動時にschemaが`head`であることと、PostgreSQLのruntime roleの権限を
+読み取りだけで確認します。未migration・未知revision・過剰/不足権限では受付を開始しません。
+SQLiteの単体testではschema revisionだけを検査します。権限境界は実PostgreSQLで検証します。
+
+管理処理は`soj_backend.database_admin`を使用します。`MIGRATION_DATABASE_URL`でschemaを
+更新し、`head`指定時は`DATABASE_URL`のユーザー・passwordから専用runtime roleを設定します。
+接続設定の条件は[共通する環境変数](../docs/DEVELOPMENT.md#共通する環境変数の条件)、
+許可する権限は[DB権限境界](../SECURITY.md#dbの管理用資格情報と通常実行role)を参照してください。
+CLIは`.env`を自動読込せず、失敗時にURL・SQL・内部例外を出力しません。
+
+ホスト上で実行する場合は、両URLをホストから到達できる同じDBへ設定し、repository rootで実行します。
+管理用schema・専用roleの準備は、backendを停止して行います。
 
 ```sh
-cd backend
-poetry run python -m soj_backend.database_migrations head
+PYTHONPATH=backend poetry run python -m soj_backend.database_admin head
 ```
 
-構造化列をrollbackする場合も、同じ`backend` directoryで次を実行します。
-実行前に整合性のあるbackupを取得し、backendからの書き込みを停止してください。
+migrationとrole設定はそれぞれtransactionです。migration成功後にrole設定が失敗した場合は、
+schemaだけ更新済みとなり得ます。backendを起動せず原因を解消して`head`を再実行してください。
+role設定は冪等でpasswordも同期します。既存の特権role・他role所属・所有物があるroleは、
+自動降格や所有者変更をせず拒否します。runtime用には新しい専用role名を使ってください。
+DBのPUBLIC CREATE/TEMP、public schemaのPUBLIC CREATE、管理対象表・sequenceのPUBLIC権限を
+取り消すため、他アプリと共用するDBにはそのまま適用しません。既存roleの列単位grant等が
+ポリシーに反する場合も、検査で拒否し、無関係な権限を自動的に整理しません。
 
-```sh
-poetry run python -m soj_backend.database_migrations 0001_legacy_execution_logs
-```
-
-本番手順は
-[更新デプロイとロールバック](../docs/PRODUCTION.md#8-更新デプロイ)を参照してください。
+明示revisionへのrollbackはschemaだけを戻し、roleを削除しません。
+低水準の`database_migrations` CLIはschema単体の検証用に残しますが、本番更新は管理CLIを使用します。
+[本番の更新・既存環境移行](../docs/PRODUCTION.md#8-更新デプロイ)と
+[ロールバック](../docs/PRODUCTION.md#9-ロールバック)を参照してください。
 
 text判定は`ExecutionResult`から`TextJudgeInput`へ必要項目だけを渡し、
 file I/Oを行わないpure functionへ分離しています。判定規則の正本は

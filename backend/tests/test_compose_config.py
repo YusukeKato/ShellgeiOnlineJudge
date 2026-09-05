@@ -16,7 +16,13 @@ def test_all_compose_services_have_bounded_local_logs() -> None:
         },
     }
 
-    assert set(compose["services"]) == {"db", "runner", "backend", "frontend"}
+    assert set(compose["services"]) == {
+        "db",
+        "runner",
+        "backend",
+        "frontend",
+        "migrate",
+    }
     for service in compose["services"].values():
         assert service["logging"] == expected_logging
 
@@ -122,3 +128,27 @@ def test_runtime_services_use_separate_targets_and_read_only_filesystems() -> No
     assert services["runner"]["group_add"] == [
         "${DOCKER_SOCKET_GID:?Set DOCKER_SOCKET_GID to the socket group inside the rootless container}"
     ]
+
+
+def test_migration_credentials_are_only_available_to_manual_maintenance_service() -> (
+    None
+):
+    # 管理URLをbackend/runnerへ渡さず、通常upでmaintenance serviceが起動しないことを確認する。
+    services = yaml.safe_load(COMPOSE_FILE.read_text())["services"]
+    migrate = services["migrate"]
+    assert migrate["profiles"] == ["maintenance"]
+    assert migrate["networks"] == ["backend_db"]
+    assert migrate["restart"] == "no"
+    assert migrate["build"]["target"] == "backend"
+    assert (
+        migrate["read_only"] and not migrate.get("volumes") and not migrate.get("ports")
+    )
+    assert "soj_backend.database_admin" in migrate["command"]
+    for name in ("backend", "runner", "frontend"):
+        assert not any(
+            value.startswith("MIGRATION_DATABASE_URL=")
+            for value in services[name].get("environment", [])
+        )
+    assert any(
+        value.startswith("MIGRATION_DATABASE_URL=") for value in migrate["environment"]
+    )

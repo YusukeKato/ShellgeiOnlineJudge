@@ -39,7 +39,7 @@ def _engine_options(database_url: str, timeout_seconds: int) -> dict[str, Any]:
             "connect_timeout": timeout_seconds,
             "options": (
                 f"-c statement_timeout={timeout_milliseconds} "
-                f"-c lock_timeout={timeout_milliseconds}"
+                f"-c lock_timeout={timeout_milliseconds} -c search_path=public"
             ),
         },
     }

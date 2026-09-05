@@ -99,8 +99,12 @@ frontend/nginxとbrowserを含む検証は、次のCompose E2Eで行います。
 
 ## ComposeとブラウザのE2E
 
+`test_database_roles.py`は専用の一時PostgreSQLで旧行・所有者を維持したrole分離、保存・retention、
+DDL・migration表更新・採番変更・role昇格の拒否、権限の後付け検知とrollback/re-upgradeを検証します。
+
 `test_compose_e2e.py`は実際の`docker-compose.yml`を読み込み、rootless確認wrapperで
-frontend/nginx、backend、runner、PostgreSQLを起動します。上記と同じ隔離環境でのみ
+frontend/nginx、backend、runner、PostgreSQLを起動します。DB起動後に同じbackend imageの
+一時`migrate` serviceでschemaと専用app roleを準備し、通常用credentialだけをbackendへ渡します。上記と同じ隔離環境でのみ
 実行してください。Docker Compose v2以降、`openssl`、DB・browserを含むbuild済みの5つのtest imageが必要です。
 ホストのbrowserやNode.jsは使用しません。
 
@@ -138,7 +142,7 @@ SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_COMPOSE_E2E=1 SOJ_RUN_FULL_REGRESSION=1 \
 検証内容:
 
 - TLS nginxの静的配信・CSP・問題一覧と、public v3 APIの正解、不正解、timeout、出力上限、画像判定
-- 応答header、保存IDとPostgreSQLの実保存行の一致
+- 応答header、保存IDと最小権限の通常roleによるPostgreSQLの実保存行の一致
 - 内部network経由のrunner認証失敗・problem revision不一致と、実行前の拒否
 - test DB停止中の判定保持と`persistence: unavailable`、DB復帰後の再保存と停止前の行の保持
 - test runner停止中の503、SIGKILL後の明示再起動による旧sandbox回収、再提出の成功

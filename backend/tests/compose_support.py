@@ -28,14 +28,19 @@ def isolated_config(
     """本番制約を複製し、test名・build済みimage・loopback動的portだけを差し替える。"""
     if re.fullmatch(r"soj-e2e-[0-9a-f]{32}", project) is None:
         raise ValueError("a unique E2E project is required")
-    if set(base["services"]) != {"db", "backend", "runner", "frontend"} or set(
-        images
-    ) != {"backend", "runner", "frontend", "db"}:
+    if set(base["services"]) != {
+        "db",
+        "backend",
+        "runner",
+        "frontend",
+        "migrate",
+    } or set(images) != {"backend", "runner", "frontend", "db"}:
         raise ValueError("review isolation before adding Compose services")
     # 新しいbind mountやenv fileをtestへ暗黙に持ち込まず、隔離方法のreviewを要求する。
     mounts = {
         "db": [r"db_data:/var/lib/postgresql/data"],
         "backend": [],
+        "migrate": [],
         "runner": [r"\$\{DOCKER_SOCKET_PATH:\?[^}]+\}:/run/docker.sock"],
         "frontend": [
             r"\$\{TLS_CERTIFICATE_PATH:-[^}]+\}:/etc/nginx/tls/fullchain.pem:ro",
@@ -73,6 +78,8 @@ def isolated_config(
         if name in images:
             service.pop("build", None)
             service["image"] = images[name]
+    result["services"]["migrate"].pop("build", None)
+    result["services"]["migrate"]["image"] = images["backend"]
     result["services"]["db"]["ports"] = []
     result["services"]["frontend"]["ports"] = ["127.0.0.1::443"]
     return result
@@ -157,7 +164,8 @@ class ComposeStack:
             "POSTGRES_USER": "e2e",
             "POSTGRES_DB": "e2e",
             "POSTGRES_PASSWORD": secret,
-            "DATABASE_URL": f"postgresql://e2e:{secret}@db:5432/e2e",
+            "MIGRATION_DATABASE_URL": f"postgresql://e2e:{secret}@db:5432/e2e",
+            "DATABASE_URL": f"postgresql://e2e_app:{os.urandom(32).hex()}@db:5432/e2e",
             "RUNNER_SHARED_SECRET": secret,
             "SANDBOX_OWNER_ID": project,
             "DOCKER_SOCKET_PATH": socket,

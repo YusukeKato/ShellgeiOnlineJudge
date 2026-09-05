@@ -241,8 +241,8 @@ def test_backend_startup_stops_before_database_when_repository_is_invalid(
     )
     monkeypatch.setattr(
         backend_main,
-        "migrate_database",
-        lambda _engine: events.append("migrate"),
+        "validate_runtime_database",
+        lambda _engine: events.append("validate_database"),
     )
 
     async def run_lifespan() -> None:

@@ -105,7 +105,7 @@ def test_postgres_engine_options_bound_connection_pool_and_statements() -> None:
         "pool_timeout": 5,
         "connect_args": {
             "connect_timeout": 5,
-            "options": "-c statement_timeout=5000 -c lock_timeout=5000",
+            "options": "-c statement_timeout=5000 -c lock_timeout=5000 -c search_path=public",
         },
     }
 
@@ -443,8 +443,8 @@ def test_backend_startup_validates_runner_and_prunes_logs(
 
     monkeypatch.setattr(
         backend_main,
-        "migrate_database",
-        lambda _engine: events.append("migrate"),
+        "validate_runtime_database",
+        lambda _engine: events.append("validate_database"),
     )
     monkeypatch.setattr(backend_main, "execution_log_repo", FakeExecutionLogRepo())
     monkeypatch.setattr(
@@ -469,7 +469,7 @@ def test_backend_startup_validates_runner_and_prunes_logs(
     assert events == [
         "runner_validate",
         "repository_load",
-        "migrate",
+        "validate_database",
         "prune",
         "serving",
         "runner_close",

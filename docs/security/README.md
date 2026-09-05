@@ -18,12 +18,12 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `b422b01`
-- commit subject: `feat: add read-only host sandbox monitoring (SOJ-002)`
+- 確認対象commit: `944356e`とSOJ-011のDB権限分離review待ち差分
+- commit subject: `docs: record approved SOJ-002 monitoring baseline`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の変更: SOJ-002の読み取り専用ホスト監視CLI。runner停止・非healthyとowner単位のsandbox異常を検出。
-  使用方法・出力・終了codeは[本番運用](../PRODUCTION.md#runnerとは独立したsandbox監視)を参照
+- 直近の変更: SOJ-011のDB管理用credential・通常実行roleの分離。backend起動時のDDLを廃止。
+  使用方法は[backend文書](../../backend/README.md#実行ログとdb-migration)、移行は[本番運用](../PRODUCTION.md#8-更新デプロイ)を参照
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
 baseline以降に変更がある場合は、先に差分を確認してください。
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff b422b01
+git diff 944356e
 ```
 
 ## Current security status
@@ -49,8 +49,8 @@ git diff b422b01
   現在のrootless開発環境で実効値を確認しています。
 - backendからDocker socketを外し、認証付き内部runnerへ分離した設計は有効です。
   ただし、runnerと他serviceは同じrootless daemonとVMを共有しています。
-- R3-023ではbackend・runnerを用途別の非root imageへ分離しました。
-  DB runtime roleの権限は維持しているため、SOJ-011は部分解決です。
+- R3-023の非root image分離に加え、SOJ-011でDB管理処理を独立serviceへ分離しました。
+  通常roleの最小権限とbackend起動時の読み取り検証を実装済みです（review待ち、本番移行は未実施）。
 - 本番の外側proxy、kernel、LSM、filesystem quota、監視、backup等は
   repositoryだけでは確認できません。
 
@@ -75,10 +75,6 @@ Statusは次の意味で使用します。
   - 概要: runner侵害時の影響が同一daemon上のDB、frontend、TLS鍵へ及ぶ
   - 関連: `docker-compose.yml`
   - 次: runner専用hostまたは使い捨てVMへ分離
-- `SOJ-011` — Medium / P2 / Partially resolved
-  - 概要: backend・runnerの非root化、runtime依存分離、read-only化は実装したが、DB runtime roleの権限が大きい
-  - 関連: `backend/Dockerfile`、`docker-compose.yml`
-  - 次: migration実行者と常時稼働backendのDB owner/app role・credential分離を設計
 - `SOJ-012` — Medium / P2 / Partially resolved
   - 概要: DB行数・Docker service logは制限したが、host I/O、
     DB volume、image cacheにquotaがない
@@ -110,9 +106,9 @@ Statusは次の意味で使用します。
 現在の未解決trackerは次の内訳です。
 
 - Open: 0件
-- Partially resolved: 6件
+- Partially resolved: 5件
 - Deferred: 2件
-- Severity: High/Critical 1件、Medium 5件、Low 2件
+- Severity: High/Critical 1件、Medium 4件、Low 2件
 
 ## SOJ-022：依存・imageの是正記録
 
@@ -270,13 +266,38 @@ Pythonの期限付き例外（`4120a76`）:
 | RES-024 | sandbox imageの`VOLUME`宣言と作成後の予期しないmountを拒否し、削除時に匿名volumeも回収 | `eff33ca` | container manager unit、Docker baseline test |
 | RES-025 | frontend nginx設定をimageへ組み込み、hostからのwritable bind mountを削除 | `eff33ca` | Compose静的test、frontend image build |
 | RES-026 | SOJ-013: revision拒否と実行・判定・保存を実Composeで検証し、DB/runner停止復帰・browser E2Eを追加 | `48a0670` | Compose E2E、隔離設定・cleanup test |
+| RES-027 | SOJ-011: DB管理serviceと最小権限app roleを分離し、backendはschema・権限を読み取り検証 | review待ち | 実PostgreSQLの禁止操作・旧行保持・rollback、Compose全問題・保存回帰 |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
 RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020、RES-021、RES-022、
-RES-023、RES-024、RES-025、RES-026は、
+RES-023、RES-024、RES-025、RES-026、RES-027は、
 記載した範囲では解決済みです。
 daemon単独のsandbox有効期限等の残存経路は、
 別のtracker issueとして追跡しています。
+
+### SOJ-011: DB runtime roleの分離
+
+Status: Resolved（review待ち）。
+
+2026-09-05、repository上の権限分離を実装・検証しました。本番DBの変更は実施していません。
+
+- backendは起動時にDDLを実行せず、head revisionと通常roleの権限を読み取り検証する。
+- maintenance profileの`migrate`だけへ管理URLを渡し、同じbackend imageを一時実行する。
+- 既存のDB/表の所有者・行を維持し、別の専用roleで保存・retentionを実行する。
+  既存特権role・所有者・他role所属は自動降格せず拒否する。
+- 権限の正本は[SECURITY.md](../../SECURITY.md#dbの管理用資格情報と通常実行role)、
+  設定・transactionの扱いは[backend文書](../../backend/README.md#実行ログとdb-migration)、
+  初回移行・password更新・旧backendへ戻す制約は[本番運用](../PRODUCTION.md#8-更新デプロイ)を参照する。
+- 起動時処理の既存testを変更し、実装前に2件のREDを確認した。
+  実PostgreSQLで保存・retention成功、DDL・migration表更新・setval・role昇格の拒否、
+  列単位やPUBLICへの追加権限の拒否、旧行・所有者保持とrollback/re-upgradeを検証した。
+- Python 3.14でruff・format・mypy・非Docker629件が成功。公開OpenAPIは変更前snapshotと一致。
+  Compose設定、文書link、secret scanも成功。最終CLIの修正後にbackend imageを再buildし、
+  管理処理・通常role保存を含むruntime4件も再実行して成功した。
+- rootless Docker23件が成功。通常roleでの実Compose全92問・browser・DB停止復帰、
+  直接sandbox全92問、runtime境界、DB image互換性と監視CLIを含む。
+- frontend・依存・image base・sandboxは変更していないため、frontend基本5検査と脆弱性scanは再実行していない。
+  GitHub CI・本番移行は未実施。SOJ-006の同一daemon上の影響範囲とSOJ-020のDB公開は別課題のまま維持する。
 
 ## Open issue details
 
@@ -330,13 +351,6 @@ daemon単独のsandbox有効期限等の残存経路は、
 - 本番の定期実行・通知設定、独立reaperの導入は未実施。Docker daemon停止等の耐性試験は行っていない。
 
 残存リスクを踏まえ、SOJ-002はMedium、P1、Partially resolvedとします。
-
-### SOJ-011: DB runtime roleの分離
-
-R3-023のOS user・image分離後も、backendは起動時migrationのため既存のDB roleを
-使用します。migration用の資格情報を常時稼働backendへ渡さない構成、既存volumeの
-権限移行、rollback手順を合わせて設計する必要があります。SOJ-006の同一daemon上の
-影響範囲も、このimage分離だけでは解消しません。
 
 ## Deferred issues
 

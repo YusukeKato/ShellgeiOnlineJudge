@@ -217,7 +217,8 @@ cp .env.example .env
 chmod 600 .env
 id -u
 printf '%s\n' "${XDG_RUNTIME_DIR}/docker.sock"
-openssl rand -hex 32  # DB password用
+openssl rand -hex 32  # DB管理password用
+openssl rand -hex 32  # DB通常実行password用
 openssl rand -hex 32  # runner認証用
 ```
 
@@ -226,8 +227,9 @@ openssl rand -hex 32  # runner認証用
 `example.com`、UID、パスワード、証明書のパスは実環境に合わせてください。
 
 ```dotenv
-POSTGRES_PASSWORD=十分に長いランダム値
-DATABASE_URL=postgresql://soj_user:十分に長いランダム値@db:5432/soj_db
+POSTGRES_PASSWORD=管理用の十分に長いランダム値
+MIGRATION_DATABASE_URL=postgresql://soj_user:管理用の十分に長いランダム値@db:5432/soj_db
+DATABASE_URL=postgresql://soj_app:通常用の別の十分に長いランダム値@db:5432/soj_db
 
 DOCKER_SOCKET_PATH=/run/user/1000/docker.sock
 SANDBOX_OWNER_ID=shellgei-online-judge-production
@@ -481,7 +483,11 @@ export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
 docker pull \
   theoldmoon0602/shellgeibot:latest@sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36
 ./deploy/rootless-compose.sh config --quiet
-./deploy/rootless-compose.sh build --pull
+./deploy/rootless-compose.sh --profile maintenance build --pull
+./deploy/rootless-compose.sh up -d db
+./deploy/rootless-compose.sh exec db sh -c 'pg_isready -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+# DBがaccepting connections（終了0）になるまで確認し、次へ進む。
+./deploy/rootless-compose.sh run --rm --no-deps migrate
 ./deploy/rootless-compose.sh up -d --remove-orphans
 ./deploy/rootless-compose.sh ps
 ./deploy/rootless-compose.sh logs --tail=100 db runner backend frontend
@@ -631,25 +637,43 @@ git diff --name-status "${SOJ_PREVIOUS_COMMIT}"..HEAD
 
 判断できない場合は、再デプロイが必要な変更として扱います。
 
+### DB権限分離前の構成からの移行
+
+整合性のあるDB backupと旧commit・旧`.env`の保護された控えを用意し、frontend/backendを停止します。
+既存の`POSTGRES_USER`・password・DB名とvolumeは維持してください。既存volumeに対する
+`POSTGRES_*`の変更だけではDB内のrole/passwordは変わりません。
+
+1. 旧backendのDB URLを`MIGRATION_DATABASE_URL`として保持する。
+2. 新しい専用role名と別passwordを`DATABASE_URL`へ設定する。共通条件は
+   [開発文書](./DEVELOPMENT.md#共通する環境変数の条件)を参照する。
+3. 下記のbuild・管理処理を実行する。管理処理は既存行・所有者を維持したままroleと権限を設定する。
+4. 成功時だけbackend/frontendを再作成し、保存・retentionを確認する。
+
+通常用roleとして旧ownerや既存の特権roleを指定すると、管理処理・backend起動は失敗します。
+管理処理はPUBLICの一部権限も変更するため、専用DBが前提です。共用DBでは適用前に権限設計を分離してください。
+passwordの変更時もbackendを停止し、管理処理の成功後にbackendを再作成します。
+
 ### Composeへの反映
 
 「6. 本番反映前の検証」を完了したcommitを使用します。
 まず、rootless daemonと本番`.env`を含むCompose設定を検査します。
 backend/runner image分離前の構成から更新する場合は、先に上記のsocket GID設定を追加します。
 Composeは両serviceの専用targetをbuildし、非root・read-onlyで再作成します。
-DB schema・roleの変更はこのimage分離には含まれず、既存volumeを引き続き使用します。
+既存volumeとDB所有者は維持します。DB権限分離前の構成から更新する場合は、
+以下の移行手順を先に実施してください。
 
 ```sh
 ./deploy/rootless-compose.sh config --quiet
 printf 'compose config exit=%s\n' "$?"
 ```
 
-終了statusが`0`の場合だけ、buildして反映します。
+終了statusが`0`の場合だけ、buildして反映します。DBが稼働・接続可能であることを確認してください。
+通常用roleのpassword・権限を更新するため、既存backend/frontendは先に停止します。
 
 ```sh
-./deploy/rootless-compose.sh build --pull
-./deploy/rootless-compose.sh run --rm --no-deps backend \
-  python -m soj_backend.database_migrations head
+./deploy/rootless-compose.sh stop frontend backend
+./deploy/rootless-compose.sh --profile maintenance build --pull
+./deploy/rootless-compose.sh run --rm --no-deps migrate
 ./deploy/rootless-compose.sh up -d --remove-orphans
 ./deploy/rootless-compose.sh ps
 ./deploy/rootless-compose.sh logs --tail=100 db runner backend frontend
@@ -660,7 +684,7 @@ printf 'compose config exit=%s\n' "$?"
 
 単一host構成では、containerの再作成中に短時間の応答断が発生する可能性があります。
 更新のために`down`を先に実行する必要はありません。
-backendもrequest受付前に同じmigrationを確認します。明示migrationが失敗した場合は
+backendはrequest受付前にschemaと通常roleを読み取り検証します。管理処理が失敗した場合は
 `up -d`へ進まず、DBを変更したまま旧backendを再起動しないでください。
 
 ### 反映後の確認
@@ -681,13 +705,17 @@ HTTPとsandbox実行の確認方法は、
 
 障害時は、更新前に記録したcommit IDを使います。
 DB schema、データ形式、`.env`の後方互換性を先に確認してください。
+SOJ-011より前のbackendは起動時migrationに管理権限を必要とします。そのコードへ戻す場合は、
+保護された旧設定から`DATABASE_URL`を旧管理用URLへ戻してから再作成します。
+このrollbackでは常時稼働backendの最小権限保証を失います。新しいapp roleや既存行・所有者を
+自動削除・変更する必要はありません。現在のbackendを維持する場合は通常用URLのままにしてください。
 R3-014の構造化実行ログschemaから、それ以前のbackendへ戻す場合は、Gitを切り替える前に
 frontendとbackendを停止し、現在のbackend imageでlegacy revisionへ戻します。
 
 ```sh
 ./deploy/rootless-compose.sh stop frontend backend
-./deploy/rootless-compose.sh run --rm --no-deps backend \
-  python -m soj_backend.database_migrations 0001_legacy_execution_logs
+./deploy/rootless-compose.sh run --rm --no-deps migrate \
+  python -m soj_backend.database_admin 0001_legacy_execution_logs
 ```
 
 このrollbackは構造化列だけを削除し、従来の`output`、`judge`を含むlegacy列と行を残します。

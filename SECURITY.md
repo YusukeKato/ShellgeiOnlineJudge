@@ -346,8 +346,9 @@ worker threadで処理し、commitを含む処理に失敗した場合はrollbac
 保存に失敗しても実行・判定結果は返します。保存不能時のID・statusの表現は、
 v3とlegacyで異なるため[Public API](./docs/API.md)を参照してください。
 
-schemaは`soj_schema_migrations`でversion管理し、backendはrequest受付前にheadまで
-migrationします。既存のversionなし実行ログ表はlegacy baselineとして認識し、
+schemaは`soj_schema_migrations`でversion管理し、独立した管理処理がheadまでmigrationします。
+backendはrequest受付前にrevisionを読み取り検証し、DDLを実行しません。
+既存のversionなし実行ログ表は管理処理がlegacy baselineとして認識し、
 構造化列を追加して旧outputとjudgeを保持します。未知revision、不連続revision、
 部分的な構造化schemaはfail-closedで起動を中止します。
 
@@ -423,8 +424,33 @@ socketの所有者やpermissionを変更して接続を許可する方式では�
 設定手順は[開発文書](./docs/DEVELOPMENT.md#runner用socket-groupの設定)を参照してください。
 
 この非root化はbackend・runner processのOS権限に対する制限です。
-sandbox内の実行user、runnerのDocker API操作権限、DB runtime roleは変えていません。
-backendは起動時migrationのため既存のDB権限を使い、DB owner/app role分離は未対応です。
+sandbox内の実行userとrunnerのDocker API操作権限は変えていません。
+DBの権限は次の境界で別途制限します。
+
+### DBの管理用資格情報と通常実行role
+
+常時稼働backendには通常用の`DATABASE_URL`だけを渡します。管理用の
+`MIGRATION_DATABASE_URL`はmaintenance profileの一時的な`migrate` serviceだけに渡し、
+DB networkに限定して実行後に削除します。通常のCompose upでは起動しません。
+
+通常用roleは非superuser・NOINHERITとし、CREATEDB・CREATEROLE・REPLICATION・BYPASSRLS、
+他roleへの所属と所有物を拒否します。管理対象DBで許可する権限は以下です。
+
+| 対象 | 通常実行roleの権限 |
+| --- | --- |
+| DB / public schema | CONNECT / USAGE。CREATEとTEMPは不可 |
+| execution_logs | SELECT・INSERT・DELETE。UPDATE・TRUNCATE・DDLは不可 |
+| 採番sequence | USAGE。setvalによる採番変更は不可 |
+| soj_schema_migrations | SELECTだけ |
+
+表・列のgrant optionも拒否し、PostgreSQL接続のsearch_pathはpublicに固定します。
+既存のDB・表の所有者は管理者のまま維持します。通常roleは保存・参照・retentionに必要な
+権限を持つため、backend侵害時の実行ログ流出・削除まで防ぐものではありません。
+任意に追加されたDB objectや管理者による事後の権限変更は別途運用管理が必要です。
+設定と移行手順は[backend文書](./backend/README.md#実行ログとdb-migration)と
+[本番更新](./docs/PRODUCTION.md#8-更新デプロイ)を参照してください。
+
+rootless daemonやホストへの侵害から管理資格情報を保護する保証は追加していません。
 
 ## runnerとDocker socketの権限
 

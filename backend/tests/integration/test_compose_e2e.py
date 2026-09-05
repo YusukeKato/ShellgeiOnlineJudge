@@ -38,6 +38,9 @@ def stack(tmp_path_factory: pytest.TempPathFactory) -> Iterator[ComposeStack]:
         environment = ComposeStack(client, tmp_path_factory.mktemp(project), project)
         try:
             environment.compose("config", "--quiet")
+            environment.compose("up", "--detach", "--no-build", "--pull", "never", "db")
+            environment.wait_command("db", ["pg_isready", "-U", "e2e", "-d", "e2e"])
+            environment.compose("run", "--rm", "--no-deps", "migrate")
             environment.compose(
                 "up",
                 "--detach",

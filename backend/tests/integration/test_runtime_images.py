@@ -244,6 +244,21 @@ def test_split_images_execute_judge_and_persist_through_private_networks(
         _wait_for_command(
             db, ["pg_isready", "-U", "runtime_test", "-d", "runtime_test"]
         )
+        app_secret = uuid.uuid4().hex
+        app_url = f"postgresql://runtime_app:{app_secret}@db:5432/runtime_test"
+        maintenance = create_service(
+            _image("backend"),
+            db_network,
+            "migrate",
+            command=["python", "-m", "soj_backend.database_admin", "head"],
+            environment={
+                "MIGRATION_DATABASE_URL": f"postgresql://runtime_test:{secret}@db:5432/runtime_test",
+                "DATABASE_URL": app_url,
+            },
+            **_restrictions("backend"),
+        )
+        maintenance.start()
+        assert maintenance.wait(timeout=40)["StatusCode"] == 0
         runner = create_service(
             _image("runner"),
             runner_network,
@@ -272,7 +287,7 @@ def test_split_images_execute_judge_and_persist_through_private_networks(
             runner_network,
             "backend",
             environment={
-                "DATABASE_URL": f"postgresql://runtime_test:{secret}@db:5432/runtime_test",
+                "DATABASE_URL": app_url,
                 "RUNNER_SHARED_SECRET": secret,
             },
             **_restrictions("backend"),

@@ -22,7 +22,7 @@ def test_isolation_preserves_service_security_and_original_config() -> None:
     assert result["volumes"] == BASE["volumes"]
     for name, original in BASE["services"].items():
         service = result["services"][name]
-        assert service["image"] == IMAGES[name]
+        assert service["image"] == IMAGES["backend" if name == "migrate" else name]
         assert "build" not in service
         assert service["container_name"] == f"{PROJECT}-{name}"
         for field in (

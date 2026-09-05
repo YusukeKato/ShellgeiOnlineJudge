@@ -26,6 +26,25 @@ services:
     networks:
       - backend_db
 
+  migrate:
+    profiles: [maintenance]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: backend
+    restart: "no"
+    command: ["python", "-m", "soj_backend.database_admin", "head"]
+    environment:
+      - DATABASE_URL=${DATABASE_URL:?Set DATABASE_URL}
+      - MIGRATION_DATABASE_URL=${MIGRATION_DATABASE_URL:?Set MIGRATION_DATABASE_URL}
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16M,mode=1777
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    logging: *service-logging
+    networks: [backend_db]
+
   runner:
     build:
       context: .
