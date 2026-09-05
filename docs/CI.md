@@ -18,6 +18,8 @@
 Actionは公式repositoryのfull commit SHAに固定し、runner OS・job timeout・concurrencyを
 明示しています。workflowとrefが同じ古い実行は、新しい実行でキャンセルされます。
 `pull_request_target`、`workflow_run`、self-hosted runnerは使用しません。
+FastAPI CIでは、browser scriptも含めたmypy検査のため`e2e` groupを導入します。
+このjobではブラウザ本体を取得・実行しません。
 
 provenance jobだけに`id-token: write`と`attestations: write`を付与します。
 このjobはcheckoutや取得artifact内のcode実行をせず、同じrunの生成物だけを取得して

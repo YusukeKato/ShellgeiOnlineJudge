@@ -148,7 +148,7 @@ runnerは起動時にcgroup v2とsystemd driverを確認し、
 ```sh
 git clone https://github.com/YusukeKato/ShellgeiOnlineJudge.git
 cd ShellgeiOnlineJudge
-poetry install
+poetry install --with e2e
 ```
 
 Pythonの実行環境を確認します。
@@ -159,8 +159,9 @@ poetry run pytest --version
 ```
 
 依存は共有・backend・runner・開発・旧補助のgroupに分けています。
-ホストでの`poetry install`は任意のbrowser E2E groupを除くgroupを導入し、本番imageの収録対象は
-[backend文書](../backend/README.md#本番runtime-image)を参照してください。
+全体のmypy検査がbrowser scriptも読むため、上記では任意の`e2e` groupを明示して導入します。
+PlaywrightのPython packageだけを追加し、ブラウザ本体はホストへinstallしません。
+本番imageの収録対象は[backend文書](../backend/README.md#本番runtime-image)を参照してください。
 
 ## 4. 開発用の環境変数
 

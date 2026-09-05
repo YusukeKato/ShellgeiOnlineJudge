@@ -18,12 +18,12 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `7b779b3`
-- commit subject: `ci: harden workflows and software supply-chain checks`
+- 確認対象commit: `5cdab01`とSOJ-022のreview待ち差分
+- commit subject: `docs: record R3-025 completion and audit baseline`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の実行検証: R3-025のworkflow/policy、固定tool取得、secret・依存/image scan、
-  scanner fixtureとSBOM生成。詳細は[R3-025](../refactoring/README.md#r3-025-harden-ci-and-software-supply-chain-checks)を参照
+- 直近の実行検証: SOJ-022の依存更新、本番image再build、同一DBでのscan比較と回帰検査。
+  変更範囲と結果は[SOJ-022の是正記録](#soj-022依存imageの是正記録)を参照
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
 baseline以降に変更がある場合は、先に差分を確認してください。
@@ -31,13 +31,14 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 7b779b3
+git diff 5cdab01
 ```
 
 ## Current security status
 
-- 依存・image scanで修正版のあるHigh/Criticalが検出され、CI gateが失敗します。
-  SOJ-022で更新と到達性評価を追跡します。scannerのseverityとサービスでの悪用可能性は区別します。
+- SOJ-022のアプリ依存・nginx更新でlock fileとfrontend imageの停止対象は0件です。
+  backend・runnerのscanner判定不一致、DB・sandboxの残存検出により、image側のCI gateは失敗します。
+  scannerのseverityとサービスでの悪用可能性は区別し、残存項目はSOJ-022で追跡します。
 - インターネット公開には、外側proxyまたはWAFの
   実client単位の受付制御を別途確認する必要があります。
 - runner異常終了後のsandboxは再起動時に回収します。
@@ -88,13 +89,13 @@ Statusは次の意味で使用します。
   - 関連: `.github/workflows/`、[CI文書](../CI.md)
   - 次: 実CIとOIDC署名を確認し、required checks・workflow変更のreview保護を設定する。
     bootstrapの間接依存・第三者imageの供給元検証とpromotion方針を整備する
-- `SOJ-022` — High/Critical（scanner分類、到達性未評価） / P1 / Open
-  - 概要: 固定済みのlock fileと本番imageに修正可能なHigh/Criticalがあり、Supply Chain CIが停止する
-  - 関連: `poetry.lock`、`frontend/yarn.lock`、runtime imageのdigestとOS package
-  - 確認: 2026-09-05のGrype scanでlock fileの停止対象は12件。Starlette、urllib3、
-    cryptography、flatted、browserslistに検出がある。image側の停止件数はR3-025の検証記録を参照
-  - 次: advisoryの到達性・false positiveと依存制約を評価し、package・base image・sandboxを
-    更新して基本検査と全問題回帰を実行する。今回のR3-025では依存更新・包括的なignoreは行っていない
+- `SOJ-022` — High/Critical（scanner分類） / P1 / Partially resolved
+  - 概要: アプリ依存とnginxを更新。lock file・frontend imageの停止対象は解消したが、
+    Pythonの判定不一致とDB・sandboxの検出が残る
+  - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、runtime image
+  - 確認: [是正記録](#soj-022依存imageの是正記録)に変更範囲、検出比較、未解決範囲を記載
+  - 次: DB・sandboxの修正版候補を検証し、Pythonのscanner判定と公式修正情報の不一致を解消する。
+    本番反映とGitHub上のCI確認は未実施
 - `SOJ-020` — Low / P3 / Deferred
   - 概要: DBをloopback公開し、Compose外では弱いfallback URLがある
   - 関連: `docker-compose.yml`、`backend/scripts/database.py`
@@ -109,9 +110,78 @@ Statusは次の意味で使用します。
 現在の未解決trackerは次の内訳です。
 
 - Open: 0件
-- Partially resolved: 5件
-- Deferred: 3件
-- Severity: High 0件、Medium 6件、Low 2件
+- Partially resolved: 6件
+- Deferred: 2件
+- Severity: High/Critical 1件、Medium 5件、Low 2件
+
+## SOJ-022：依存・imageの是正記録
+
+2026-09-05、依頼者の次の対策実装依頼に対し、CIを停止させるP1課題を優先しました。
+アプリ依存・nginxの是正は`Review`です。DB・sandboxとscanner判定の残存課題があるため、
+SOJ-022全体を`Resolved`にはしていません。R3-029等のpackage再配置は今回の範囲外です。
+
+### 更新と互換性
+
+- FastAPIを0.116.2から0.136.3へ更新し、Starletteを0.48.0から1.6.0へ解決しました。
+  旧FastAPIのStarlette上限が修正版の取得を妨げていました。公式の依存条件に従い、
+  [大きな内部変更を含む0.137以降](https://fastapi.tiangolo.com/release-notes/#01370-2026-06-14)への移行は分けています。
+- urllib3を2.6.3から2.7.0、開発用の型stubから入るcryptographyを46.0.5から50.0.1へ更新しました。
+- frontendの間接依存flattedを3.3.3から3.4.4、browserslistを4.25.2から4.28.9へ更新しました。
+  browserslistが必要とするdata packageもlockへ反映しました。直接依存の追加・一括更新はしていません。
+- nginxの固定digestを更新しました。正本は`frontend/Dockerfile`で、実nginx統合testのimageも揃えています。
+- クリーンvenvでmypyがE2E scriptのPlaywrightを見つけられないことを確認したため、
+  FastAPI CIと開発手順で既存の`e2e` groupを明示しました。本番runtime依存への追加はありません。
+
+Starletteのform解析・StaticFilesに関する検出経路は本サービスの提出処理では使いませんが、
+framework全体の依存を修正版へ更新しています。urllib3はDocker SDKのHTTP処理、
+cryptographyは開発用の間接依存、flatted・browserslistはfrontendの検査・build依存です。
+到達性の違いを理由とした検出除外は追加していません。
+
+### 同一DBでのscan比較
+
+R3-025と同じ固定scannerを使い、今回取得した同一の脆弱性DBで比較しました。
+imageの「更新後」は今回のlock・Dockerfileから再buildした本番3 imageです。
+DB・sandboxは固定digestが変わらないため、既存SBOMを同じDBで再照合しています。
+停止条件の正本は[CI文書](../CI.md#scannerと停止条件)です。
+
+| 対象 | 更新前の停止対象 | 更新後の停止対象 |
+| --- | ---: | ---: |
+| Python / frontend lock file | 12 | 0 |
+| backend image | 6 | 3 |
+| runner image | 8 | 3 |
+| frontend image | 20 | 0 |
+| PostgreSQL | 42 | 42 |
+| sandbox | 248 | 248 |
+
+対象ごとのmatch数であり、重複を除いたCVE数ではありません。source scanは終了code 2から0へ改善しました。
+image側は残存検出によりCIを停止します。低severity・未修正の検出を含め、全脆弱性がなくなったという意味ではありません。
+
+### 回帰検査
+
+- 新規venvでPython 3.14のruff・format・mypy・非Docker 541件が成功。
+  `e2e` group不足によるmypy失敗も再現し、明示install後の成功を確認しました。
+- frontendのformat・lint・typecheck・test 35件・production buildが成功。
+- 更新した本番3 imageをbuildし、rootless Docker 19件がすべて成功。
+  Composeの全92問、browser、認証・revision拒否、DB/runner停止復帰、
+  直接sandbox経路の全92問、nginx・migration・runtime境界検査を含みます。
+- actionlintとlock整合性検査が成功。GitHub-hosted上のworkflow、OIDC署名、
+  required checksと本番への反映は実行していません。
+
+### 残存項目
+
+- backend・runnerの各3件は`CVE-2026-3644`、`CVE-2026-4224`、`CVE-2026-7210`です。
+  [Python 3.12.14の公式修正情報](https://www.python.org/downloads/release/python-31214/)と、
+  [Expat修正条件を含む公式リリース説明](https://blog.python.org/2026/08/python-31214-31116-31021/)を確認しました。
+  実imageはPython 3.12.14／Expat 2.8.3であり、修正済みversionに対するscanner判定の不一致です。
+  自動除外や期限なしの例外は追加していないため、DB側の反映または根拠付きの例外設計が必要です。
+- PostgreSQLの現在の`15-alpine`も既存digestと同一です。libcrypto/libsslとgosu内のGo stdlibの
+  検出が残り、tagを再解決するだけでは直りません。修正版imageの確認または独自再buildが必要です。
+- sandboxは多数の言語runtime・配布済みbinaryを含みます。個別toolの更新と問題互換性の検証が必要です。
+  更新候補`sha256:1916181574c13e207836852d673bcf367c8293b7b556acbcaf0bc3f2f660d6b2`を
+  registryからSBOM化して比較しましたが、停止対象は248から245件への減少にとどまり、
+  `jackson-core`の`GHSA-r7wm-3cxj-wff9`が新たに検出されました。
+  この候補は今回採用せず、現行digestと問題互換性を維持しています。
+  候補のコマンド実行・全問題回帰は未実施で、採用時に改めて検証が必要です。
 
 ## Resolved issues
 

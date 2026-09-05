@@ -27,7 +27,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 FRONTEND_NGINX_CONFIG = REPOSITORY_ROOT / "frontend" / "nginx" / "default.conf"
 NGINX_IMAGE = (
     "nginx:alpine@"
-    "sha256:db35bfc6b2951e7f8a72db5db120288c127ffaeeb4a6d4b95a26fead017d5913"
+    "sha256:72ba65eb42c10344912a84ff42408db7d34f2feb642204570ab8fc5ffd29f1d3"
 )
 
 
