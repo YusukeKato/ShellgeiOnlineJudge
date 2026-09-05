@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 3
 - Pending (`Ready` + `Planned`): 3
 - In Progress: 0
-- Review: 1
-- Completed: 25
+- Review: 0
+- Completed: 26
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -177,7 +177,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-022 | P1 | Completed | E | Pin runtime artifacts and harden mounts and configuration | R3-013 | `eff33ca` |
 | R3-023 | P1 | Completed | E | Split production backend and runner images | R3-017, R3-022 | `aacda56` |
 | R3-024 | P1 | Completed | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | `48a0670` |
-| R3-025 | P2 | Review | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | - |
+| R3-025 | P2 | Completed | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | `7b779b3` |
 | R3-026 | P3 | Planned | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | - |
 | R3-027 | P3 | Planned | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | - |
 | R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
@@ -549,7 +549,7 @@ They are planning aids, not acceptance criteria.
 
 ### R3-025: Harden CI and software supply-chain checks
 
-- Priority / Status: P2 / `Review`
+- Priority / Status: P2 / `Completed`
 - Goal: CI token権限、timeout、supported runtime matrix、dependency/image/secret scan、SBOM、artifact provenanceを段階的に導入する
 - Main files/components: `.github/workflows/`、dependency update policy、image build/promotion、security documentation
 - Dependencies: R3-004、R3-022、R3-024
@@ -573,7 +573,7 @@ They are planning aids, not acceptance criteria.
   frontend 20、DB 42、sandbox 248件。対象ごとのmatch数であり、重複を除いたCVE数ではない。
   scan処理とreport生成は完了したが、gateは設計どおり終了code 2となるため、現状のCIは成功扱いにならない。
   到達性・false positiveの評価と更新はSOJ-022へ登録し、R3-025では既存検出のbaseline化やignore追加を行っていない。
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `7b779b3` / date `2026-09-05` / note 依頼者のreview・commit承認により完了。検出済み脆弱性とGitHub上の運用確認はSOJ-022・SOJ-019で継続追跡する。
 
 ## Phase F — Cleanup / Release
 
@@ -760,3 +760,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-05 | R3-023 split runtime images, non-root execution, and planned tests completed; moved to `Review` | - |
 | 2026-09-05 | R3-023 approved and recorded as `Completed`; R3-029 remains `Planned` | `aacda56` |
 | 2026-09-05 | R3-024 approved and recorded as `Completed` | `48a0670` |
+| 2026-09-05 | R3-025 approved and recorded as `Completed`; vulnerability remediation and hosted verification remain tracked separately | `7b779b3` |

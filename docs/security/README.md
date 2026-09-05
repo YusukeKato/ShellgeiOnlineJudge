@@ -18,8 +18,8 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `f39cdb9`とR3-025の未commit差分
-- commit subject: `docs: allow research downloads and pulls before review`
+- 確認対象commit: `7b779b3`
+- commit subject: `ci: harden workflows and software supply-chain checks`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
 - 直近の実行検証: R3-025のworkflow/policy、固定tool取得、secret・依存/image scan、
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff f39cdb9
+git diff 7b779b3
 ```
 
 ## Current security status
