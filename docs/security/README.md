@@ -18,8 +18,8 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `161d054`とSOJ-002のホスト監視CLI review待ち差分
-- commit subject: `docs: record R3-029 completion and approved baseline`
+- 確認対象commit: `b422b01`
+- commit subject: `feat: add read-only host sandbox monitoring (SOJ-002)`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
 - 直近の変更: SOJ-002の読み取り専用ホスト監視CLI。runner停止・非healthyとowner単位のsandbox異常を検出。
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 161d054
+git diff b422b01
 ```
 
 ## Current security status
@@ -67,7 +67,7 @@ Statusは次の意味で使用します。
 ### Open / Partially resolved / Deferred
 
 - `SOJ-002` — Medium / P1 / Partially resolved
-  - 概要: 起動時回収・Docker失敗時の追跡に加え、独立したホスト監視CLIを実装（review待ち）。
+  - 概要: 起動時回収・Docker失敗時の追跡に加え、独立したホスト監視CLIを実装（`b422b01`でcommit済み）。
     daemon単独のsandbox有効期限はない
   - 関連: `backend/soj_runner/container_manager.py`、`backend/soj_tools/sandbox_health.py`
   - 次: 本番監視への定期実行・alert接続と、独立した期限強制の要否を判断
@@ -315,7 +315,7 @@ daemon単独のsandbox有効期限等の残存経路は、
 - production監視・alert設定
 - 必要と判断した場合のみ、runnerと独立した回収component
 
-今回の実装（2026-09-05、review待ち）:
+今回の実装（2026-09-05、依頼者のreview承認後に`b422b01`でcommit済み）:
 
 - `soj_tools.sandbox_health`を追加。CLIの契約は[本番監視手順](../PRODUCTION.md#runnerとは独立したsandbox監視)を正本とする。
 - 識別label・owner検証・pool上限を`soj_runner.sandbox_identity`へ移し、
