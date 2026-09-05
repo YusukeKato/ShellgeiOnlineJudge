@@ -557,11 +557,15 @@ hash、header、query、bodyをaccess log、error log、WAF event、分析基盤
 
 ## 依存関係とイメージの制約
 
-sandbox、Python、Node.js、nginx、PostgreSQLのimageは、可読なtagと
+sandbox、Python、Node.js、nginx、PostgreSQL・Goのbase imageは、可読なtagと
 SHA-256 digestを併記して同一artifactへ固定します。sandbox managerはdigestのない
 image referenceを拒否し、固定imageがlocalにない場合だけ同じdigestをpullします。
 imageの更新方法は[本番運用の「image digestの更新」](./docs/PRODUCTION.md#image-digestの更新)を
 正本とします。
+
+DBは固定PostgreSQL baseからOpenSSL・gosuを是正してbuildする派生imageです。
+Composeの`soj-db:local`はローカル生成物の名前であり、第三者registryからpullするtagではありません。
+更新・既存volume互換性の扱いは[PostgreSQL派生image](./docs/PRODUCTION.md#postgresql派生image)を参照してください。
 
 CIにはsecret・依存・image scan、SBOM生成と、mainの検査成功後の署名付きprovenance登録を
 構成しています。停止条件、権限境界、artifact検証と保証範囲は[CI文書](./docs/CI.md)を

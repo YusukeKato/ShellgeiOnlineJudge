@@ -11,7 +11,7 @@
 | FastAPI CI | 対応Python全versionでruff・format・mypy・非Docker test | push、PR、週次 |
 | React CI | Node.jsでformat・lint・typecheck・test・build | push、PR、週次 |
 | Supply Chain CI / source | workflow検証、Git履歴と作業treeのsecret scan、lock fileのSBOM・脆弱性scan、scanner fixture | push、PR、週次、手動 |
-| Supply Chain CI / runtime | 本番3 imageのbuild、DB/sandboxを含むSBOM・scan、Compose全問題回帰・browser・image境界test | push、PR、週次、手動 |
+| Supply Chain CI / runtime | DBを含む本番4 imageのbuild・SBOM・scan、sandbox scan、Compose全問題回帰・browser・image境界・DB更新互換test | push、PR、週次、手動 |
 | Supply Chain CI / provenance | 同じrunで検査を通過した生成物の署名付きprovenance登録 | mainへのpushでsource・runtime両jobが成功した場合だけ |
 
 全workflowは`contents: read`を既定とし、checkoutはcredentialを保持しません。
@@ -37,7 +37,7 @@ provenance jobだけに`id-token: write`と`attestations: write`を付与しま�
 | --- | --- | --- |
 | actionlintとCI policy test | YAML、expression、Action入力、権限・固定SHA・timeout・署名job境界 | 構文・policy違反 |
 | Gitleaks | shallowでない取得済みGit履歴の全refと、現在の作業tree | secret検出またはtool障害 |
-| Syft | Poetry/Yarnのlock file、本番backend・runner・frontend、固定digestのPostgreSQL・sandbox | inventory作成失敗、空inventory、Python/frontendの片側欠落 |
+| Syft | Poetry/Yarnのlock file、本番backend・runner・frontend・派生DB、固定digestのsandbox | inventory作成失敗、空inventory、Python/frontendの片側欠落 |
 | Grype | 同じSyft inventoryを脆弱性DBと照合 | 修正版のあるHigh/Critical、DB取得・読込失敗、scan失敗、未知のreport形式 |
 
 secret出力は全量redactし、secretを含み得る生のreportをartifactへ追加しません。
@@ -66,11 +66,14 @@ DBは各jobで更新してから使用し、失敗時に古いDBへfallbackし�
 明示されたUnix socketとdaemonの`SecurityOptions`を確認してからbuild・scan・testを行います。
 確認できない場合は失敗し、host上のrootful daemonへfallbackしません。
 
-本番3 imageは当該checkoutからbuildし、scanしたimmutable image IDでarchiveへ保存します。
-DB・sandboxはComposeとsandbox定数の正本からdigestを読み、registryを直接scanします。
+DBを含む本番4 imageは当該checkoutからbuildし、scanしたimmutable image IDでarchiveへ保存します。
+派生DBのbuild仕様は[本番運用](./PRODUCTION.md#postgresql派生image)を参照してください。
+sandboxは定数の正本からdigestを読み、registryを直接scanします。
 大きなsandbox imageをdaemonからscan用に再exportするための追加領域を避ける構成です。
 scan成功後、同じdigestをrootless daemonへpullしてR3-024のCompose全問題回帰・browser・
 runtime image検査を実行します。失敗した候補にはprovenanceを登録しません。
+DB更新互換test用にはDockerfileの正本から公式PostgreSQLのbaseも取得します。
+この旧baseは移行元のfixtureであり、本番DBのscan対象はbuild済みの派生imageです。
 
 sandboxの展開には大きな一時領域が必要です。小さなtmpfsを使う環境では、容量のある
 作業専用directoryを`TMPDIR`へ指定してください。既存のcacheや他のDocker資源を自動削除して
@@ -82,7 +85,7 @@ source/runtimeのscanを開始した場合は、検出でjobが失敗してもre
 保存期間と対象pathはworkflowで固定し、workspace全体やhidden fileをuploadしません。
 
 - 各対象のSyft JSON、CycloneDX JSON、Grype JSON、検出数summary
-- scanした本番3 imageの`runtime.tar`。image IDでexportするため、元のtagを保持する保証はありません
+- scanした本番4 imageの`runtime.tar`。image IDでexportするため、元のtagを保持する保証はありません
 - `build-record.json`: 検査時のcheckout commit、dirty状態、image ID、外部image reference、tool manifestと生成fileのSHA-256
 
 localのbuild recordは検査対象を追跡する未署名の記録です。既存imageを渡した場合、
@@ -149,7 +152,8 @@ image検証では[本番runtime image・Compose E2E](../backend/tests/integratio
 export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
 poetry run python ci/supply_chain.py runtime \
   --tools "$SOJ_CI_WORK/tools" --reports "$SOJ_CI_WORK/runtime" \
-  --backend soj-backend:compose-test --runner soj-runner:compose-test --frontend soj-frontend:compose-test
+  --backend soj-backend:compose-test --runner soj-runner:compose-test --frontend soj-frontend:compose-test \
+  --db soj-db:compose-test
 ```
 
 ## 公式資料

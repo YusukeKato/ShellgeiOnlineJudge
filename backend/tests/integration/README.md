@@ -17,7 +17,13 @@ docker pull \
   postgres:15-alpine@sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b
 docker pull \
   nginx:alpine@sha256:72ba65eb42c10344912a84ff42408db7d34f2feb642204570ab8fc5ffd29f1d3
+docker build --file deploy/postgres/Dockerfile --tag soj-db:local .
 ```
+
+DBの実行にはbuild済みの派生imageを使用します。`SOJ_DB_IMAGE`で上書きでき、省略時は
+本番Composeのimage名を使用します。公式PostgreSQLのpullは既存volume互換性testの移行元用です。
+`test_postgres_image.py`は専用volumeで旧image→派生image→旧imageの読み書き、
+非rootのPID 1、正常停止とdata保持を確認します。本番volumeには接続しません。
 
 リポジトリのルートから、rootless socketを指定して実行します。
 
@@ -92,7 +98,7 @@ frontend/nginxとbrowserを含む検証は、次のCompose E2Eで行います。
 
 `test_compose_e2e.py`は実際の`docker-compose.yml`を読み込み、rootless確認wrapperで
 frontend/nginx、backend、runner、PostgreSQLを起動します。上記と同じ隔離環境でのみ
-実行してください。Docker Compose v2以降、`openssl`、build済みの4つのtest imageが必要です。
+実行してください。Docker Compose v2以降、`openssl`、DB・browserを含むbuild済みの5つのtest imageが必要です。
 ホストのbrowserやNode.jsは使用しません。
 
 リポジトリrootで、現在のコードから検証対象をbuildします。
@@ -104,7 +110,9 @@ docker build --file backend/Dockerfile --target backend --tag soj-backend:compos
 docker build --file backend/Dockerfile --target runner --tag soj-runner:compose-test .
 docker build --file frontend/Dockerfile --build-arg VITE_SOJ_URL= --tag soj-frontend:compose-test .
 docker build --file backend/tests/integration/browser/Dockerfile --tag soj-browser:compose-test .
+docker build --file deploy/postgres/Dockerfile --tag soj-db:compose-test .
 
+export SOJ_DB_IMAGE=soj-db:compose-test
 export SOJ_COMPOSE_BACKEND_IMAGE=soj-backend:compose-test
 export SOJ_COMPOSE_RUNNER_IMAGE=soj-runner:compose-test
 export SOJ_COMPOSE_FRONTEND_IMAGE=soj-frontend:compose-test

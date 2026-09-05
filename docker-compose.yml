@@ -6,7 +6,11 @@ x-service-logging: &service-logging
 
 services:
   db:
-    image: postgres:15-alpine@sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b
+    image: soj-db:local
+    pull_policy: never
+    build:
+      context: .
+      dockerfile: deploy/postgres/Dockerfile
     container_name: soj-db
     restart: always
     environment:

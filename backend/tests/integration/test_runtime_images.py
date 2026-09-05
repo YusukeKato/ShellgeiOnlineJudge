@@ -13,6 +13,7 @@ import yaml
 
 from scripts.container_manager import OWNER_LABEL
 from scripts.problem_repository import build_problem_repository
+from tests.postgres_support import database_image
 
 
 pytestmark = [
@@ -218,7 +219,7 @@ def test_split_images_execute_judge_and_persist_through_private_networks(
             networks.append(client.networks.create(f"{owner}-{suffix}", internal=True))
         runner_network, db_network = networks
         db = create_service(
-            COMPOSE["services"]["db"]["image"],
+            database_image(),
             db_network,
             "db",
             environment={

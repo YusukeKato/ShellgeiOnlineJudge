@@ -95,6 +95,7 @@ jobs:
           docker build --file backend/Dockerfile --target backend --tag soj-backend:ci .
           docker build --file backend/Dockerfile --target runner --tag soj-runner:ci .
           docker build --file frontend/Dockerfile --build-arg VITE_SOJ_URL= --tag soj-frontend:ci .
+          docker build --file deploy/postgres/Dockerfile --tag soj-db:ci .
           docker build --file backend/tests/integration/browser/Dockerfile --tag soj-browser:ci .
       - name: Install verified inventory and vulnerability tools
         run: |
@@ -108,20 +109,21 @@ jobs:
         run: poetry run python ci/supply_chain.py runtime --tools "$RUNNER_TEMP/soj-tools" --reports "$RUNNER_TEMP/runtime-reports"
       - name: Pull verified infrastructure images
         run: |
-          poetry run python -c 'import subprocess, yaml; from scripts.container_manager import DEFAULT_IMAGE_ID; refs = [DEFAULT_IMAGE_ID, yaml.safe_load(open("docker-compose.yml"))["services"]["db"]["image"]]; [subprocess.run(["docker", "pull", ref], check=True) for ref in refs]'
+          poetry run python -c 'import subprocess; from scripts.container_manager import DEFAULT_IMAGE_ID; from tests.postgres_support import upstream_postgres_image; refs = [DEFAULT_IMAGE_ID, upstream_postgres_image()]; [subprocess.run(["docker", "pull", ref], check=True) for ref in refs]'
       - name: Full Compose regression and image boundary checks
         env:
           SOJ_RUN_DOCKER_TESTS: "1"
           SOJ_RUN_COMPOSE_E2E: "1"
           SOJ_RUN_FULL_REGRESSION: "1"
           SOJ_RUN_RUNTIME_IMAGE_TESTS: "1"
+          SOJ_DB_IMAGE: soj-db:ci
           SOJ_COMPOSE_BACKEND_IMAGE: soj-backend:ci
           SOJ_COMPOSE_RUNNER_IMAGE: soj-runner:ci
           SOJ_COMPOSE_FRONTEND_IMAGE: soj-frontend:ci
           SOJ_COMPOSE_BROWSER_IMAGE: soj-browser:ci
           SOJ_BACKEND_RUNTIME_IMAGE: soj-backend:ci
           SOJ_RUNNER_RUNTIME_IMAGE: soj-runner:ci
-        run: poetry run pytest backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_runtime_images.py
+        run: poetry run pytest backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_runtime_images.py backend/tests/integration/test_postgres_image.py
       - name: Retain runtime inventory and candidate for review
         if: ${{ always() && steps.scan.outcome != 'skipped' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

@@ -432,7 +432,7 @@ webrootなどへ変更するか、更新時の安全な停止・再開方法を�
 
 ### image digestの更新
 
-runtime image referenceの正本は各Dockerfile、`docker-compose.yml`、
+外部image referenceの正本は各Dockerfileと
 `backend/scripts/container_manager.py`です。通常のdeployでは固定済みdigestを
 `--pull`しても同じartifactが取得され、tagの移動だけでは内容が変わりません。
 
@@ -448,6 +448,28 @@ imageを更新するときだけ、次の順序で候補を確認します。
 mainの検査成功時に登録するprovenanceの検証方法は[CI文書](./CI.md)を参照してください。
 検査失敗時にもreport artifactを保存するため、artifactの存在だけでdeploy対象を判断しません。
 第三者imageの供給元署名等の残存対策は[セキュリティ課題tracker](./security/README.md)で追跡します。
+
+### PostgreSQL派生image
+
+ComposeのDBは[`deploy/postgres/Dockerfile`](../deploy/postgres/Dockerfile)からbuildします。
+`soj-db:local`はそのローカルimage名です。公式PostgreSQL imageへ戻すと、今回是正した
+OpenSSL・gosuの脆弱性が再導入されるため、通常の起動・更新ではこのbuildを使用してください。
+`pull_policy: never`で同名imageのregistry取得を禁止します。起動前に明示的なbuildが必要です。
+
+PostgreSQLのメジャーバージョン、公式entrypoint、`PGDATA`、既存のDB role・credentialを継承し、
+OpenSSLだけをAlpineの固定package versionへ更新します。gosuは同じ公式sourceを修正版Goで
+再buildし、通常の非root PostgreSQL起動を維持します。Go・PostgreSQLのimage digest、
+gosu archiveのSHA-256、OpenSSLのversionはDockerfileを正本とします。
+Go compiler・source・build用cacheはDB runtime imageへ収録しません。
+
+gosuはarchiveのchecksumと`go.sum`を検証し、moduleは`-mod=readonly`でbuildします。
+Alpine packageはrepository署名と固定versionで取得します。固定packageが配布元から消えた場合は
+buildを失敗させ、別versionへ暗黙にfallbackしません。pinの変更はscan・DB互換性testを通してreviewします。
+
+更新時は整合性のあるDB backupを取得し、buildした候補で[DB更新互換性とCompose回帰](../backend/tests/integration/README.md)を
+確認してください。DB containerを再作成しても`db_data` volumeは維持します。`down --volumes`や
+DB初期化を更新手順に使用しないでください。旧imageへの復帰testはこのPostgreSQL 15内の更新だけを
+対象とし、将来のメジャー更新・schema migration・拡張moduleの互換性まで保証しません。
 
 ## 7. 初回デプロイ
 

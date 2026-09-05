@@ -18,11 +18,11 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `cb044c7`
-- commit subject: `security: update application dependencies and nginx for SOJ-022`
+- 確認対象commit: `a2c6564`とSOJ-022のDB是正review待ち差分
+- commit subject: `docs: record approved SOJ-022 remediation and baseline`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の実行検証: SOJ-022の依存更新、本番image再build、同一DBでのscan比較と回帰検査。
+- 直近の実行検証: SOJ-022の派生DB build・scan、既存volumeの更新・復帰互換性と回帰検査。
   変更範囲と結果は[SOJ-022の是正記録](#soj-022依存imageの是正記録)を参照
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
@@ -31,13 +31,13 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff cb044c7
+git diff a2c6564
 ```
 
 ## Current security status
 
-- SOJ-022のアプリ依存・nginx更新でlock fileとfrontend imageの停止対象は0件です。
-  backend・runnerのscanner判定不一致、DB・sandboxの残存検出により、image側のCI gateは失敗します。
+- SOJ-022のアプリ依存・nginx・派生DB更新でlock file、frontend・DB imageの停止対象は0件です。
+  backend・runnerのscanner判定不一致とsandboxの残存検出により、image側のCI gateは失敗します。
   scannerのseverityとサービスでの悪用可能性は区別し、残存項目はSOJ-022で追跡します。
 - インターネット公開には、外側proxyまたはWAFの
   実client単位の受付制御を別途確認する必要があります。
@@ -90,11 +90,10 @@ Statusは次の意味で使用します。
   - 次: 実CIとOIDC署名を確認し、required checks・workflow変更のreview保護を設定する。
     bootstrapの間接依存・第三者imageの供給元検証とpromotion方針を整備する
 - `SOJ-022` — High/Critical（scanner分類） / P1 / Partially resolved
-  - 概要: アプリ依存とnginxを更新。lock file・frontend imageの停止対象は解消したが、
-    Pythonの判定不一致とDB・sandboxの検出が残る
-  - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、runtime image
+  - 概要: アプリ依存・nginx・派生DBの停止対象を是正。Pythonの判定不一致とsandboxの検出が残る
+  - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、`deploy/postgres/Dockerfile`、runtime image
   - 確認: [是正記録](#soj-022依存imageの是正記録)に変更範囲、検出比較、未解決範囲を記載
-  - 次: DB・sandboxの修正版候補を検証し、Pythonのscanner判定と公式修正情報の不一致を解消する。
+  - 次: sandboxの修正版候補を検証し、Pythonのscanner判定と公式修正情報の不一致を解消する。
     本番反映とGitHub上のCI確認は未実施
 - `SOJ-020` — Low / P3 / Deferred
   - 概要: DBをloopback公開し、Compose外では弱いfallback URLがある
@@ -118,7 +117,7 @@ Statusは次の意味で使用します。
 
 2026-09-05、依頼者の次の対策実装依頼に対し、CIを停止させるP1課題を優先しました。
 アプリ依存・nginxの是正は依頼者のreview承認後、`cb044c7`でcommit済みです。
-DB・sandboxとscanner判定の残存課題があるため、
+派生DBの是正は`Review`です。sandboxとscanner判定の残存課題があるため、
 SOJ-022全体を`Resolved`にはしていません。R3-029等のpackage再配置は今回の範囲外です。
 
 ### 更新と互換性
@@ -138,11 +137,19 @@ framework全体の依存を修正版へ更新しています。urllib3はDocker 
 cryptographyは開発用の間接依存、flatted・browserslistはfrontendの検査・build依存です。
 到達性の違いを理由とした検出除外は追加していません。
 
+### 派生DBの是正（Review）
+
+公式PostgreSQL 15 baseを維持し、OpenSSLとgosuのbuildを更新しました。
+実装・固定値・更新時の制約は[PostgreSQL派生image](../PRODUCTION.md#postgresql派生image)を正本とします。
+CIとすべてのDB統合testはbuild済みの派生imageを使用し、scan・archive・build recordの対象にも含めます。
+公式baseをそのまま起動するのは既存volume互換性testの移行元だけです。検出除外・gateの緩和は追加していません。
+DBの停止対象42件は0件になりました。Medium 3件（BusyBox系）とLow 1件（gosu内のx/sys）はreportに残ります。
+
 ### 同一DBでのscan比較
 
-R3-025と同じ固定scannerを使い、今回取得した同一の脆弱性DBで比較しました。
-imageの「更新後」は今回のlock・Dockerfileから再buildした本番3 imageです。
-DB・sandboxは固定digestが変わらないため、既存SBOMを同じDBで再照合しています。
+R3-025と同じ固定scannerと、2026-09-05に取得した同一の脆弱性DBで比較しました。
+アプリ3 imageは`cb044c7`の依存更新時に再buildし、DBは今回のDockerfileからbuildした派生imageです。
+sandboxは固定digestを維持し、既存SBOMを同じDBで再照合しています。
 停止条件の正本は[CI文書](../CI.md#scannerと停止条件)です。
 
 | 対象 | 更新前の停止対象 | 更新後の停止対象 |
@@ -151,13 +158,15 @@ DB・sandboxは固定digestが変わらないため、既存SBOMを同じDBで�
 | backend image | 6 | 3 |
 | runner image | 8 | 3 |
 | frontend image | 20 | 0 |
-| PostgreSQL | 42 | 42 |
+| PostgreSQL | 42 | 0 |
 | sandbox | 248 | 248 |
 
 対象ごとのmatch数であり、重複を除いたCVE数ではありません。source scanは終了code 2から0へ改善しました。
 image側は残存検出によりCIを停止します。低severity・未修正の検出を含め、全脆弱性がなくなったという意味ではありません。
 
 ### 回帰検査
+
+アプリ依存・nginxの是正（`cb044c7`）:
 
 - 新規venvでPython 3.14のruff・format・mypy・非Docker 541件が成功。
   `e2e` group不足によるmypy失敗も再現し、明示install後の成功を確認しました。
@@ -168,6 +177,17 @@ image側は残存検出によりCIを停止します。低severity・未修正�
 - actionlintとlock整合性検査が成功。GitHub-hosted上のworkflow、OIDC署名、
   required checksと本番への反映は実行していません。
 
+派生DBの是正（今回）:
+
+- Dockerfileの固定base・Composeのbuild対象を検証するtestと、E2EのDB image指定testで実装前のREDを確認。
+- Python 3.14のruff・format・mypy・非Docker 542件が成功。
+- 旧PostgreSQLの専用volumeを派生DBで読み書きし、旧imageへ戻してdata保持・非root PID 1・正常停止を確認。
+- 派生DBを指定したrootless Docker 20件が成功。Compose・直接sandbox両経路の全92問、browser、
+  migration、認証・停止復帰、runtime境界を含む。アプリ3 imageは前回の検証済みimageを再利用した。
+- 派生DBを含む本番4 imageのarchive・build recordを生成し、OCI indexとscan済みimmutable IDの一致を確認。
+- frontendのコード・依存・imageは変更していないため、基本5検査は前回の成功結果を維持し、今回は再実行しない。
+- rootless Compose設定検査とactionlintが成功。GitHub上のCI・署名実行、本番DBへの反映は未実施。
+
 ### 残存項目
 
 - backend・runnerの各3件は`CVE-2026-3644`、`CVE-2026-4224`、`CVE-2026-7210`です。
@@ -175,8 +195,6 @@ image側は残存検出によりCIを停止します。低severity・未修正�
   [Expat修正条件を含む公式リリース説明](https://blog.python.org/2026/08/python-31214-31116-31021/)を確認しました。
   実imageはPython 3.12.14／Expat 2.8.3であり、修正済みversionに対するscanner判定の不一致です。
   自動除外や期限なしの例外は追加していないため、DB側の反映または根拠付きの例外設計が必要です。
-- PostgreSQLの現在の`15-alpine`も既存digestと同一です。libcrypto/libsslとgosu内のGo stdlibの
-  検出が残り、tagを再解決するだけでは直りません。修正版imageの確認または独自再buildが必要です。
 - sandboxは多数の言語runtime・配布済みbinaryを含みます。個別toolの更新と問題互換性の検証が必要です。
   更新候補`sha256:1916181574c13e207836852d673bcf367c8293b7b556acbcaf0bc3f2f660d6b2`を
   registryからSBOM化して比較しましたが、停止対象は248から245件への減少にとどまり、

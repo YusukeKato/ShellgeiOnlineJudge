@@ -10,7 +10,7 @@ from tests.compose_support import ComposeStack, isolated_config
 ROOT = Path(__file__).resolve().parents[2]
 BASE = yaml.safe_load((ROOT / "docker-compose.yml").read_text())
 PROJECT = "soj-e2e-" + "a" * 32
-IMAGES = {name: f"soj-{name}:e2e" for name in ("backend", "runner", "frontend")}
+IMAGES = {name: f"soj-{name}:e2e" for name in ("backend", "runner", "frontend", "db")}
 
 
 def test_isolation_preserves_service_security_and_original_config() -> None:
@@ -22,6 +22,8 @@ def test_isolation_preserves_service_security_and_original_config() -> None:
     assert result["volumes"] == BASE["volumes"]
     for name, original in BASE["services"].items():
         service = result["services"][name]
+        assert service["image"] == IMAGES[name]
+        assert "build" not in service
         assert service["container_name"] == f"{PROJECT}-{name}"
         for field in (
             "environment",

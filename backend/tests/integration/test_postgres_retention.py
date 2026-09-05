@@ -27,6 +27,7 @@ from scripts.execution_log_repository import (
 )
 from scripts.execution_log_retention import prune_execution_logs
 from scripts.judge import JudgeResult, JudgeVerdict
+from tests.postgres_support import database_image
 
 
 pytestmark = [
@@ -37,10 +38,6 @@ pytestmark = [
     ),
 ]
 
-POSTGRES_IMAGE = (
-    "postgres:15-alpine@"
-    "sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b"
-)
 POSTGRES_USER = "soj_retention_test"
 POSTGRES_PASSWORD = "soj_retention_test_password"
 POSTGRES_DATABASE = "soj_retention_test"
@@ -122,14 +119,15 @@ def test_postgres_migration_repository_retention_and_recovery(
     timeout_engine = None
     try:
         assert "name=rootless" in client.info()["SecurityOptions"]
+        image = database_image()
         try:
-            client.images.get(POSTGRES_IMAGE)
+            client.images.get(image)
         except docker.errors.ImageNotFound:
-            pytest.skip(f"pull {POSTGRES_IMAGE} before running this test")
+            pytest.skip(f"build {image} before running this test")
 
         postgres_port = _available_loopback_port()
         container = client.containers.run(
-            POSTGRES_IMAGE,
+            image,
             detach=True,
             environment={
                 "POSTGRES_USER": POSTGRES_USER,

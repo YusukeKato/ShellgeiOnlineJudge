@@ -10,6 +10,9 @@
 
 ## 補助スクリプト
 
+`postgres/Dockerfile`は本番DBの派生imageをbuildします。
+構成・更新方針は[PostgreSQL派生image](../docs/PRODUCTION.md#postgresql派生image)を正本とします。
+
 `rootless-compose.sh`は次の処理を行います。
 
 - 接続先Docker daemonがrootlessであることを確認する

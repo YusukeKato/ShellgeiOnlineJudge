@@ -3,11 +3,56 @@ import io
 import json
 import tarfile
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+import ci.supply_chain as supply_chain
 from ci.install_tools import extract_binary
 from ci.supply_chain import blocking_findings, write_record
+
+
+def test_runtime_scan_records_and_archives_the_built_database(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # DBだけの検出でも失敗し、scan済みDBのIDをarchive・recordへ含める。古い公式DBのregistry scanへ戻さない。
+    products = {
+        name: f"soj-{name}:review" for name in ("backend", "runner", "frontend", "db")
+    }
+    sources = []
+    commands = []
+
+    def inspect_image(command: list[str], **kwargs: object) -> SimpleNamespace:
+        """タグごとのimmutable IDを返し、Docker daemonなしで保存対象の一致を検証する。"""
+        assert command[:3] == ["docker", "image", "inspect"]
+        return SimpleNamespace(
+            stdout="sha256:" + hashlib.sha256(command[-1].encode()).hexdigest()
+        )
+
+    def scan_image(tools: Path, source: str, reports: Path, name: str) -> bool:
+        """scan対象を記録し、DBだけに停止対象がある状態を返す。"""
+        sources.append(source)
+        return name != "db"
+
+    monkeypatch.setattr(supply_chain, "rootless", lambda: None)
+    monkeypatch.setattr(supply_chain.subprocess, "run", inspect_image)
+    monkeypatch.setattr(
+        supply_chain.subprocess,
+        "check_output",
+        lambda command, **kwargs: "a" * 40 if command[1] == "rev-parse" else "",
+    )
+    monkeypatch.setattr(supply_chain, "scan", scan_image)
+    monkeypatch.setattr(supply_chain, "run", lambda command: commands.append(command))
+    assert not supply_chain.runtime_scan(tmp_path, tmp_path, products)
+    record = json.loads((tmp_path / "build-record.json").read_text())
+    ids = [record["image_ids"][name] for name in products]
+    assert set(record["image_ids"]) == set(products)
+    assert set(commands[0][4:]) == set(ids)
+    assert sources == [
+        *("docker:" + image for image in ids),
+        "registry:" + supply_chain.DEFAULT_IMAGE_ID,
+    ]
+    assert set(record["external_image_references"]) == {"sandbox"}
 
 
 def archive(*, link: bool = False) -> bytes:

@@ -32,11 +32,16 @@ def test_runtime_and_sandbox_images_are_pinned_by_digest() -> None:
     image_references = [
         *_dockerfile_base_images(REPOSITORY_ROOT / "backend" / "Dockerfile"),
         *_dockerfile_base_images(REPOSITORY_ROOT / "frontend" / "Dockerfile"),
-        compose["services"]["db"]["image"],
+        *_dockerfile_base_images(REPOSITORY_ROOT / "deploy/postgres/Dockerfile"),
         DEFAULT_IMAGE_ID,
     ]
 
-    assert len(set(image_references)) == 5
+    assert len(set(image_references)) == 6
+    assert compose["services"]["db"]["build"] == {
+        "context": ".",
+        "dockerfile": "deploy/postgres/Dockerfile",
+    }
+    assert compose["services"]["db"]["pull_policy"] == "never"
     assert all(
         PINNED_IMAGE_REFERENCE.fullmatch(reference) is not None
         for reference in image_references

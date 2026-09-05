@@ -10,8 +10,6 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from scripts.container_manager import DEFAULT_IMAGE_ID
 
 
@@ -126,11 +124,9 @@ def rootless() -> None:
 
 
 def runtime_scan(tools: Path, reports: Path, products: dict[str, str]) -> bool:
-    """本番3 imageと正本のDB/sandbox imageをscanし、配布候補archiveとhash記録を作る。"""
+    """DBを含む本番4 imageと正本のsandboxをscanし、配布候補archiveとhash記録を作る。"""
     rootless()
-    compose = yaml.safe_load((ROOT / "docker-compose.yml").read_text())
     external = {
-        "db": compose["services"]["db"]["image"],
         "sandbox": DEFAULT_IMAGE_ID,
     }
     ids = {}
@@ -237,6 +233,7 @@ def main() -> None:
     parser.add_argument("--backend", default="soj-backend:ci")
     parser.add_argument("--runner", default="soj-runner:ci")
     parser.add_argument("--frontend", default="soj-frontend:ci")
+    parser.add_argument("--db", default="soj-db:ci")
     args = parser.parse_args()
     args.reports.mkdir(parents=True, exist_ok=False)
     os.environ.setdefault("SYFT_CACHE_DIR", str(args.reports.parent / "syft-cache"))
@@ -257,7 +254,10 @@ def main() -> None:
         ok = runtime_scan(
             args.tools,
             args.reports,
-            {name: getattr(args, name) for name in ("backend", "runner", "frontend")},
+            {
+                name: getattr(args, name)
+                for name in ("backend", "runner", "frontend", "db")
+            },
         )
     raise SystemExit(0 if ok else 2)
 

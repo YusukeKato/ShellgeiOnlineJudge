@@ -16,6 +16,7 @@ from typing import Any
 import yaml
 
 from scripts.container_manager import OWNER_LABEL
+from tests.postgres_support import database_image
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,7 +30,7 @@ def isolated_config(
         raise ValueError("a unique E2E project is required")
     if set(base["services"]) != {"db", "backend", "runner", "frontend"} or set(
         images
-    ) != {"backend", "runner", "frontend"}:
+    ) != {"backend", "runner", "frontend", "db"}:
         raise ValueError("review isolation before adding Compose services")
     # 新しいbind mountやenv fileをtestへ暗黙に持ち込まず、隔離方法のreviewを要求する。
     mounts = {
@@ -90,9 +91,9 @@ class ComposeStack:
             for name in ("backend", "runner", "frontend", "browser")
         }
         self.browser_image = images.pop("browser")
+        images["db"] = client.images.get(database_image()).id
         base = yaml.safe_load((ROOT / "docker-compose.yml").read_text())
         config = isolated_config(base, project, images)
-        client.images.get(config["services"]["db"]["image"])
         (directory / "compose.yml").write_text(yaml.safe_dump(config))
         # 呼出元の.env、COMPOSE_*、proxy、DB接続情報を一切継承しない。
         self.environment = {
