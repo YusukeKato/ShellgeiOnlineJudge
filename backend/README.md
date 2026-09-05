@@ -11,7 +11,6 @@
 - `soj_backend/migrations/`: legacy実行ログ表から構造化schemaへ進めるversioned migration
 - `soj_runner/`: `main.py`による認証付き内部API、sandbox pool、archive・出力上限・watchdog・終了処理
 - `soj_tools/`: 問題schema移行・manifest生成とホスト監視CLI。本番imageへは収録しない
-- `scripts/`: 旧`log_manager.py`・`time_manager.py`を保持。削除判断はR3-026で行う
 - `tests/`: 単体・API・Docker統合テスト
 
 依存方向は`soj_backend -> soj_shared <- soj_runner`です。共有packageは公開API・DB・
@@ -55,8 +54,8 @@ import方向は静的test、本番imageの全module importと収録境界はDock
 
 共有の構造化logは提出結果modelへ依存しません。Pillowは判定を行うbackend groupだけに導入します。
 Poetryは固定versionでbuild stageにだけ導入し、`poetry.lock`から`main,backend`または
-`main,runner`の依存を専用venvへinstallします。旧補助packageは`legacy` groupへ残し、
-削除判断はR3-026へ分離しています。ホストの通常の`poetry install`は開発用groupも導入します。
+`main,runner`の依存を専用venvへinstallします。
+ホストの通常の`poetry install`は開発用groupも導入します。
 
 実行UID、read-only filesystem、socket権限は
 [SECURITY.md](../SECURITY.md#backendrunnerの実行権限)、socket GIDの設定方法は

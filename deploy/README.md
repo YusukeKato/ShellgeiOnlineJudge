@@ -21,27 +21,5 @@
 
 実行コマンドは、開発環境または本番運用の文書を参照してください。
 
-`test.py`は、起動済みサービスのlegacy `POST /api/shellgei`を呼ぶ手動確認スクリプトです。
-problem IDはlegacy `yaml_data/`から列挙し、問題詳細APIの`answer`を実行します。
-v3 submission DTO・browser操作・Compose自動起動/終了を検証するE2Eではありません。
-
-利用時の注意点は次のとおりです。
-
-- 全問題を対象にシェルコマンドの実行を試みる
-- 本番サービスや共有環境では実行しない
-- 自動テストには、pytestの明示的に有効化する回帰テストを使用する
-- 問題取得失敗や参照解答欠損をskipする経路があるため、末尾の成功表示だけでは全問題の通過を保証しない
-
-起動済みのローカル環境を対象に手動で実行する場合は、
-リポジトリのルートで次を実行します。
-
-```sh
-REQUESTS_CA_BUNDLE=deploy/tls/fullchain.pem \
-  SERVER_URL=https://localhost:8443 \
-  poetry run python deploy/test.py
-```
-
-`REQUESTS_CA_BUNDLE`には、起動中のfrontendが使用する開発用証明書を指定します。
-
-自動回帰テストの実行条件とコマンドは、
-[Docker統合テスト](../backend/tests/integration/README.md)を参照してください。
+Compose全体のE2Eと全問題の回帰テストは、pytestで明示的に有効化します。
+実行条件とコマンドは[Docker統合テスト](../backend/tests/integration/README.md)を参照してください。

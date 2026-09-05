@@ -18,12 +18,13 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `4eec07b`
-- commit subject: `feat: separate database maintenance and runtime privileges (SOJ-011)`
+- 確認対象commit: `9c15a34`とR3-026のreview差分
+- commit subject: `docs: record approved SOJ-011 database privilege separation`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の変更: SOJ-011のDB管理用credential・通常実行roleの分離。backend起動時のDDLを廃止。
-  使用方法は[backend文書](../../backend/README.md#実行ログとdb-migration)、移行は[本番運用](../PRODUCTION.md#8-更新デプロイ)を参照
+- 直近の変更: R3-026の未使用コード・資産・依存整理。範囲と検証結果は
+  [refactoring tracker](../refactoring/README.md#r3-026-remove-obsolete-code-assets-scripts-and-dependencies)を参照。
+  SOJ-011を含むsecurity境界・既存課題のstatusは維持する
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
 baseline以降に変更がある場合は、先に差分を確認してください。
@@ -31,7 +32,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 4eec07b
+git diff 9c15a34
 ```
 
 ## Current security status

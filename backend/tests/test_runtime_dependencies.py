@@ -16,7 +16,8 @@ def test_runtime_dependency_groups_separate_docker_database_and_development() ->
     assert groups["backend"] == {"sqlalchemy", "psycopg2-binary", "pillow"}
     assert groups["runner"] == {"docker"}
     assert {"pytest", "ruff", "mypy"} <= groups["dev"]
-    assert groups["legacy"] == {"gunicorn", "pytz"}
-    for name in ("backend", "runner", "dev", "legacy"):
+    assert "legacy" not in groups
+    assert {"gunicorn", "pytz", "types-pytz"}.isdisjoint(common.union(*groups.values()))
+    for name in ("backend", "runner", "dev"):
         assert common.isdisjoint(groups[name])
     assert groups["backend"].isdisjoint(groups["runner"])

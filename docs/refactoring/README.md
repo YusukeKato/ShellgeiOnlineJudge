@@ -23,10 +23,10 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 29
 - Ready: 0
-- Planned: 2
-- Pending (`Ready` + `Planned`): 2
+- Planned: 1
+- Pending (`Ready` + `Planned`): 1
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 27
 - Blocked: 0
 - Deferred: 0
@@ -178,7 +178,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-023 | P1 | Completed | E | Split production backend and runner images | R3-017, R3-022 | `aacda56` |
 | R3-024 | P1 | Completed | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | `48a0670` |
 | R3-025 | P2 | Completed | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | `7b779b3` |
-| R3-026 | P3 | Planned | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | - |
+| R3-026 | P3 | Review | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | - |
 | R3-027 | P3 | Planned | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | - |
 | R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
 | R3-029 | P2 | Completed | F | Organize shared, backend, and runner packages | R3-023, R3-024 | `b71663e` |
@@ -598,14 +598,23 @@ They are planning aids, not acceptance criteria.
 
 ### R3-026: Remove obsolete code, assets, scripts, and dependencies
 
-- Priority / Status: P3 / `Planned`
+- Priority / Status: P3 / `Review`
 - Goal: 代替経路の完了後にdead code、unused CSS/image/script、manual regression重複、不要なruntime dependencyを削除する
-- Main files/components: `backend/scripts/`、`deploy/`、frontend asset/CSS、Python/frontend dependency manifests、関連README
+- Main files/components: `backend/scripts/`、`deploy/`、frontend asset/CSS、Python dependency manifest・lock、関連README
 - Dependencies: 各削除対象を置き換えるR3 unit。削除前に使用箇所を再調査する
+- Scope: repository全体の参照確認に基づき、旧`backend/scripts/`、未使用の`get_db()`、手動`deploy/test.py`、未使用CSS 2件・`.select-button`・画像3件、`gunicorn`・`pytz`・`types-pytz`を削除する。手動回帰の代替はR3-024のCompose E2Eと全問題回帰。legacy問題data・移行CLI・characterization test、画面で使う画像・CSSは維持する
 - Risk: Low--Medium。運用で暗黙に使われているscriptやassetを削除しないこと
 - Expected tests: repository-wide reference search、基本Python/frontend検査、build、Compose test、documentation link check
 - Size: M
-- Completion: commit `-` / date `-` / note `-`
+- Review validation: 2026-09-05、依存境界testの期待値変更でREDを確認後、削除を反映してGREEN。
+  削除対象3 packageを含まない新規Python 3.14環境でruff・format・mypyと非Docker 629件が成功。
+  lockは対象3件と関連metadataだけを変更し、残るpackageのversion・配布物hashは維持した。
+  frontendのformat・lint・typecheck・35 test・production buildが成功。
+  新しいbackend・runner・frontend imageを使用したrootless Docker 23件が成功（skipなし）。
+  Compose/browser、直接sandboxとComposeの全92問、DB migration・権限・保存、停止復帰、収録境界を含む。
+  Compose config・専用資源のcleanupはE2E内で検証し、文書のローカルlink参照先165件と`git diff --check`も成功。
+  本番反映・GitHub上のCIは未実施。API・DB schema・sandbox制限の契約変更はない。
+- Completion: commit `-` / date `-` / note 実装・検証完了、依頼者のreview・commit指示待ち
 
 ### R3-027: Establish canonical v3.0.0 version and release documentation
 
@@ -772,3 +781,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-05 | R3-024 approved and recorded as `Completed` | `48a0670` |
 | 2026-09-05 | R3-025 approved and recorded as `Completed`; vulnerability remediation and hosted verification remain tracked separately | `7b779b3` |
 | 2026-09-05 | R3-029 approved and recorded as `Completed` | `b71663e` |
+| 2026-09-05 | R3-026 obsolete code, assets, scripts, and dependencies removed after reference audit; planned validation passed; moved to `Review` | - |

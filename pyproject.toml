@@ -31,13 +31,7 @@ ruff = "^0.12.12"
 mypy = "^1.17.1"
 types-requests = "^2.32.4.20250809"
 types-docker = "^7.1.0.20250822"
-types-pytz = "^2025.2.0.20250809"
 types-pyyaml = "^6.0.12"
-
-# 旧補助依存の削除判断はR3-026で行い、本番imageには含めない。
-[tool.poetry.group.legacy.dependencies]
-gunicorn = "^23.0.0"
-pytz = "^2025.2"
 
 # ブラウザE2Eとそのscriptの型検査専用。本番imageには導入しない。
 [tool.poetry.group.e2e]
