@@ -41,6 +41,8 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - 動的sandboxのlogging driverが`none`であること
 - sandboxの待機PID 1のstdin、stdout、stderrが`/dev/null`であること
 - 同じownerの旧sandboxをrunner起動時に回収すること
+- ホスト監視CLIが別ownerを除外し、runner停止・削除後のsandbox残存を読み取りだけで検出すること
+  （`test_sandbox_health_docker.py`。runtime image検査の有効化とbuild済みbackend imageが必要）
 - root filesystemがread-onlyであること
 - 通常ファイルの書き込み先が、容量・inode制限付きの
   `/work`、`/tmp`、`/media`、`/dev`に限定されていること

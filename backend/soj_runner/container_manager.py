@@ -8,6 +8,15 @@ from typing import Any
 
 import docker
 
+from soj_runner.sandbox_identity import (
+    DEFAULT_POOL_SIZE,
+    MANAGED_LABEL,
+    OWNER_LABEL,
+    INSTANCE_LABEL,
+    DEFAULT_SANDBOX_OWNER_ID,
+    SANDBOX_OWNER_ID_PATTERN,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -15,13 +24,7 @@ DEFAULT_IMAGE_ID = (
     "theoldmoon0602/shellgeibot:latest@"
     "sha256:aaaa5b10e6419e4309a0b53a8d9e48ddcadabb92cc1dc7e1a739bc0248741a36"
 )
-DEFAULT_POOL_SIZE = 3
 DOCKER_API_TIMEOUT_SECONDS = 15
-MANAGED_LABEL = "com.shellgei-online-judge.sandbox"
-OWNER_LABEL = "com.shellgei-online-judge.owner"
-INSTANCE_LABEL = "com.shellgei-online-judge.runner-instance"
-DEFAULT_SANDBOX_OWNER_ID = "shellgei-online-judge"
-SANDBOX_OWNER_ID_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,62}")
 PINNED_IMAGE_PATTERN = re.compile(r"[^@\s]+@sha256:[0-9a-f]{64}")
 SANDBOX_CONTAINER_NAME_PREFIX = "soj-sandbox"
 SANDBOX_WORK_DIRECTORY = "/work"

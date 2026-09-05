@@ -10,7 +10,7 @@
 - `soj_backend/models/`: 公開API DTO、提出結果、typed実行ログ、DB model
 - `soj_backend/migrations/`: legacy実行ログ表から構造化schemaへ進めるversioned migration
 - `soj_runner/`: `main.py`による認証付き内部API、sandbox pool、archive・出力上限・watchdog・終了処理
-- `soj_tools/`: 開発用の問題schema移行・manifest生成CLI。本番imageへは収録しない
+- `soj_tools/`: 問題schema移行・manifest生成とホスト監視CLI。本番imageへは収録しない
 - `scripts/`: 旧`log_manager.py`・`time_manager.py`を保持。削除判断はR3-026で行う
 - `tests/`: 単体・API・Docker統合テスト
 
@@ -35,6 +35,9 @@ DB migration CLIは`soj_backend.database_migrations`、問題整備CLIは
 
 problem schema、manifest revision、移行・更新手順は、
 [問題データ](../problems/README.md)を参照してください。
+
+ホスト監視CLI `python -m soj_tools.sandbox_health`の使用方法は、
+[本番運用の監視手順](../docs/PRODUCTION.md#runnerとは独立したsandbox監視)を参照してください。
 
 ## 本番runtime image
 

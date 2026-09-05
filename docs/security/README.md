@@ -18,12 +18,12 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `b71663e`
-- commit subject: `refactor: organize shared backend and runner packages (R3-029)`
+- 確認対象commit: `161d054`とSOJ-002のホスト監視CLI review待ち差分
+- commit subject: `docs: record R3-029 completion and approved baseline`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の変更: R3-029の責務別package再配置。共有から専用実装への依存を外し、判定・Pillowをbackendへ限定。
-  検証結果は[リファクタリングtracker](../refactoring/README.md#r3-029-organize-shared-backend-and-runner-packages)を参照
+- 直近の変更: SOJ-002の読み取り専用ホスト監視CLI。runner停止・非healthyとowner単位のsandbox異常を検出。
+  使用方法・出力・終了codeは[本番運用](../PRODUCTION.md#runnerとは独立したsandbox監視)を参照
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
 baseline以降に変更がある場合は、先に差分を確認してください。
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff b71663e
+git diff 161d054
 ```
 
 ## Current security status
@@ -67,10 +67,10 @@ Statusは次の意味で使用します。
 ### Open / Partially resolved / Deferred
 
 - `SOJ-002` — Medium / P1 / Partially resolved
-  - 概要: 起動時回収とDocker失敗時の追跡は実装したが、
+  - 概要: 起動時回収・Docker失敗時の追跡に加え、独立したホスト監視CLIを実装（review待ち）。
     daemon単独のsandbox有効期限はない
-  - 関連: `backend/soj_runner/container_manager.py`、`backend/soj_runner/main.py`
-  - 次: runner再起動・回収失敗の監視と、独立した期限強制の要否を判断
+  - 関連: `backend/soj_runner/container_manager.py`、`backend/soj_tools/sandbox_health.py`
+  - 次: 本番監視への定期実行・alert接続と、独立した期限強制の要否を判断
 - `SOJ-006` — Medium / P1 / Deferred
   - 概要: runner侵害時の影響が同一daemon上のDB、frontend、TLS鍵へ及ぶ
   - 関連: `docker-compose.yml`
@@ -233,6 +233,9 @@ Pythonの期限付き例外（`4120a76`）:
   `jackson-core`の`GHSA-r7wm-3cxj-wff9`が新たに検出されました。
   この候補は今回採用せず、現行digestと問題互換性を維持しています。
   候補のコマンド実行・全問題回帰は未実施で、採用時に改めて検証が必要です。
+  2026-09-05の次P1項目着手時にregistryのlatestを再照合し、同じ候補digestであることを確認しました。
+  新しい候補はなく、この再照合ではscan・依存更新を実施していません。個別toolの再buildは別単位とし、
+  同じP1のSOJ-002のホスト監視整備を先行しました。
 
 ## Resolved issues
 
@@ -298,18 +301,33 @@ daemon単独のsandbox有効期限等の残存経路は、
 - 回収確認不能なcontainer名をprocess内hard capへ保持
 - cleanupの直列化と、実行thread終了後の最終削除
 - Composeの`restart: always`
+- rootless daemonを読み取るホスト監視CLI。runner状態とowner単位のsandbox残存・台数異常・instance混在を検出
 
 不足と次の対応:
 
-- productionでrunner再起動、起動時回収、owner別container数を監視する
+- ホスト監視CLIをproductionの定期監視・alertへ接続する（repository上の実装・検証のみ完了）
 - 1 ownerにつきrunnerを1 instanceに限定する
-- runnerとは独立したhost監視またはreaperが必要か運用要件を決定する
+- runnerとは独立したreaperによる期限強制が必要か運用要件を決定する
 - 独立したreaperを追加する場合は、Docker socket権限の増加と分離方法を先に評価する
 
 想定変更範囲:
 
 - production監視・alert設定
 - 必要と判断した場合のみ、runnerと独立した回収component
+
+今回の実装（2026-09-05、review待ち）:
+
+- `soj_tools.sandbox_health`を追加。CLIの契約は[本番監視手順](../PRODUCTION.md#runnerとは独立したsandbox監視)を正本とする。
+- 識別label・owner検証・pool上限を`soj_runner.sandbox_identity`へ移し、
+  監視がruntime managerの初期化や環境変数の副作用を伴わず同じ定義を使えるようにした。値は変更していない。
+- 新規testは実装前のmodule未存在によるREDを確認後、31件成功。
+  ruff・format・mypy、Python 3.14の非Docker608件が成功。
+- runner imageを再buildし、rootless Docker11件が成功。runtime境界・非root・実行/画像判定・DB保存と、
+  実sandboxの隔離・出力・timeout・回収を確認。専用の軽量containerでは正常・別owner除外・
+  runner停止/削除・停止sandboxと監視の非変更を確認した。
+- frontend・依存・問題データ・Composeは変更していないため、frontend基本5検査とCompose/全92問回帰は再実行していない。
+  imageのbase・依存とsandbox digestも維持し、脆弱性scanは再実行していない。
+- 本番の定期実行・通知設定、独立reaperの導入は未実施。Docker daemon停止等の耐性試験は行っていない。
 
 残存リスクを踏まえ、SOJ-002はMedium、P1、Partially resolvedとします。
 

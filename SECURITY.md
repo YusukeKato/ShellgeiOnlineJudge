@@ -261,6 +261,8 @@ shutdown中はreadinessを503とします。実行中のcontainerも管理済み
 Composeのrunnerは`restart: always`で再起動し、起動時回収を実行します。
 ただし、Docker daemon側だけで強制するsandboxの有効期限はありません。
 runner再起動、残存sandbox数、起動時回収失敗をホスト側で監視してください。
+読み取り専用のホスト監視CLIと終了codeの扱いは
+[本番のsandbox監視手順](./docs/PRODUCTION.md#runnerとは独立したsandbox監視)を参照してください。
 
 Docker clientのHTTP timeoutは15秒です。
 これはdaemon障害時の長時間blockを軽減しますが、

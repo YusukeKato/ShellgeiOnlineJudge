@@ -804,6 +804,45 @@ daemon稼働中のこのディレクトリをそのままコピーしても、
 DBバックアップの代わりにはなりません。
 PostgreSQLの整合性が保証される方法でバックアップしてください。
 
+### runnerとは独立したsandbox監視
+
+rootless Dockerを所有するホストユーザーの既存監視から、repository rootで次を実行します。
+ホストには[開発環境](./DEVELOPMENT.md)のPoetry環境（Docker SDKを含む）が必要です。
+本番container内へtoolや追加のDocker socket mountを導入する必要はありません。
+
+```sh
+export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
+timeout --kill-after=5s 30s env PYTHONPATH=backend \
+  poetry run python -m soj_tools.sandbox_health
+```
+
+Composeと同じ`SANDBOX_OWNER_ID`を環境変数または`--owner`で指定してください。
+runnerのcontainer名を変更した環境では`--runner-container`も指定します。
+CLIは明示したUnix socketのrootless確認後、同じownerのsandbox一覧とrunnerのinspectだけを読み取ります。
+runnerのCompose service labelとowner設定が一致しない場合は確認失敗です。
+
+| 終了code | 意味・対応 |
+| --- | --- |
+| `0` | このsnapshotではrunnerがrunning/healthyで、同一instanceのsandboxが管理上限数だけrunning |
+| `1` | runner欠落・停止・非healthy、sandbox数の過不足・停止・instance混在。連続する場合はrunnerの状態と回収失敗を確認 |
+| `2` | 設定不正、rootless不一致、Docker接続失敗、metadata欠損等で確認不能。正常として扱わず監視障害として通知 |
+
+外側の`timeout`による`124`・`137`や、Python/Poetry起動失敗等の他の非0終了も監視障害です。
+SDKのtimeoutは各HTTP要求に適用され、検査全体の期限は上記のホスト側timeoutで制限します。
+30秒周期等で実行し、起動・pool補充・再起動との非atomicな読み取りによる一時的な`1`は、
+例えば3回連続した場合に通知します。実際の通知設定・定期実行の導入は本番監視側で行ってください。
+
+stdoutは1行JSONで、`status`・固定`issues`、runnerのstate/health、累積`runner_restarts`、
+`sandbox_count`・`sandbox_not_running`・`instance_count`だけを返します。
+再起動数は前回値からの増加を監視し、container再作成でリセットされることに注意してください。
+container名・ID、instance labelの値、環境変数、command、healthcheckの生出力、内部例外は出力しません。
+
+このtoolは読み取り専用です。runner停止時の残存sandboxを通知できますが、
+削除、runner再起動、実行中commandの経過時間確認、独立した有効期限の強制は行いません。
+待機poolは長時間残るのが正常なので、containerの作成時刻だけを期限超過と判定しません。
+通知後の回収は[runnerの停止・復旧手順](#10-日常運用コマンド)と
+[セキュリティ課題](./security/README.md)を参照してください。
+
 ## 12. 運用上の制約
 
 - 同時実行数とrunnerの開始頻度はrunnerプロセス単位です。
