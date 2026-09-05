@@ -18,8 +18,8 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `5cdab01`とSOJ-022のreview待ち差分
-- commit subject: `docs: record R3-025 completion and audit baseline`
+- 確認対象commit: `cb044c7`
+- commit subject: `security: update application dependencies and nginx for SOJ-022`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
 - 直近の実行検証: SOJ-022の依存更新、本番image再build、同一DBでのscan比較と回帰検査。
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 5cdab01
+git diff cb044c7
 ```
 
 ## Current security status
@@ -117,7 +117,8 @@ Statusは次の意味で使用します。
 ## SOJ-022：依存・imageの是正記録
 
 2026-09-05、依頼者の次の対策実装依頼に対し、CIを停止させるP1課題を優先しました。
-アプリ依存・nginxの是正は`Review`です。DB・sandboxとscanner判定の残存課題があるため、
+アプリ依存・nginxの是正は依頼者のreview承認後、`cb044c7`でcommit済みです。
+DB・sandboxとscanner判定の残存課題があるため、
 SOJ-022全体を`Resolved`にはしていません。R3-029等のpackage再配置は今回の範囲外です。
 
 ### 更新と互換性
