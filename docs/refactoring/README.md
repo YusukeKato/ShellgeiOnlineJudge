@@ -27,8 +27,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Pending (`Ready` + `Planned`): 5
 - In Progress: 0
 - Review: 0
-- Completed: 22
-- Done: 1
+- Completed: 23
+- Done: 0
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -182,7 +182,7 @@ Codexが実装とtestを終えた時点は通常`Review`です。R3-028は依頼
 | R3-025 | P2 | Planned | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | - |
 | R3-026 | P3 | Planned | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | - |
 | R3-027 | P3 | Planned | F | Establish canonical v3.0.0 version and release documentation | R3-001--R3-026 release scope | - |
-| R3-028 | P1 | Done | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | - |
+| R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
 
 Size estimates use `XS` (under about 100 changed lines), `S` (100--250),
 `M` (250--600), and `L` (over 600 or a large mechanical data migration).
@@ -475,7 +475,7 @@ They are planning aids, not acceptance criteria.
 
 ### R3-028: Distinguish execution failures and judge errors in frontend results
 
-- Priority / Status: P1 / `Done`
+- Priority / Status: P1 / `Completed`
 - Goal: backendが区別した実行失敗・判定エラーをfrontendで不正解へ潰さず表示する
 - Main files/components: `frontend/src/functions/judge_result.tsx`、`submit.tsx`、`legacy_behavior.test.jsx`、frontend README、legacy behavior文書
 - Dependencies: R3-019、R3-020
@@ -483,7 +483,7 @@ They are planning aids, not acceptance criteria.
 - Expected tests: 旧失敗表示の期待値変更でRED、API clientからDOMまでの実行失敗・判定エラー・timeout・出力上限、終了code許容問題、未知reason拒否、frontend基本5検査
 - Risk: Low。利用者向け判定文言が変わるため、HTTP応答成功と実行成功を混同しない
 - Size: S
-- Completion: commit `-` / implementation date `2026-09-05` / 未commit・依頼者のdiff review待ち。
+- Completion: commit `eb9e4587badc3bbfd1e48712a7afc5b5e1daf1d5` / date `2026-09-05` / 依頼者のreview承認後にcommit済み。
   表示期待値の修正後、実装前に9件のREDを確認。rootless Dockerの既存builder
   （Node.js 22.23.2 / Yarn 1.22.22）で現ソースを一時コピーし、frontend test 35件、
   format、lint、typecheck、production buildが成功。二重送信・abort・response raceの
