@@ -21,7 +21,7 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Baseline commit subject: `docs: update maintenance history`
 - Baseline date: 2026-08-25
 - Overall status: `Implementation complete; release verification pending`
-- Total refactoring units: 29
+- Total refactoring units: 30
 - Ready: 0
 - Planned: 0
 - Pending (`Ready` + `Planned`): 0
@@ -29,12 +29,13 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Review: 0
 - Completed: 29
 - Blocked: 0
-- Deferred: 0
+- Deferred: 1
 - Superseded: 0
 
 `2.8.0`は今回の計画で宣言されたproduct baselineです。
 製品versionの正本・転記先・更新手順はR3-027で整備し、
 [リリース準備](../RELEASE.md)に記載しています。
+R3-030は依頼者の指示により後日対応とし、今回のrelease対象には含めません。
 
 ## Goals
 
@@ -638,6 +639,19 @@ They are planning aids, not acceptance criteria.
   文書のローカル参照先151件と`git diff --check`を確認。依存lock・API/protocol/schemaの契約値は維持。
   GitHub上のCI・署名・required checks、本番反映、タグ・Release公開は未実施。
 - Completion: commit `c7b2b5286ca077e19cc732fec106fd728987b5d6` / date `2026-09-06` / note 依頼者のreview承認後にcommit。公開前の環境確認はリリース準備文書・security trackerで管理
+
+## Deferred follow-up
+
+### R3-030: Support display of generated GIF artifacts
+
+- Priority / Status: P2 / `Deferred`
+- Goal: 画面に掲載しているGIF生成例について、生成した画像をユーザーが確認できるようにする
+- Current limitation: sandboxはGIF・MIFFを許可し、API・frontendも`image/gif`を扱えるが、runnerは画像判定の問題定義に指定されたartifactだけを回収する。現在の問題定義には`media/output.gif`の指定がなく、生成に成功しても表示へ届かない。画面のGIF出力先・サンプル説明と実装に不整合がある
+- Reproduction: 画面掲載例の`seq 0 9 | xargs -I@ bash -c 'textimg "$1" -F100 | convert - miff:-' _ @ | convert -delay 10 miff:- media/output.gif`。コマンドの生成成否と、artifactの回収・表示の成否を分けて確認する
+- Main files/components: `backend/soj_runner/sandbox_executor.py`、runner/public APIのartifact contract、frontendの画像表示と`frontend/src/tsx/run.tsx`、関連API文書
+- Scope: 問題の判定用artifactと表示用GIFの扱いを整理し、回収・返却・表示の経路を設計する。既存の判定結果を変えず、path・形式・サイズの検証とsandbox制限を維持する。API変更が必要なら互換性を確認し、画面の説明も実装と同期する
+- Acceptance / Expected tests: 掲載例のアニメーションGIFがブラウザで表示されることをrootless Docker・API・browser経路で確認する。画像欠損・不正形式・上限超過時の挙動と、既存のtext/image判定・JPEG表示の回帰も確認する
+- Deferral: 2026-09-06、依頼者の指示により実装は後日とする。再開時にartifact contractと回収処理を再確認する
 
 ## Known design decisions
 
