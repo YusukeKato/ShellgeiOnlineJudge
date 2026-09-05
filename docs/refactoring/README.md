@@ -23,10 +23,10 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 29
 - Ready: 0
-- Planned: 4
-- Pending (`Ready` + `Planned`): 4
+- Planned: 3
+- Pending (`Ready` + `Planned`): 3
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 25
 - Blocked: 0
 - Deferred: 0
@@ -177,7 +177,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-022 | P1 | Completed | E | Pin runtime artifacts and harden mounts and configuration | R3-013 | `eff33ca` |
 | R3-023 | P1 | Completed | E | Split production backend and runner images | R3-017, R3-022 | `aacda56` |
 | R3-024 | P1 | Completed | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | `48a0670` |
-| R3-025 | P2 | Planned | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | - |
+| R3-025 | P2 | Review | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | - |
 | R3-026 | P3 | Planned | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | - |
 | R3-027 | P3 | Planned | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | - |
 | R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
@@ -549,13 +549,30 @@ They are planning aids, not acceptance criteria.
 
 ### R3-025: Harden CI and software supply-chain checks
 
-- Priority / Status: P2 / `Planned`
+- Priority / Status: P2 / `Review`
 - Goal: CI token権限、timeout、supported runtime matrix、dependency/image/secret scan、SBOM、artifact provenanceを段階的に導入する
 - Main files/components: `.github/workflows/`、dependency update policy、image build/promotion、security documentation
 - Dependencies: R3-004、R3-022、R3-024
 - Risk: Medium。external scannerのavailability、false positive、artifact release flowを管理する必要がある
 - Expected tests: workflow validation、least-permission review、scanner fixtures、SBOM/provenance generation、required checks
 - Size: M
+- Implemented scope: 既存CIのAction SHA・権限・timeout・concurrency・Poetry/Yarnを固定し、
+  専用workflowへsecret/lock file/image scan、SBOM、rootless Compose E2E、main限定の署名jobを追加。
+  scannerはversionと配布hashを固定し、依存更新はDependabotの週次PRでreviewする。
+  配布候補archiveはscan済みのimmutable IDから保存し、未署名recordにsource commitとfile hashを記録する。
+  手順・停止条件・保証範囲の正本は[CI文書](../CI.md)。remote設定や本番deployは変更していない。
+- Review validation: 2026-09-05、実装前にCI policy test 2件のREDを確認。
+  actionlint、Pythonのruff・format・mypy・非Docker 541件、frontend基本5検査（test 35件）が成功。
+  公式archiveでinstallerのhash照合、実scannerで合成secret・既知脆弱package・破損SBOMの検出を確認。
+  Git履歴160 commitsのsecret scanは検出なし。lock fileのSBOMと既存の本番3 image・
+  正本のDB/sandboxのSBOM・脆弱性reportを生成し、候補archiveのOCI indexとscan済みID、全file hashを照合した。
+  imageはR3-024でbuild・検証済みのものを使用。GitHub-hosted上の新規build・rootless setup・
+  OIDC署名・required checksは未実行で、反映後の確認が必要。Docker実行コードと問題dataは変更していないため、
+  既存Docker 19件・全92問回帰は今回は再実行していない。
+- Scan findings: 停止対象（修正版のあるHigh/Critical）はlock file 12、backend 6、runner 8、
+  frontend 20、DB 42、sandbox 248件。対象ごとのmatch数であり、重複を除いたCVE数ではない。
+  scan処理とreport生成は完了したが、gateは設計どおり終了code 2となるため、現状のCIは成功扱いにならない。
+  到達性・false positiveの評価と更新はSOJ-022へ登録し、R3-025では既存検出のbaseline化やignore追加を行っていない。
 - Completion: commit `-` / date `-` / note `-`
 
 ## Phase F — Cleanup / Release
@@ -690,6 +707,7 @@ Git履歴から分からないpriority、scope、順序、review gateの変更�
 | 2026-09-05 | R3-023 | 次unitの実装依頼に基づき、現行配置で本番image・依存・OS userを分離する範囲を確定。専用host/VMとDB role分離は運用・migration設計が別途必要なためSOJ-006・SOJ-011へ残し、frontendを含むCompose全体E2EはR3-024へ維持 | `aacda56` |
 | 2026-09-05 | R3-029 | 依頼者の将来実施希望により、責務別package整理とfile単位COPY解消を独立unitとして追加。R3-026の不要資産削除とは分け、R3-023・R3-024の回帰基準を前提とする。今回のR3-023実装には含めない | `aacda56` |
 | 2026-09-05 | R3-024 | 次unitの実装依頼に基づき、既存Composeの実経路・停止復帰・browser・全問題回帰を対象とした。独立reaperは権限境界と運用設計を伴うためSOJ-002へ維持し、R3-025のCI整備は含めない | `48a0670` |
+| 2026-09-05 | R3-025 | 既存CIを維持して検査・候補生成・main限定provenanceを構成。実scanで検出した依存/image更新はSOJ-022へ記録し、既存検出を自動除外しない。GitHubのremote設定変更・署名実行・本番promotionは依頼者による反映後の確認とする | - |
 
 ## Tracker history
 

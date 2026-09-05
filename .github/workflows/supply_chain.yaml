@@ -1,0 +1,154 @@
+name: Supply Chain CI
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "15 11 * * 2"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source:
+    name: Workflow, secrets and dependencies
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PYTHONPATH: backend
+      GRYPE_CHECK_FOR_APP_UPDATE: "false"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+      - name: Install locked development dependencies
+        run: |
+          python -m pip install poetry==2.4.1
+          poetry check --lock
+          poetry install --no-interaction
+      - name: Install verified scanners
+        run: |
+          python ci/install_tools.py "$RUNNER_TEMP/soj-tools" actionlint gitleaks syft grype
+          printf 'GRYPE_DB_CACHE_DIR=%s/grype-db\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Validate workflows and policy
+        run: |
+          "$RUNNER_TEMP/soj-tools/actionlint"
+          poetry run pytest backend/tests/test_ci_policy.py backend/tests/test_supply_chain.py
+      - name: Scan complete Git history and current files
+        run: |
+          "$RUNNER_TEMP/soj-tools/gitleaks" git . --redact=100 --no-banner --log-opts=--all
+          "$RUNNER_TEMP/soj-tools/gitleaks" dir . --redact=100 --no-banner
+      - name: Update vulnerability database
+        run: |
+          "$RUNNER_TEMP/soj-tools/grype" db update
+      - name: Verify scanner failure detection
+        run: poetry run python ci/supply_chain.py fixtures --tools "$RUNNER_TEMP/soj-tools" --reports "$RUNNER_TEMP/scanner-fixtures"
+      - name: Scan lock files and generate SBOMs
+        id: scan
+        run: poetry run python ci/supply_chain.py source --tools "$RUNNER_TEMP/soj-tools" --reports "$RUNNER_TEMP/dependency-reports"
+      - name: Retain dependency reports even when vulnerabilities block the job
+        if: ${{ always() && steps.scan.outcome != 'skipped' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dependency-reports
+          path: ${{ runner.temp }}/dependency-reports/
+          retention-days: 14
+          if-no-files-found: error
+
+  runtime:
+    name: Rootless runtime E2E and image scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      PYTHONPATH: backend
+      GRYPE_CHECK_FOR_APP_UPDATE: "false"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+      - name: Install locked development dependencies
+        run: |
+          python -m pip install poetry==2.4.1
+          poetry check --lock
+          poetry install --no-interaction
+      - name: Set up isolated rootless Docker
+        uses: docker/setup-docker-action@77e84dbf09b47d1e29270283c22f16145aa85ca1 # v5.4.0
+        with:
+          version: v29.8.0
+          rootless: true
+          set-host: true
+      - name: Validate rootless daemon and build current targets
+        run: |
+          poetry run python -c 'from ci.supply_chain import rootless; rootless()'
+          docker build --file backend/Dockerfile --target backend --tag soj-backend:ci .
+          docker build --file backend/Dockerfile --target runner --tag soj-runner:ci .
+          docker build --file frontend/Dockerfile --build-arg VITE_SOJ_URL= --tag soj-frontend:ci .
+          docker build --file backend/tests/integration/browser/Dockerfile --tag soj-browser:ci .
+      - name: Install verified inventory and vulnerability tools
+        run: |
+          python ci/install_tools.py "$RUNNER_TEMP/soj-tools" syft grype
+          printf 'GRYPE_DB_CACHE_DIR=%s/grype-db\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Update vulnerability database
+        run: |
+          "$RUNNER_TEMP/soj-tools/grype" db update
+      - name: Scan runtime images and prepare candidate archive
+        id: scan
+        run: poetry run python ci/supply_chain.py runtime --tools "$RUNNER_TEMP/soj-tools" --reports "$RUNNER_TEMP/runtime-reports"
+      - name: Pull verified infrastructure images
+        run: |
+          poetry run python -c 'import subprocess, yaml; from scripts.container_manager import DEFAULT_IMAGE_ID; refs = [DEFAULT_IMAGE_ID, yaml.safe_load(open("docker-compose.yml"))["services"]["db"]["image"]]; [subprocess.run(["docker", "pull", ref], check=True) for ref in refs]'
+      - name: Full Compose regression and image boundary checks
+        env:
+          SOJ_RUN_DOCKER_TESTS: "1"
+          SOJ_RUN_COMPOSE_E2E: "1"
+          SOJ_RUN_FULL_REGRESSION: "1"
+          SOJ_RUN_RUNTIME_IMAGE_TESTS: "1"
+          SOJ_COMPOSE_BACKEND_IMAGE: soj-backend:ci
+          SOJ_COMPOSE_RUNNER_IMAGE: soj-runner:ci
+          SOJ_COMPOSE_FRONTEND_IMAGE: soj-frontend:ci
+          SOJ_COMPOSE_BROWSER_IMAGE: soj-browser:ci
+          SOJ_BACKEND_RUNTIME_IMAGE: soj-backend:ci
+          SOJ_RUNNER_RUNTIME_IMAGE: soj-runner:ci
+        run: poetry run pytest backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_runtime_images.py
+      - name: Retain runtime inventory and candidate for review
+        if: ${{ always() && steps.scan.outcome != 'skipped' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: runtime-reports
+          path: ${{ runner.temp }}/runtime-reports/
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 0
+
+  provenance:
+    name: Attest reviewed main artifacts
+    needs: [source, runtime]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      # このjobはcheckoutや取得artifact内のcode実行を行わない。
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: "*-reports"
+          path: ${{ runner.temp }}/attestation-subjects
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: ${{ runner.temp }}/attestation-subjects/**/*
+          create-storage-record: false

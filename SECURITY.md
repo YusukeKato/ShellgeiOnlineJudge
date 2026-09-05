@@ -563,11 +563,9 @@ image referenceを拒否し、固定imageがlocalにない場合だけ同じdige
 imageの更新方法は[本番運用の「image digestの更新」](./docs/PRODUCTION.md#image-digestの更新)を
 正本とします。
 
-次のsupply chain対策はまだ構成されていません。
-
-- SBOM生成
-- 署名検証
-- 継続的な脆弱性scan
+CIにはsecret・依存・image scan、SBOM生成と、mainの検査成功後の署名付きprovenance登録を
+構成しています。停止条件、権限境界、artifact検証と保証範囲は[CI文書](./docs/CI.md)を
+正本とします。第三者imageの供給元署名検証や、本番promotionの自動化は未導入です。
 
 イメージや依存関係を更新する場合は、次のテストが必要です。
 
@@ -581,5 +579,5 @@ imageの更新方法は[本番運用の「image digestの更新」](./docs/PRODU
 - 外側proxyで実際のclient単位に共有するrate・connection制限
 - 複数frontend replica・複数hostで共有する受付制御
 - runnerとは独立したsandbox期限強制の必要性評価
-- イメージのSBOM、署名検証、脆弱性scan
+- 検出された依存/image脆弱性の評価・更新、第三者imageの供給元署名検証
 - runnerを別hostまたは使い捨てVMへ配置する追加隔離

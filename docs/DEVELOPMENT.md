@@ -276,6 +276,8 @@ poetry run pytest -m "not docker"
 
 CIは、[前提環境](#1-前提環境)に記載したすべてのPython versionで
 同じ検査を実行します。
+CIの権限・workflow検証・secret/依存/image scan・SBOM・provenanceは
+[CIとソフトウェア供給網の検査](./CI.md)を正本とします。
 
 ### Docker統合テスト
 

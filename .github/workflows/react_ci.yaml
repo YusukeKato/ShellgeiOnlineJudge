@@ -6,21 +6,33 @@ on:
   schedule:
     - cron: "45 10 * * 2" # At 10:45 AM (UTC) every Tuesday.
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build_and_test:
     name: React Build and Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
 
     steps:
       - name: React Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '22'
-          cache: 'yarn'
-          cache-dependency-path: ./frontend/yarn.lock
+          package-manager-cache: false
+
+      - name: Pin Yarn
+        run: corepack enable && corepack prepare yarn@1.22.22 --activate
 
       - name: React install dependencies
         run: yarn install --frozen-lockfile

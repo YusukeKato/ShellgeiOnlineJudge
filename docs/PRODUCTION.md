@@ -444,9 +444,10 @@ imageを更新するときだけ、次の順序で候補を確認します。
 4. 基本検査、image build、rootless Docker統合test、全問題回帰testを実行する
 5. 検証したdigestと結果をreviewし、commit後に本番へ反映する
 
-候補tagをそのまま本番設定へ記載してはいけません。SBOM、署名検証、脆弱性scanは
-未導入のため、残存するsupply chain対策は
-[セキュリティ課題tracker](./security/README.md)で追跡します。
+候補tagをそのまま本番設定へ記載してはいけません。CIのSBOM・脆弱性scanと、
+mainの検査成功時に登録するprovenanceの検証方法は[CI文書](./CI.md)を参照してください。
+検査失敗時にもreport artifactを保存するため、artifactの存在だけでdeploy対象を判断しません。
+第三者imageの供給元署名等の残存対策は[セキュリティ課題tracker](./security/README.md)で追跡します。
 
 ## 7. 初回デプロイ
 

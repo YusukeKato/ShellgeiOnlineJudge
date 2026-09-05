@@ -18,12 +18,12 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `48a067086315f9fe06697dbcfd357568483d8ebf`
-- commit subject: `test: add full rootless Compose and browser E2E regression`
+- 確認対象commit: `f39cdb9`とR3-025の未commit差分
+- commit subject: `docs: allow research downloads and pulls before review`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の実行検証: R3-024差分で実ComposeのTLS proxy・提出・保存・認証/revision拒否・
-  DB/runnerの停止復帰・browser操作。詳細と回帰結果は[R3-024](../refactoring/README.md#r3-024-add-full-rootless-compose-e2e-regression)を参照
+- 直近の実行検証: R3-025のworkflow/policy、固定tool取得、secret・依存/image scan、
+  scanner fixtureとSBOM生成。詳細は[R3-025](../refactoring/README.md#r3-025-harden-ci-and-software-supply-chain-checks)を参照
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
 baseline以降に変更がある場合は、先に差分を確認してください。
@@ -31,14 +31,13 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 48a0670
+git diff f39cdb9
 ```
 
 ## Current security status
 
-- Criticalとして確定した未解決課題はありません。
-- Highとして確定したOpen課題はありません。
-- repository内のHigh blocking issueは解決しています。
+- 依存・image scanで修正版のあるHigh/Criticalが検出され、CI gateが失敗します。
+  SOJ-022で更新と到達性評価を追跡します。scannerのseverityとサービスでの悪用可能性は区別します。
 - インターネット公開には、外側proxyまたはWAFの
   実client単位の受付制御を別途確認する必要があります。
 - runner異常終了後のsandboxは再起動時に回収します。
@@ -83,11 +82,19 @@ Statusは次の意味で使用します。
     DB volume、image cacheにquotaがない
   - 関連: `docker-compose.yml`、`backend/scripts/execution_log_retention.py`
   - 次: 専用filesystem、I/O制御、quota、監視を本番設計へ追加
-- `SOJ-019` — Medium / P2 / Deferred
-  - 概要: CIにdependency/image/secret scan、最小token権限、
-    artifact保証がない
-  - 関連: `.github/workflows/`
-  - 次: CI権限固定と継続scanを段階導入
+- `SOJ-019` — Medium / P2 / Partially resolved
+  - 概要: CI権限・timeout・Action SHA、secret/依存/image scan、SBOMとmain限定provenanceを構成した。
+    GitHub上の実行、required checks・review保護、供給元署名と本番promotionは未確認または未導入
+  - 関連: `.github/workflows/`、[CI文書](../CI.md)
+  - 次: 実CIとOIDC署名を確認し、required checks・workflow変更のreview保護を設定する。
+    bootstrapの間接依存・第三者imageの供給元検証とpromotion方針を整備する
+- `SOJ-022` — High/Critical（scanner分類、到達性未評価） / P1 / Open
+  - 概要: 固定済みのlock fileと本番imageに修正可能なHigh/Criticalがあり、Supply Chain CIが停止する
+  - 関連: `poetry.lock`、`frontend/yarn.lock`、runtime imageのdigestとOS package
+  - 確認: 2026-09-05のGrype scanでlock fileの停止対象は12件。Starlette、urllib3、
+    cryptography、flatted、browserslistに検出がある。image側の停止件数はR3-025の検証記録を参照
+  - 次: advisoryの到達性・false positiveと依存制約を評価し、package・base image・sandboxを
+    更新して基本検査と全問題回帰を実行する。今回のR3-025では依存更新・包括的なignoreは行っていない
 - `SOJ-020` — Low / P3 / Deferred
   - 概要: DBをloopback公開し、Compose外では弱いfallback URLがある
   - 関連: `docker-compose.yml`、`backend/scripts/database.py`
@@ -205,8 +212,8 @@ R3-023のOS user・image分離後も、backendは起動時migrationのため既�
 
 ### CI・運用基盤が必要
 
-- SOJ-019は、CI token権限、dependency/image scan、SBOM、署名、
-  artifact promotionを段階的に導入する必要があります。
+- SOJ-019は、構成したCIの実運用確認、review保護、第三者供給元検証、
+  artifact promotionの整備が必要です。
 - SOJ-020は、本番のDB管理方法を決めてからport公開を分離します。
 
 Deferredは不要という意味ではありません。
@@ -264,8 +271,9 @@ Deferredは不要という意味ではありません。
   - `.env`、TLS key、Git履歴はDocker build contextから除外します。
   - runner secretはbackendとrunnerだけへ渡します。
 - Development environment verified:
-  - [初回監査](./audit-2026-08-23.md)でtracked fileと当時の99 commitsを簡易pattern scan済み。
-    現在のHEADまで継続scanできているという意味ではありません。
+  - R3-025でGit履歴と現在の作業treeをGitleaksでscanし、検出なし。
+    対象commitと検証範囲は[R3-025の検証記録](../refactoring/README.md#r3-025-harden-ci-and-software-supply-chain-checks)を参照。
+    GitHub上での継続実行は反映後に確認する。
 - Production verification required:
   - secret生成・rotation・保管、`.env` mode、backup暗号化
   - GitHub token権限、branch protection、secret scanning、push protection
@@ -319,6 +327,8 @@ Deferredは不要という意味ではありません。
   - build済み本番imageの非root・依存境界・socket group、内部network上の実行・判定・DB保存
 - `backend/tests/integration/test_compose_e2e.py`
   - 実ComposeのTLS nginx・提出・DB保存、認証/revision拒否、DB/runner停止復帰、browser操作、全問題回帰
+- `backend/tests/test_ci_policy.py`、`test_supply_chain.py`と`ci/`
+  - workflow権限境界、toolの改変・symlink拒否、脆弱性gate、実scannerの検出・異常終了
 - `frontend/src/legacy_behavior.test.jsx`、`playground.test.jsx`
   - typed API検証、正解・不正解・実行失敗・判定エラー表示、timeout、abort、
     二重送信と問題選択・提出responseの競合
@@ -330,7 +340,7 @@ Deferredは不要という意味ではありません。
 
 - Docker create応答timeoutとdaemon停止を使うfailure test
 - 外側proxyを含むpublic Host allowlistとsecurity header
-- dependency、container image、secret、workflowの継続scan
+- GitHub上でのCI・OIDC署名・required checksの実運用確認
 - 外側proxyと複数送信元を含む負荷・公平性test
 
 fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行しません。
@@ -345,9 +355,8 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 この文書では[未解決security課題](#open--partially-resolved--deferred)と
 本番環境での確認事項を管理し、完了済みunitを次作業として再掲しません。
 
-Highとして確定したOpen課題はありません。
-以降はMedium以下を1項目ずつ、または密接に関連する
-小さな単位で差分をレビューして進めてください。
+SOJ-022のscanner検出を優先して評価し、検査を停止させる依存・imageの更新範囲を決めてください。
+その他の課題も1項目ずつ、または密接に関連する小さな単位で差分をレビューして進めてください。
 
 ## 作業再開手順
 
