@@ -83,7 +83,7 @@ assert not list(Path('/app').rglob('poetry.lock'))
 assert not list(Path('/app').rglob('pyproject.toml'))
 assert 'CapEff:\\t0000000000000000' in Path('/proc/self/status').read_text()
 packages = {d.metadata['Name'].lower() for d in importlib.metadata.distributions()}
-assert not packages.intersection({'poetry', 'pytest', 'ruff', 'mypy', 'gunicorn', 'pytz'})
+assert not packages.intersection({'poetry', 'pytest', 'ruff', 'mypy', 'gunicorn', 'pytz', 'playwright', 'pyee'})
 assert not any(name.startswith('types-') for name in packages)
 if service == 'backend':
     assert 'docker' not in packages

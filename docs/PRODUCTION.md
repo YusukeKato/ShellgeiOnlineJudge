@@ -424,6 +424,8 @@ webrootなどへ変更するか、更新時の安全な停止・再開方法を�
 - Pythonとfrontendの検査は、[開発環境の「6. テスト」](./DEVELOPMENT.md#6-テスト)を実行する
 - Docker統合テストと全問題の回帰テストは、
   [Docker統合テスト](../backend/tests/integration/README.md)に従って実行する
+- frontendからDBまでの経路と停止・復帰は、staging側で
+  [ComposeとブラウザのE2E](../backend/tests/integration/README.md#composeとブラウザのe2e)を実行する
 
 本番ホスト上でfork bomb、ディスク枯渇、daemon停止、大量コンテナ生成など、極端な負荷条件を扱う耐性試験を実行してはいけません。
 これらは使い捨てVMでのみ実施します。

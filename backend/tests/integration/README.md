@@ -86,7 +86,79 @@ SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_RUNTIME_IMAGE_TESTS=1 \
 必要性を確認します。一時的なbackend・runner・PostgreSQLを内部networkへ配置し、
 Composeと同じ実行制限でtext/image判定とDB保存まで検証します。test ownerだけの
 sandbox・container・networkを終了時に回収し、本番volumeや公開portは使用しません。
-frontend/nginx、browser、Compose全体の起動・障害回復E2EはR3-024の対象です。
+frontend/nginxとbrowserを含む検証は、次のCompose E2Eで行います。
+
+## ComposeとブラウザのE2E
+
+`test_compose_e2e.py`は実際の`docker-compose.yml`を読み込み、rootless確認wrapperで
+frontend/nginx、backend、runner、PostgreSQLを起動します。上記と同じ隔離環境でのみ
+実行してください。Docker Compose v2以降、`openssl`、build済みの4つのtest imageが必要です。
+ホストのbrowserやNode.jsは使用しません。
+
+リポジトリrootで、現在のコードから検証対象をbuildします。
+
+```sh
+export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
+docker info --format '{{json .SecurityOptions}}'  # name=rootlessを確認する
+docker build --file backend/Dockerfile --target backend --tag soj-backend:compose-test .
+docker build --file backend/Dockerfile --target runner --tag soj-runner:compose-test .
+docker build --file frontend/Dockerfile --build-arg VITE_SOJ_URL= --tag soj-frontend:compose-test .
+docker build --file backend/tests/integration/browser/Dockerfile --tag soj-browser:compose-test .
+
+export SOJ_COMPOSE_BACKEND_IMAGE=soj-backend:compose-test
+export SOJ_COMPOSE_RUNNER_IMAGE=soj-runner:compose-test
+export SOJ_COMPOSE_FRONTEND_IMAGE=soj-frontend:compose-test
+export SOJ_COMPOSE_BROWSER_IMAGE=soj-browser:compose-test
+SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_COMPOSE_E2E=1 \
+  poetry run pytest -m compose_e2e
+```
+
+`VITE_SOJ_URL`の空文字は同一originを使用するためのtest build設定です。
+frontendはloopbackの動的portだけへ公開し、DBのhost portは公開しません。
+testはimageをpull/buildせず、指定されたimage IDを使います。通常のDocker統合testでは
+`SOJ_RUN_COMPOSE_E2E`未指定によりskipされます。Compose経路の全問題回帰も実行する場合は、
+上記のimage環境変数を維持して、追加flagを指定します。
+
+```sh
+SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_COMPOSE_E2E=1 SOJ_RUN_FULL_REGRESSION=1 \
+  poetry run pytest -m compose_e2e
+```
+
+検証内容:
+
+- TLS nginxの静的配信・CSP・問題一覧と、public v3 APIの正解、不正解、timeout、出力上限、画像判定
+- 応答header、保存IDとPostgreSQLの実保存行の一致
+- 内部network経由のrunner認証失敗・problem revision不一致と、実行前の拒否
+- test DB停止中の判定保持と`persistence: unavailable`、DB復帰後の再保存と停止前の行の保持
+- test runner停止中の503、SIGKILL後の明示再起動による旧sandbox回収、再提出の成功
+- runner PID 1のSIGTERM終了後に、Composeのrestart policyで自動再起動して受付が復帰すること
+- Chromiumから実UIを操作し、正解・不正解・timeout・出力上限・画像の表示とDB保存を確認
+- 追加flag有効時は、全manifest問題の参照解答をnginxから提出し、判定・DB保存まで確認
+
+Docker経由のkillは手動停止として扱われるため、強制終了後の回収と自動再起動は
+別の経路として検証します。runner停止中に独立reaperがsandboxを回収する保証は追加しません。
+その制約は[SOJ-002](../../../docs/security/README.md#soj-002-runner-crash後の独立した期限強制)へ残します。
+
+testは`soj-e2e-<UUID>`のproject、container名、owner label、DB volume、networkを使用します。
+呼出元の`.env`やDB接続情報は継承せず、専用の秘密鍵・共有secret・DB passwordを生成します。
+rootless namespace内のsocket GIDを実測し、runnerだけへsocketと補助groupを渡します。
+本番のreadonly、capability、tmpfs、logging、service間network制約は維持します。
+browser containerはfrontend側networkだけに接続し、socketやDB credentialを持ちません。
+
+正常終了・assert失敗・通常の中断では、service停止と`down --volumes`を試みた後に
+当該ownerのsandboxを回収し、専用Compose資源とsandboxの残存がないことを検査します。
+回収に成功したら一時credential・証明書fileも削除します。
+停止・回収の1段階が失敗しても、残るcleanupを試みます。pytest自身のSIGKILLやhost停止では
+finallyを実行できないため、残ったproject名を確認し、そのprojectの生成済み`compose.yml`と
+`test.env`を指定してrootless wrapperの`down --volumes`を実行してください。
+その後、`com.shellgei-online-judge.owner=<同じproject名>` labelが一致するsandboxだけを確認・削除します。
+他projectを巻き込むpruneは使用しません。
+
+ブラウザ専用Dockerfileは、lock済みの任意`e2e` groupと、それに対応するChromiumを導入します。
+本番targetや通常の`poetry install`にはこのgroupを含めません。
+browser scriptも実際のPlaywright型情報で検査する場合は`poetry install --with e2e`を実行します。
+browser本体のホストへのinstallは不要です。構築方法の参考は
+[PlaywrightのDocker文書](https://playwright.dev/python/docs/docker)です。
 
 ## 対象外の耐性試験
 

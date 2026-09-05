@@ -53,3 +53,12 @@ def test_frontend_configuration_is_built_in_and_only_tls_files_are_mounted() -> 
         "${TLS_PRIVATE_KEY_PATH:-./deploy/tls/privkey.pem}:/etc/nginx/tls/privkey.pem:ro",
     ]
     assert all("/etc/nginx/conf.d" not in volume for volume in volumes)
+
+
+def test_browser_test_image_base_is_pinned_by_digest() -> None:
+    # 任意E2E用imageも、browser packageとは別にOS/Pythonのbaseをdigestで固定する。
+    references = _dockerfile_base_images(
+        REPOSITORY_ROOT / "backend/tests/integration/browser/Dockerfile"
+    )
+    assert references
+    assert all(PINNED_IMAGE_REFERENCE.fullmatch(reference) for reference in references)

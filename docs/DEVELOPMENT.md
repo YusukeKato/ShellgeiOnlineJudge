@@ -159,7 +159,7 @@ poetry run pytest --version
 ```
 
 依存は共有・backend・runner・開発・旧補助のgroupに分けています。
-ホストでの`poetry install`は全groupを導入し、本番imageの収録対象は
+ホストでの`poetry install`は任意のbrowser E2E groupを除くgroupを導入し、本番imageの収録対象は
 [backend文書](../backend/README.md#本番runtime-image)を参照してください。
 
 ## 4. 開発用の環境変数
@@ -282,6 +282,9 @@ CIは、[前提環境](#1-前提環境)に記載したすべてのPython version
 実行条件、必要なイメージ、コマンド、検証内容は、
 [Docker統合テスト](../backend/tests/integration/README.md)を正本とします。
 このテストは実際にsandboxコンテナを生成・削除します。
+実UI・nginx・backend・runner・DBを通す
+[ComposeとブラウザのE2E](../backend/tests/integration/README.md#composeとブラウザのe2e)は、
+専用imageのbuildと追加flagが必要です。
 
 次のような極端な負荷条件を扱う耐性試験は、
 日常利用の開発PCや本番ホストで実行しないでください。

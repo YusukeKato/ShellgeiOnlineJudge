@@ -36,6 +36,9 @@ stderr規則違反を固定文言で説明し、それ以外やreason未指定�
 Node.js、Yarn、静的検査、テスト、buildの手順は、
 [開発環境の構築・テスト・起動](../docs/DEVELOPMENT.md)を参照してください。
 
+実ブラウザから本番imageの提出・表示・DB保存まで確認する手順は、
+[ComposeとブラウザのE2E](../backend/tests/integration/README.md#composeとブラウザのe2e)を参照してください。
+
 開発serverとproduction buildにはVite、component testにはVitestとjsdom、型検査にはTypeScript、
 lintにはESLint flat configを使用します。build時の`VITE_*`は
 ブラウザへ公開される値です。設定条件とsecurity上の制約は

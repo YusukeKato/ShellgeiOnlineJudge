@@ -23,10 +23,10 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Overall status: `Implementation`
 - Total refactoring units: 29
 - Ready: 0
-- Planned: 5
-- Pending (`Ready` + `Planned`): 5
+- Planned: 4
+- Pending (`Ready` + `Planned`): 4
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 24
 - Blocked: 0
 - Deferred: 0
@@ -176,7 +176,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-021 | P2 | Completed | D | Consolidate frontend toolchain after behavior coverage | R3-020 | `872bacf` |
 | R3-022 | P1 | Completed | E | Pin runtime artifacts and harden mounts and configuration | R3-013 | `eff33ca` |
 | R3-023 | P1 | Completed | E | Split production backend and runner images | R3-017, R3-022 | `aacda56` |
-| R3-024 | P1 | Planned | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | - |
+| R3-024 | P1 | Review | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | - |
 | R3-025 | P2 | Planned | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | - |
 | R3-026 | P3 | Planned | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | - |
 | R3-027 | P3 | Planned | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | - |
@@ -526,13 +526,25 @@ They are planning aids, not acceptance criteria.
 
 ### R3-024: Add full rootless Compose E2E regression
 
-- Priority / Status: P1 / `Planned`
+- Priority / Status: P1 / `Review`
 - Goal: frontend/nginxからbackend、runner、rootless Docker、PostgreSQLまでの実経路を自動検証する
-- Main files/components: Compose E2E fixture/test、rootless wrapper、integration documentation、test data
-- Dependencies: R3-016、R3-017、R3-023、runner外reaper判断のreview gate
+- Main files/components: `backend/tests/compose_support.py`、`test_compose_e2e.py`、browser専用Dockerfile/script、任意のPoetry e2e group、integration documentation
+- Dependencies: R3-016、R3-017、R3-023。recoveryは既存のrunner再起動と起動時回収を対象とする
 - Risk: High。専用rootless Docker環境と安全なcleanupが必要で、通常hostで破壊的耐性試験を行わない
 - Expected tests: success/wrong/execution failure、auth/revision mismatch、restart/recovery、DB persistence、frontend proxy、full problem regression
 - Size: M
+- Implemented scope: 本番Compose定義からtest projectを生成し、実TLS nginx・backend・runner・DBを起動する。
+  project名・owner・credential・DB volume・公開portを分離し、本番制約を維持する。
+  browserは独立したtest imageで実UIを操作する。通常の依存導入・本番targetにはPlaywrightを含めない。
+  Docker経由のSIGKILL後の明示再起動・旧sandbox回収と、processのSIGTERM終了後の自動再起動を分けて検証する。
+  起動前の隔離検査と、部分失敗時も残るcleanupを試みる仕組みを追加した。
+- Review validation: 2026-09-05、Python 3.14のruff・format・mypy・非Docker 527件、
+  rootless Docker 19件（Compose E2E 6件、既存統合/全問題回帰9件、本番image検査4件）が成功。
+  全92問は既存sandbox回帰とnginx経由のCompose回帰の両方で検証した。
+  frontendのformat・lint・typecheck・test 35件・production buildが成功。
+  backend/runner/frontend/browserの4 imageをbuildし、rootless wrapper経由のCompose設定検査も成功。
+  最終cleanup順序の補強後もCompose基本5件が成功し、専用資源の残存がないことを確認した。
+  独立reaper・本番host・外側proxy・破壊的耐性試験は対象外。既存のFastAPI/Python・React Routerの警告は残る。
 - Completion: commit `-` / date `-` / note `-`
 
 ### R3-025: Harden CI and software supply-chain checks
@@ -604,7 +616,7 @@ They are planning aids, not acceptance criteria.
 | Topic | Status | Decision needed before | Decision | Rationale |
 | --- | --- | --- | --- | --- |
 | R3-023でrunnerを専用hostまたは使い捨てVMへ分離するか | Decided | R3-023の最終設計 | このunitは現行の同一rootless daemon構成でimage・OS user・依存を分離する。host/VM移設はSOJ-006としてDeferredを維持し、v3 release範囲確定時に再評価する | 別hostへの移設は内部HTTPの暗号化・認証と本番基盤の設計を伴うため、image分離と同時には変更しない。2026-09-05、既存構成を維持する範囲で実装 |
-| runner process外の独立reaperを導入するか | Open | R3-024のrecovery acceptance確定 | - | - |
+| runner process外の独立reaperを導入するか | Decided | R3-024のrecovery acceptance確定 | R3-024はrunner再起動時の旧sandbox回収とservice停止復帰を検証する。独立した期限強制はSOJ-002の部分解決として維持する | 独立reaperはsocket権限と本番監視設計を追加するため、既存Compose経路の回帰確立と分ける。2026-09-05、既存の保証範囲を変更せず実装 |
 | Analytics / Google Fontsを維持するか、CSPをどう設定するか | Decided | R3-021 | Google Analyticsと外部Google Fontsを削除し、script・style・font・API通信を同一originに限定するCSPを適用する。実行結果画像の`data:`だけを追加許可する | commandと結果を扱うbrowserから第三者への自動送信経路をなくし、外部resource障害と情報漏えい時の影響を減らす。2026-09-04決定、commit `872bacf` |
 | reference solutionをpublic frontend/API artifactに含めるか | Decided | R3-007 | 現行どおりpublic problem detail APIで公開する | 既存APIは`answer`をすでに公開しているためR3-016以前の互換性を維持し、v3では`reference_solution`として保持する。2026-08-30決定、commit `4d25fa8` |
 | execution logの利用目的、保持期間、privacy、backup方針 | Decided | R3-014 | 投稿ID発行、障害・security・不正利用調査に用途を限定し、保存対象とretention・backup policyを明示する。現行仕様は[実行ログとDockerログ](../../SECURITY.md#実行ログとdockerログ)を参照 | 漏えい時の影響を抑えるため個人特定につながるrequest情報と不要なbinaryを永続化せず、既存の保持上限とcommand・上限付き出力の互換性は維持する。2026-09-01決定、commit `b7cb6f9` |
@@ -677,6 +689,7 @@ Git履歴から分からないpriority、scope、順序、review gateの変更�
 | 2026-09-05 | R3-027 | R3-028追加後もrelease対象が古いID範囲で打ち切られないよう、依存関係の表記を自身以外の全release対象unitへ整合 | - |
 | 2026-09-05 | R3-023 | 次unitの実装依頼に基づき、現行配置で本番image・依存・OS userを分離する範囲を確定。専用host/VMとDB role分離は運用・migration設計が別途必要なためSOJ-006・SOJ-011へ残し、frontendを含むCompose全体E2EはR3-024へ維持 | `aacda56` |
 | 2026-09-05 | R3-029 | 依頼者の将来実施希望により、責務別package整理とfile単位COPY解消を独立unitとして追加。R3-026の不要資産削除とは分け、R3-023・R3-024の回帰基準を前提とする。今回のR3-023実装には含めない | `aacda56` |
+| 2026-09-05 | R3-024 | 次unitの実装依頼に基づき、既存Composeの実経路・停止復帰・browser・全問題回帰を対象とした。独立reaperは権限境界と運用設計を伴うためSOJ-002へ維持し、R3-025のCI整備は含めない | - |
 
 ## Tracker history
 

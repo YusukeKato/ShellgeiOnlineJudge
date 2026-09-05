@@ -39,6 +39,13 @@ types-pyyaml = "^6.0.12"
 gunicorn = "^23.0.0"
 pytz = "^2025.2"
 
+# ブラウザE2E専用。通常の開発環境と本番imageには導入しない。
+[tool.poetry.group.e2e]
+optional = true
+
+[tool.poetry.group.e2e.dependencies]
+playwright = "1.62.0"
+
 [tool.mypy]
 mypy_path = "backend"
 namespace_packages = true
@@ -50,4 +57,5 @@ testpaths = ["backend/tests"]
 markers = [
     "docker: requires an explicitly enabled Docker integration-test environment",
     "full_regression: runs every problem answer in real sandbox containers",
+    "compose_e2e: starts an isolated full rootless Compose stack",
 ]

@@ -18,12 +18,12 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `aacda5640b87157ab2aa06c1f8d329250e51f289`
-- commit subject: `refactor: split backend and runner production images`
+- 確認対象commit: `50198eb`とR3-024の未commit差分
+- commit subject: `docs: complete split runtime images tracker`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の実行検証: R3-023差分でPython静的検査・非Docker test・rootless Docker統合/全問題回帰・
-  分離した本番imageの非root/依存/socket/実行/判定/保存検査。frontend基本5検査は`eb9e458`で実施済み
+- 直近の実行検証: R3-024差分で実ComposeのTLS proxy・提出・保存・認証/revision拒否・
+  DB/runnerの停止復帰・browser操作。詳細と回帰結果は[R3-024](../refactoring/README.md#r3-024-add-full-rootless-compose-e2e-regression)を参照
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
 baseline以降に変更がある場合は、先に差分を確認してください。
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff aacda5640b87157ab2aa06c1f8d329250e51f289
+git diff 50198eb
 ```
 
 ## Current security status
@@ -83,11 +83,6 @@ Statusは次の意味で使用します。
     DB volume、image cacheにquotaがない
   - 関連: `docker-compose.yml`、`backend/scripts/execution_log_retention.py`
   - 次: 専用filesystem、I/O制御、quota、監視を本番設計へ追加
-- `SOJ-013` — Medium / P2 / Partially resolved
-  - 概要: protocol versionとproblem data revisionの相互検証は追加したが、
-    backend、runner、Docker、DBを通る実Compose E2Eがない
-  - 関連: `docker-compose.yml`、`backend/tests/test_runner_boundary.py`
-  - 次: rootless Compose E2Eでrevision一致と実行・保存を検証
 - `SOJ-019` — Medium / P2 / Deferred
   - 概要: CIにdependency/image/secret scan、最小token権限、
     artifact保証がない
@@ -143,10 +138,11 @@ Statusは次の意味で使用します。
 | RES-023 | sandbox・base・DB imageをSHA-256 digestで固定し、tag移動による未検証artifactへの差替えを防止 | `eff33ca` | runtime image pin静的test、image build、Docker統合test |
 | RES-024 | sandbox imageの`VOLUME`宣言と作成後の予期しないmountを拒否し、削除時に匿名volumeも回収 | `eff33ca` | container manager unit、Docker baseline test |
 | RES-025 | frontend nginx設定をimageへ組み込み、hostからのwritable bind mountを削除 | `eff33ca` | Compose静的test、frontend image build |
+| RES-026 | SOJ-013: revision拒否と実行・判定・保存を実Composeで検証し、DB/runner停止復帰・browser E2Eを追加 | R3-024（未commit） | Compose E2E、隔離設定・cleanup test |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
 RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020、RES-021、RES-022、
-RES-023、RES-024、RES-025は、
+RES-023、RES-024、RES-025、RES-026は、
 記載した範囲では解決済みです。
 daemon単独のsandbox有効期限等の残存経路は、
 別のtracker issueとして追跡しています。
@@ -321,6 +317,8 @@ Deferredは不要という意味ではありません。
   - 現在の92問の正解commandとjudge互換性
 - `backend/tests/integration/test_runtime_images.py`
   - build済み本番imageの非root・依存境界・socket group、内部network上の実行・判定・DB保存
+- `backend/tests/integration/test_compose_e2e.py`
+  - 実ComposeのTLS nginx・提出・DB保存、認証/revision拒否、DB/runner停止復帰、browser操作、全問題回帰
 - `frontend/src/legacy_behavior.test.jsx`、`playground.test.jsx`
   - typed API検証、正解・不正解・実行失敗・判定エラー表示、timeout、abort、
     二重送信と問題選択・提出responseの競合
@@ -330,11 +328,8 @@ Deferredは不要という意味ではありません。
 
 ### 不足しているtest
 
-- 実runner processの強制終了とCompose自動再起動を含むE2E
 - Docker create応答timeoutとdaemon停止を使うfailure test
-- 実Composeのfrontend -> backend -> runner -> Docker -> DB E2E
 - 外側proxyを含むpublic Host allowlistとsecurity header
-- 実Compose経路でのDB停止・復帰とpublic API応答
 - dependency、container image、secret、workflowの継続scan
 - 外側proxyと複数送信元を含む負荷・公平性test
 
