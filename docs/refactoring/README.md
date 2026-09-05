@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 5
 - Pending (`Ready` + `Planned`): 5
 - In Progress: 0
-- Review: 1
-- Completed: 23
+- Review: 0
+- Completed: 24
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -175,7 +175,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-020 | P1 | Completed | D | Model frontend submission state and cancellation safely | R3-019 | `bc6e60c` |
 | R3-021 | P2 | Completed | D | Consolidate frontend toolchain after behavior coverage | R3-020 | `872bacf` |
 | R3-022 | P1 | Completed | E | Pin runtime artifacts and harden mounts and configuration | R3-013 | `eff33ca` |
-| R3-023 | P1 | Review | E | Split production backend and runner images | R3-017, R3-022 | - |
+| R3-023 | P1 | Completed | E | Split production backend and runner images | R3-017, R3-022 | `aacda56` |
 | R3-024 | P1 | Planned | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | - |
 | R3-025 | P2 | Planned | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | - |
 | R3-026 | P3 | Planned | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | - |
@@ -509,7 +509,7 @@ They are planning aids, not acceptance criteria.
 
 ### R3-023: Split production backend and runner images
 
-- Priority / Status: P1 / `Review`
+- Priority / Status: P1 / `Completed`
 - Goal: backendとrunnerのruntime image/dependencyを分け、non-rootとleast privilegeを適用し、productionへtest/development dependencyを持ち込まない
 - Main files/components: backend/runner Dockerfile targets、dependency groups、Compose、runtime image tests、deployment docs
 - Scope: 現行の同一rootless daemon構成でOS user・image・依存を分離する。専用host/VM移設とDB owner/app role分離は含めず、SOJ-006・SOJ-011の残存課題として追跡する
@@ -522,7 +522,7 @@ They are planning aids, not acceptance criteria.
   build済みPython 3.12の本番image検査4件が成功。新image検査は別flagで実行したため、
   既存Docker回帰の実行では同4件をskip。両targetのbuild、GID設定済みComposeと未設定時の拒否を確認。
   frontendのコード・toolchainは変更していないためfrontend基本検査は再実行していない。
-- Completion: commit `-` / date `-` / note `-`
+- Completion: commit `aacda5640b87157ab2aa06c1f8d329250e51f289` / date 2026-09-05 / 依頼者のreview承認後にcommit済み。専用host/VM移設とDB role分離は残存課題として維持する
 
 ### R3-024: Add full rootless Compose E2E regression
 
@@ -675,8 +675,8 @@ Git履歴から分からないpriority、scope、順序、review gateの変更�
 | --- | --- | --- | --- |
 | 2026-09-05 | R3-028 | typed化後も実行失敗・判定エラーを不正解へ変換する表示が残るため、frontend限定の修正unitを追加。依頼者指定でreview前に一時使用したDoneは実装・検査完了、未commitを表し、承認・commit後はCompletedへ移行 | `eb9e458` |
 | 2026-09-05 | R3-027 | R3-028追加後もrelease対象が古いID範囲で打ち切られないよう、依存関係の表記を自身以外の全release対象unitへ整合 | - |
-| 2026-09-05 | R3-023 | 次unitの実装依頼に基づき、現行配置で本番image・依存・OS userを分離する範囲を確定。専用host/VMとDB role分離は運用・migration設計が別途必要なためSOJ-006・SOJ-011へ残し、frontendを含むCompose全体E2EはR3-024へ維持 | - |
-| 2026-09-05 | R3-029 | 依頼者の将来実施希望により、責務別package整理とfile単位COPY解消を独立unitとして追加。R3-026の不要資産削除とは分け、R3-023・R3-024の回帰基準を前提とする。今回のR3-023実装には含めない | - |
+| 2026-09-05 | R3-023 | 次unitの実装依頼に基づき、現行配置で本番image・依存・OS userを分離する範囲を確定。専用host/VMとDB role分離は運用・migration設計が別途必要なためSOJ-006・SOJ-011へ残し、frontendを含むCompose全体E2EはR3-024へ維持 | `aacda56` |
+| 2026-09-05 | R3-029 | 依頼者の将来実施希望により、責務別package整理とfile単位COPY解消を独立unitとして追加。R3-026の不要資産削除とは分け、R3-023・R3-024の回帰基準を前提とする。今回のR3-023実装には含めない | `aacda56` |
 
 ## Tracker history
 
@@ -727,3 +727,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-04 | R3-022 approved and recorded as `Completed` | `eff33ca` |
 | 2026-09-05 | R3-028 approved and recorded as `Completed` | `eb9e458` |
 | 2026-09-05 | R3-023 split runtime images, non-root execution, and planned tests completed; moved to `Review` | - |
+| 2026-09-05 | R3-023 approved and recorded as `Completed`; R3-029 remains `Planned` | `aacda56` |

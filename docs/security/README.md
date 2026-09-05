@@ -18,8 +18,8 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `83fbe90078b74a7f8da7c5668248c7f30415f2b3`とR3-023の未commit差分
-- commit subject: `docs: align repository documentation with current behavior`
+- 確認対象commit: `aacda5640b87157ab2aa06c1f8d329250e51f289`
+- commit subject: `refactor: split backend and runner production images`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
 - 直近の実行検証: R3-023差分でPython静的検査・非Docker test・rootless Docker統合/全問題回帰・
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 83fbe90078b74a7f8da7c5668248c7f30415f2b3
+git diff aacda5640b87157ab2aa06c1f8d329250e51f289
 ```
 
 ## Current security status
