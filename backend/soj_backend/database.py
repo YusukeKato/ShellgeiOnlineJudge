@@ -20,9 +20,15 @@ def _positive_integer_from_env(name: str, default: int) -> int:
     return value
 
 
-SQLALCHEMY_DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://soj_user:soj_password@localhost:5432/soj_db"
-)
+def _database_url_from_env() -> str:
+    """明示されたDB URLを返す。未設定・空白だけなら既定DBへ接続せず起動を拒否する。"""
+    value = os.getenv("DATABASE_URL")
+    if value is None or not value.strip():
+        raise RuntimeError("DATABASE_URL must be explicitly configured")
+    return value
+
+
+SQLALCHEMY_DATABASE_URL = _database_url_from_env()
 DATABASE_OPERATION_TIMEOUT_SECONDS = _positive_integer_from_env(
     "DATABASE_OPERATION_TIMEOUT_SECONDS",
     DEFAULT_DATABASE_OPERATION_TIMEOUT_SECONDS,
@@ -45,12 +51,18 @@ def _engine_options(database_url: str, timeout_seconds: int) -> dict[str, Any]:
     }
 
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    **_engine_options(
+try:
+    engine = create_engine(
         SQLALCHEMY_DATABASE_URL,
-        DATABASE_OPERATION_TIMEOUT_SECONDS,
-    ),
-)
+        **_engine_options(
+            SQLALCHEMY_DATABASE_URL,
+            DATABASE_OPERATION_TIMEOUT_SECONDS,
+        ),
+    )
+except Exception:
+    # URL解析やdriver初期化の例外には資格情報が含まれ得るため、固定の診断だけを出す。
+    raise RuntimeError(
+        "database engine initialization failed; check DATABASE_URL and driver"
+    ) from None
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

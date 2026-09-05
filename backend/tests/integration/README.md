@@ -141,6 +141,7 @@ SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_COMPOSE_E2E=1 SOJ_RUN_FULL_REGRESSION=1 \
 
 検証内容:
 
+- DBのhost port割当がなく、内部networkの管理service・backendから接続できること
 - TLS nginxの静的配信・CSP・問題一覧と、public v3 APIの正解、不正解、timeout、出力上限、画像判定
 - 応答header、保存IDと最小権限の通常roleによるPostgreSQLの実保存行の一致
 - 内部network経由のrunner認証失敗・problem revision不一致と、実行前の拒否

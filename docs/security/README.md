@@ -18,13 +18,12 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `ef4cb22`
-- commit subject: `refactor: remove obsolete code assets and dependencies (R3-026)`
+- 確認対象commit: `5f8fe00`とSOJ-020のreview差分
+- commit subject: `docs: record approved R3-026 cleanup`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の変更: R3-026の未使用コード・資産・依存整理。範囲と検証結果は
-  [refactoring tracker](../refactoring/README.md#r3-026-remove-obsolete-code-assets-scripts-and-dependencies)を参照。
-  SOJ-011を含むsecurity境界・既存課題のstatusは維持する
+- 直近の変更: SOJ-020のDB host port廃止と接続URL必須化。
+  [実装と検証記録](#soj-020-dbのhost-port廃止と接続設定の必須化)を参照。実装・検証完了、review待ち・未commit
 - 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
 
 baseline以降に変更がある場合は、先に差分を確認してください。
@@ -32,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff ef4cb22
+git diff 5f8fe00
 ```
 
 ## Current security status
@@ -93,10 +92,6 @@ Statusは次の意味で使用します。
   - 確認: [是正記録](#soj-022依存imageの是正記録)に変更範囲、検出比較、未解決範囲を記載
   - 次: sandboxの修正版候補を検証し、Python例外の期限前に公式advisory・DBと実装を再確認する。
     本番反映とGitHub上のCI確認は未実施
-- `SOJ-020` — Low / P3 / Deferred
-  - 概要: DBをloopback公開し、Compose外では弱いfallback URLがある
-  - 関連: `docker-compose.yml`、`backend/soj_backend/database.py`
-  - 次: 本番port非公開化と設定fail-closedを検討
 - `SOJ-021` — Low / P3 / Partially resolved
   - 概要: command/output保持の目的・最小field・backup方針は確定したが、
     非公開脆弱性報告手順は未整備
@@ -108,8 +103,10 @@ Statusは次の意味で使用します。
 
 - Open: 0件
 - Partially resolved: 5件
-- Deferred: 2件
-- Severity: High/Critical 1件、Medium 4件、Low 2件
+- Deferred: 1件
+- Severity: High/Critical 1件、Medium 4件、Low 1件
+
+SOJ-020は下記の実装・検証により`Resolved`としました。未解決は上記6件です。
 
 ## SOJ-022：依存・imageの是正記録
 
@@ -233,6 +230,8 @@ Pythonの期限付き例外（`4120a76`）:
   2026-09-05の次P1項目着手時にregistryのlatestを再照合し、同じ候補digestであることを確認しました。
   新しい候補はなく、この再照合ではscan・依存更新を実施していません。個別toolの再buildは別単位とし、
   同じP1のSOJ-002のホスト監視整備を先行しました。
+  SOJ-020着手時にもregistryを再照合し、同じ候補digestであることを確認しました。
+  今回はsandboxのscan・差替えを実施せず、個別toolの是正を残件として維持しています。
 
 ## Resolved issues
 
@@ -268,10 +267,11 @@ Pythonの期限付き例外（`4120a76`）:
 | RES-025 | frontend nginx設定をimageへ組み込み、hostからのwritable bind mountを削除 | `eff33ca` | Compose静的test、frontend image build |
 | RES-026 | SOJ-013: revision拒否と実行・判定・保存を実Composeで検証し、DB/runner停止復帰・browser E2Eを追加 | `48a0670` | Compose E2E、隔離設定・cleanup test |
 | RES-027 | SOJ-011: DB管理serviceと最小権限app roleを分離し、backendはschema・権限を読み取り検証 | `4eec07b` | 実PostgreSQLの禁止操作・旧行保持・rollback、Compose全問題・保存回帰 |
+| RES-028 | SOJ-020: DBのhost portを廃止し、backendの明示DB URLと安全な設定診断を必須化 | review待ち・未commit | DB設定process test、Compose port静的test・実port非公開・全問題/保存E2E |
 
 RES-003、RES-007、RES-008、RES-009、RES-011、RES-012、RES-013、
 RES-014、RES-015、RES-016、RES-017、RES-018、RES-019、RES-020、RES-021、RES-022、
-RES-023、RES-024、RES-025、RES-026、RES-027は、
+RES-023、RES-024、RES-025、RES-026、RES-027、RES-028は、
 記載した範囲では解決済みです。
 daemon単独のsandbox有効期限等の残存経路は、
 別のtracker issueとして追跡しています。
@@ -298,7 +298,28 @@ Status: Resolved（依頼者のreview承認後に`4eec07b`でcommit済み）。
 - rootless Docker23件が成功。通常roleでの実Compose全92問・browser・DB停止復帰、
   直接sandbox全92問、runtime境界、DB image互換性と監視CLIを含む。
 - frontend・依存・image base・sandboxは変更していないため、frontend基本5検査と脆弱性scanは再実行していない。
-  GitHub CI・本番移行は未実施。SOJ-006の同一daemon上の影響範囲とSOJ-020のDB公開は別課題のまま維持する。
+  GitHub CI・本番移行は未実施。SOJ-006の同一daemon上の影響範囲は別課題として維持する。
+  SOJ-020のDB公開は後続の下記対応で解決した。
+
+### SOJ-020: DBのhost port廃止と接続設定の必須化
+
+Status: `Resolved`（2026-09-05、実装・検証完了、依頼者のreview・commit指示待ち）。
+SOJ-011で内部network上の管理serviceが整ったため、DB管理手段を理由とする延期を解除しました。
+
+- ComposeのDB port公開を廃止し、backendの既定DB URLを削除しました。
+  未設定・空・空白だけなら起動を拒否し、URL解析・driver初期化の失敗も資格情報を含まない固定診断へ変換します。
+- E2E設定がDB portを消して隠す処理を廃止し、追加を拒否するtestと実containerのport非公開検査を追加しました。
+  pytest収集時だけmemory DBを明示し、ホストの資格情報を検証用接続へ引き継ぎません。
+- URL未指定と公開portを含む新しい期待値でREDを確認後、対象37件がGREEN。
+  Python 3.14のruff・format・mypy、非Docker639件が成功しました。
+- 更新したbackend imageでrootless Docker23件が成功（skipなし）。Compose config、実browser、
+  直接sandboxとComposeの全92問、DB管理・保存・権限・停止復帰・cleanupを含みます。
+- frontendのコード・依存・imageは変更せず、検証済みimageをE2Eで使用しました。frontend基本5検査は再実行していません。
+  GitHub CI、本番反映、脆弱性scanは未実施です。
+
+設定と管理手順は[DBへの管理アクセス](../DEVELOPMENT.md#dbへの管理アクセス)、
+本番で既存client・backup・監視を切り替える手順は[更新デプロイ](../PRODUCTION.md#8-更新デプロイ)を参照してください。
+DB schema・保存内容・APIは維持します。host portの廃止は、rootless daemonやhostの管理者からのDB隔離を保証しません。
 
 ## Open issue details
 
@@ -368,7 +389,6 @@ Status: Resolved（依頼者のreview承認後に`4eec07b`でcommit済み）。
 
 - SOJ-019は、構成したCIの実運用確認、review保護、第三者供給元検証、
   artifact promotionの整備が必要です。
-- SOJ-020は、本番のDB管理方法を決めてからport公開を分離します。
 
 Deferredは不要という意味ではありません。
 必要な前提が整った時点でseverityとpriorityを再評価してください。

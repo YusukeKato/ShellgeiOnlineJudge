@@ -6,6 +6,16 @@ import yaml
 COMPOSE_FILE = Path(__file__).resolve().parents[2] / "docker-compose.yml"
 
 
+def test_database_is_not_published_to_the_host() -> None:
+    # DB管理は内部networkのserviceで行い、loopbackを含むhost portへDBを公開しない。
+    compose = yaml.safe_load(COMPOSE_FILE.read_text(encoding="utf-8"))
+    db = compose["services"]["db"]
+    assert not db.get("ports")
+    assert db.get("network_mode") != "host"
+    assert db["networks"] == ["backend_db"]
+    assert compose["networks"]["backend_db"]["internal"] is True
+
+
 def test_all_compose_services_have_bounded_local_logs() -> None:
     compose = yaml.safe_load(COMPOSE_FILE.read_text(encoding="utf-8"))
     expected_logging = {

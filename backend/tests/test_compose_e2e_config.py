@@ -38,7 +38,7 @@ def test_isolation_preserves_service_security_and_original_config() -> None:
             "group_add",
         ):
             assert service.get(field) == original.get(field)
-    assert result["services"]["db"]["ports"] == []
+    assert not result["services"]["db"].get("ports")
     assert result["services"]["frontend"]["ports"] == ["127.0.0.1::443"]
 
 
@@ -49,6 +49,14 @@ def test_rejects_non_test_project(project: str) -> None:
     # cleanupが既存環境を対象にできないよう、専用UUID形式以外を起動前に拒否する。
     with pytest.raises(ValueError):
         isolated_config(BASE, project, IMAGES)
+
+
+def test_rejects_database_host_port_instead_of_masking_it() -> None:
+    # 本番定義へのDB port追加をE2E側で消して検査成功に見せず、設定変更として拒否する。
+    base = deepcopy(BASE)
+    base["services"]["db"]["ports"] = ["127.0.0.1:5432:5432"]
+    with pytest.raises(ValueError):
+        isolated_config(base, PROJECT, IMAGES)
 
 
 @pytest.mark.parametrize("section", ["volumes", "networks"])

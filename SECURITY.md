@@ -429,6 +429,13 @@ DBの権限は次の境界で別途制限します。
 
 ### DBの管理用資格情報と通常実行role
 
+ComposeのDBは内部`backend_db` networkだけに接続し、loopbackを含むhost portには
+公開しません。管理は同networkの一時serviceまたはDBコンテナ内clientから行います。
+backendのDB URLにはfallbackを設けず、明示設定を要求します。設定条件と管理手順は
+[開発文書](./docs/DEVELOPMENT.md#dbへの管理アクセス)を参照してください。
+これはhost port経由の到達経路を減らす対策であり、rootless daemonを操作できる
+ユーザーやhost管理者からDBを隔離する保証ではありません。
+
 常時稼働backendには通常用の`DATABASE_URL`だけを渡します。管理用の
 `MIGRATION_DATABASE_URL`はmaintenance profileの一時的な`migrate` serviceだけに渡し、
 DB networkに限定して実行後に削除します。通常のCompose upでは起動しません。

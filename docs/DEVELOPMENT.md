@@ -158,7 +158,7 @@ poetry run python --version
 poetry run pytest --version
 ```
 
-依存は共有・backend・runner・開発・旧補助のgroupに分けています。
+依存は共有・backend・runner・開発のgroupに分けています。
 全体のmypy検査がbrowser scriptも読むため、上記では任意の`e2e` groupを明示して導入します。
 PlaywrightのPython packageだけを追加し、ブラウザ本体はホストへinstallしません。
 本番imageの収録対象は[backend文書](../backend/README.md#本番runtime-image)を参照してください。
@@ -221,6 +221,7 @@ daemon移設やUID/GID mappingを変更した場合は再確認します。値�
 
 - `POSTGRES_USER`・`POSTGRES_PASSWORD`と`MIGRATION_DATABASE_URL`の管理資格情報を一致させる
 - `DATABASE_URL`は別の専用ユーザー・別passwordとし、両URLは同じhost・port・DBを指す
+- backendの`DATABASE_URL`に既定値はない。Compose外でも明示し、未設定・空・空白だけなら起動を拒否する。URL/driver初期化失敗時は資格情報を含まない固定の診断を出す
 - 管理CLIは明示的なPostgreSQL URL（`postgresql`または`postgresql+psycopg2`）を要求し、query optionを受け付けない
 - 通常用role名は小文字英字またはunderscoreで始まる小文字英数字/underscoreの63文字以内とし、`pg_`で始めない
 - `DATABASE_OPERATION_TIMEOUT_SECONDS`は1以上の整数にする
@@ -236,15 +237,35 @@ daemon移設やUID/GID mappingを変更した場合は再確認します。値�
 [SECURITY.mdの「実行ログとDockerログ」](../SECURITY.md#実行ログとdockerログ)を参照してください。
 
 backendはDBを自動migrationせず、準備済みschemaと通常実行roleを起動時に検証します。
-ホストからDBを準備する場合は、`MIGRATION_DATABASE_URL`と`DATABASE_URL`を設定し、
-次をrepository rootから実行してください。
+ComposeのDBは内部networkだけで使用し、loopbackを含むhost portへ公開しません。
+管理方法は次の手順を使用してください。
+
+CLIと権限設定の契約は[backendの実行ログとDB migration](../backend/README.md#実行ログとdb-migration)、
+既存環境の移行・rollbackは[本番運用](./PRODUCTION.md#8-更新デプロイ)を参照してください。
+
+### DBへの管理アクセス
+
+ComposeのDB管理は、起動済みDBに対して一時的な管理serviceを実行します。
+backend/frontendを停止してからmigrationとrole設定を行い、成功時だけ再開します。
+初回起動を含む順序は後述の[Compose起動](#7-composeでの起動)を参照してください。
+
+```sh
+./deploy/rootless-compose.sh run --rm --no-deps migrate
+```
+
+SQLによる調査にはDBコンテナ内のclientを使用します。hostへのport公開は不要です。
+
+```sh
+./deploy/rootless-compose.sh exec db sh -c 'exec psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+Composeと別に用意した開発DBへホストのPythonから接続する場合は、そのDBへ到達できる
+明示URLを環境変数へ設定します。`.env`はPythonから自動読込されません。
+通常backendには通常用`DATABASE_URL`、管理CLIには両URLが必要です。
 
 ```sh
 PYTHONPATH=backend poetry run python -m soj_backend.database_admin head
 ```
-
-CLIと権限設定の契約は[backendの実行ログとDB migration](../backend/README.md#実行ログとdb-migration)、
-既存環境の移行・rollbackは[本番運用](./PRODUCTION.md#8-更新デプロイ)を参照してください。
 
 ## 5. 開発用TLS証明書
 
@@ -277,6 +298,8 @@ poetry run pytest -m "not docker"
 
 CIは、[前提環境](#1-前提環境)に記載したすべてのPython versionで
 同じ検査を実行します。
+pytestの収集時はtest専用のmemory SQLite URLを明示し、ホストのDB設定を引き継ぎません。
+実PostgreSQLを使用するtestは専用fixtureで接続先を準備します。
 CIの権限・workflow検証・secret/依存/image scan・SBOM・provenanceは
 [CIとソフトウェア供給網の検査](./CI.md)を正本とします。
 

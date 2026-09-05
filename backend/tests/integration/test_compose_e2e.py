@@ -99,6 +99,7 @@ with SessionLocal() as session:
 
 def test_frontend_proxy_and_real_submission_contract(stack: ComposeStack) -> None:
     # TLS nginxを通して静的配信・問題API・typed判定・PostgreSQLの実保存を確認する。
+    assert not stack.service("db").attrs["HostConfig"]["PortBindings"]
     status, headers, body = stack.request("/")
     assert status == 200 and b'<div id="root">' in body
     assert "default-src 'self'" in headers["Content-Security-Policy"]

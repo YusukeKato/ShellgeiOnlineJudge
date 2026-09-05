@@ -34,7 +34,7 @@ Internet
           |-> runner API（認証付き内部network）
           |   -> rootless Docker socket
           |     -> sandbox containers（networkなし、リソース制限あり）
-          `-> PostgreSQL（内部接続はdb:5432、host公開は127.0.0.1:5432のみ）
+          `-> PostgreSQL（内部接続はdb:5432、host port公開なし）
 ```
 
 backendにはDocker socketをmountしません。
@@ -365,7 +365,7 @@ HTTPS_PORT=443
 - 443番は公開HTTPSに使用する
 - 80番はCertbot standaloneなど、選択した証明書更新方式で必要な場合だけ許可する
 - 22番は管理元のIP addressへ限定する
-- PostgreSQLの5432番と内部用8443番はインターネットへ公開しない
+- PostgreSQLはhost portを設けない。内部用8443番はインターネットへ公開しない
 
 ### 証明書ファイル
 
@@ -537,7 +537,7 @@ rm -f -- "${SOJ_SMOKE_RESPONSE}"
 - 16 KiBを超えるrequest bodyが413になる
 - client単位のburstを超えるrequestが429になる
 - client識別情報を含まない413、429、5xxの集計値を取得できる
-- 8443番と5432番が外部interfaceでlistenしていない
+- DB containerにhost port割当がなく、8443番が外部interfaceでlistenしていない
 - 受信した`X-Forwarded-For`をclient識別へ無条件に使用していない
 
 ### OS再起動後の確認
@@ -653,6 +653,19 @@ git diff --name-status "${SOJ_PREVIOUS_COMMIT}"..HEAD
 管理処理はPUBLICの一部権限も変更するため、専用DBが前提です。共用DBでは適用前に権限設計を分離してください。
 passwordの変更時もbackendを停止し、管理処理の成功後にbackendを再作成します。
 
+### DBのhost port公開がある旧構成からの移行
+
+DBのhost port公開は廃止しました。ホストの`localhost:5432`を使用する既存のDB client・
+backup・監視scriptがある場合は、更新前に[DBへの管理アクセス](./DEVELOPMENT.md#dbへの管理アクセス)の
+コンテナ内clientへ切り替えてください。Compose内の`db:5432`と既存volumeは維持します。
+後述の`up -d`でDB containerを再作成し、古いport割当を除去します。
+
+反映後は次の出力が空または`{}`であり、port割当がないことを確認します。
+
+```sh
+docker inspect soj-db --format '{{json .HostConfig.PortBindings}}'
+```
+
 ### Composeへの反映
 
 「6. 本番反映前の検証」を完了したcommitを使用します。
@@ -705,6 +718,8 @@ HTTPとsandbox実行の確認方法は、
 
 障害時は、更新前に記録したcommit IDを使います。
 DB schema、データ形式、`.env`の後方互換性を先に確認してください。
+SOJ-020より前のComposeへ戻すとDBのhost port公開も復活します。
+rollback対象のport設定を確認し、DBを非公開にする運用方針との整合を取ってください。
 SOJ-011より前のbackendは起動時migrationに管理権限を必要とします。そのコードへ戻す場合は、
 保護された旧設定から`DATABASE_URL`を旧管理用URLへ戻してから再作成します。
 このrollbackでは常時稼働backendの最小権限保証を失います。新しいapp roleや既存行・所有者を

@@ -51,7 +51,7 @@ def isolated_config(
         volumes = service.get("volumes", [])
         if (
             "env_file" in service
-            or (name not in {"db", "frontend"} and service.get("ports"))
+            or (name != "frontend" and service.get("ports"))
             or len(volumes) != len(mounts[name])
             or any(
                 not isinstance(value, str) or re.fullmatch(pattern, value) is None
@@ -80,7 +80,6 @@ def isolated_config(
             service["image"] = images[name]
     result["services"]["migrate"].pop("build", None)
     result["services"]["migrate"]["image"] = images["backend"]
-    result["services"]["db"]["ports"] = []
     result["services"]["frontend"]["ports"] = ["127.0.0.1::443"]
     return result
 
