@@ -18,8 +18,8 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `9c15a34`とR3-026のreview差分
-- commit subject: `docs: record approved SOJ-011 database privilege separation`
+- 確認対象commit: `ef4cb22`
+- commit subject: `refactor: remove obsolete code assets and dependencies (R3-026)`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
 - 直近の変更: R3-026の未使用コード・資産・依存整理。範囲と検証結果は
@@ -32,7 +32,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff 9c15a34
+git diff ef4cb22
 ```
 
 ## Current security status

@@ -26,8 +26,8 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Planned: 1
 - Pending (`Ready` + `Planned`): 1
 - In Progress: 0
-- Review: 1
-- Completed: 27
+- Review: 0
+- Completed: 28
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -178,7 +178,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-023 | P1 | Completed | E | Split production backend and runner images | R3-017, R3-022 | `aacda56` |
 | R3-024 | P1 | Completed | E | Add full rootless Compose E2E regression | R3-016, R3-017, R3-023 | `48a0670` |
 | R3-025 | P2 | Completed | E | Harden CI and software supply-chain checks | R3-004, R3-022, R3-024 | `7b779b3` |
-| R3-026 | P3 | Review | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | - |
+| R3-026 | P3 | Completed | F | Remove obsolete code, assets, scripts, and dependencies | replacement units | `ef4cb22` |
 | R3-027 | P3 | Planned | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | - |
 | R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
 | R3-029 | P2 | Completed | F | Organize shared, backend, and runner packages | R3-023, R3-024 | `b71663e` |
@@ -598,7 +598,7 @@ They are planning aids, not acceptance criteria.
 
 ### R3-026: Remove obsolete code, assets, scripts, and dependencies
 
-- Priority / Status: P3 / `Review`
+- Priority / Status: P3 / `Completed`
 - Goal: 代替経路の完了後にdead code、unused CSS/image/script、manual regression重複、不要なruntime dependencyを削除する
 - Main files/components: `backend/scripts/`、`deploy/`、frontend asset/CSS、Python dependency manifest・lock、関連README
 - Dependencies: 各削除対象を置き換えるR3 unit。削除前に使用箇所を再調査する
@@ -614,7 +614,7 @@ They are planning aids, not acceptance criteria.
   Compose/browser、直接sandboxとComposeの全92問、DB migration・権限・保存、停止復帰、収録境界を含む。
   Compose config・専用資源のcleanupはE2E内で検証し、文書のローカルlink参照先165件と`git diff --check`も成功。
   本番反映・GitHub上のCIは未実施。API・DB schema・sandbox制限の契約変更はない。
-- Completion: commit `-` / date `-` / note 実装・検証完了、依頼者のreview・commit指示待ち
+- Completion: commit `ef4cb22` / date `2026-09-05` / note 依頼者のレビュー承認後にcommit。検証結果は上記参照
 
 ### R3-027: Establish canonical v3.0.0 version and release documentation
 
@@ -782,3 +782,4 @@ Git履歴と重複する細かな文言修正ではなく、計画の節目だ�
 | 2026-09-05 | R3-025 approved and recorded as `Completed`; vulnerability remediation and hosted verification remain tracked separately | `7b779b3` |
 | 2026-09-05 | R3-029 approved and recorded as `Completed` | `b71663e` |
 | 2026-09-05 | R3-026 obsolete code, assets, scripts, and dependencies removed after reference audit; planned validation passed; moved to `Review` | - |
+| 2026-09-05 | R3-026 approved and recorded as `Completed` | `ef4cb22` |
