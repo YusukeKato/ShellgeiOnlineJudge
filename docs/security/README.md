@@ -18,8 +18,8 @@
 
 - 最終コード照合日: 2026-09-05
 - branch: `main`
-- 確認対象commit: `d436217`とSOJ-022のPython判定review待ち差分
-- commit subject: `docs: record approved PostgreSQL remediation and baseline`
+- 確認対象commit: `4120a76`
+- commit subject: `security: verify and expire Python scan exceptions for SOJ-022`
 - 今回の変更開始時のworktree: clean
 - 対象: repositoryのコード・設定・文書・テストの照合
 - 直近の実行検証: SOJ-022のPython実装確認・期限付き例外・実scannerとruntime境界検査。
@@ -31,7 +31,7 @@ baseline以降に変更がある場合は、先に差分を確認してくださ
 ```sh
 git status --short
 git log -1 --oneline
-git diff d436217
+git diff 4120a76
 ```
 
 ## Current security status
@@ -119,7 +119,8 @@ Statusは次の意味で使用します。
 2026-09-05、依頼者の次の対策実装依頼に対し、CIを停止させるP1課題を優先しました。
 アプリ依存・nginxの是正は依頼者のreview承認後、`cb044c7`でcommit済みです。
 派生DBの是正は依頼者のreview承認後、`6b59c19`でcommit済みです。
-Pythonの期限付き例外は`Review`です。sandboxと期限付きで扱うscanner判定の残存課題があるため、
+Pythonの期限付き例外は依頼者のreview承認後、`4120a76`でcommit済みです。
+sandboxと期限付きで扱うscanner判定の残存課題があるため、
 SOJ-022全体を`Resolved`にはしていません。R3-029等のpackage再配置は今回の範囲外です。
 
 ### 更新と互換性
@@ -166,7 +167,7 @@ sandboxは固定digestを維持し、既存SBOMを同じDBで再照合してい�
 対象ごとのmatch数であり、重複を除いたCVE数ではありません。source scanは終了code 2から0へ改善しました。
 image側は残存検出によりCIを停止します。低severity・未修正の検出を含め、全脆弱性がなくなったという意味ではありません。
 
-### Python判定と内蔵Expatの検査（Review）
+### Python判定と内蔵Expatの検査
 
 backend・runnerの各3件はPythonの公式修正情報とNVDのversion範囲の不一致です。
 例外の対象・根拠・期限・実装hashは[`ci/python-runtime-exceptions.json`](../../ci/python-runtime-exceptions.json)、
@@ -205,7 +206,7 @@ Syftはこの内蔵Expatをpackageとして識別しておらず、scan成功だ
 - frontendのコード・依存・imageは変更していないため、基本5検査は前回の成功結果を維持し、今回は再実行しない。
 - rootless Compose設定検査とactionlintが成功。GitHub上のCI・署名実行、本番DBへの反映は未実施。
 
-Pythonの期限付き例外（今回）:
+Pythonの期限付き例外（`4120a76`）:
 
 - 新しい例外testで実装前のREDを確認。期限切れ、未知CVE、別namespace・package・path、
   version/hash不一致、確認障害、rootful拒否、timeout時のcontainer回収、raw report保持を検証した。
