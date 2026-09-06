@@ -5,6 +5,7 @@
 
 - [開発環境の構築・テスト・起動](../docs/DEVELOPMENT.md)
 - [本番デプロイ・更新・障害対応](../docs/PRODUCTION.md)
+- [GitHub ActionsからのSSH自動更新](../docs/AUTODEPLOY.md)
 - [本番ホストの初期設定](../docs/PRODUCTION_HOST.md)
 - [Docker統合テスト](../backend/tests/integration/README.md)
 - [セキュリティモデルと制約](../SECURITY.md)
@@ -18,6 +19,9 @@
 構成・更新方針は[PostgreSQL派生image](../docs/PRODUCTION.md#postgresql派生image)を正本とします。
 
 ## 補助スクリプト
+
+`production.py`はCIで検証済みのimageを既存の本番環境へ反映します。
+SSH転送とCI gateは`ci/deploy.py`、設定と復旧手順は上記の自動更新文書を参照してください。
 
 `rootless-compose.sh`は次の処理を行います。
 

@@ -13,18 +13,30 @@
 | Supply Chain CI / source | workflow検証、Git履歴と作業treeのsecret scan、lock fileのSBOM・脆弱性scan、scanner fixture | push、PR、週次、手動 |
 | Supply Chain CI / runtime | sandbox・DBを含む本番5 imageのbuild・SBOM・scan、Compose全問題回帰・browser・image境界・DB更新互換test | push、PR、週次、手動 |
 | Supply Chain CI / provenance | 同じrunで検査を通過した生成物の署名付きprovenance登録 | mainへのpushでsource・runtime両jobが成功した場合だけ |
+| Production deploy | 同じcommitの全CI成功待ち、署名検証、SSH配備・DB backup/migration・起動確認 | main push、Repository variableで有効化した場合だけ |
 
 全workflowは`contents: read`を既定とし、checkoutはcredentialを保持しません。
 Actionは公式repositoryのfull commit SHAに固定し、runner OS・job timeout・concurrencyを
-明示しています。workflowとrefが同じ古い実行は、新しい実行でキャンセルされます。
+明示しています。検査workflowとrefが同じ古い実行は、新しい実行でキャンセルされます。
+Production deployはmigrationの中断を避けるため直列実行し、進行中runを自動キャンセルしません。
 `pull_request_target`、`workflow_run`、self-hosted runnerは使用しません。
 FastAPI CIでは、browser scriptも含めたmypy検査のため`e2e` groupを導入します。
 このjobではブラウザ本体を取得・実行しません。
 
-provenance jobだけに`id-token: write`と`attestations: write`を付与します。
+Supply Chainのprovenance jobに`id-token: write`と`attestations: write`を付与します。
 このjobはcheckoutや取得artifact内のcode実行をせず、同じrunの生成物だけを取得して
 固定済みActionへ渡します。PRには署名権限を付与しません。registryへのpush、release作成、
 本番deployはこのworkflowでは行いません。
+
+Production deployは`workflow_run`を使わず、main pushから読み取りAPIで
+Python・React・Supply Chainの同じSHAのpush runを最大55分待ちます。
+最新runの失敗を過去の成功で置き換えません。待機jobには`actions: read`、
+配備jobにはさらに`attestations: read`とAWS OIDC用の`id-token: write`を付けます。
+署名検証後にAWS認証し、SSH秘密鍵はSSM経由の転送stepだけに渡します。
+Session Manager pluginは`ci/install_session_manager.sh`の公式deb URL・version・SHA-256へ固定し、
+job専用directoryへ展開します。AWS CLIはGitHub-hosted Ubuntu runnerの導入済み版を使用します。
+本番の資格情報は`production` Environmentへ限定します。
+設定と失敗時の停止・復旧は[自動更新手順](./AUTODEPLOY.md)を正本とします。
 
 ## Scannerと停止条件
 
@@ -145,12 +157,14 @@ artifactの存在だけで検査成功や本番適合を判断しないでくだ
 1. 対象commitの基本CI・Supply Chain CI・必要なreviewがすべて成功していること。
 2. 対象runからartifactを取得し、GitHub CLIの`gh attestation verify FILE --repo YusukeKato/ShellgeiOnlineJudge`
    で署名を検証する。結果のworkflow、source commit、refも承認対象と一致すること。
-3. build recordの`product_version`・file hash・image IDと実imageのversionラベルを照合する。frontendはE2E用の同一origin設定でbuildしているため、
-   本番の`VITE_*`等への適合も確認する。再buildした別の生成物へ元の署名を流用しないこと。
-4. 本番反映は[本番運用](./PRODUCTION.md)に従い、依頼者が承認した対象だけを扱うこと。
+3. build recordの`product_version`・file hash・image IDと実imageのversionラベルを照合する。
+   frontendは同一origin APIとRepository variablesの公開リンク、[自動設定する更新日](./AUTODEPLOY.md)でbuildし、同じimageをE2E・配備する。
+   再buildした別の生成物へ元の署名を流用しないこと。
+4. 自動更新を有効にした環境では、Production deployが上記のCI・署名・image照合を実施する。
+   手動反映時は[本番運用](./PRODUCTION.md)に従う。
 
-この変更ではGitHub上のworkflow実行、OIDC署名、branch protection、required checksの設定変更、
-本番promotionを実行していません。repositoryへ反映後、実際のrunと設定を確認してください。
+GitHub上のworkflow実行、OIDC署名、branch protection、required checksとSSH配備の実設定は、
+repositoryへ反映後に確認してください。workflowの追加だけでは自動更新は有効になりません。
 required checksには既存のPython matrix各job、`React Build and Test`に加え、
 `Workflow, secrets and dependencies`と`Rootless runtime E2E and image scan`を指定します。
 PRでskipされるprovenance jobを必須にはしません。mainへの直接push・review bypassの禁止、
@@ -185,7 +199,7 @@ Action SHA・scanner archiveの固定は、第三者artifactの署名検証や�
 export SOJ_CI_WORK="$(mktemp -d)"
 python3 ci/install_tools.py "$SOJ_CI_WORK/tools" actionlint gitleaks syft grype
 "$SOJ_CI_WORK/tools/actionlint"
-poetry run pytest backend/tests/test_ci_policy.py backend/tests/test_supply_chain.py
+poetry run pytest backend/tests/test_ci_policy.py backend/tests/test_supply_chain.py backend/tests/test_deployment.py
 "$SOJ_CI_WORK/tools/gitleaks" git . --redact=100 --no-banner --log-opts=--all
 "$SOJ_CI_WORK/tools/gitleaks" dir . --redact=100 --no-banner
 export PYTHONPATH=backend

@@ -1,5 +1,7 @@
 .git
 .env
+.soj-deploy
+docker-compose.override.yml
 .venv
 .mypy_cache
 .pytest_cache

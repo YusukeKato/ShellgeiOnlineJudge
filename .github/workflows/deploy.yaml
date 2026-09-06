@@ -1,0 +1,81 @@
+name: Production deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# migration中のrunを、新しいpushで中断しない。
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    if: ${{ vars.PRODUCTION_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      run-id: ${{ steps.ci.outputs.run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Wait for all CI on this main commit
+        id: ci
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 ci/deploy.py wait
+
+  deploy:
+    needs: gate
+    if: ${{ needs.gate.outputs.run-id != '' }}
+    environment: production
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+      attestations: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: runtime-reports
+          run-id: ${{ needs.gate.outputs.run-id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/runtime-reports
+      - name: Verify signed archive and build record
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 ci/deploy.py verify "$RUNNER_TEMP/runtime-reports"
+      - name: Install verified Session Manager plugin
+        run: bash ci/install_session_manager.sh
+      - name: Authenticate to AWS using production OIDC role
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
+        with:
+          role-to-assume: ${{ vars.DEPLOY_AWS_ROLE_ARN }}
+          aws-region: ${{ vars.DEPLOY_AWS_REGION }}
+          role-session-name: soj-deploy-${{ github.run_id }}-${{ github.run_attempt }}
+          role-duration-seconds: 3600
+          unset-current-credentials: true
+      - name: Transfer verified images and update production
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_INSTANCE_ID: ${{ vars.DEPLOY_INSTANCE_ID }}
+          DEPLOY_AWS_REGION: ${{ vars.DEPLOY_AWS_REGION }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_REPOSITORY: ${{ vars.DEPLOY_REPOSITORY }}
+          DEPLOY_BACKUP_ROOT: ${{ vars.DEPLOY_BACKUP_ROOT }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: python3 ci/deploy.py transfer "$RUNNER_TEMP/runtime-reports"

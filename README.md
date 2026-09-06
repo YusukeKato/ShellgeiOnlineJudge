@@ -20,6 +20,7 @@ SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-j
 | [開発環境](./docs/DEVELOPMENT.md) | 開発者 | ローカル環境、静的検査、テスト、Compose起動 |
 | [CI・供給網の検査](./docs/CI.md) | 開発者・運用者 | CI権限、scan、SBOM、provenance、依存更新 |
 | [本番デプロイ](./docs/PRODUCTION.md) | 運用者 | 必要な設定、build、DB更新、起動、動作確認、障害対応 |
+| [main pushからの自動更新](./docs/AUTODEPLOY.md) | 運用者 | CI成功後のSSH配備、初回設定、DB backup、障害対応 |
 | [本番ホスト設定](./docs/PRODUCTION_HOST.md) | サーバ管理者 | 初回のrootless Docker、公開経路、TLS、再起動確認 |
 | [セキュリティ](./SECURITY.md) | 開発者・運用者 | 現在のセキュリティモデル、sandbox制限、既知の制約 |
 | [セキュリティ課題](./docs/security/README.md) | 開発者・運用者 | 現在の課題、対応状況、優先順位、作業再開手順 |

@@ -42,7 +42,7 @@ jobs:
       - name: Validate workflows and policy
         run: |
           "$RUNNER_TEMP/soj-tools/actionlint"
-          poetry run pytest backend/tests/test_ci_policy.py backend/tests/test_supply_chain.py backend/tests/test_rootless_ci.py
+          poetry run pytest backend/tests/test_ci_policy.py backend/tests/test_supply_chain.py backend/tests/test_deployment.py backend/tests/test_rootless_ci.py
       - name: Scan complete Git history and current files
         run: |
           "$RUNNER_TEMP/soj-tools/gitleaks" git . --redact=100 --no-banner --log-opts=--all
@@ -92,6 +92,12 @@ jobs:
           rootless: true
           set-host: true
       - name: Validate rootless daemon and build current targets
+        env:
+          VITE_X_URL: ${{ vars.VITE_X_URL || 'https://x.com/yusukekato_main' }}
+          VITE_GITHUB_REPO_URL: ${{ vars.VITE_GITHUB_REPO_URL || 'https://github.com/YusukeKato/ShellgeiOnlineJudge' }}
+          VITE_GITHUB_AUTHOR_URL: ${{ vars.VITE_GITHUB_AUTHOR_URL || 'https://github.com/YusukeKato' }}
+          VITE_BLOG_URL: ${{ vars.VITE_BLOG_URL || 'https://yusukekato.jp' }}
+          VITE_MIXI2_URL: ${{ vars.VITE_MIXI2_URL || 'https://mixi.social/communities/dcf8e9d8-a6c4-40a9-8e05-328b4424f886/about' }}
         run: |
           poetry run python -c 'from ci.supply_chain import rootless; rootless()'
           docker build --file deploy/sandbox/Dockerfile --tag soj-sandbox:ci .
@@ -100,7 +106,12 @@ jobs:
           # 長いbuild・scanの前に、実際に資源制限付きcontainerを起動できるか検証する。
           poetry run python -c 'import subprocess; from ci.supply_chain import inspect_python_runtime; image = subprocess.check_output(["docker", "image", "inspect", "soj-backend:ci", "--format", "{{.Id}}"], text=True).strip(); print(inspect_python_runtime(image))'
           docker build --file backend/Dockerfile --target runner --tag soj-runner:ci .
-          docker build --file frontend/Dockerfile --build-arg VITE_SOJ_URL= --tag soj-frontend:ci .
+          # 検証・配備するfrontend imageに、日本時間のbuild日を埋め込む。
+          export VITE_UPDATE_DATE="$(TZ=Asia/Tokyo date +%F)"
+          docker build --file frontend/Dockerfile --build-arg VITE_SOJ_URL= \
+            --build-arg VITE_UPDATE_DATE --build-arg VITE_X_URL --build-arg VITE_GITHUB_REPO_URL \
+            --build-arg VITE_GITHUB_AUTHOR_URL --build-arg VITE_BLOG_URL --build-arg VITE_MIXI2_URL \
+            --tag soj-frontend:ci .
           docker build --file deploy/postgres/Dockerfile --tag soj-db:ci .
           docker build --file backend/tests/integration/browser/Dockerfile --tag soj-browser:ci .
       - name: Install verified inventory and vulnerability tools
@@ -129,7 +140,7 @@ jobs:
           SOJ_COMPOSE_BROWSER_IMAGE: soj-browser:ci
           SOJ_BACKEND_RUNTIME_IMAGE: soj-backend:ci
           SOJ_RUNNER_RUNTIME_IMAGE: soj-runner:ci
-        run: poetry run pytest backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_runtime_images.py backend/tests/integration/test_postgres_image.py backend/tests/integration/test_sandbox_tools.py
+        run: poetry run pytest backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_production_deploy.py backend/tests/integration/test_runtime_images.py backend/tests/integration/test_postgres_image.py backend/tests/integration/test_sandbox_tools.py
       - name: Retain runtime inventory and candidate for review
         if: ${{ always() && steps.scan.outcome != 'skipped' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

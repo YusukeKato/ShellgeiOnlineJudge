@@ -5,3 +5,5 @@ backend/public
 __pycache__
 nohup.out
 backend_data*
+.soj-deploy/
+docker-compose.override.yml

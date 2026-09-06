@@ -82,10 +82,11 @@ Statusは次の意味で使用します。
   - 次: 専用filesystem、I/O制御、quota、監視を本番設計へ追加
 - `SOJ-019` — Medium / P2 / Partially resolved
   - 概要: CI権限・timeout・Action SHA、secret/依存/image scan、SBOMとmain限定provenanceを構成した。
-    GitHub上の実行、required checks・review保護、供給元署名と本番promotionは未確認または未導入
+    同じmain SHAの全CI成功・署名検証後のSSH promotionも構成した。
+    GitHub・本番上の実運用、required checks・review保護は導入時の確認が必要で、第三者供給元署名は未導入
   - 関連: `.github/workflows/`、[CI文書](../CI.md)
   - 次: 実CIとOIDC署名を確認し、required checks・workflow変更のreview保護を設定する。
-    bootstrapの間接依存・第三者imageの供給元検証とpromotion方針を整備する
+    bootstrapの間接依存・第三者imageの供給元検証を整備し、[SSH自動更新](../AUTODEPLOY.md)の実接続と復旧を確認する
 - `SOJ-022` — High/Critical（scanner分類） / P1 / Partially resolved
   - 概要: アプリ依存とsandboxを含む本番imageの停止対象を是正。Pythonは実装確認付きの期限付き例外で扱う
   - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、`deploy/postgres/Dockerfile`、`ci/python-runtime-exceptions.json`、`deploy/sandbox/`、runtime image
@@ -434,8 +435,7 @@ DB schema・保存内容・APIは維持します。host portの廃止は、rootl
 
 ### CI・運用基盤が必要
 
-- SOJ-019は、構成したCIの実運用確認、review保護、第三者供給元検証、
-  artifact promotionの整備が必要です。
+- SOJ-019は、構成したCIとSSH promotionの実運用確認、review保護、第三者供給元検証が必要です。
 
 Deferredは不要という意味ではありません。
 必要な前提が整った時点でseverityとpriorityを再評価してください。

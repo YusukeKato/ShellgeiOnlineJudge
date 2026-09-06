@@ -8,7 +8,8 @@
 [backend/soj_shared/version.json](../backend/soj_shared/version.json)を正本とします。
 backendとrunnerは同梱ファイルを読み、frontendはViteがビルド時に同じ値を埋め込みます。
 画面のversionを指定する`VITE_VERSION`は廃止しました。旧`.env`に残っていても使用しません。
-`VITE_UPDATE_DATE`は運用者が設定する更新日です。
+`VITE_UPDATE_DATE`は画面に表示する更新日です。手動buildでは運用者が設定し、
+[自動デプロイ](./AUTODEPLOY.md)ではCIで自動設定します。
 
 Poetry・frontendのpackage versionと、本番5 imageの`org.opencontainers.image.version`ラベルは
 正本の値を転記します。[整合性テスト](../backend/tests/test_release_version.py)で不一致を拒否し、

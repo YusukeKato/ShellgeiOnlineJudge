@@ -7,6 +7,11 @@ Docker統合テストは実際のsandboxコンテナを生成・削除するた�
 隔離されたrootless Docker環境でのみ実行してください。
 本番ホストや共有CI runnerでは実行しないでください。
 
+`test_production_deploy.py`は下記のCompose E2Eと同じimage・有効化変数を使い、
+専用DBで自動配備scriptのbackup、migration、HTTPS実行・保存確認、失敗時の受付停止を検査します。
+DB volumeと更新前のデータを保持し、PostgreSQLでdumpを読み取れることも確認します。
+Git取得とarchive loadは既存のlocal imageで代替し、SSH・systemd・GitHub署名検証は実行しません。
+
 次のイメージを、rootless daemonへ事前にbuild・取得してください。
 sandboxの指定・更新方針は[本番運用](../../../docs/PRODUCTION.md#sandbox専用image)を参照してください。
 
