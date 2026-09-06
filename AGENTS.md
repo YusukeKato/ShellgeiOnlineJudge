@@ -13,6 +13,7 @@
 - `docs/PRODUCTION.md`: 本番構成、デプロイ、更新、運用
 - `backend/tests/integration/README.md`: Docker統合テストの内容と実行条件
 - `problems/README.md`: 問題データの構成とフィールド仕様
+- 問題の新規作成・修正前は、[問題作成ガイド](docs/problem-authoring.md)を参照し、設計を先に提示してください。
 - `UPDATE_HISTORY.md`: リリースとメンテナンスの履歴
 
 ## サービスの前提
