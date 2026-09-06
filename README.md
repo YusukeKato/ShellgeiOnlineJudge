@@ -28,6 +28,7 @@ SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-j
 | [Docker統合テスト](./backend/tests/integration/README.md) | 開発者 | Dockerテストの実行条件、コマンド、検証範囲 |
 | [sandbox image](./deploy/sandbox/README.md) | 開発者・運用者 | 独自Ubuntu imageの収録コマンド、問題data、画像policy、互換性 |
 | [問題データ](./problems/README.md) | 問題作成者 | YAMLと正解画像の仕様 |
+| [問題作成ガイド](./docs/problem-authoring.md) / [設計記録](./docs/problem-design-notes.md) | 問題作成者 | 作問方針、設計・検証手順、各問題の学習意図 |
 | [backend](./backend/README.md) / [frontend](./frontend/README.md) | 開発者 | 各componentの責務と主な配置 |
 | [deploy](./deploy/README.md) | 開発者・運用者 | デプロイ補助スクリプト |
 | [更新履歴](./UPDATE_HISTORY.md) | 利用者・開発者 | 過去のリリースとメンテナンスの履歴 |

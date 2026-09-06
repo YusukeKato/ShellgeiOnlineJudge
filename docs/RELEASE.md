@@ -44,7 +44,7 @@ sandboxの収録コマンドは[sandbox README](../deploy/sandbox/README.md)を�
 | 対象 | 更新前に確認すること | 手順の正本 |
 | --- | --- | --- |
 | API利用者 | 新規clientは`/api/v3/submissions`へ対応。旧`/api/shellgei`は互換用に維持 | [API移行](./API.md) |
-| 問題データ | v3変換・validation・全92問回帰を実施し、backendとrunnerのrevisionを一致させる | [問題データ](../problems/README.md) |
+| 問題データ | 移行baselineの保持・validation・全登録問題の回帰を実施し、backendとrunnerのrevisionを一致させる | [問題データ](../problems/README.md) |
 | サーバ設定 | rootless socket、runner認証、DB通常用／migration用URL、sandboxのimmutable IDを設定 | [本番運用](./PRODUCTION.md) |
 | DB | 整合性のあるbackupと旧設定を保存。旧frontend/backendを停止して管理処理を実施 | [更新デプロイ](./PRODUCTION.md#更新デプロイ) |
 | 障害時 | 旧image・commit・設定を保持。schema・権限・port公開の互換性を確認して復帰 | [ロールバック](./PRODUCTION.md#ロールバック) |
@@ -54,7 +54,7 @@ DB migration失敗時はサービス更新へ進みません。単に旧コー�
 
 ## 公開前の確認
 
-- 対象commitのPython・frontend基本検査、全92問、Compose/browser E2E、実imageのversion検査が成功。
+- 対象commitのPython・frontend基本検査、全登録問題の回帰、Compose/browser E2E、実imageのversion検査が成功。
 - 最新の脆弱性DBによる検査、Python例外の期限・適用条件、残存リスクをレビュー。
 - GitHub上のCI、required checks・review保護、署名と配布artifactの照合を確認。
 - 本番の受付制御、sandbox監視、容量監視、backup・復元手順を確認。

@@ -75,10 +75,12 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
   backendへ転送しないこと
 
 現在登録されている全問題の回帰テストには、追加の明示指定が必要です。
-この回帰ではschema v3の全92問から`reference_solution`を読み、実sandboxで実行します。
+この回帰ではschema v3の全登録問題から`reference_solution`を読み、実sandboxで実行します。
 runnerとjudgeには起動時検証済みの同じ不変problem repositoryを注入し、fixture、
 期待出力、正解画像がrequestごとのfile再読込なしで利用される経路を検証します。
 legacy `yaml_data/`とのsemantic一致はnon-Docker testで別途検証します。
+`test_reservation_problem.py`は未受付者を求める問題の参照解答と2つの別解を実行し、
+集合差の逆転・重複の残存・部分一致による除外を不正解として区別します。
 
 ```sh
 SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_FULL_REGRESSION=1 \

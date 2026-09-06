@@ -24,7 +24,9 @@ from soj_shared.problem_schema import (
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 LEGACY_DIRECTORY = REPOSITORY_ROOT / "problems" / "yaml_data"
 V3_DIRECTORY = REPOSITORY_ROOT / "problems" / "v3"
-V3_PROBLEM_IDS = tuple(path.stem for path in sorted(LEGACY_DIRECTORY.glob("*.yaml")))
+LEGACY_PROBLEM_IDS = tuple(
+    path.stem for path in sorted(LEGACY_DIRECTORY.glob("*.yaml"))
+)
 
 
 def _valid_text_data() -> dict[str, object]:
@@ -217,17 +219,17 @@ def test_schema_rejects_oversized_definition_before_yaml_parsing() -> None:
         parse_problem_definition(oversized)
 
 
-def test_v3_and_legacy_problem_id_sets_match() -> None:
-    # legacyとv3に同じ92問が1件ずつ存在し、欠落や余分な問題がないことを確認する。
-    v3_problem_ids = tuple(path.stem for path in sorted(V3_DIRECTORY.glob("*.yaml")))
+def test_v3_preserves_all_legacy_problem_ids() -> None:
+    # 新規v3問題の追加を許容しつつ、移行元92問が欠落していないことを確認する。
+    v3_problem_ids = {path.stem for path in V3_DIRECTORY.glob("*.yaml")}
 
-    assert len(V3_PROBLEM_IDS) == 92
-    assert v3_problem_ids == V3_PROBLEM_IDS
+    assert len(LEGACY_PROBLEM_IDS) == 92
+    assert set(LEGACY_PROBLEM_IDS) <= v3_problem_ids
 
 
-@pytest.mark.parametrize("problem_id", V3_PROBLEM_IDS)
+@pytest.mark.parametrize("problem_id", LEGACY_PROBLEM_IDS)
 def test_all_v3_files_equal_deterministic_legacy_migration(problem_id: str) -> None:
-    # 各v3 YAMLが対応するlegacyデータからの決定的な移行結果と一致することを確認する。
+    # 移行済み92問のv3 YAMLが対応するlegacyからの決定的な移行結果と一致することを確認する。
     migrated = migrate_legacy_file(LEGACY_DIRECTORY / f"{problem_id}.yaml")
     v3_path = V3_DIRECTORY / f"{problem_id}.yaml"
 
@@ -235,7 +237,7 @@ def test_all_v3_files_equal_deterministic_legacy_migration(problem_id: str) -> N
     assert v3_path.read_text(encoding="utf-8") == dump_problem_definition(migrated)
 
 
-@pytest.mark.parametrize("problem_id", V3_PROBLEM_IDS)
+@pytest.mark.parametrize("problem_id", LEGACY_PROBLEM_IDS)
 def test_all_v3_definitions_preserve_legacy_problem_semantics(problem_id: str) -> None:
     # 全fieldをlegacy値と照合し、構造変更で問題文・入出力・解答の意味が変わらないことを確認する。
     legacy = yaml.safe_load(

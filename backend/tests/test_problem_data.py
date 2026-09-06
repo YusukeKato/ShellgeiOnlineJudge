@@ -1,4 +1,3 @@
-import base64
 import hashlib
 import json
 from pathlib import Path
@@ -8,6 +7,7 @@ import yaml
 from soj_shared.models.execution import ExecutionResult, ExecutionStatus
 from soj_backend.judge import JudgeVerdict, ShellgeiJudge
 from soj_shared.problem_repository import build_problem_repository
+from soj_shared.problem_schema import load_problem_definition
 from soj_shared.runner_protocol import ExecutionArtifact
 
 
@@ -52,12 +52,11 @@ def _problem_semantics(yaml_path: Path) -> dict[str, object]:
     }
 
 
-def test_all_problem_records_are_well_formed() -> None:
-    # 全問題で必須fieldの型、IDとファイル名の一致、対応する正解画像の存在を確認する。
+def test_all_legacy_problem_records_are_well_formed() -> None:
+    # 移行元の全問題で必須fieldの型、IDとファイル名の一致、対応画像の存在を確認する。
     yaml_paths = sorted(YAML_DIR.glob("*.yaml"))
 
     assert yaml_paths
-    assert len(yaml_paths) == len(list(IMAGE_DIR.glob("*.jpg")))
 
     for yaml_path in yaml_paths:
         data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
@@ -100,22 +99,18 @@ def test_judge_accepts_all_expected_problem_outputs() -> None:
     )
     judge = ShellgeiJudge(repository)
 
-    for yaml_path in sorted(YAML_DIR.glob("*.yaml")):
-        data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
-        image_bytes = (IMAGE_DIR / f"{yaml_path.stem}.jpg").read_bytes()
-        image = base64.b64encode(image_bytes).decode("ascii")
-
-        definition = repository.require(yaml_path.stem).definition
+    for record in repository.records.values():
+        definition = record.definition
         artifact = None
         if definition.judge.type == "image":
             artifact = ExecutionArtifact(
                 path=definition.judge.artifact.path,
                 media_type=definition.judge.artifact.media_type,
-                data=image,
+                data=record.answer_image_base64,
             )
         execution = ExecutionResult(
             status=ExecutionStatus.COMPLETED,
-            stdout=data["expected_output"],
+            stdout=record.expected_output,
             stderr="",
             exit_code=0,
             timed_out=False,
@@ -124,6 +119,21 @@ def test_judge_accepts_all_expected_problem_outputs() -> None:
             artifact=artifact,
             error=None,
         )
-        assert (
-            judge.judge(execution, yaml_path.stem).verdict is JudgeVerdict.ACCEPTED
-        ), yaml_path.name
+        assert judge.judge(execution, definition.id).verdict is JudgeVerdict.ACCEPTED, (
+            definition.id
+        )
+
+
+def test_reservation_problem_expected_output_matches_set_difference() -> None:
+    # 未受付者の期待値をPythonの集合差で独立に確認し、名前の完全一致と重複除去を検証する。
+    definition = load_problem_definition(PROBLEMS_DIR / "v3/STANDARD-00000052.yaml")
+    assert definition.judge.type == "text"
+    entries = [
+        line.split(" ")
+        for fixture in definition.execution.fixtures
+        if fixture.path == "input.txt"
+        for line in fixture.content.splitlines()
+    ]
+    reserved = {name for kind, name in entries if kind == "reserved"}
+    arrived = {name for kind, name in entries if kind == "arrived"}
+    assert definition.judge.expected_output.splitlines() == sorted(reserved - arrived)

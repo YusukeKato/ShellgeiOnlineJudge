@@ -1,0 +1,58 @@
+schema_version: 3
+id: STANDARD-00000052
+category: STANDARD
+title:
+  ja: 未受付の予約者
+  en: Reserved but Not Checked In
+statement:
+  ja: |
+    イベントの予約と受付の記録がinput.txtにあります。
+    各行は種類と名前を半角スペース1個で区切ったものです。
+    reservedは予約、arrivedは受付済みを表します。名前は英小文字のみで、同じ名前は同じ人です。
+    記録は時系列順ではなく、同じ記録が複数回含まれる場合があります。
+    予約せずに来場した人の受付記録も含まれます。
+
+    予約記録があり、受付記録がない人の名前を出力してください。
+    名前は1行に1つ、重複なしで、アルファベットの辞書順に並べてください。
+  en: |
+    input.txt contains reservation and check-in records for an event.
+    Each line contains a record type and a name separated by one ASCII space.
+    reserved means a reservation; arrived means a completed check-in.
+    Names contain only lowercase English letters. The same name always identifies the same person.
+    Records are not in chronological order and may appear more than once.
+    Some people checked in without a reservation.
+
+    Output the names that have a reservation record but no check-in record.
+    Print each name once, one per line, in alphabetical dictionary order.
+reference_solution: export LC_ALL=C; comm -23 <(sed -n 's/^reserved //p' input.txt | sort -u) <(sed -n 's/^arrived //p' input.txt | sort -u)
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      reserved haru
+      arrived sora
+      reserved akiko
+      reserved sora
+      arrived guest
+      reserved mio
+      reserved ren
+      arrived aki
+      reserved yui
+      arrived ren
+      reserved haru
+      arrived aki
+      reserved kei
+      arrived mio
+      reserved nao
+      arrived kei
+      reserved aki
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    akiko
+    haru
+    nao
+    yui

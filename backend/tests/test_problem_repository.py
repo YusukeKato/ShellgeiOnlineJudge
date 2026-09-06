@@ -57,15 +57,19 @@ def _one_problem_repository(tmp_path: Path) -> tuple[Path, Path, Path]:
 
 
 def test_checked_in_repository_is_immutable_and_manifest_matches() -> None:
-    # 92問のchecked-in dataがmanifestと一致し、mappingと型付き定義を変更できないことを確認する。
+    # 現行の全問題がmanifestと一致し、mappingと型付き定義を変更できないことを確認する。
     repository = build_problem_repository(
         V3_DIRECTORY,
         IMAGE_DIRECTORY,
         MANIFEST_PATH,
     )
 
-    assert repository.problem_count == 92
-    assert repository.revision == json.loads(MANIFEST_PATH.read_text())["revision"]
+    manifest = json.loads(MANIFEST_PATH.read_text())
+    assert set(repository.records) == {
+        path.stem for path in V3_DIRECTORY.glob("*.yaml")
+    }
+    assert repository.problem_count == manifest["problem_count"]
+    assert repository.revision == manifest["revision"]
     assert repository.require("STANDARD-00000001").definition.id == (
         "STANDARD-00000001"
     )

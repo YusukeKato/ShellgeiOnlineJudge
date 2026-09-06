@@ -1,6 +1,8 @@
 # 問題データ
 
 このディレクトリは、ShellgeiOnlineJudgeで使用する問題データの正本です。
+作成前の設計方針は[問題作成ガイド](../docs/problem-authoring.md)、
+各問題の狙いは[設計記録](../docs/problem-design-notes.md)を参照してください。
 
 ## ディレクトリ
 
@@ -26,7 +28,7 @@ schema、ID集合、画像形式・上限、`manifest.json`のrevisionを検証�
 完全decodeによる破損検出は行いません。markerを満たす破損画像は起動時検査を通過し得るため、
 正解画像の更新時には実際のdecodeと画像問題回帰も確認してください。
 
-text問題にも表示用JPEGを配置する必要があります。現在の87枚は同一の白画像ですが、
+text問題にも表示用JPEGを配置する必要があります。現在は同一の白画像を使用していますが、
 repositoryのID集合検査と問題詳細APIが依存しているため、単独では削除できません。
 
 ## Legacy YAMLフィールド（移行baseline）
@@ -50,7 +52,8 @@ repositoryのID集合検査と問題詳細APIが依存しているため、単�
 問題の一部は`input.txt`以外に`/ShellGeiData`の公開dataを参照します。
 収録範囲、取得元・build時の最新revisionの記録方法、利用条件は
 [sandbox文書](../deploy/sandbox/README.md#収録するもの)を正本とします。
-ShellGeiData以外のdataを使う問題を追加する場合はsandbox構成も更新してください。
+追加の固定textは`execution.fixtures`で配置できます。fixtureでは扱えないdataをimageへ
+収録する必要がある場合は、sandbox構成も更新してください。
 新規問題と公開data更新の互換性は、全問題回帰で確認してください。
 
 ## Schema v3
@@ -67,7 +70,7 @@ schema v3の実行可能な型定義は
 | `schema_version` | 固定値`3` |
 | `id` / `category` | problem IDと`STANDARD`、`PRACTICE`、`IMAGE`の分類 |
 | `title` / `statement` | `ja`と`en`を持つ日英metadata |
-| `reference_solution` | 既存`answer`から移行した参照解答。現行どおりpublic problem detail APIで公開する |
+| `reference_solution` | 参照解答。public problem detail APIで公開する |
 | `execution.stdin` | commandへ渡す標準入力。legacy移行では空文字列 |
 | `execution.fixtures` | sandboxへ配置する相対pathとUTF-8 text。legacy `input`は`input.txt`へ移行 |
 | `execution.exit_code` | `ignore`または終了code 0を要求する`zero` |
@@ -121,9 +124,14 @@ fixtureとartifactのpathはabsolute path、`..`、`.`、空segment、backslash�
 NULを許可しません。同一fixture pathの重複と、提出command用に予約した
 `z.bash`も拒否します。
 
-`v3/`にはSTANDARD 51問、PRACTICE 36問、IMAGE 5問を移行済みです。
-全fileについてlegacyからの決定的な再生成結果と、問題文、入出力、参照解答、
+`v3/`にはSTANDARD 52問、PRACTICE 36問、IMAGE 5問の計93問があります。
+このうち移行済みの92問は、legacyからの決定的な再生成結果と、問題文、入出力、参照解答、
 judge種別、fixtureの意味が一致することをbackend testで確認します。
+
+新規問題は`v3/`と対応画像へ追加し、manifestも再生成します。
+`yaml_data/`と`semantic_manifest.json`は移行baselineとして保持し、新問を追加しません。
+legacyのID集合がv3に含まれることと、現行の全YAML・JPEGのID集合およびmanifestの一致を
+別々に検査します。既存問題の意図した修正では、移行一致テストへの影響もレビューしてください。
 
 legacy YAMLを1問移行する場合はbackend directoryから実行します。
 
