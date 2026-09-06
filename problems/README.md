@@ -125,13 +125,17 @@ NULを許可しません。同一fixture pathの重複と、提出command用に�
 `z.bash`も拒否します。
 
 `v3/`にはSTANDARD 52問、PRACTICE 36問、IMAGE 5問の計93問があります。
-このうち移行済みの92問は、legacyからの決定的な再生成結果と、問題文、入出力、参照解答、
-judge種別、fixtureの意味が一致することをbackend testで確認します。
+移行元92問のうち未改訂の問題は、legacyからの決定的な再生成結果との一致を検査します。
+意図した改訂は、[改訂登録](../backend/tests/fixtures/problem_revisions.json)の変更field一覧と
+定義hashで限定し、未変更field・実行policy・judge種別の保持も検査します。
+改訂内容の正本はv3 YAML、学習意図は[設計記録](../docs/problem-design-notes.md)です。
 
 新規問題は`v3/`と対応画像へ追加し、manifestも再生成します。
 `yaml_data/`と`semantic_manifest.json`は移行baselineとして保持し、新問を追加しません。
 legacyのID集合がv3に含まれることと、現行の全YAML・JPEGのID集合およびmanifestの一致を
-別々に検査します。既存問題の意図した修正では、移行一致テストへの影響もレビューしてください。
+別々に検査します。既存問題の意図した修正では、改訂登録も同じdiffでレビューしてください。
+改訂hashは型付き定義のJSON（UTF-8、key昇順、ensure_ascii=False、区切りは`,`と`:`）のSHA-256です。
+変更fieldはlegacyのfield名で列挙し、移行元YAMLとsemantic manifestを改訂後の内容で上書きしません。
 
 legacy YAMLを1問移行する場合はbackend directoryから実行します。
 

@@ -2,35 +2,57 @@ schema_version: 3
 id: STANDARD-00000010
 category: STANDARD
 title:
-  ja: 虫食い日記
-  en: Incomplete Diary
+  ja: 日記テンプレートの復元
+  en: Filling a Diary Template
 statement:
   ja: |
-    日記が虫食い状態になっているので、正しい文章に修正してください。
-    虫が食った空欄には、順番に「川」「魚」「新幹線」「富士山」が入ります。
+    input.txtには置換表と日記のテンプレートが、この順に入っています。
+    「---」だけの行が両者の区切りです。
+
+    置換表の各行は「キー=値」です。キーは小文字の英字だけからなり、重複しません。
+    値は日本語の文字だけからなり、空白や記号を含みません。
+    本文中の「{{キー}}」を、置換表の対応する値で置き換えてください。
+    すべての穴に対応するキーがあり、同じ穴が複数回現れる場合もあります。
+
+    出力するのは置換後の本文だけです。置換表と区切り行は出力しないでください。
+    穴以外の文字・空白・改行は変更しないでください。
   en: |
-    Correct the diary.
-    Fill in the blanks with "川", "魚", "新幹線", and "富士山" in that order.
-reference_solution: cat input.txt | sed -e '2 s/は　に/は川に/' | sed 's/ん　が/ん魚が/;s/は　に/は新幹線に/;s/、　が/、富士山が/'
+    input.txt contains a replacement table followed by a diary template.
+    A line containing only "---" separates them.
+
+    Each table row is "key=value". Keys contain only lowercase ASCII letters and are unique.
+    Values contain only Japanese characters, with no spaces or punctuation.
+    Replace each "{{key}}" in the body with the corresponding value from the table.
+    Every placeholder has a matching key, and the same placeholder may occur more than once.
+
+    Output only the completed body, without the table or separator.
+    Preserve all other characters, spaces, and line breaks.
+reference_solution: sed '1,/^---$/d' input.txt | sed -f <(sed '/^---$/,$d; s|^\([a-z]*\)=\(.*\)$|s/{{\1}}/\2/g|' input.txt)
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      2023/05/03　火曜日　晴れ
-      今日は　に遊びに出かけました。
-      たくさん　が釣れました。
-      帰りは　に乗りました。
-      途中、　が見えました。
-      楽しかったです。
+      view=富士山
+      train=新幹線
+      river=多摩川
+      catch=魚
+      weather=晴れ
+      ---
+      2023/05/03 水曜日 {{weather}}
+      今日は{{river}}へ出かけました。
+      {{river}}でたくさん{{catch}}が釣れました。
+      帰りは{{train}}に乗りました。
+      車窓から{{view}}が見えました。写真にも{{view}}が写っています。
+      旅のメモ：river  train
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    2023/05/03　火曜日　晴れ
-    今日は川に遊びに出かけました。
-    たくさん魚が釣れました。
+    2023/05/03 水曜日 晴れ
+    今日は多摩川へ出かけました。
+    多摩川でたくさん魚が釣れました。
     帰りは新幹線に乗りました。
-    途中、富士山が見えました。
-    楽しかったです。
+    車窓から富士山が見えました。写真にも富士山が写っています。
+    旅のメモ：river  train

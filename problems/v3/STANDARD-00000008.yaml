@@ -3,23 +3,25 @@ id: STANDARD-00000008
 category: STANDARD
 title:
   ja: 鶴亀算
-  en: Crane and Turtle Problem
+  en: Cranes and Turtles
 statement:
   ja: |
-    鶴亀算を行ってください。
-    入力の一列目の値は鶴と亀の合計、二列目の値は足の数の合計です。
-    出力の一列目は鶴の数、二列目は亀の数としてください。
-    ただし、鶴の足は二本、亀の足は四本とします。
-  en: |
-    Input:
-    - first column: the sum of cranes and turtles
-    - second column: the sum of the number of legs
-    Output:
-    - first column: the number of cranes
-    - second column: the number of turtles
+    鶴は足が2本、亀は足が4本あります。
+    input.txtの各行には、鶴と亀の合計匹数と、足の合計本数が、半角スペース1個で区切られています。
+    どちらも整数で、合計匹数は1以上100以下です。鶴と亀の匹数が非負整数となる解が必ず存在します。
+    片方が0匹の場合もあります。
 
-    Assume cranes have two legs and turtles have four.
-reference_solution: cat input.txt | awk '{for(i=0;i<10;i++){for(j=0;j<10;j++){if(i+j==$1&&i*2+j*4==$2){print i, j}}}}'
+    各行について「鶴の匹数 亀の匹数」を、入力と同じ順序で1行ずつ出力してください。
+    2つの数は半角スペース1個で区切ってください。
+  en: |
+    A crane has 2 legs, and a turtle has 4 legs.
+    Each line of input.txt contains the total number of animals and the total number of legs, separated by one ASCII space.
+    Both are integers. The animal total is between 1 and 100 inclusive, and a solution with nonnegative integer counts always exists.
+    Either species may have a count of zero.
+
+    For each input line, output "cranes turtles" in input order, one pair per line.
+    Separate the counts with one ASCII space.
+reference_solution: awk '{turtles = ($2 - 2*$1) / 2; print $1 - turtles, turtles}' input.txt
 execution:
   stdin: ''
   fixtures:
@@ -29,6 +31,9 @@ execution:
       10 30
       2 6
       11 28
+      12 24
+      15 60
+      30 84
   exit_code: ignore
   stderr: merge
 judge:
@@ -38,3 +43,6 @@ judge:
     5 5
     1 1
     8 3
+    12 0
+    0 15
+    18 12

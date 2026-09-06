@@ -3,13 +3,27 @@ id: STANDARD-00000009
 category: STANDARD
 title:
   ja: 日記の並べ替え
-  en: Diary Rearrangement
+  en: Sorting Diary Entries
 statement:
   ja: |
-    日記を時系列順に並び替えてください。
+    input.txtの日記を、日付の新しいものから古いものへ並べ替えてください。
+
+    各日記は、日付1行と本文1行以上で構成され、日記どうしは空行1行で区切られています。
+    日付はYYYY/MM/DD形式で、月と日は2桁です。日付の重複はありません。
+    本文に空行はありませんが、半角スペースや日付のような文字列を含む場合があります。
+
+    各日記の日付と本文は、文字・空白・改行を変更せずに保ってください。
+    出力でも日記どうしを空行1行で区切ってください。
   en: |
-    Sort the diary in chronological order.
-reference_solution: cat input.txt | xargs | sed -E 's;([0-9]*/[0-9]*/[0-9]*);\n\1;g' | sort -r -k 1,1 | awk '{for(i=1;i<=NF;i++){print $i};printf("\n")}'
+    Sort the diary entries in input.txt from newest to oldest.
+
+    Each entry consists of one date line followed by one or more body lines. Entries are separated by one empty line.
+    Dates use YYYY/MM/DD, with two-digit months and days, and are unique.
+    Bodies contain no empty lines, but may contain ASCII spaces or date-like text.
+
+    Preserve the date and body of each entry, including all characters, spaces, and line breaks.
+    Separate output entries with one empty line.
+reference_solution: awk 'BEGIN {RS=""; ORS="\0"} {print $0 "\n"}' input.txt | LC_ALL=C sort -zr | tr '\0' '\n'
 execution:
   stdin: ''
   fixtures:
@@ -17,13 +31,14 @@ execution:
     content: |
       2023/05/05
       海へ行きました
-      楽しかったです
+      集合場所は Blue Cafe
 
       2030/04/01
       自転車購入
+      メモ：2023/05/05 の写真を整理
 
       2022/01/01
-      正月は楽しいなぁ
+      今年の目標：read  more books
 
       1998/12/24
       クリスマスって今日だっけ？
@@ -39,16 +54,17 @@ judge:
   expected_output: |
     2030/04/01
     自転車購入
+    メモ：2023/05/05 の写真を整理
 
     2023/06/24
     晴れ
 
     2023/05/05
     海へ行きました
-    楽しかったです
+    集合場所は Blue Cafe
 
     2022/01/01
-    正月は楽しいなぁ
+    今年の目標：read  more books
 
     1998/12/24
     クリスマスって今日だっけ？

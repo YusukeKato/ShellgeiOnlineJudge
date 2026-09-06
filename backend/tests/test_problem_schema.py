@@ -1,4 +1,6 @@
 import copy
+import hashlib
+import json
 from pathlib import Path
 
 import pytest
@@ -26,6 +28,12 @@ LEGACY_DIRECTORY = REPOSITORY_ROOT / "problems" / "yaml_data"
 V3_DIRECTORY = REPOSITORY_ROOT / "problems" / "v3"
 LEGACY_PROBLEM_IDS = tuple(
     path.stem for path in sorted(LEGACY_DIRECTORY.glob("*.yaml"))
+)
+# 意図した改訂だけをfield一覧と定義hashで固定する。設計意図はdocs/problem-design-notes.mdを参照。
+REVISIONS = json.loads(
+    (Path(__file__).parent / "fixtures/problem_revisions.json").read_text(
+        encoding="utf-8"
+    )
 )
 
 
@@ -229,17 +237,36 @@ def test_v3_preserves_all_legacy_problem_ids() -> None:
 
 @pytest.mark.parametrize("problem_id", LEGACY_PROBLEM_IDS)
 def test_all_v3_files_equal_deterministic_legacy_migration(problem_id: str) -> None:
-    # 移行済み92問のv3 YAMLが対応するlegacyからの決定的な移行結果と一致することを確認する。
+    # 未改訂問題は移行結果、意図した改訂は登録hashと照合し、両方のYAML書式も検証する。
     migrated = migrate_legacy_file(LEGACY_DIRECTORY / f"{problem_id}.yaml")
     v3_path = V3_DIRECTORY / f"{problem_id}.yaml"
 
-    assert load_problem_definition(v3_path) == migrated
-    assert v3_path.read_text(encoding="utf-8") == dump_problem_definition(migrated)
+    definition = load_problem_definition(v3_path)
+    if problem_id in REVISIONS:
+        canonical = json.dumps(
+            definition.model_dump(mode="json"),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        assert (
+            hashlib.sha256(canonical).hexdigest()
+            == REVISIONS[problem_id]["definition_sha256"]
+        )
+        assert definition != migrated
+        assert definition.execution.stdin == migrated.execution.stdin
+        assert definition.execution.exit_code == migrated.execution.exit_code
+        assert definition.execution.stderr == migrated.execution.stderr
+        assert definition.judge.type == migrated.judge.type
+        assert all(f.path == "input.txt" for f in definition.execution.fixtures)
+    else:
+        assert definition == migrated
+    assert v3_path.read_text(encoding="utf-8") == dump_problem_definition(definition)
 
 
 @pytest.mark.parametrize("problem_id", LEGACY_PROBLEM_IDS)
 def test_all_v3_definitions_preserve_legacy_problem_semantics(problem_id: str) -> None:
-    # 全fieldをlegacy値と照合し、構造変更で問題文・入出力・解答の意味が変わらないことを確認する。
+    # legacyとの相違が登録したfieldだけに限定され、無関係な意味が変わらないことを確認する。
     legacy = yaml.safe_load(
         (LEGACY_DIRECTORY / f"{problem_id}.yaml").read_text(encoding="utf-8")
     )
@@ -253,16 +280,30 @@ def test_all_v3_definitions_preserve_legacy_problem_semantics(problem_id: str) -
         definition.judge.expected_output if definition.judge.type == "text" else ""
     )
 
-    assert definition.id == legacy["id"]
+    actual = {
+        "id": definition.id,
+        "title_ja": definition.title.ja,
+        "title_en": definition.title.en,
+        "statement_ja": definition.statement.ja,
+        "statement_en": definition.statement.en,
+        "answer": definition.reference_solution,
+        "input": fixture_input,
+        "expected_output": expected_output,
+    }
+    assert actual.keys() == legacy.keys()
+    assert {key for key in legacy if actual[key] != legacy[key]} == set(
+        REVISIONS.get(problem_id, {}).get("changed_fields", [])
+    )
     assert definition.category == problem_id.split("-", maxsplit=1)[0]
-    assert definition.title.ja == legacy["title_ja"]
-    assert definition.title.en == legacy["title_en"]
-    assert definition.statement.ja == legacy["statement_ja"]
-    assert definition.statement.en == legacy["statement_en"]
-    assert definition.reference_solution == legacy["answer"]
     assert definition.execution.stdin == ""
-    assert fixture_input == legacy["input"]
-    assert expected_output == legacy["expected_output"]
+
+
+def test_revision_registry_identifies_only_existing_legacy_problems() -> None:
+    # 改訂登録の誤ったIDや空の変更fieldが、移行一致検査を黙って迂回しないことを確認する。
+    assert set(REVISIONS) <= set(LEGACY_PROBLEM_IDS)
+    for revision in REVISIONS.values():
+        assert revision["changed_fields"]
+        assert len(revision["changed_fields"]) == len(set(revision["changed_fields"]))
 
 
 def test_migration_preserves_legacy_input_as_an_isolated_fixture() -> None:

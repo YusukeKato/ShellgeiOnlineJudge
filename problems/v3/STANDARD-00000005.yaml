@@ -2,32 +2,47 @@ schema_version: 3
 id: STANDARD-00000005
 category: STANDARD
 title:
-  ja: フィボナッチ数列
-  en: Fibonacci Sequence
+  ja: 入出庫と在庫
+  en: Tracking Inventory
 statement:
   ja: |
-    Fibonacci: F(0) = 0, F(1) = 1, F(n+2) = F(n) + F(n+1)
-    F(0)からF(10)まで出力してください。
+    倉庫にある品物の初期在庫は0個です。
+    input.txtの各行には、入出庫の時刻と在庫の増減が、半角スペース1個で区切られています。
+    正の数は入庫、負の数は出庫を表します。記録は時刻順で、在庫が負になることはありません。
+
+    各記録を処理した直後の「時刻 在庫数」を、入力と同じ順序で1行ずつ出力してください。
+    時刻と在庫数は半角スペース1個で区切ってください。
   en: |
-    Fibonacci: F(0) = 0, F(1) = 1, F(n+2) = F(n) + F(n+1)
-    Output from F(0) to F(10).
-reference_solution: seq 9 | awk 'BEGIN{a=0;b=1;print a;print b}{c=a+b;print c;a=b;b=c}'
+    The warehouse starts with 0 items in stock.
+    Each line of input.txt contains a time and an inventory change, separated by one ASCII space.
+    Positive numbers are arrivals; negative numbers are departures. Records are chronological, and stock never becomes negative.
+
+    For each record, output "time stock" after applying that change, in input order, one record per line.
+    Separate the time and stock with one ASCII space.
+reference_solution: awk '{stock += $2; print $1, stock}' input.txt
 execution:
   stdin: ''
-  fixtures: []
+  fixtures:
+  - path: input.txt
+    content: |
+      09:00 12
+      09:10 -5
+      09:20 3
+      09:30 -10
+      10:00 8
+      10:15 -2
+      10:30 -6
+      11:00 4
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    0
-    1
-    1
-    2
-    3
-    5
-    8
-    13
-    21
-    34
-    55
+    09:00 12
+    09:10 7
+    09:20 10
+    09:30 0
+    10:00 8
+    10:15 6
+    10:30 0
+    11:00 4

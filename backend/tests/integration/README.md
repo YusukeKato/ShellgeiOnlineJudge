@@ -83,9 +83,12 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 この回帰ではschema v3の全登録問題から`reference_solution`を読み、実sandboxで実行します。
 runnerとjudgeには起動時検証済みの同じ不変problem repositoryを注入し、fixture、
 期待出力、正解画像がrequestごとのfile再読込なしで利用される経路を検証します。
-legacy `yaml_data/`とのsemantic一致はnon-Docker testで別途検証します。
+legacy `yaml_data/`とのsemantic一致と意図した改訂の範囲は、
+[問題データ仕様](../../../problems/README.md)に従いnon-Docker testで別途検証します。
 `test_reservation_problem.py`は未受付者を求める問題の参照解答と2つの別解を実行し、
 集合差の逆転・重複の残存・部分一致による除外を不正解として区別します。
+`test_revised_standard_solutions.py`は改訂した通常問題3・5〜10の参照解答・別解と、
+累積の欠落、丸め違い、改行の全削除、探索範囲の不足、記録や空白の破壊、置換漏れ等の誤答を区別します。
 
 ```sh
 SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_FULL_REGRESSION=1 \

@@ -2,15 +2,19 @@ schema_version: 3
 id: STANDARD-00000003
 category: STANDARD
 title:
-  ja: 改行テスト
-  en: Newline Test
+  ja: 連番の生成
+  en: Generating a Sequence
 statement:
   ja: |
-    1から10までの数字を改行区切りで出力してください。
-    ex: seq 10
+    1から10までの整数を、小さい順に1行に1個ずつ出力してください。
+
+    これは連番を生成する基礎問題です。
+    ヒント：seqコマンドで数の列を生成できます。
   en: |
-    Output numbers from 1 to 10, separated by newlines.
-    ex: seq 10
+    Output the integers from 1 through 10 in ascending order, one per line.
+
+    This is an introductory exercise in generating sequences.
+    Hint: the seq command can generate a sequence of numbers.
 reference_solution: seq 10
 execution:
   stdin: ''

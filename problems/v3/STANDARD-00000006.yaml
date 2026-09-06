@@ -3,15 +3,21 @@ id: STANDARD-00000006
 category: STANDARD
 title:
   ja: 円周率10桁
-  en: Pi to 10 Digits
+  en: Pi to 10 Decimal Places
 statement:
   ja: |
-    円周率を小数点以下10桁まで求めてください。
-    11桁目以降は切り捨ててください。
+    円周率を小数点以下10桁まで、1行で出力してください。
+    小数点以下11桁目以降は切り捨ててください。
+
+    ヒント：bc -lでは、a(1)が1の逆正接を表し、4*a(1)で円周率を計算できます。
+    scaleで計算の小数桁数を指定できます。途中の計算誤差を避けるため、出力より多い桁数で計算してから整形してください。
   en: |
-    Find pi to 10 decimal places.
-    Round down after the 11th digit.
-reference_solution: echo "scale=11; 4*a(1)" | bc -l | cut -c 1-12
+    Output pi to exactly 10 decimal places on one line.
+    Discard the 11th and all subsequent decimal digits.
+
+    Hint: in bc -l, a(1) is the arctangent of 1, so 4*a(1) computes pi.
+    The scale variable sets the number of decimal places used in calculation. Compute extra digits before formatting to avoid intermediate truncation errors.
+reference_solution: printf 'scale=20; 4*a(1)\n' | bc -l | cut -c 1-12
 execution:
   stdin: ''
   fixtures: []

@@ -2,22 +2,44 @@ schema_version: 3
 id: STANDARD-00000007
 category: STANDARD
 title:
-  ja: 円周率100桁
-  en: Pi to 100 Digits
+  ja: 長い計算結果の復元
+  en: Restoring Wrapped Numbers
 statement:
   ja: |
-    円周率を小数点以下100桁まで求めてください。
-    101桁目以降は切り捨ててください。
+    計算結果の数値が、表示幅に合わせて複数行に折り返されています。
+    行末の「\」は、その数値が次の行へ続くことを示します。継続記号のない行で1つの数値が終わります。
+    空行はなく、最後の数値も必ず完結しています。
+
+    継続記号と、その直後の改行だけを取り除き、元の数値を1行に1個ずつ出力してください。
+    数値の順序とすべての桁を保ってください。数値を計算し直す必要はありません。
   en: |
-    Find pi to 100 decimal places.
-    Round down after the 101th digit.
-reference_solution: echo "scale=101; 4*a(1)" | bc -l | tr -d '\n' | tr -d '\\' | cut -c 1-102
+    Long calculation results have been wrapped across lines to fit a display width.
+    A trailing "\" means the same number continues on the next line. A line without this marker ends a number.
+    There are no empty lines, and the final number is complete.
+
+    Remove only continuation markers and the newlines immediately following them. Output one restored number per line.
+    Preserve the order and every digit. You do not need to recalculate the numbers.
+reference_solution: sed ':join; /\\$/ { N; s/\\\n//; b join; }' input.txt
 execution:
   stdin: ''
-  fixtures: []
+  fixtures:
+  - path: input.txt
+    content: |
+      340282366920\
+      938463463374\
+      607431768211\
+      456
+      1024
+      2432902008\
+      176640000
+      184467440737\
+      09551616
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679
+    340282366920938463463374607431768211456
+    1024
+    2432902008176640000
+    18446744073709551616
