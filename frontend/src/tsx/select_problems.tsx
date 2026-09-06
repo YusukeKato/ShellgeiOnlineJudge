@@ -45,6 +45,11 @@ const SojSelectProblems: React.FC<SojValuesInterface> = ({
   }, [soj_url]);
 
   const selected = problemList.find((problem) => problem.id === selectedProblem);
+  const selectedCategory = selected?.category ?? selectedProblem.split("-")[0];
+  useEffect(() => {
+    // 直接URL・戻る/進む・選択変更では該当カテゴリへ合わせ、タブだけの操作は保持する。
+    setActiveTab(selectedCategory);
+  }, [selectedProblem, selectedCategory]);
   const categories = [
     { id: "STANDARD", label: text("通常", "Standard") },
     { id: "PRACTICE", label: text("練習", "Practice") },

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { LanguageProvider, useLanguage } from "./language";
 import Playground from "./tsx/playground";
+import { BrowserRouter } from "react-router-dom";
 
 const SOJ_URL = "https://soj.example";
 const DEFAULT_PROBLEM_ID = "STANDARD-00000001";
@@ -23,10 +24,12 @@ const LanguageControls = () => {
 const renderPlayground = () => {
   // 本番と同じproviderを通して問題画面を描画し、表示言語と入力・通信の関係を確認する。
   return render(
-    <LanguageProvider>
-      <LanguageControls />
-      <Playground soj_url={SOJ_URL} />
-    </LanguageProvider>,
+    <BrowserRouter>
+      <LanguageProvider>
+        <LanguageControls />
+        <Playground soj_url={SOJ_URL} />
+      </LanguageProvider>
+    </BrowserRouter>,
   );
 };
 
@@ -47,7 +50,7 @@ const selectProblem = async (title) => {
 };
 
 const problemListResponse = () => ({
-  // 通常問題2問と画像問題を返し、選択raceとカテゴリ別の画像表示を確認できるようにする。
+  // 通常問題2問・練習問題・画像問題を返し、選択raceとカテゴリ別の画像表示を確認できるようにする。
   ok: true,
   json: async () => [
     {
@@ -61,6 +64,12 @@ const problemListResponse = () => ({
       category: "STANDARD",
       title_ja: "標準問題2",
       title_en: "Standard problem 2",
+    },
+    {
+      id: "PRACTICE-00000001",
+      category: "PRACTICE",
+      title_ja: "練習問題1",
+      title_en: "Practice problem 1",
     },
     {
       id: IMAGE_PROBLEM_ID,
@@ -139,6 +148,7 @@ describe("playground default problem", () => {
 
   beforeEach(() => {
     // 問題一覧・問題詳細・投稿APIをURL別に応答させ、初期表示と送信内容を外部通信なしで確認する。
+    window.history.replaceState({}, "", "/");
     fetchMock.mockImplementation(defaultFetchResponse);
     localStorage.clear();
     Object.defineProperty(globalThis, "fetch", {
@@ -153,6 +163,166 @@ describe("playground default problem", () => {
     fetchMock.mockReset();
     localStorage.clear();
     vi.restoreAllMocks();
+  });
+
+  test.each([SECOND_PROBLEM_ID, IMAGE_PROBLEM_ID, "PRACTICE-00000001"])(
+    "opens the problem in a shared URL: %s",
+    async (id) => {
+      // 直接開いたURLから詳細を取得し、初期問題や提出を余分に要求しない。
+      window.history.replaceState({}, "", `/?problem=${id}`);
+      renderPlayground();
+      await screen.findByText(/日本語の問題文2/);
+      expect(document.querySelector("#selected-text")).toHaveTextContent(id);
+      expect(fetchMock.mock.calls.map(([url]) => url)).not.toContain(
+        `${SOJ_URL}/api/problems/${DEFAULT_PROBLEM_ID}`,
+      );
+      expect(fetchMock.mock.calls.some(([, options]) => options?.method === "POST")).toBe(false);
+      fireEvent.click(screen.getByText(/問題を選ぶ/).closest("summary"));
+      const category = id.startsWith("IMAGE")
+        ? "画像"
+        : id.startsWith("PRACTICE")
+          ? "練習"
+          : "通常";
+      expect(screen.getByRole("button", { name: category, exact: true })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+    },
+  );
+
+  test.each(["", "../../about", "<script>", "A".repeat(65)])(
+    "replaces an invalid problem URL and explains the fallback: %s",
+    async (id) => {
+      // 不正IDはAPIへ渡さず、他のqueryとfragmentを保持して標準問題へ置換する。
+      window.history.replaceState(
+        {},
+        "",
+        `/?keep=yes&problem=${encodeURIComponent(id)}#main-content`,
+      );
+      renderPlayground();
+      await screen.findByText(/日本語の問題文1/);
+      expect(screen.getByRole("alert")).toHaveTextContent(/Invalid or unknown problem/);
+      expect(new URLSearchParams(window.location.search).get("problem")).toBe(DEFAULT_PROBLEM_ID);
+      expect(new URLSearchParams(window.location.search).get("keep")).toBe("yes");
+      expect(window.location.hash).toBe("#main-content");
+      expect(fetchMock.mock.calls.filter(([url]) => url.includes("/api/problems/"))).toHaveLength(
+        1,
+      );
+    },
+  );
+
+  test.each([404, 500])(
+    "handles problem HTTP %s without hiding server failures",
+    async (status) => {
+      // 未登録IDの404だけ標準問題へ戻し、サーバ障害を問題IDの誤りと扱わない。
+      window.history.replaceState({}, "", "/?problem=STANDARD-99999999");
+      fetchMock.mockImplementation((url, options) =>
+        url.endsWith("/STANDARD-99999999")
+          ? Promise.resolve({ ok: false, status, json: async () => ({}) })
+          : defaultFetchResponse(url, options),
+      );
+      renderPlayground();
+      if (status === 404) {
+        await screen.findByText(/日本語の問題文1/);
+        expect(screen.getByRole("alert")).toHaveTextContent(/Invalid or unknown problem/);
+        expect(new URLSearchParams(window.location.search).get("problem")).toBe(DEFAULT_PROBLEM_ID);
+      } else {
+        await screen.findByText("Error: Failed to get problem");
+        expect(window.location.search).toBe("?problem=STANDARD-99999999");
+        expect(screen.queryByText(/Invalid or unknown problem/)).not.toBeInTheDocument();
+      }
+    },
+  );
+
+  test("updates shared URLs and restores selection with back and forward", async () => {
+    // 履歴移動で選択・カテゴリを復元しても入力と提出結果は保持する。
+    window.history.replaceState({}, "", `/?problem=${DEFAULT_PROBLEM_ID}`);
+    renderPlayground();
+    await screen.findByText(/日本語の問題文1/);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "printf keep" } });
+    await selectProblem("標準問題2");
+    await screen.findByText(/日本語の問題文2/);
+    expect(window.location.search).toBe(`?problem=${SECOND_PROBLEM_ID}`);
+    fireEvent.click(runButton());
+    await waitFor(() =>
+      expect(document.querySelector("#user-output-text")).toHaveTextContent("ok"),
+    );
+    act(() => window.history.back());
+    await screen.findByText(/日本語の問題文1/);
+    expect(screen.getByRole("textbox")).toHaveValue("printf keep");
+    expect(document.querySelector("#user-output-text")).toHaveTextContent("ok");
+    act(() => window.history.forward());
+    await screen.findByText(/日本語の問題文2/);
+    expect(document.querySelector("#selected-text")).toHaveTextContent(SECOND_PROBLEM_ID);
+  });
+
+  test("rejects duplicate problem parameters without adding a history entry", async () => {
+    // 複数IDの曖昧な指定は先勝ちにせず、履歴を増やさず正常なURLへ戻す。
+    window.history.replaceState(
+      {},
+      "",
+      `/?problem=${DEFAULT_PROBLEM_ID}&problem=${SECOND_PROBLEM_ID}`,
+    );
+    const entries = window.history.length;
+    renderPlayground();
+    await screen.findByText(/日本語の問題文1/);
+    expect(new URLSearchParams(window.location.search).getAll("problem")).toEqual([
+      DEFAULT_PROBLEM_ID,
+    ]);
+    expect(window.history.length).toBe(entries);
+    await selectProblem("標準問題2");
+    await screen.findByText(/日本語の問題文2/);
+    expect(screen.queryByText(/Invalid or unknown problem/)).not.toBeInTheDocument();
+  });
+
+  test("ignores a late 404 after choosing another problem", async () => {
+    // abortを無視する旧404が後から届いても、選択済み問題やURLを初期値へ戻さない。
+    const pending = deferredResponse();
+    window.history.replaceState({}, "", "/?problem=STANDARD-99999999");
+    fetchMock.mockImplementation((url, options) =>
+      url.endsWith("/STANDARD-99999999") ? pending.promise : defaultFetchResponse(url, options),
+    );
+    renderPlayground();
+    await selectProblem("標準問題2");
+    await screen.findByText(/日本語の問題文2/);
+    await act(async () => pending.resolve({ ok: false, status: 404, json: async () => ({}) }));
+    expect(window.location.search).toBe(`?problem=${SECOND_PROBLEM_ID}`);
+    expect(screen.queryByText(/Invalid or unknown problem/)).not.toBeInTheDocument();
+  });
+
+  test("restores image category on history navigation during submission", async () => {
+    // 履歴移動でもカテゴリと問題が一致し、実行中の提出は送信時の問題に紐づいたまま続く。
+    const pending = deferredResponse();
+    let signal;
+    fetchMock.mockImplementation((url, options) => {
+      if (options?.method === "POST") {
+        signal = options.signal;
+        return pending.promise;
+      }
+      return defaultFetchResponse(url, options);
+    });
+    window.history.replaceState({}, "", `/?problem=${IMAGE_PROBLEM_ID}`);
+    renderPlayground();
+    await screen.findByText(/日本語の問題文2/);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "printf running" } });
+    fireEvent.click(runButton());
+    fireEvent.click(screen.getByText(/問題を選ぶ/).closest("summary"));
+    fireEvent.click(screen.getByRole("button", { name: "通常", exact: true }));
+    await selectProblem("標準問題1");
+    await screen.findByText(/日本語の問題文1/);
+    act(() => window.history.back());
+    await screen.findByText(/日本語の問題文2/);
+    fireEvent.click(screen.getByText(/問題を選ぶ/).closest("summary"));
+    expect(screen.getByRole("button", { name: "画像", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(signal.aborted).toBe(false);
+    expect(fetchMock.mock.calls.filter(([, options]) => options?.method === "POST")).toHaveLength(
+      1,
+    );
+    await act(async () => pending.resolve(submissionResponse("image result", 2)));
+    expect(document.querySelector("#user-output-text")).toHaveTextContent("image result");
   });
 
   test("selects and loads standard problem 1 on the initial render", async () => {
