@@ -98,6 +98,13 @@ source・frontend・DB・sandboxにはこの例外を適用しません。
 明示されたUnix socketとdaemonの`SecurityOptions`を確認してからbuild・scan・testを行います。
 確認できない場合は失敗し、host上のrootful daemonへfallbackしません。
 
+Dockerの固定versionは[Supply Chain CI](../.github/workflows/supply_chain.yaml)の
+`Set up isolated rootless Docker`を正本とします。更新時はActionが参照する
+[公式リリース一覧](https://github.com/docker/actions-toolkit/blob/main/.github/docker-releases.json)に
+対象の安定版が登録されていることと、[Linux x86_64のstable配布先](https://download.docker.com/linux/static/stable/x86_64/)から
+同じversionの`docker`・`docker-rootless-extras`両archiveを取得できることを確認してください。
+RC版の存在から正式版の公開を推測せず、`latest`ではなく確認した安定版の番号を指定します。
+
 DBを含む本番5 imageは当該checkoutからbuildし、scanしたimmutable image IDでarchiveへ保存します。
 派生DBのbuild仕様は[本番運用](./PRODUCTION.md#postgresql派生image)を参照してください。
 sandboxも`deploy/sandbox/Dockerfile`からbuildし、同じimmutable IDでscan・archive・
