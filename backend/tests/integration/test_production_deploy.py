@@ -1,4 +1,4 @@
-"""一時rootless Compose環境で、配備scriptのDB backup・migration・HTTPS確認を通す。"""
+"""一時rootless Compose環境で、配備scriptのDB保持・migration・HTTPS確認を通す。"""
 
 import json
 import os
@@ -99,8 +99,6 @@ def test_production_update_preserves_db_and_checks_public_execution(
         state.mkdir(mode=0o700)
         incoming = state / "incoming-1-1"
         incoming.mkdir(mode=0o700)
-        backups = tmp_path / "backups"
-        backups.mkdir(mode=0o700)
         sha = "a" * 40
         images = {
             name: stack.service(name).image.id
@@ -133,7 +131,7 @@ def test_production_update_preserves_db_and_checks_public_execution(
         for key, value in stack.environment.items():
             monkeypatch.setenv(key, value)
         monkeypatch.setenv("SSL_CERT_FILE", str(tmp_path / "cert.pem"))
-        task = production.Deployment(tmp_path, incoming, backups, sha)
+        task = production.Deployment(tmp_path, incoming, sha)
         if migration_failure:
             with pytest.raises(subprocess.CalledProcessError):
                 task.execute()
@@ -151,25 +149,9 @@ def test_production_update_preserves_db_and_checks_public_execution(
                 > before["submission_id"]
             )
         assert stack.service("db").attrs["Mounts"][0]["Name"] == before_volume
-        backup = backups / incoming.name
-        with (backup / "database.dump").open("rb") as source:
-            # PostgreSQL自身がdumpを読めることも確認し、空fileの存在確認だけにしない。
-            result = subprocess.run(
-                [
-                    "docker",
-                    "exec",
-                    "-i",
-                    stack.service("db").id,
-                    "pg_restore",
-                    "--list",
-                ],
-                stdin=source,
-                capture_output=True,
-                check=True,
-                timeout=30,
-            )
-            assert b"TABLE DATA" in result.stdout
-        assert (backup / "roles.sql").stat().st_size > 0
+        assert not list(state.rglob("database.dump"))
+        assert not list(state.rglob("roles.sql"))
+        assert not list(state.rglob(".env"))
     finally:
         if stack is not None:
             stack.close()

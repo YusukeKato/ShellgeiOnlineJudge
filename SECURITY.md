@@ -620,7 +620,7 @@ Composeの`soj-db:local`はローカル生成物の名前であり、第三者re
 CIにはsecret・依存・image scan、SBOM生成と、mainの検査成功後の署名付きprovenance登録を
 構成しています。停止条件、権限境界、artifact検証と保証範囲は[CI文書](./docs/CI.md)を
 正本とします。本番promotionは[SSH自動更新](./docs/AUTODEPLOY.md)の設定後に有効になります。
-mainのCI成功とarchiveの署名を検証し、DB backup後に同じimmutable imageを配備します。
+mainのCI成功とarchiveの署名を検証し、同じimmutable imageを配備します。DBバックアップを省略する運用方針は上記の自動更新手順を参照してください。
 SSM接続用のAWSロールはGitHub OIDCで取得し、専用SSH鍵で本番ユーザーへ認証します。
 SSM経由のSSH内容はSession Managerのセッションログには記録されません。
 専用SSH鍵は本番ユーザーの操作権限を持つため、production Environmentとmainのreview保護が

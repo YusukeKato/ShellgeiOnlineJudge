@@ -1,4 +1,4 @@
-"""CIの配備条件と、本番更新時の停止・backup・復旧境界を検証する。"""
+"""CIの配備条件と、本番更新時の停止・migration・復旧境界を検証する。"""
 
 import copy
 import hashlib
@@ -158,7 +158,6 @@ def candidate(directory: Path) -> dict:
         ("DEPLOY_USER", "-oProxyCommand=anything"),
         ("DEPLOY_PORT", "22 -o StrictHostKeyChecking=no"),
         ("DEPLOY_REPOSITORY", "/repo/../elsewhere"),
-        ("DEPLOY_BACKUP_ROOT", "/backups/$(anything)"),
     ],
 )
 def test_ssh_configuration_cannot_inject_shell_or_options(
@@ -173,7 +172,6 @@ def test_ssh_configuration_cannot_inject_shell_or_options(
         "DEPLOY_USER": "soj",
         "DEPLOY_PORT": "22",
         "DEPLOY_REPOSITORY": "/srv/judge",
-        "DEPLOY_BACKUP_ROOT": "/srv/backups",
     }.items():
         monkeypatch.setenv(key, default)
     monkeypatch.setenv(variable, value)
@@ -197,7 +195,6 @@ def test_transfer_uses_ssm_for_ssh_and_scp_and_removes_keys(
         "DEPLOY_USER": "soj",
         "DEPLOY_PORT": "22",
         "DEPLOY_REPOSITORY": "/srv/judge",
-        "DEPLOY_BACKUP_ROOT": "/srv/backups",
         "GITHUB_RUN_ID": "123",
         "GITHUB_RUN_ATTEMPT": "1",
         "DEPLOY_SSH_KEY": "test-private-key",
@@ -263,13 +260,11 @@ def test_candidate_corruption_is_rejected_before_docker(
 def deployment(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> tuple[host.Deployment, list[str], dict]:
-    """外部processだけを置換し、実際の更新分岐・記録file・backup順序を試す。"""
+    """外部processだけを置換し、実際の更新分岐・記録file・migration順序を試す。"""
     state = tmp_path / ".soj-deploy"
     state.mkdir()
     incoming = state / "incoming-123-1"
     incoming.mkdir()
-    backups = tmp_path / "backups"
-    backups.mkdir()
     (tmp_path / ".env").write_text("private fixture configuration")
     record = candidate(incoming)
     events: list[str] = []
@@ -374,14 +369,6 @@ def deployment(
             return ""
         raise AssertionError(args)
 
-    def backup(args: list[str], **kwargs: Any) -> None:
-        """backup完了前にmigrationへ進まないことと、保存障害を確認する。"""
-        assert args[:2] == ["docker", "exec"]
-        events.append("backup")
-        if controls["fail"] == "backup":
-            raise subprocess.CalledProcessError(1, args)
-        kwargs["stdout"].write(b"fixture database backup")
-
     def smoke(url: str) -> None:
         """公開経路の失敗を、DB変更後の復旧境界として再現する。"""
         events.append("smoke")
@@ -389,25 +376,22 @@ def deployment(
             raise RuntimeError("smoke failed")
 
     monkeypatch.setattr(host, "run", run)
-    monkeypatch.setattr(host.subprocess, "run", backup)
     monkeypatch.setattr(host, "smoke", smoke)
     monkeypatch.setattr(host.time, "sleep", lambda _: None)
     monkeypatch.setattr(host.os, "getuid", lambda: 1000)
-    return host.Deployment(tmp_path, incoming, backups, SHA), events, controls
+    return host.Deployment(tmp_path, incoming, SHA), events, controls
 
 
-def test_deployment_promotes_exact_images_after_backup(deployment: tuple) -> None:
-    # backup両方→migration→起動→実行/保存確認を経て成功し、通常Composeも同じIDを使う。
+def test_deployment_promotes_exact_images_without_backup(deployment: tuple) -> None:
+    # backup先なしで停止→migration→起動→実行/保存確認が成功し、秘密設定を複製しない。
     task, events, _ = deployment
     task.execute()
     assert (
         events.index("stop")
-        < events.index("backup")
         < events.index("migration")
         < events.index("up services")
         < events.index("smoke")
     )
-    assert events.count("backup") == 2
     current = json.loads((task.state / "current.json").read_text())
     override = json.loads((task.repository / "docker-compose.override.yml").read_text())
     assert override["services"]["migrate"]["image"] == current["image_ids"]["backend"]
@@ -417,19 +401,16 @@ def test_deployment_promotes_exact_images_after_backup(deployment: tuple) -> Non
     )
     assert not (task.state / "FAILED").exists()
     assert not (task.incoming / "runtime.tar").exists()
-    backup = task.backups / task.incoming.name
-    assert (backup / "database.dump").is_file() and (backup / "roles.sql").is_file()
-    assert (backup / ".env").read_text() == (task.repository / ".env").read_text()
-    assert (
-        json.loads((backup / "image-ids.json").read_text())["backend"] == "old-backend"
-    )
+    assert list(task.repository.rglob(".env")) == [task.repository / ".env"]
+    assert not list(task.repository.rglob("database.dump"))
+    assert not list(task.repository.rglob("roles.sql"))
 
 
-@pytest.mark.parametrize("failure", ["backup", "migration", "smoke"])
+@pytest.mark.parametrize("failure", ["migration", "smoke"])
 def test_failure_stops_acceptance_and_blocks_automatic_retry(
     deployment: tuple, failure: str
 ) -> None:
-    # backup失敗ならmigrationなし。migration後の失敗でも自動rollbackせず停止記録を残す。
+    # migration後の失敗でもDBを削除・自動rollbackせず停止記録を残す。
     task, events, controls = deployment
     controls["fail"] = failure
     with pytest.raises((RuntimeError, subprocess.CalledProcessError)):
@@ -437,8 +418,6 @@ def test_failure_stops_acceptance_and_blocks_automatic_retry(
     assert events[-1] == "stop"
     assert (task.state / "FAILED").is_file()
     assert not (task.state / "current.json").exists()
-    if failure == "backup":
-        assert "migration" not in events
     if failure != "smoke":
         assert "up services" not in events
     previous = copy.copy(events)

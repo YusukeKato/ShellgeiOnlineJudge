@@ -8,7 +8,7 @@ Docker統合テストは実際のsandboxコンテナを生成・削除するた�
 本番ホストや共有CI runnerでは実行しないでください。
 
 `test_production_deploy.py`は下記のCompose E2Eと同じimage・有効化変数を使い、
-専用DBで自動配備scriptのbackup、migration、HTTPS実行・保存確認、失敗時の受付停止を検査します。
+専用DBで自動配備scriptのDB保持、migration、HTTPS実行・保存確認、失敗時の受付停止を検査します。
 DB volumeと更新前のデータを保持し、PostgreSQLでdumpを読み取れることも確認します。
 Git取得とarchive loadは既存のlocal imageで代替し、SSH・systemd・GitHub署名検証は実行しません。
 

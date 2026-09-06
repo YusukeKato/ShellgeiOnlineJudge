@@ -13,7 +13,7 @@
 | Supply Chain CI / source | workflow検証、Git履歴と作業treeのsecret scan、lock fileのSBOM・脆弱性scan、scanner fixture | push、PR、週次、手動 |
 | Supply Chain CI / runtime | sandbox・DBを含む本番5 imageのbuild・SBOM・scan、Compose全問題回帰・browser・image境界・DB更新互換test | push、PR、週次、手動 |
 | Supply Chain CI / provenance | 同じrunで検査を通過した生成物の署名付きprovenance登録 | mainへのpushでsource・runtime両jobが成功した場合だけ |
-| Production deploy | 同じcommitの全CI成功待ち、署名検証、SSH配備・DB backup/migration・起動確認 | main push、Repository variableで有効化した場合だけ |
+| Production deploy | 同じcommitの全CI成功待ち、署名検証、SSH配備・DB migration・起動確認 | main push、Repository variableで有効化した場合だけ |
 
 全workflowは`contents: read`を既定とし、checkoutはcredentialを保持しません。
 Actionは公式repositoryのfull commit SHAに固定し、runner OS・job timeout・concurrencyを

@@ -11,7 +11,6 @@ import json
 import os
 from pathlib import Path
 import re
-import shutil
 import signal
 import subprocess
 import sys
@@ -150,12 +149,11 @@ def smoke(url: str) -> None:
 class Deployment:
     """lock取得済みの専用ホストで、停止境界と復旧記録を管理する。"""
 
-    def __init__(self, repository: Path, incoming: Path, backups: Path, sha: str):
+    def __init__(self, repository: Path, incoming: Path, sha: str):
         """設定はhost側の.envを使用し、GitHubへ送らない。"""
-        self.repository, self.incoming, self.backups, self.sha = (
+        self.repository, self.incoming, self.sha = (
             repository,
             incoming,
-            backups,
             sha,
         )
         self.state = repository / ".soj-deploy"
@@ -173,7 +171,7 @@ class Deployment:
         print(f"production deployment: {name}", flush=True)
 
     def execute(self) -> None:
-        """検証→backup→migration→起動の順に更新し、停止後の失敗は後続更新を遮断する。"""
+        """検証→停止→migration→起動の順に更新し、停止後の失敗は後続更新を遮断する。"""
         try:
             self.stage("preflight")
             self.update()
@@ -255,27 +253,6 @@ class Deployment:
         if run("git", "rev-parse", "FETCH_HEAD") != self.sha:
             self.stage("superseded after image transfer; no service changes")
             return
-        backup = self.backups / self.incoming.name
-        backup.mkdir(mode=0o700)  # 再試行でも既存backupを上書きしない。
-        (backup / "previous-commit").write_text(previous_sha + "\n")
-        (backup / "compose.json").write_text(json.dumps(old_config))
-        old_images = {
-            name: json.loads(
-                run(
-                    "docker",
-                    "inspect",
-                    run(*previous_command, "ps", "-q", name),
-                )
-            )[0]["Image"]
-            for name in ("db", "runner", "backend", "frontend")
-        }
-        old_images["sandbox"] = old_config["services"]["runner"]["environment"][
-            "SANDBOX_IMAGE_ID"
-        ]
-        (backup / "image-ids.json").write_text(json.dumps(old_images))
-        shutil.copyfile(self.repository / ".env", backup / ".env")
-        if override.exists():
-            shutil.copyfile(override, backup / "docker-compose.override.yml")
         run("git", "merge", "--ff-only", self.sha)
         candidate = self.state / "candidate.json"
         candidate.write_text(json.dumps(override_for(record)))
@@ -313,28 +290,12 @@ class Deployment:
         ):
             raise DeploymentError("SERVER_URL must be a public HTTPS origin")
         # 起動確認は生成物の取り違えも検出する。新設定は運用時の通常Composeにも残す。
-        self.stage("stop and backup")
+        self.stage("stop services")
         self.stopped = True
         (self.state / "FAILED").write_text(
             json.dumps({"commit": self.sha, "phase": "in progress"})
         )
         self.compose("stop", "frontend", "backend")
-        for name, command in (
-            ("database.dump", 'exec pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc'),
-            ("roles.sql", 'exec pg_dumpall -U "$POSTGRES_USER" --globals-only'),
-        ):
-            with (backup / name).open("xb") as output:
-                subprocess.run(
-                    ["docker", "exec", db_id, "sh", "-c", command],
-                    stdout=output,
-                    stderr=subprocess.PIPE,
-                    check=True,
-                    timeout=300,
-                )
-                output.flush()
-                os.fsync(output.fileno())
-            if (backup / name).stat().st_size == 0:
-                raise DeploymentError("empty database backup")
         candidate.replace(override)
         self.command[-1] = str(override)
         self.stage("database migration")
@@ -374,7 +335,7 @@ class Deployment:
         (self.state / "FAILED").unlink()
         self.stopped = False
         self.stage("success")
-        # 自分の今回のarchiveだけを削除する。旧imageとbackupは運用者が保存期間を管理する。
+        # 自分の今回のarchiveだけを削除する。旧imageは運用者が保存期間を管理する。
         (self.incoming / "runtime.tar").unlink()
 
     def wait_database(self) -> None:
@@ -416,8 +377,8 @@ def main() -> None:
     os.umask(0o077)
     signal.signal(signal.SIGTERM, terminate)
     try:
-        repository, incoming, backups = (Path(value) for value in sys.argv[1:4])
-        for directory in (repository / ".soj-deploy", incoming, backups):
+        repository, incoming = (Path(value) for value in sys.argv[1:3])
+        for directory in (repository / ".soj-deploy", incoming):
             private_directory(directory)
         if (
             repository.resolve() != repository
@@ -427,12 +388,12 @@ def main() -> None:
         os.chdir(repository)
         with (repository / ".soj-deploy/lock").open("a") as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            Deployment(repository, incoming, backups, sys.argv[4]).execute()
+            Deployment(repository, incoming, sys.argv[3]).execute()
     except DeploymentError as error:
         raise SystemExit(f"Production deployment refused: {error}") from None
     except BaseException:
         raise SystemExit(
-            "Production deployment failed; inspect phase and private backup on the host."
+            "Production deployment failed; inspect phase and failure record on the host."
         ) from None
 
 

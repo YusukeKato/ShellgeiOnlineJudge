@@ -124,10 +124,7 @@ def transfer(reports: Path) -> None:
     host, user = os.environ["DEPLOY_INSTANCE_ID"], os.environ["DEPLOY_USER"]
     region = os.environ["DEPLOY_AWS_REGION"]
     port = os.environ["DEPLOY_PORT"]
-    repository, backups = (
-        os.environ["DEPLOY_REPOSITORY"],
-        os.environ["DEPLOY_BACKUP_ROOT"],
-    )
+    repository = os.environ["DEPLOY_REPOSITORY"]
     if not re.fullmatch(r"i-(?:[0-9a-f]{8}|[0-9a-f]{17})", host):
         raise ValueError("DEPLOY_INSTANCE_ID must be an EC2 instance ID")
     if not re.fullmatch(r"[a-z]{2}(?:-[a-z]+)+-[0-9]+", region):
@@ -138,11 +135,13 @@ def transfer(reports: Path) -> None:
         or not 1 <= int(port) <= 65535
     ):
         raise ValueError("invalid SSH user or port")
-    for path in (repository, backups):
-        if not re.fullmatch(r"/[A-Za-z0-9_./-]+", path) or ".." in Path(path).parts:
-            raise ValueError(
-                "deployment paths must be absolute, without spaces or traversal"
-            )
+    if (
+        not re.fullmatch(r"/[A-Za-z0-9_./-]+", repository)
+        or ".." in Path(repository).parts
+    ):
+        raise ValueError(
+            "deployment paths must be absolute, without spaces or traversal"
+        )
     run = os.environ["GITHUB_RUN_ID"] + "-" + os.environ["GITHUB_RUN_ATTEMPT"]
     if not re.fullmatch(r"[0-9]+-[0-9]+", run):
         raise ValueError("invalid run identity")
@@ -231,7 +230,6 @@ def transfer(reports: Path) -> None:
             f"{incoming}/production.py",
             repository,
             incoming,
-            backups,
             sha,
         ]
         # SSHの非対話loginでもuser systemdのbusを見つけられるようにする。

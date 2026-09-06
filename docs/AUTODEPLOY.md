@@ -1,7 +1,9 @@
 # main pushからの本番自動更新
 
 既存の本番サーバへGitHub ActionsからSSM経由でSSH接続し、CIで検証した5 imageを配備します。
-DB migrationとsandbox更新を含み、バックアップ開始から起動確認まで一時停止します。
+DB migrationとsandbox更新を含み、サービス停止から起動確認まで一時停止します。
+この運用ではDBの消失を許容し、DB・role・設定fileの自動バックアップは作りません。
+既存DB volumeは通常の更新で維持しますが、障害時に更新前のデータへ戻せる保証はありません。
 初回構築は[本番デプロイ手順](./PRODUCTION.md)、CIの検査内容は[CI文書](./CI.md)を参照してください。
 
 ## 1. 本番サーバを準備する
@@ -17,13 +19,12 @@ DB migrationとsandbox更新を含み、バックアップ開始から起動確�
 2. 自動更新機能を含むcommitを本番checkoutにも取得する。作業treeをcleanにし、
    `.env`、TLS、DB資格情報、`SERVER_URL`が有効な状態にする。
    mainでもdetached HEADでも使用できるが、対象mainへfast-forwardできる必要がある。
-3. リポジトリ内に更新管理directoryを作る。バックアップ先は**暗号化された保存領域**に用意する。
-   下記pathは実環境に置き換える。両directoryは専用ユーザー所有・mode 700にする。
+3. リポジトリ内に更新管理directoryを作る。
+   下記pathは実環境に置き換える。専用ユーザー所有・mode 700にする。
 
 ```sh
 cd /home/soj/ShellgeiOnlineJudge
 mkdir -m 700 .soj-deploy
-mkdir -m 700 /your/encrypted/storage/soj-backups
 ```
 
 4. Actions専用のSSH鍵を管理端末で作り、公開鍵を本番ユーザーの`~/.ssh/authorized_keys`へ登録する。
@@ -80,10 +81,11 @@ AWSアクセスキーをGitHubへ登録する必要はありません。
 | `DEPLOY_PORT` | SSH port。省略時22 |
 | `DEPLOY_USER` | rootless Dockerを所有する専用ユーザー |
 | `DEPLOY_REPOSITORY` | 本番checkoutの絶対path。例 `/home/soj/ShellgeiOnlineJudge` |
-| `DEPLOY_BACKUP_ROOT` | 上で作ったバックアップ先の絶対path |
 
 pathには空白や`..`を含めず、symlinkを経由しない実pathを指定します。
 DB URL、`.env`、TLS秘密鍵はGitHubへ登録・転送しません。
+以前の`DEPLOY_BACKUP_ROOT`は使用しません。GitHubの変数は削除して構いません。
+既存のバックアップdirectoryや保存済みfileを自動削除することはありません。
 
 **Repository variables:**
 
@@ -108,8 +110,7 @@ backendの`SERVER_URL`は本番`.env`に設定した公開HTTPS originを使用�
 3. OIDCでAWSの一時資格情報を取得し、SSM経由のSSHで転送し、本番のuser systemd serviceとして更新する。
 4. rootless、clean checkout、既存DB volume、image ID・version・architectureを検証する。
    PostgreSQLのmajor versionまたはPGDATA変更は拒否する。
-5. checkoutをfast-forwardし、frontend/backendを停止。旧commit・設定・image ID、
-   `pg_dump -Fc`、role情報を専用directoryへ保存する。
+5. checkoutをfast-forwardし、frontend/backendを停止する。
 6. DB imageを更新、接続待ち、migration、残りのserviceを起動する。
 7. 公開HTTPS APIで`printf smoke-ok`の実行とDB保存を確認する。
 
@@ -144,31 +145,26 @@ cat .soj-deploy/FAILED
 後続の自動更新を拒否します。Docker daemon自体の障害時には、実際に受付が停止したかも確認します。
 disk障害で記録できない場合も停止を試みますが、記録fileの有無だけでは更新の成否を判定しないでください。
 
-バックアップは`DEPLOY_BACKUP_ROOT/incoming-<run ID>-<attempt>/`にあります。
-`database.dump`、`roles.sql`、`.env`、`compose.json`、`image-ids.json`、`previous-commit`と、
-存在した場合は旧overrideを保存します。`compose.json`は解決済み設定の調査用であり、
-秘密値を含むためActionsログやissueへ貼らないでください。
-backup途中の障害では不完全なfileが残るため、fileの存在だけで復元可能と判断しません。
-
 DB schemaとrole変更は途中まで反映され得るため、旧imageへ自動で戻しません。
-[本番の障害対応](./PRODUCTION.md#失敗した場合)に従い、DBとroleの状態、旧image ID、
-旧checkoutとoverrideを揃えて復旧します。初回自動更新前は旧overrideがないため、
-`image-ids.json`も使って復旧対象を確認してください。
+まずjournalと`.soj-deploy/FAILED`で失敗段階を確認し、設定やmigrationの原因を修正します。
+データの復元用バックアップはありません。既存DBで復旧できない場合は、停止状態で
+対象DB volumeを特定し、データ消失を伴うDB再作成を手動で行います。
+自動更新scriptはDB volumeの削除・初期化を行いません。
 復旧と公開経路テストが成功し、実行中unitがないことを確認してから`FAILED`を作業記録へ移し、
 自動更新を再度有効化します。記録だけを消してmigrationを繰り返さないでください。
 
-成功した回の転送archiveだけを自動削除します。失敗時のarchive、旧image、DBバックアップは
+成功した回の転送archiveだけを自動削除します。失敗時のarchiveと旧imageは
 自動削除しないため、復旧に必要な世代と容量を確認して運用者が保存期間を管理してください。
-本番に新旧image、転送archive、DBバックアップを同時に保持できる空き容量が必要です。
+本番に新旧imageと転送archiveを同時に保持できる空き容量が必要です。
 
 ## 検証と保証範囲
 
 ローカルでは`pytest backend/tests/test_deployment.py backend/tests/test_ci_policy.py`と
 actionlintで配備条件・停止順序・失敗分岐・権限を検査します。
 `backend/tests/integration/test_production_deploy.py`は[Compose E2Eの設定](../backend/tests/integration/README.md)で
-実DBのbackup・migration・TLS経由の実行/保存と、migration失敗時の受付停止を確認します。
+実DBの保持・migration・TLS経由の実行/保存と、migration失敗時の受付停止を確認します。
 Git取得とarchive loadは省略し、指定された検証用local imageを使います。
-実際のGitHub attestation、OIDC・SSM・SSH経路、systemd、バックアップからの復旧は、導入時に検証用サーバで
+実際のGitHub attestation、OIDC・SSM・SSH経路、systemdは、導入時に検証用サーバで
 確認してください。ローカルのprocess代替テストは実サーバでの受入検証を代替しません。
 
 公式資料: [attestationの検証条件](https://cli.github.com/manual/gh_attestation_verify)、
