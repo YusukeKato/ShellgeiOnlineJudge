@@ -124,6 +124,15 @@ const AboutPage: React.FC<AboutPageProps> = ({
       {/* お問い合わせ / CONTACT */}
       <div className="soj-main">
         <h2>お問い合わせ / CONTACT</h2>
+        <p>
+          <a
+            href="https://docs.google.com/forms/d/e/1FAIpQLSe8XIueiVyEXZBlVzwTYzqF241MLRkYK17PCtKy8Y94Fs7z1A/viewform?usp=dialog"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            お問い合わせフォーム / Contact form（Googleフォーム・別タブで開きます）
+          </a>
+        </p>
         <h3>SNS</h3>
         <ul>
           <li>
