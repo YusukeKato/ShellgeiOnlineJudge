@@ -107,7 +107,8 @@ jobs:
           poetry run python -c 'import subprocess; from ci.supply_chain import inspect_python_runtime; image = subprocess.check_output(["docker", "image", "inspect", "soj-backend:ci", "--format", "{{.Id}}"], text=True).strip(); print(inspect_python_runtime(image))'
           docker build --file backend/Dockerfile --target runner --tag soj-runner:ci .
           # 検証・配備するfrontend imageに、日本時間のbuild日を埋め込む。
-          export VITE_UPDATE_DATE="$(TZ=Asia/Tokyo date +%F)"
+          VITE_UPDATE_DATE="$(TZ=Asia/Tokyo date +%F)"
+          export VITE_UPDATE_DATE
           docker build --file frontend/Dockerfile --build-arg VITE_SOJ_URL= \
             --build-arg VITE_UPDATE_DATE --build-arg VITE_X_URL --build-arg VITE_GITHUB_REPO_URL \
             --build-arg VITE_GITHUB_AUTHOR_URL --build-arg VITE_BLOG_URL --build-arg VITE_MIXI2_URL \
