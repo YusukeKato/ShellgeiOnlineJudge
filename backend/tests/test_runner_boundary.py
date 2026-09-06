@@ -71,7 +71,7 @@ def _runner_response_bytes(
     problem_revision: str = TEST_PROBLEM_REVISION,
     request_id: str = TEST_REQUEST_ID,
 ) -> bytes:
-    # 任意stdout・revision・request IDをprotocol version 3の正常response JSONへ変換する。
+    # 任意stdout・revision・request IDを現行protocolの正常response JSONへ変換する。
     return (
         RunnerExecutionResponse(
             protocol_version=RUNNER_PROTOCOL_VERSION,
@@ -186,7 +186,7 @@ def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
     )
 
     assert result.model_dump() == {
-        "protocol_version": 3,
+        "protocol_version": RUNNER_PROTOCOL_VERSION,
         "request_id": TEST_REQUEST_ID,
         "problem_revision": TEST_PROBLEM_REVISION,
         "result": {
@@ -199,6 +199,7 @@ def test_runner_accepts_only_registered_problem_and_fixed_execution_fields(
             "duration_ms": 1,
             "artifact": None,
             "error": None,
+            "display_artifact": None,
         },
     }
     assert calls == [("printf output", "STANDARD-00000001")]
@@ -267,7 +268,7 @@ def test_runner_returns_schema_path_and_media_type_with_image_artifact(
     )
 
     assert result.model_dump() == {
-        "protocol_version": 3,
+        "protocol_version": RUNNER_PROTOCOL_VERSION,
         "request_id": TEST_REQUEST_ID,
         "problem_revision": TEST_PROBLEM_REVISION,
         "result": {
@@ -284,6 +285,7 @@ def test_runner_returns_schema_path_and_media_type_with_image_artifact(
                 "data": "encoded-image",
             },
             "error": None,
+            "display_artifact": None,
         },
     }
 
@@ -540,7 +542,7 @@ def test_backend_runner_client_sends_only_the_fixed_schema(
     assert json.loads(request.data) == {
         "shellgei": "printf ok",
         "problem_id": "STANDARD-00000001",
-        "protocol_version": 3,
+        "protocol_version": RUNNER_PROTOCOL_VERSION,
         "request_id": TEST_REQUEST_ID,
         "problem_revision": TEST_PROBLEM_REVISION,
     }

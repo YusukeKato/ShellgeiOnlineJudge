@@ -158,18 +158,28 @@ runner内部では正常完了、timeout、出力上限、Docker等の基盤erro
 stdout、stderr、終了code、timeout、切り詰め、所要時間を別fieldでbackendへ渡します。
 既存public APIの表示時だけstdoutとstderrを結合し、timeoutや切り詰めのsuffixを付けます。
 
-出力画像はproblem schemaのartifact pathとbyte上限を使用し、上限値は最大
-750,000 bytesです。text問題では画像を読み取らず、画像問題でも指定pathだけを
-read-only root filesystem上の`/usr/bin/head`で読み取ります。同じdirectoryに
-JPEG/GIFが複数あっても探索や暗黙選択を行いません。
+判定用画像はproblem schemaのartifact pathとbyte上限を使用し、最大750,000 bytesです。
+画像問題では指定pathだけをread-only root filesystem上の`/usr/bin/head`で読み取ります。
+text問題は判定用画像を回収しません。
 
-runnerは設定上限+1 bytesのbufferへbinaryのまま読み込み、上限を超えた画像を破棄します。
-runner protocolへ変換するときだけBase64 encodeします。
-backendはBase64、schemaのpath・MIME、JPEG/GIF形式を検証し、decode後の寸法、
-frame数、RGBA画素を正解画像と比較します。decodeする総画素数は4,000,000以下です。
+これとは別に、全問題で表示用GIF候補を固定path `/media/output.gif`から回収します。
+通常の出力先`media/output.gif`は`/work/media`の初期symlinkを通してこのpathへ書き込みます。
+回収は書き換え可能な`/work/media`を辿らず、`/usr/bin/dd`の`nofollow,nonblock,count_bytes`
+指定で最終pathのsymlinkを拒否し、FIFOでもwriterを待ちません。探索や任意pathの指定は行いません。
+判定画像を優先し、2画像のBase64合計が従来の1,000,000文字以内となる残り枠だけをGIFに割り当てます。
+encode前の合計も750,000 bytes以下です。paddingのため数bytes余る場合があります。
+
+runnerは各読取上限+1 bytesのbufferへbinaryのまま読み込み、超過した画像を破棄します。
+画像回収も実行watchdogの期限内で行い、timeout・出力超過・基盤error時は両画像を破棄します。
+runner protocolへ変換するときだけBase64 encodeします。backendは判定画像のBase64、
+schemaのpath・MIME、JPEG/GIF形式を検証し、寸法・frame数・RGBA画素を正解画像と比較します。
+表示用GIFにも形式と全frameのdecode検証を適用します。1画像あたりの総画素数は
+全frame合計4,000,000以下です。decoderにも同じ画素上限を設定し、後続frameでcanvasが
+拡大するGIFを拒否します。GIFの元bytesを返し、delay・loopを維持します。
 
 画像をwritable root layerへ退避せず、Docker archive APIも使用しません。
-上限超過または読み取り失敗は、画像なしの結果として扱います。
+上限超過・読取失敗・不正GIFは表示なしとして扱い、採点結果を変えません。
+公開画像の選択規則は[Public API](./docs/API.md)を参照してください。
 
 ## リクエストごとのデータ分離
 

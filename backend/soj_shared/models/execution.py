@@ -9,6 +9,7 @@ from soj_shared.models.problem import ImageMediaType, MAX_PROBLEM_PATH_BYTES
 MAX_CAPTURED_OUTPUT_CHARS = 1_000
 MAX_EXECUTION_ERROR_CHARS = 1_000
 MAX_RUNNER_IMAGE_BASE64_CHARS = 1_000_000
+DISPLAY_GIF_PATH = "media/output.gif"
 
 
 class ExecutionStatus(str, Enum):
@@ -59,6 +60,7 @@ class ExecutionResult(BaseModel):
     duration_ms: int = Field(ge=0)
     artifact: ExecutionArtifact | None
     error: str | None = Field(max_length=MAX_EXECUTION_ERROR_CHARS)
+    display_artifact: ExecutionArtifact | None = None
 
     @model_validator(mode="after")
     def validate_consistent_outcome(self) -> "ExecutionResult":
@@ -81,7 +83,17 @@ class ExecutionResult(BaseModel):
                 raise ValueError("output limited execution result is inconsistent")
         elif self.timed_out or not self.error:
             raise ValueError("failed execution result is inconsistent")
-        if self.status is not ExecutionStatus.COMPLETED and self.artifact is not None:
+        artifacts = [
+            item for item in (self.artifact, self.display_artifact) if item is not None
+        ]
+        if sum(len(item.data) for item in artifacts) > MAX_RUNNER_IMAGE_BASE64_CHARS:
+            raise ValueError("combined artifact data exceeds the limit")
+        if self.display_artifact is not None and (
+            self.display_artifact.path != DISPLAY_GIF_PATH
+            or self.display_artifact.media_type != "image/gif"
+        ):
+            raise ValueError("display artifact must be the fixed GIF output")
+        if self.status is not ExecutionStatus.COMPLETED and artifacts:
             raise ValueError("incomplete execution result must not contain an artifact")
         return self
 

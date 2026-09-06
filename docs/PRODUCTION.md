@@ -246,7 +246,10 @@ PY
 
 最後に`... smoke test: ok`が出れば成功です。問題の正解を出すテストではないので、
 `wrong_answer / output_mismatch`は正常です。続いてブラウザで問題一覧・提出・画像問題のJPEG表示を確認します。
-任意に生成したGIFの表示は[R3-030で後日対応](./refactoring/README.md#r3-030-support-display-of-generated-gif-artifacts)です。
+GIF表示に対応する更新ではbackend・runner・frontendを同じcommitからbuildして再作成してください。
+内部protocolの異なる旧runner/backendを混在させないでください。DB schemaの変更はありません。
+確認には画面の「コマンドの例」にあるGIF生成を実行し、生成画像がアニメーションすることを確かめます。
+表示条件・制限は[API仕様](./API.md)を参照してください。
 
 初回は[公開制御とOS再起動後の確認](./PRODUCTION_HOST.md#再起動と移行後の確認)も実施してください。
 

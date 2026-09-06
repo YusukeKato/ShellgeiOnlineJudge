@@ -65,6 +65,8 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - Docker execのstdout・stderr分離、非0終了code、所要時間の取得
 - コンテナ削除
 - 実行中コンテナからの上限付き画像取得
+- 元のGIF生成コマンドの全10frame・delay保持、固定回収path・symlink・FIFO・byte上限・timeout・出力上限・次の提出への非残存（`test_gif_display_docker.py`）
+- browser上のGIFアニメーションと、JPEGでの採点・GIF表示の両立。browserで実提出7件とDB保存を照合
 - workerの回復
 - 実nginxで、sandboxを開始しないrequestが
   正常requestと共有の実行開始枠を消費しないこと

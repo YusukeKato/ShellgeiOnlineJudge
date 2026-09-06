@@ -84,6 +84,15 @@ HTTP 200で次の型付きresponseを返します。受付拒否やrunner応答�
 `image/gif`、Base64 dataは1,000,000文字以下です。runner内部の取得pathは公開しません。
 HTTP 200のresponse全体は1,025,000 bytes以下です。
 
+全問題で`media/output.gif`に生成したGIFを表示できます。runnerは表示用GIFを
+判定用artifactと別に回収します。backendの形式・全frame検証を通ったGIFがあれば
+公開`artifact`に優先して返し、なければ従来の判定用画像（または`null`）を返します。
+GIFは採点に使わず、画像問題でも定義された判定用画像だけで採点します。
+壊れたGIF・画像上限超過は判定を変えず表示から除外し、timeout・出力超過・基盤errorでは
+画像を返しません。GIFのframe・delay・loopは変換せず保持します。
+回収path、共有byte枠、画素上限の正本は[SECURITY.md](../SECURITY.md#stdoutstderr画像)です。
+legacy APIの`image`・`image_media_type`にも同じ選択規則を適用します。
+
 ## HTTP statusとerror
 
 404・429・503は、内部例外やcommandを含まない固定のerrorを返します。

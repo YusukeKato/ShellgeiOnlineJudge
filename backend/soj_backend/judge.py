@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 import base64
 import binascii
-import warnings
 from enum import Enum
-from io import BytesIO
 
 from pydantic import BaseModel, ConfigDict
-from PIL import Image, UnidentifiedImageError
 
 from soj_shared.models.execution import (
     ExecutionArtifact,
@@ -20,9 +17,7 @@ from soj_shared.models.problem import (
 )
 from soj_shared.input_validation import validate_problem_id
 from soj_shared.problem_repository import ProblemRepository, get_problem_repository
-
-
-MAX_DECODED_IMAGE_PIXELS = 4_000_000
+from soj_backend.image_validation import matches_media_type, decode_image_pixels
 
 
 class JudgeVerdict(str, Enum):
@@ -150,52 +145,6 @@ def _execution_policy_failure(
     return None
 
 
-def _matches_media_type(payload: bytes, media_type: str) -> bool:
-    """入力画像bytesが宣言MIMEの完全なJPEG/GIF外形ならTrueを返す。"""
-    if media_type == "image/jpeg":
-        return (
-            len(payload) >= 4
-            and payload.startswith(b"\xff\xd8")
-            and payload.endswith(b"\xff\xd9")
-        )
-    return (
-        len(payload) >= 7
-        and payload[:6] in {b"GIF87a", b"GIF89a"}
-        and payload.endswith(b";")
-    )
-
-
-def _decode_image_pixels(
-    payload: bytes,
-    media_type: str,
-) -> tuple[tuple[int, int], tuple[bytes, ...]] | None:
-    """JPEG/GIF bytesを上限内でdecodeし、寸法と全frameのRGBA画素列を返す。"""
-    expected_format = "JPEG" if media_type == "image/jpeg" else "GIF"
-    try:
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", Image.DecompressionBombWarning)
-            with Image.open(BytesIO(payload)) as image:
-                if image.format != expected_format:
-                    return None
-                width, height = image.size
-                frame_count = getattr(image, "n_frames", 1)
-                if width * height * frame_count > MAX_DECODED_IMAGE_PIXELS:
-                    return None
-                frames: list[bytes] = []
-                for frame_index in range(frame_count):
-                    image.seek(frame_index)
-                    frames.append(image.convert("RGBA").tobytes())
-                return (width, height), tuple(frames)
-    except (
-        Image.DecompressionBombError,
-        Image.DecompressionBombWarning,
-        OSError,
-        UnidentifiedImageError,
-        ValueError,
-    ):
-        return None
-
-
 def judge_image(
     judge_specification: ImageJudgeSpecification,
     expected_artifact: bytes,
@@ -229,13 +178,13 @@ def judge_image(
             verdict=JudgeVerdict.WRONG_IMAGE,
             reason=JudgeReason.ARTIFACT_INVALID,
         )
-    if not _matches_media_type(payload, specification.media_type):
+    if not matches_media_type(payload, specification.media_type):
         return JudgeResult(
             verdict=JudgeVerdict.WRONG_IMAGE,
             reason=JudgeReason.ARTIFACT_INVALID,
         )
-    actual_pixels = _decode_image_pixels(payload, specification.media_type)
-    expected_pixels = _decode_image_pixels(
+    actual_pixels = decode_image_pixels(payload, specification.media_type)
+    expected_pixels = decode_image_pixels(
         expected_artifact,
         specification.media_type,
     )

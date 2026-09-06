@@ -217,6 +217,21 @@ def main() -> None:
         expect(page.locator("html")).to_have_attribute("lang", "en")
         expect(page.locator("#result-text")).to_have_text("Not run yet")
         switch_language(page, "ja")
+        # 報告されたGIF生成commandを実提出し、browser上でもframeが切り替わることを確認する。
+        gif_command = "seq 0 9 | xargs -I@ bash -c 'textimg \"$1\" -F100 | convert - miff:-' _ @ | convert -delay 10 miff:- media/output.gif"
+        ids.append(submit(page, gif_command, "wrong_answer", "不正解"))
+        gif_image = page.locator("#result-image")
+        expect(gif_image).to_have_attribute(
+            "src", re.compile(r"^data:image/gif;base64,")
+        )
+        page.wait_for_function(
+            "document.querySelector('#result-image').naturalWidth > 0"
+        )
+        frames = set()
+        for _ in range(5):
+            frames.add(gif_image.screenshot(animations="allow"))
+            page.wait_for_timeout(130)
+        assert len(frames) > 1, "GIF must animate in the browser"
         ids.append(submit(page, "printf wrong", "wrong_answer", "不正解"))
         ids.append(
             submit(
@@ -248,9 +263,19 @@ def main() -> None:
                 return image && image.complete && image.naturalWidth > 0;
             }"""
         )
+        # 判定JPEGと表示GIFが両方存在しても画像問題を正解と判定し、表示にはGIFを選ぶ。
+        both = (
+            "(\n"
+            + detail["answer"]
+            + "\n)\nconvert -size 8x8 -delay 10 xc:red xc:blue -loop 0 media/output.gif"
+        )
+        ids.append(submit(page, both, "accepted", "正解"))
+        expect(page.locator("#result-image")).to_have_attribute(
+            "src", re.compile(r"^data:image/gif;base64,")
+        )
         check_responsive_playground(page)
         check_about_page(page)
-        assert len(submissions) == 5
+        assert len(submissions) == 7
         assert not errors
         browser.close()
         print(json.dumps({"submission_ids": ids}))

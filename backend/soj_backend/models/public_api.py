@@ -1,3 +1,4 @@
+from soj_backend.artifact_display import select_display_artifact
 from datetime import datetime
 from enum import Enum
 from typing import Literal
@@ -114,7 +115,7 @@ class SubmitSolutionResponseV3(BaseModel):
             raise ValueError("submission result is not completed")
         if result.execution is None or result.judgment is None:
             raise ValueError("completed submission result is inconsistent")
-        artifact = result.execution.artifact
+        artifact = select_display_artifact(result.execution)
         if result.persistence is SubmissionPersistenceStatus.SAVED:
             persistence = PublicPersistenceStatusV3.SAVED
         elif result.persistence is SubmissionPersistenceStatus.UNAVAILABLE:

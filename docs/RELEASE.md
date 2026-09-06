@@ -31,6 +31,7 @@ public APIの`api_version`、問題の`schema_version`、runnerの`protocol_vers
 - 実行状態と判定を分離し、正解・不正解・実行失敗・判定エラーをAPIと画面で区別。
 - 問題schema v3と問題revision検証、画像の画素比較、非0終了・stderrの判定規則を導入。
 - 提出の二重送信・キャンセル・古い応答の表示を制御。
+- 表示用GIFを採点用画像と分けて回収し、アニメーションを維持して表示。
 - PC・スマートフォン向けの画面構成と日英の表示切替を整備。エラー説明は英語で表示。
 - DB migrationを専用処理へ分離し、通常接続の最小権限と実行ログの保持制限を導入。
 - rootless Dockerの隔離・資源制限、独自Ubuntu sandbox、供給網検査とCompose/browser E2Eを整備。

@@ -20,22 +20,22 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Baseline commit: `991ef334f2785cce81a2e33206ec1f00f3487c9b`
 - Baseline commit subject: `docs: update maintenance history`
 - Baseline date: 2026-08-25
-- Overall status: `Release-scope refactoring completed`
+- Overall status: `GIF display awaiting review`
 - Total refactoring units: 31
 - Ready: 0
 - Planned: 0
 - Pending (`Ready` + `Planned`): 0
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 30
 - Blocked: 0
-- Deferred: 1
+- Deferred: 0
 - Superseded: 0
 
 `2.8.0`は今回の計画で宣言されたproduct baselineです。
 製品versionの正本・転記先・更新手順はR3-027で整備し、
 [リリース準備](../RELEASE.md)に記載しています。
-R3-030は依頼者の指示により後日対応とし、今回のrelease対象には含めません。
+R3-030は依頼者の実装指示により再開し、GIF表示を判定処理から分離して整備します。
 
 ## Goals
 
@@ -183,7 +183,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-027 | P3 | Completed | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | `c7b2b52` |
 | R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
 | R3-029 | P2 | Completed | F | Organize shared, backend, and runner packages | R3-023, R3-024 | `b71663e` |
-| R3-030 | P2 | Deferred | D | Support display of generated GIF artifacts | artifact contract review | - |
+| R3-030 | P2 | Review | D | Support display of generated GIF artifacts | artifact contract review | - |
 | R3-031 | P2 | Completed | D | Refresh the responsive frontend and add language selection | R3-019, R3-020, R3-028 | `118ba5d` |
 
 Size estimates use `XS` (under about 100 changed lines), `S` (100--250),
@@ -657,18 +657,26 @@ They are planning aids, not acceptance criteria.
   実機iOS/Android・ソフトウェアキーボード、本番反映は未確認。
 - Completion: commit `118ba5d3e67a1a65c91bc56e99237ceff8f9e13c` / date `2026-09-06` / note 依頼者によるローカル画面確認・文言と配置の修正レビュー承認後にcommit。検証結果は上記参照
 
-## Deferred follow-up
+## Generated image display
 
 ### R3-030: Support display of generated GIF artifacts
 
-- Priority / Status: P2 / `Deferred`
+- Priority / Status: P2 / `Review`
 - Goal: 生成したGIF画像をユーザーが画面で確認できるようにする
-- Current limitation: sandboxはGIF・MIFFを許可し、API・frontendも`image/gif`を扱えるが、runnerは画像判定の問題定義に指定されたartifactだけを回収する。現在の問題定義には`media/output.gif`の指定がなく、生成に成功しても表示へ届かない。R3-031では画面に表示未対応と明記し、GIFの生成例を案内から外した
+- Implementation: 全問題の固定pathから表示用GIFを回収し、判定用artifactと分離する。画像の合計byte枠を維持し、backendで形式・総画素上限を検証して公開artifactへ優先表示する。公開API・DB schema・sandbox制限を維持し、内部protocolは4へ更新する
 - Reproduction: `seq 0 9 | xargs -I@ bash -c 'textimg "$1" -F100 | convert - miff:-' _ @ | convert -delay 10 miff:- media/output.gif`。コマンドの生成成否と、artifactの回収・表示の成否を分けて確認する
 - Main files/components: `backend/soj_runner/sandbox_executor.py`、runner/public APIのartifact contract、frontendの画像表示と`frontend/src/tsx/run.tsx`、関連API文書
 - Scope: 問題の判定用artifactと表示用GIFの扱いを整理し、回収・返却・表示の経路を設計する。既存の判定結果を変えず、path・形式・サイズの検証とsandbox制限を維持する。API変更が必要なら互換性を確認し、画面の説明も実装と同期する
 - Acceptance / Expected tests: 上記の再現例で生成したアニメーションGIFがブラウザで表示されることをrootless Docker・API・browser経路で確認する。画像欠損・不正形式・上限超過時の挙動と、既存のtext/image判定・JPEG表示の回帰も確認する
-- Deferral: 2026-09-06、依頼者の指示により実装は後日とする。再開時にartifact contractと回収処理を再確認する
+- Review validation: 2026-09-06、text/image問題のGIF表示と内部型の3件でREDを確認後、実装してGREEN。
+  後続frameによるcanvas拡大とheader破損もREDからGREENへ修正した。
+  ruff・format・mypy（110 file）と非Docker659件、frontend基本5検査・53件が成功。
+  rootless DockerのGIF回収・制限・分離10件とCompose 6件（全92問・実browserのアニメーション・7提出のDB保存・停止復帰）が成功。
+  decoder補強後の最終backend imageでComposeのAPI・browser・全92問の3件を再実行して成功。
+  既存の検証済みruntime imageへ変更したソース・配信資産を重ねて検証し、依存更新・sandbox再build・供給網再scanは行っていない。
+  public response schemaは変更前と一致し、文書のローカル参照先99件を確認した。
+  ローカル確認環境も更新。本番反映・commit・pushは未実施。backendとrunnerは内部protocol 4へ同時更新が必要。
+- Completion: -
 
 ## Known design decisions
 

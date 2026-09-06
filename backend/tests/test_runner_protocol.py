@@ -86,17 +86,24 @@ def test_runner_protocol_round_trip_preserves_versioned_request_and_result() -> 
             "problem_revision": TEST_PROBLEM_REVISION,
             "shellgei": "true",
             "problem_id": "STANDARD-00000001",
+        },
+        {
+            "protocol_version": RUNNER_PROTOCOL_VERSION,
+            "request_id": TEST_REQUEST_ID,
+            "problem_revision": TEST_PROBLEM_REVISION,
+            "shellgei": "true",
+            "problem_id": "STANDARD-00000001",
             "unknown": "value",
         },
         {
-            "protocol_version": 3,
+            "protocol_version": RUNNER_PROTOCOL_VERSION,
             "request_id": TEST_REQUEST_ID,
             "problem_revision": "not-a-sha256-digest",
             "shellgei": "true",
             "problem_id": "STANDARD-00000001",
         },
         {
-            "protocol_version": 3,
+            "protocol_version": RUNNER_PROTOCOL_VERSION,
             "request_id": "attacker-controlled",
             "problem_revision": TEST_PROBLEM_REVISION,
             "shellgei": "true",
@@ -145,7 +152,7 @@ def test_runner_request_rejects_missing_wrong_version_and_unknown_fields(
             },
         },
         {
-            "protocol_version": 3,
+            "protocol_version": RUNNER_PROTOCOL_VERSION,
             "request_id": TEST_REQUEST_ID,
             "problem_revision": TEST_PROBLEM_REVISION,
             "result": {
@@ -162,7 +169,7 @@ def test_runner_request_rejects_missing_wrong_version_and_unknown_fields(
             },
         },
         {
-            "protocol_version": 3,
+            "protocol_version": RUNNER_PROTOCOL_VERSION,
             "request_id": TEST_REQUEST_ID,
             "problem_revision": TEST_PROBLEM_REVISION,
             "result": {
@@ -179,13 +186,13 @@ def test_runner_request_rejects_missing_wrong_version_and_unknown_fields(
             "unknown": "value",
         },
         {
-            "protocol_version": 3,
+            "protocol_version": RUNNER_PROTOCOL_VERSION,
             "request_id": TEST_REQUEST_ID,
             "problem_revision": "A" * 64,
             "result": _completed_result().model_dump(),
         },
         {
-            "protocol_version": 3,
+            "protocol_version": RUNNER_PROTOCOL_VERSION,
             "request_id": "invalid-request-id",
             "problem_revision": TEST_PROBLEM_REVISION,
             "result": _completed_result().model_dump(),

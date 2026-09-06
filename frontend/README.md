@@ -25,7 +25,7 @@ storageを使えない環境でも切替可能です。言語変更では問題�
 PCでは問題選択・問題文と入力・結果を2列、1,024px未満では1列に配置します。
 問題一覧は問題文と同じ幅の折りたたみから選択でき、入出力の長い行はコード枠内で横スクロールします。
 結果には提出時の問題ID・実行時間・提出IDを示し、artifactがない場合は画像枠を表示しません。
-生成GIFの表示は[R3-030で後日対応](../docs/refactoring/README.md#r3-030-support-display-of-generated-gif-artifacts)です。
+生成GIFは`media/output.gif`へ保存すると表示できます。判定用画像との優先順位・制限は[API仕様](../docs/API.md)を参照してください。
 
 「使い方・情報 / About」と共通フッターからGoogleフォームを別タブで開けます。
 リンク先は[`links.ts`](./src/links.ts)で管理します。

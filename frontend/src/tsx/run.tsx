@@ -141,6 +141,10 @@ const SojRun: React.FC<SojValuesInterface> = ({
             <code>media/output.jpg</code>
           </li>
           <li>
+            {text("GIFの表示用出力先：", "GIF preview output: ")}
+            <code>media/output.gif</code>
+          </li>
+          <li>
             {text(
               "コマンドは1,000文字まで。実行時間の上限は10秒です。",
               "Commands can contain up to 1,000 characters. The time limit is 10 seconds.",
@@ -155,8 +159,8 @@ const SojRun: React.FC<SojValuesInterface> = ({
           <li>{text("危険なシェル芸は禁止です。", "Malicious shell commands are prohibited.")}</li>
           <li>
             {text(
-              "生成したGIFの表示は現在未対応です。",
-              "Displaying generated GIFs is not currently supported.",
+              "画像は合計750KBまで。判定用画像を優先し、上限超過や読み取れないGIFは表示しません。",
+              "Images share a 750KB limit. Judging images take priority; oversized or invalid GIFs are not displayed.",
             )}
           </li>
         </ul>
@@ -174,6 +178,10 @@ const SojRun: React.FC<SojValuesInterface> = ({
         <p>{text("画像問題で文字を画像にする", "Create a text image in an image problem")}</p>
         <pre className="code-output" tabIndex={0}>
           <code>textimg SOJ -F50 | convert - media/output.jpg</code>
+        </pre>
+        <p>{text("数字をアニメーションGIFにする", "Create an animated GIF of numbers")}</p>
+        <pre className="code-output" tabIndex={0}>
+          <code>{`seq 0 9 | xargs -I@ bash -c 'textimg "$1" -F100 | convert - miff:-' _ @ | convert -delay 10 miff:- media/output.gif`}</code>
         </pre>
       </details>
     </section>

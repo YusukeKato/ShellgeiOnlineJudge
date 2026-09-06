@@ -1,3 +1,4 @@
+from soj_backend.artifact_display import select_display_artifact
 from typing import Annotated
 
 from fastapi import APIRouter, Header, HTTPException, Response, status
@@ -74,7 +75,7 @@ def _submission_response(result: SubmissionResult) -> ShellgeiResultResponse:
     judgment = result.judgment
     if execution is None or judgment is None:
         raise RuntimeError("completed submission result is inconsistent")
-    artifact = execution.artifact
+    artifact = select_display_artifact(execution)
     return ShellgeiResultResponse(
         output=execution.legacy_output(),
         id=str(result.log_id if result.log_id is not None else -1),

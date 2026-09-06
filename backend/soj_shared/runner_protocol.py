@@ -30,7 +30,7 @@ RUNNER_READINESS_PATH = "/internal/ready"
 RUNNER_SHARED_SECRET_ENVIRONMENT = "RUNNER_SHARED_SECRET"
 RUNNER_SHARED_SECRET_PATTERN = re.compile(r"^[A-Za-z0-9_-]{32,256}$")
 RUNNER_INSECURE_EXAMPLE_SECRET = "replace-with-at-least-32-random-characters"
-RUNNER_PROTOCOL_VERSION: Final = 3
+RUNNER_PROTOCOL_VERSION: Final = 4
 PROBLEM_REVISION_PATTERN_TEXT = r"^[0-9a-f]{64}$"
 ProblemRevision = Annotated[
     str,
@@ -59,7 +59,7 @@ class RunnerExecutionRequest(ShellgeiData):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    protocol_version: Literal[3]
+    protocol_version: Literal[4]
     request_id: RequestId
     problem_revision: ProblemRevision
 
@@ -69,7 +69,7 @@ class RunnerExecutionResponse(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    protocol_version: Literal[3]
+    protocol_version: Literal[4]
     request_id: RequestId
     problem_revision: ProblemRevision
     result: ExecutionResult
@@ -87,7 +87,7 @@ class RunnerReadinessResponse(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    protocol_version: Literal[3]
+    protocol_version: Literal[4]
     problem_revision: ProblemRevision
     status: RunnerReadinessStatus
 

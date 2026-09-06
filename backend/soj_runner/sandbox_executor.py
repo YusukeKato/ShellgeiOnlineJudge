@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
-from soj_shared.models.execution import ExecutionStatus
+from soj_shared.models.execution import MAX_RUNNER_IMAGE_BASE64_CHARS, ExecutionStatus
 from soj_runner.container_manager import SANDBOX_WORK_DIRECTORY
 from soj_runner.execution_archive import build_execution_archive
 from soj_shared.problem_repository import ProblemRecord
@@ -49,6 +49,7 @@ class SandboxExecutionOutcome:
     duration_ms: int
     artifact: bytes | None
     error: str | None
+    display_artifact: bytes | None = None
 
 
 @dataclass(frozen=True)
@@ -280,6 +281,46 @@ class SandboxOutputCapturer:
             return None
         return payload
 
+    def capture_display_artifact(self, container: Any, max_bytes: int) -> bytes | None:
+        """固定の通常GIF候補を残りbyte枠内で読み、リンク・FIFO待ち・上限超過を避ける。
+
+        /mediaはroot filesystem上の固定mountで、利用者が変更できる/work/mediaを辿らない。
+        nofollowは最終pathのsymlinkを拒否し、nonblockはFIFOに差し替えられても待たない。
+        形式の検証はPillowを持つbackendで行う。読込失敗・空・上限超過は表示なしとする。
+        """
+        if max_bytes <= 0:
+            return None
+        buffer = BoundedByteBuffer(max_bytes + 1)
+        stream = None
+        try:
+            stream = container.exec_run(
+                [
+                    "/usr/bin/dd",
+                    "if=/media/output.gif",
+                    "iflag=nofollow,nonblock,count_bytes",
+                    "bs=65536",
+                    f"count={max_bytes + 1}",
+                    "status=none",
+                ],
+                stdout=True,
+                stderr=False,
+                stream=True,
+            ).output
+            chunks = (stream,) if isinstance(stream, bytes) else stream
+            for chunk in chunks:
+                if chunk and not buffer.append(chunk):
+                    return None
+            payload = buffer.to_bytes()
+            return payload if payload and len(payload) <= max_bytes else None
+        except Exception:
+            return None
+        finally:
+            if stream is not None and hasattr(stream, "close"):
+                try:
+                    stream.close()
+                except Exception:
+                    pass
+
 
 class SandboxCleanup:
     def stop(
@@ -347,6 +388,7 @@ class SandboxExecutor:
 
         command_output = CapturedCommandOutput(b"", b"", None, False, None)
         artifact: bytes | None = None
+        display_artifact: bytes | None = None
         cleanup_result: SandboxCleanupResult
         try:
             command_output = self.output_capturer.capture_command_output(
@@ -364,6 +406,16 @@ class SandboxExecutor:
                     container,
                     judge.artifact.path,
                     judge.artifact.max_bytes,
+                )
+            if watchdog.reason is None and command_output.error is None:
+                # 判定画像の枠を優先し、Base64のpaddingを含めて既存の合計上限を維持する。
+                used_chars = 4 * ((len(artifact or b"") + 2) // 3)
+                remaining_bytes = (
+                    (MAX_RUNNER_IMAGE_BASE64_CHARS - used_chars) // 4
+                ) * 3
+                display_artifact = self.output_capturer.capture_display_artifact(
+                    container,
+                    remaining_bytes,
                 )
         finally:
             cleanup_result = self.cleanup.stop(container, watchdog, timeout_timer)
@@ -383,6 +435,7 @@ class SandboxExecutor:
             status = ExecutionStatus.COMPLETED
         if status is not ExecutionStatus.COMPLETED:
             artifact = None
+            display_artifact = None
         duration_ms = max(0, (time.monotonic_ns() - started_at) // 1_000_000)
         outcome = SandboxExecutionOutcome(
             status=status,
@@ -393,6 +446,7 @@ class SandboxExecutor:
             truncated=command_output.truncated,
             duration_ms=duration_ms,
             artifact=artifact,
+            display_artifact=display_artifact,
             error=str(execution_error) if execution_error is not None else None,
         )
         return outcome, cleanup_result.container_stopped

@@ -7,6 +7,7 @@ from typing import Any
 
 from soj_shared.models.execution import (
     MAX_CAPTURED_OUTPUT_CHARS,
+    DISPLAY_GIF_PATH,
     MAX_EXECUTION_ERROR_CHARS,
     ExecutionArtifact,
     ExecutionResult,
@@ -117,6 +118,13 @@ class ShellgeiDockerClient:
                 data=base64.b64encode(outcome.artifact).decode("ascii"),
             )
         error = outcome.error
+        display_artifact = None
+        if status is ExecutionStatus.COMPLETED and outcome.display_artifact is not None:
+            display_artifact = ExecutionArtifact(
+                path=DISPLAY_GIF_PATH,
+                media_type="image/gif",
+                data=base64.b64encode(outcome.display_artifact).decode("ascii"),
+            )
         if status is ExecutionStatus.ERROR:
             error = (error or "sandbox execution failed")[:MAX_EXECUTION_ERROR_CHARS]
         elif error is not None:
@@ -130,6 +138,7 @@ class ShellgeiDockerClient:
             truncated=truncated,
             duration_ms=outcome.duration_ms,
             artifact=artifact,
+            display_artifact=display_artifact,
             error=error,
         )
 

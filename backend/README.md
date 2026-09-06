@@ -70,7 +70,7 @@ Poetryは固定versionでbuild stageにだけ導入し、`poetry.lock`から`mai
 backendからrunnerへの実行境界は、`soj_shared/runner_protocol.py`の
 `RunnerGateway`、`RunnerExecutionRequest`、`RunnerExecutionResponse`と、
 `soj_shared/models/execution.py`の`ExecutionResult`を正本とします。requestとresponseは
-`protocol_version: 3`、backend生成の`request_id`、起動時検証済み
+`protocol_version: 4`、backend生成の`request_id`、起動時検証済み
 problem dataのSHA-256 `problem_revision`を必須とし、
 未知version、未知field、欠落field、文字列・画像上限超過を拒否します。
 
@@ -80,8 +80,10 @@ requestは`protocol_version`、`request_id`、`problem_revision`、`shellgei`、
 異なる場合は実行結果を受理せずfail-closedとします。
 `result`は`status`、
 分離した`stdout`・`stderr`、`exit_code`、`timed_out`、`truncated`、
-`duration_ms`、任意の`artifact`・`error`を保持します。
-artifactはproblem schemaと一致する`path`、`media_type`、Base64 `data`を保持します。
+`duration_ms`、任意の`artifact`・`display_artifact`・`error`を保持します。
+`artifact`は判定用で、problem schemaと一致する`path`、`media_type`、Base64 `data`を保持します。
+`display_artifact`は固定の`media/output.gif`・`image/gif`だけを許可し、採点には使いません。
+両画像のdata合計にも既存の上限を適用します。version 3とは混在できません。
 これは外部公開APIではなく、backendとrunnerを同時に更新する内部protocolです。
 実行endpointはbody parse前にBearer認証し、認証後のbodyも8 KiBまでとします。
 `/internal/health`はprocessのliveness、`/internal/ready`はproblem revisionと
