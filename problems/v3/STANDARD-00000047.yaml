@@ -3,32 +3,30 @@ id: STANDARD-00000047
 category: STANDARD
 title:
   ja: IPアドレスの抽出
-  en: Extract IP Address
+  en: Extracting IP Addresses
 statement:
   ja: |
-    入力の中のIPアドレスを改行区切りで出力してください。
+    input.txtの空白区切りの項目から、IPv4アドレスだけを登場順に1行ずつ出力してください。
+    ここでのIPv4アドレスは、0〜255の十進整数4つをピリオドで結んだものです。
+    前後に別の文字が付いた項目は出力しないでください。
   en: |
-    Output the IP addresses in the input, separated by new lines.
-reference_solution: cat input.txt | sed "s/ /\n/g" | grep -E "[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+"
+    From the whitespace-separated tokens in input.txt, output IPv4 addresses, one per line in order of appearance.
+    An IPv4 address has four decimal integers from 0 through 255 separated by dots.
+    Do not output tokens with extra characters before or after an address.
+reference_solution: tr -s '[:space:]' '\n' < input.txt | grep -E '^[0-9]+(\.[0-9]+){3}$'
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      server20250101 777 198.51.100.8
-      server 203.0.113.100 server2 198.51.100.0
-      local 192.0.2.21 local3 198.51.100.111
-      100 100 100 100 203.0.113.99
-      100-100-100-100 : 198.51.100.201
+      host1 198.51.100.8
+      version1.2.3.4 203.0.113.9.bak
+      local 192.0.2.21 198.51.100.8
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
     198.51.100.8
-    203.0.113.100
-    198.51.100.0
     192.0.2.21
-    198.51.100.111
-    203.0.113.99
-    198.51.100.201
+    198.51.100.8

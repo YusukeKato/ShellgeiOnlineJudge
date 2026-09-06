@@ -7,19 +7,19 @@ title:
 statement:
   ja: |
     input.txtのメンバーをチームごとにまとめてください。
-    各行は「名前 チーム番号」で、半角スペース1個で区切られています。名前に空白はなく、チーム番号は先頭に0のない正の整数です。
+    各行は「名前 チーム番号」です。
 
     チーム番号の小さい順に、1チームを1行で出力してください。
     各行は「チーム番号 名前 名前 ...」とし、同じチームの名前は入力で登場した順に並べてください。
     項目は半角スペース1個で区切ってください。
   en: |
     Group the members in input.txt by team.
-    Each line is "name team_number", separated by one ASCII space. Names contain no whitespace; team numbers are positive integers with no leading zeros.
+    Each line is "name team_number".
 
     Output one team per line in ascending numeric order of team number.
     Use "team_number name name ...", keeping names within each team in their original input order.
     Separate fields with one ASCII space.
-reference_solution: LC_ALL=C sort -s -k2,2n input.txt | awk '$2!=team {if(NR>1) printf "\n"; team=$2; printf "%s",team} {printf " %s",$1} END {print ""}'
+reference_solution: sort -s -k2,2n input.txt | awk '$2!=team {if(NR>1) printf "\n"; team=$2; printf "%s",team} {printf " %s",$1} END {print ""}'
 execution:
   stdin: ''
   fixtures:

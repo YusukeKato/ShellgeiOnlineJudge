@@ -8,6 +8,7 @@
 
 - `v3/`: productionで使用するschema v3 YAMLと`manifest.json`
 - `image/`: 全問題の表示・判定用JPEG。GIF artifact問題では同じIDの判定用GIFも配置する
+- `legacy_image/`: 改訂前の正解JPEG。移行baselineの検査専用で、表示・判定には使用しない
 - `yaml_data/`: v3の決定的な移行元として保持するlegacy YAML
 - `semantic_manifest.json`: v3移行前の全問題definitionと正解画像のsemantic baseline
 
@@ -127,7 +128,8 @@ NULを許可しません。同一fixture pathの重複と、提出command用に�
 `v3/`にはSTANDARD 52問、PRACTICE 36問、IMAGE 5問の計93問があります。
 移行元92問のうち未改訂の問題は、legacyからの決定的な再生成結果との一致を検査します。
 意図した改訂は、[改訂登録](../backend/tests/fixtures/problem_revisions.json)の変更field一覧と
-定義hashで限定し、未変更field・実行policy・judge種別の保持も検査します。
+定義hashで限定し、画像改訂は現行JPEGのhashも登録します。旧JPEGは`legacy_image/`へ保存し、
+移行前のsemantic baselineとの照合を維持します。未変更field・実行policy・judge種別の保持も検査します。
 改訂内容の正本はv3 YAML、学習意図は[設計記録](../docs/problem-design-notes.md)です。
 
 新規問題は`v3/`と対応画像へ追加し、manifestも再生成します。

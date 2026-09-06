@@ -7,17 +7,13 @@ title:
 statement:
   ja: |
     鶴は足が2本、亀は足が4本あります。
-    input.txtの各行には、鶴と亀の合計匹数と、足の合計本数が、半角スペース1個で区切られています。
-    どちらも整数で、合計匹数は1以上100以下です。鶴と亀の匹数が非負整数となる解が必ず存在します。
-    片方が0匹の場合もあります。
+    input.txtの各行には、鶴と亀の合計匹数と、足の合計本数が記録されています。
 
     各行について「鶴の匹数 亀の匹数」を、入力と同じ順序で1行ずつ出力してください。
     2つの数は半角スペース1個で区切ってください。
   en: |
     A crane has 2 legs, and a turtle has 4 legs.
-    Each line of input.txt contains the total number of animals and the total number of legs, separated by one ASCII space.
-    Both are integers. The animal total is between 1 and 100 inclusive, and a solution with nonnegative integer counts always exists.
-    Either species may have a count of zero.
+    Each line of input.txt contains the total number of animals and the total number of legs.
 
     For each input line, output "cranes turtles" in input order, one pair per line.
     Separate the counts with one ASCII space.

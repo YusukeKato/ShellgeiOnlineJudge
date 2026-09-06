@@ -14,6 +14,7 @@ from soj_shared.runner_protocol import ExecutionArtifact
 PROBLEMS_DIR = Path(__file__).resolve().parents[2] / "problems"
 YAML_DIR = PROBLEMS_DIR / "yaml_data"
 IMAGE_DIR = PROBLEMS_DIR / "image"
+LEGACY_IMAGE_DIR = PROBLEMS_DIR / "legacy_image"
 SEMANTIC_MANIFEST_PATH = PROBLEMS_DIR / "semantic_manifest.json"
 REQUIRED_FIELDS = {
     "id",
@@ -41,7 +42,9 @@ def _definition_sha256(data: dict[str, str]) -> str:
 def _problem_semantics(yaml_path: Path) -> dict[str, object]:
     # 1問分のYAMLと正解画像から、移行前に固定するsemantic情報とhashを組み立てる。
     data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
-    image_path = IMAGE_DIR / f"{yaml_path.stem}.jpg"
+    image_path = LEGACY_IMAGE_DIR / f"{yaml_path.stem}.jpg"
+    if not image_path.exists():
+        image_path = IMAGE_DIR / image_path.name
     return {
         "id": yaml_path.stem,
         "category": yaml_path.stem.split("-", maxsplit=1)[0],
@@ -137,3 +140,21 @@ def test_reservation_problem_expected_output_matches_set_difference() -> None:
     reserved = {name for kind, name in entries if kind == "reserved"}
     arrived = {name for kind, name in entries if kind == "arrived"}
     assert definition.judge.expected_output.splitlines() == sorted(reserved - arrived)
+
+
+def test_revised_images_preserve_baseline_and_register_current_hashes() -> None:
+    # 旧画像は移行baselineで検査し、改訂した現行画像は別hashで意図しない差し替えを検出する。
+    revisions = json.loads(
+        (Path(__file__).parent / "fixtures/problem_revisions.json").read_text()
+    )
+    revised = {
+        pid for pid, value in revisions.items() if "answer_image_sha256" in value
+    }
+    assert revised == {path.stem for path in LEGACY_IMAGE_DIR.glob("*.jpg")}
+    assert revised == {f"IMAGE-{n:08d}" for n in range(2, 6)}
+    for pid in revised:
+        current = (IMAGE_DIR / f"{pid}.jpg").read_bytes()
+        assert current != (LEGACY_IMAGE_DIR / f"{pid}.jpg").read_bytes()
+        assert (
+            hashlib.sha256(current).hexdigest() == revisions[pid]["answer_image_sha256"]
+        )

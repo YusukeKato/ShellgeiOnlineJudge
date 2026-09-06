@@ -6,12 +6,12 @@ title:
   en: uniq 2
 statement:
   ja: |
-    練習：uniq, sort
-    uniqコマンドで入力ファイル"input.txt"の各行の個数を出力してください。
+    練習：uniq
+    sortとuniqでinput.txtの各行が出現する回数を数えてください。行の内容を辞書順に並べ、回数を幅7文字に右揃えし、半角スペース1個の後に行の内容を出力してください。
   en: |
-    Exercise: uniq, sort
-    Output the number of pieces in each line of the input file "input.txt".
-reference_solution: cat input.txt | sort | uniq -c
+    Practice: uniq
+    Use sort and uniq to count occurrences of each line in input.txt. Sort line contents in lexicographic order. Right-align the count in seven characters, followed by one ASCII space and the line contents.
+reference_solution: sort input.txt | uniq -c
 execution:
   stdin: ''
   fixtures:

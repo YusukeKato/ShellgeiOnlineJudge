@@ -2,17 +2,23 @@ schema_version: 3
 id: STANDARD-00000045
 category: STANDARD
 title:
-  ja: 模様の描画3
-  en: Pattern Drawing 3
+  ja: 模様を3倍に拡大
+  en: Enlarging a Pattern
 statement:
   ja: |
-    次の想定出力のような模様を描いてください。
+    input.txtの模様を、縦横それぞれ3倍に拡大してください。
+    各文字を横に3個並べ、その行を縦に3回出力します。
   en: |
-    Output the same pattern as the expected output.
-reference_solution: echo | awk '{for(i=0;i<6;i++){for(j=0;j<6;j++){if(i>=3&&j<3){printf("3")}else if(i<3&&j<3){printf("2")}else if(i<3&&j>=3){printf("1")}else if(i>=3&&j>=3){printf("4")}};printf("\n")}}'
+    Enlarge the pattern in input.txt by a factor of three horizontally and vertically.
+    Repeat each character three times across, then output that expanded row three times.
+reference_solution: sed 's/./&&&/g;p;p' input.txt
 execution:
   stdin: ''
-  fixtures: []
+  fixtures:
+  - path: input.txt
+    content: |
+      21
+      34
   exit_code: ignore
   stderr: merge
 judge:

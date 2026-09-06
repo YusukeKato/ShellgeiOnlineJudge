@@ -7,24 +7,22 @@ title:
 statement:
   ja: |
     練習：cat
-    catコマンドで入力ファイル"input.txt"の各行の末尾に'$'を付けて出力してください。
+    catでinput.txtの各行の末尾に$を表示してください。空行と行末のスペースもそのまま残してください。
   en: |
-    Exercise: cat
-    Output the input file "input.txt" with '$' appended to the end.
-reference_solution: cat -e input.txt
+    Practice: cat
+    Use cat to display $ at the end of every line of input.txt. Preserve empty lines and trailing spaces.
+reference_solution: cat -E input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
-    content: |
-      SHELLGEI
-      ONLINE
-      JUDGE
+    content: "SHELLGEI  \n\nONLINE\nJUDGE\n"
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    SHELLGEI$
+    SHELLGEI  $
+    $
     ONLINE$
     JUDGE$

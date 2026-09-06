@@ -7,17 +7,17 @@ title:
 statement:
   ja: |
     input.txtには「リクエストID 応答時間」の形式でログが記録されています。
-    区切りは半角スペース1個で、応答時間はミリ秒単位の非負整数です。
+    応答時間の単位はミリ秒です。
 
     応答時間が長い順に上位3件の行を出力してください。
     同じ応答時間の行は、入力で先に登場したものを優先してください。
   en: |
-    Each line of input.txt is a log record in the form "request_id response_time", separated by one ASCII space.
-    Response times are nonnegative integers in milliseconds.
+    Each line of input.txt is a log record in the form "request_id response_time".
+    Response times are in milliseconds.
 
     Output the three records with the longest response times, from longest to shortest.
     For equal response times, give priority to records that appear earlier in the input.
-reference_solution: LC_ALL=C sort -s -k2,2nr input.txt | head -n 3
+reference_solution: sort -s -k2,2nr input.txt | head -n 3
 execution:
   stdin: ''
   fixtures:

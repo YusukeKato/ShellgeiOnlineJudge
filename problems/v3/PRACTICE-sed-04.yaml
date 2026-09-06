@@ -6,12 +6,12 @@ title:
   en: sed 4
 statement:
   ja: |
-    練習：sed、正規表現
-    sedコマンドで入力ファイル"input.txt"の数字の行だけを削除してください。
+    練習：sed
+    sedでinput.txtから、半角数字だけでできた行を削除してください。それ以外の行は元の順序で残してください。
   en: |
-    Exercise: sed, Regular Expression
-    Delete only lines containing numbers in the input file "input.txt".
-reference_solution: cat input.txt | sed "/[0-9]/d"
+    Practice: sed
+    Use sed to delete lines of input.txt consisting entirely of ASCII digits. Preserve all other lines in their original order.
+reference_solution: sed -E '/^[0-9]+$/d' input.txt
 execution:
   stdin: ''
   fixtures:
@@ -19,11 +19,9 @@ execution:
     content: |
       29383846
       SHELLGEI
+      file2
       001122
-      777
       ONLINE
-      029433112
-      73429999
       JUDGE
   exit_code: ignore
   stderr: merge
@@ -31,5 +29,6 @@ judge:
   type: text
   expected_output: |
     SHELLGEI
+    file2
     ONLINE
     JUDGE

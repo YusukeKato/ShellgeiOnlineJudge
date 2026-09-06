@@ -8,11 +8,9 @@ statement:
   ja: |
     input.txtの整数を1行ずつ判定し、素数ならYES、それ以外ならNOを入力と同じ順序で出力してください。
     素数とは、2以上の整数で、正の約数が1と自分自身だけのものです。
-    入力の整数は1以上10000以下です。
   en: |
     For each integer in input.txt, output YES if it is prime, or NO otherwise, one result per line in input order.
     A prime is an integer at least 2 whose only positive divisors are 1 and itself.
-    Input integers are between 1 and 10000 inclusive.
 reference_solution: 'factor < input.txt | awk ''{print NF==2 ? "YES" : "NO"}'''
 execution:
   stdin: ''

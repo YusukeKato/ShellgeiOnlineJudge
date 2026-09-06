@@ -7,34 +7,30 @@ title:
 statement:
   ja: |
     練習：grep
-    grepコマンドで入力ファイル"input.txt"から拡張子".jpg"が付いた行だけを出力してください。
+    grepでinput.txtから、文字列.jpgを含む行を元の順序で出力してください。行末でなくても対象です。
   en: |
-    Exercise: grep
-    Output only the lines from the input file "input.txt" with the extension ".jpg".
-reference_solution: cat input.txt | grep ".jpg"
+    Practice: grep
+    Use grep to output lines of input.txt containing the literal string .jpg, in input order. The string need not be at the end.
+reference_solution: grep -F '.jpg' input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      file_01.txt
-      file_02.txt
-      file_03.png
-      file_05.c
-      file_06.cpp
-      file_09
-      file_10.jpg
-      file_11.png
-      file_12.jpg
-      file_13.txt
-      file_15.py
-      file_16.php
-      file_18.jpg
+      photoXjpg
+      photo.jpg.bak
+      photo.jpg
+      photo.png
+      photoXpng
+      photo.png.old
+      notes.txt
+      notes.txt.bak
+      notesXtxt
+      README
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    file_10.jpg
-    file_12.jpg
-    file_18.jpg
+    photo.jpg.bak
+    photo.jpg

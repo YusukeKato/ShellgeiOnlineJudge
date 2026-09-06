@@ -6,12 +6,12 @@ title:
   en: sed 3
 statement:
   ja: |
-    練習：sed、正規表現
-    sedコマンドで入力ファイル"input.txt"の数字だけを削除してください。
+    練習：sed
+    sedでinput.txtから半角数字0〜9だけをすべて削除してください。
   en: |
-    Exercise: sed, Regular Expression
-    Delete only the numbers in the input file "input.txt".
-reference_solution: cat input.txt | sed "s/[0-9]//g"
+    Practice: sed
+    Use sed to delete every ASCII digit (0 through 9) from input.txt.
+reference_solution: sed 's/[0-9]//g' input.txt
 execution:
   stdin: ''
   fixtures:

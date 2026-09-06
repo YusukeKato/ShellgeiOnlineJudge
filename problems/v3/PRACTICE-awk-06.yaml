@@ -7,16 +7,17 @@ title:
 statement:
   ja: |
     練習：awk
-    awkコマンドで入力ファイル"input.txt"の各行が偶数か奇数か判定してください。
+    awkでinput.txtの各整数について、偶数ならEVEN、奇数ならODDを1行ずつ出力してください。
   en: |
-    Exercise: awk
-    Determine whether each line of the input file "input.txt" is even or odd.
-reference_solution: cat input.txt | awk '{if($0%2==0){print "EVEN"}else{print "ODD"}}'
+    Practice: awk
+    Use awk to output EVEN for each even integer in input.txt and ODD for each odd integer, one result per line.
+reference_solution: 'awk ''{print $1%2 ? "ODD" : "EVEN"}'' input.txt'
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
+      0
       1
       2
       5
@@ -30,6 +31,7 @@ execution:
 judge:
   type: text
   expected_output: |
+    EVEN
     ODD
     EVEN
     ODD

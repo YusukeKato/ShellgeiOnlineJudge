@@ -6,29 +6,27 @@ title:
   en: sed 6
 statement:
   ja: |
-    練習：sed、正規表現
-    sedコマンドで入力ファイル"input.txt"の各行の末尾に".jpg"を付けて出力してください。
+    練習：sed
+    sedでinput.txtの各行の末尾に.jpgを追加してください。
   en: |
-    Exercise: sed, Regular Expression
-    Append ".jpg" to the end of each line of the input file "input.txt".
-reference_solution: cat input.txt | sed "s/\([a-z]*[0-9]\)/\1.jpg/"
+    Practice: sed
+    Use sed to append .jpg to every line of input.txt.
+reference_solution: sed 's/$/.jpg/' input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
       image1
-      image2
-      image3
-      image4
-      image5
+      image12
+      cover
+      album2026
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
     image1.jpg
-    image2.jpg
-    image3.jpg
-    image4.jpg
-    image5.jpg
+    image12.jpg
+    cover.jpg
+    album2026.jpg

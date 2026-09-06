@@ -2,16 +2,16 @@ schema_version: 3
 id: STANDARD-00000044
 category: STANDARD
 title:
-  ja: 文字列の検索
-  en: String Search
+  ja: 文字列を含むファイル
+  en: Files Containing a String
 statement:
   ja: |
-    ShellGeiData/vol.68ディレクトリの中にあるファイルにおいて、"entrepreneurial"という文字列が書かれているファイルの名前を出力してください。
-    使用データ：https://github.com/ryuichiueda/ShellGeiData/tree/master/vol.68
+    /ShellGeiData/vol.68以下の通常ファイルから、文字列entrepreneurialを含むファイルを探してください。
+    出力するのはディレクトリを除いたファイル名です。複数ある場合は辞書順に並べ、同じ名前は1回だけ出力してください。
   en: |
-    Output the names of the files that contain the string "entrepreneurial" in the ShellGeiData/vol.68 directory.
-    data: https://github.com/ryuichiueda/ShellGeiData/tree/master/vol.68
-reference_solution: find ShellGeiData/vol.68 -type f | xargs -I@ grep entrepreneurial -rl @ | awk -F'/' '{print $NF}'
+    Find regular files under /ShellGeiData/vol.68 that contain the literal string entrepreneurial.
+    Output only basenames, without directories. Sort multiple names in lexicographic order and output each name once.
+reference_solution: find /ShellGeiData/vol.68 -type f -exec grep -Fl entrepreneurial {} + | sed 's|.*/||' | sort -u
 execution:
   stdin: ''
   fixtures: []

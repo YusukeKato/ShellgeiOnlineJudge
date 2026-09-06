@@ -6,21 +6,21 @@ title:
   en: Least Common Multiple
 statement:
   ja: |
-    最小公倍数を求めてください。
+    input.txtのすべての整数で割り切れる、最小の正の整数を出力してください。
   en: |
-    Find the least common multiple.
-reference_solution: cat input.txt | xargs | awk '{a=$1;for(i=100;i>=1;i--){for(j=100;j>=1;j--){for(k=100;k>=1;k--){if($1*i==$2*j&&$2*j==$3*k){a=$1*i}}}};print a}'
+    Output the least positive integer divisible by every integer in input.txt.
+reference_solution: awk 'function gcd(a,b,t){while(b){t=a%b;a=b;b=t}return a} BEGIN{m=1} {m=m/gcd(m,$1)*$1} END{printf "%.0f\n",m}' input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      256
-      512
-      1024
+      12
+      18
+      30
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    1024
+    180

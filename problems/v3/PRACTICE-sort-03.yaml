@@ -7,43 +7,35 @@ title:
 statement:
   ja: |
     練習：sort
-    sortコマンドで入力ファイル"input.txt"の数値を重複無しで昇順に並び替えてください。
-  en: "Exercise: sort \nSort the numbers in the input file \"input.txt\" in ascending order with no duplicates.\n"
-reference_solution: cat input.txt | sort -u
+    sortでinput.txtの整数を重複を除いた昇順に並べて、1行に1つずつ出力してください。
+  en: |
+    Practice: sort
+    Use sort to output the integers in input.txt in ascending order, without duplicates, one per line.
+reference_solution: sort -nu input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      8
       9
-      4
-      4
-      1
-      5
-      0
+      10
       2
-      8
-      0
-      3
+      100
       9
-      6
-      4
       0
-      7
-      1
+      10
+      2
+      21
+      3
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
     0
-    1
     2
     3
-    4
-    5
-    6
-    7
-    8
     9
+    10
+    21
+    100

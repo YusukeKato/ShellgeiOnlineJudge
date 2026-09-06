@@ -2,28 +2,33 @@ schema_version: 3
 id: STANDARD-00000042
 category: STANDARD
 title:
-  ja: 魔法陣5x5
-  en: Magic Square 5x5
+  ja: 桁を揃えた表
+  en: Aligned Inventory Table
 statement:
   ja: |
-    xを求めて魔法陣を完成させてください。
-    参考 : https://ja.wikipedia.org/wiki/%E9%AD%94%E6%96%B9%E9%99%A3
+    input.txtは「商品名 個数」の一覧です。
+    商品名を幅8文字で左揃え、個数を幅4文字で右揃えにし、その間を「 | 」で区切って入力順に出力してください。
+    幅の不足分は半角スペースで埋めてください。
   en: |
-    Complete the magic square.
-    Reference: https://ja.wikipedia.org/wiki/%E9%AD%94%E6%96%B9%E9%99%A3
-reference_solution: cat input.txt | awk 'NR==1{a=$1+$2+$3+$4+$5}NR==3{x=a-$1-$2-$4-$5;print $1,$2,x,$4,$5}NR!=3{print $0}' | sed '3 s/\( [0-9] \)/ \1/g;3 s/\( [0-9]$\)/ \1/g'
+    input.txt lists "item quantity" pairs.
+    Left-align names in a field of width 8 and right-align quantities in a field of width 4, separated by " | ", in input order.
+    Pad fields with ASCII spaces.
+reference_solution: awk '{printf "%-8s | %4d\n",$1,$2}' input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      11 24  7 20  3
-       4 12 25  8 16
-      17  5  x 21  9
-      10 18  1 14 22
-      23  6 19  2 15
+      apple 7
+      melon 120
+      fig 3
+      pear 42
   exit_code: ignore
   stderr: merge
 judge:
   type: text
-  expected_output: "11 24  7 20  3\n 4 12 25  8 16\n17  5 13 21  9\n10 18  1 14 22\n23  6 19  2 15 \n"
+  expected_output: |
+    apple    |    7
+    melon    |  120
+    fig      |    3
+    pear     |   42

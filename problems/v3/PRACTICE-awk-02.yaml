@@ -7,11 +7,11 @@ title:
 statement:
   ja: |
     練習：awk
-    awkコマンドで入力ファイル"input.txt"の2列目だけを出力してください。
+    awkでinput.txtの各行の2列目だけを出力してください。
   en: |
-    Exercise: awk
-    Output only the second column of the input file "input.txt".
-reference_solution: cat input.txt | awk '{print $2}'
+    Practice: awk
+    Use awk to output only the second field of each line in input.txt.
+reference_solution: awk '{print $2}' input.txt
 execution:
   stdin: ''
   fixtures:

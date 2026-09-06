@@ -3,13 +3,13 @@ id: STANDARD-00000038
 category: STANDARD
 title:
   ja: 割り算判定
-  en: Division
+  en: Divisibility Check
 statement:
   ja: |
-    1列目の値が2列目の値で割り切れるかどうか判定してください。
+    input.txtの各行について、1列目が2列目で割り切れるならYes、それ以外ならNoを、入力順に1行ずつ出力してください。
   en: |
-    Judge if the value in the first column is divisible by the value in the second column.
-reference_solution: cat input.txt | awk '{if($1%$2==0){print "Yes"}else{print "No"}}'
+    For each line of input.txt, output Yes if the first number is divisible by the second, or No otherwise, one per line in input order.
+reference_solution: 'awk ''{print $1%$2==0 ? "Yes" : "No"}'' input.txt'
 execution:
   stdin: ''
   fixtures:

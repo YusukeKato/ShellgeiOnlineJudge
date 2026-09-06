@@ -6,40 +6,28 @@ title:
   en: sed 5
 statement:
   ja: |
-    練習：sed、正規表現
-    sedコマンドで入力ファイル"input.txt"の数字の行だけを出力してください。
+    練習：sed
+    sedでinput.txtから、半角数字を1文字以上含む行だけを元の順序で出力してください。
   en: |
-    Exercise: sed, Regular Expression
-    Output only the lines that contain numbers in the input file "input.txt".
-reference_solution: cat input.txt | sed -n "/[0-9]/p"
+    Practice: sed
+    Use sed to output only lines of input.txt containing at least one ASCII digit, in their original order.
+reference_solution: sed -n '/[0-9]/p' input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
       1
-      22
       SHELLGEI
+      file2
       333
-      4444
-      55555
-      666666
-      7777777
       ONLINE
-      88888888
       JUDGE
-      999999999
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
     1
-    22
+    file2
     333
-    4444
-    55555
-    666666
-    7777777
-    88888888
-    999999999

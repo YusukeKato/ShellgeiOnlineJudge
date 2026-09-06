@@ -2,36 +2,29 @@ schema_version: 3
 id: STANDARD-00000026
 category: STANDARD
 title:
-  ja: 最短経路探索
-  en: Shortest Path Search
+  ja: 迷路の最短距離
+  en: Shortest Path Through a Maze
 statement:
   ja: |
-    5マスx5マスの盤面が与えられるので、スタート（S）からゴール（G）までの最短経路の距離を出力してください。
-    以下がルールです。
-    ・Sから上下左右に1マスずつ移動してGを目指します。
-    ・「.」が通過可能、「#」が通過不可能なマスです。
-    ・斜めに移動することはできません。
+    input.txtの迷路で、SからGまでの最短の移動回数を出力してください。
+    上下左右に1マスずつ移動でき、#は通れません。.とSとGは通れます。
   en: |
-    Find the distance of the shortest path from the S(Start) to the G(Goal).
-
-    Rule:
-    - Move one square at a time (up, down, left, or right) from S to G.
-    - '.' is a passable square and '#' is a non-passable square
-    - Diagonal moves are not allowed
-reference_solution: cat input.txt | sed -E 's/(.)/\1 /g' | awk '{for(i=1;i<=NF;i++){a[NR,i]=$i}}END{for(i=1;i<=5;i++){for(j=1;j<=5;j++){b[i,j]=999}};b[1,1]=0;c=0;while(c==0){for(i=1;i<=5;i++){for(j=1;j<=5;j++){if(a[i,j]!="#"){if(i>1&&a[i-1,j]!="#"&&b[i-1,j]+1<b[i,j]){b[i,j]=b[i-1,j]+1};if(j>1&&a[i,j-1]!="#"&&b[i,j-1]+1<b[i,j]){b[i,j]=b[i,j-1]+1}}}};if(b[5,5]!=999){c=1;print b[5,5]} }}'
+    Output the minimum number of moves from S to G in the maze in input.txt.
+    Each move goes one cell up, down, left or right. Walls (#) are impassable; ., S and G are passable.
+reference_solution: awk '{for(c=1;c<=length;c++){a[NR,c]=substr($0,c,1);if(a[NR,c]=="S"){qr[1]=NR;qc[1]=c;seen[NR,c]=1}}cols=length} END{dr[1]=1;dr[2]=-1;dc[3]=1;dc[4]=-1;tail=1;for(head=1;head<=tail;head++){r=qr[head];c=qc[head];if(a[r,c]=="G"){print dist[r,c]+0;exit}for(k=1;k<=4;k++){x=r+dr[k];y=c+dc[k];if(x>=1&&x<=NR&&y>=1&&y<=cols&&a[x,y]!="#"&&!seen[x,y]){seen[x,y]=1;dist[x,y]=dist[r,c]+1;qr[++tail]=x;qc[tail]=y}}}}' input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      S..#.
-      .#...
-      ...##
-      #....
-      ..##G
+      G...#
+      ###.#
+      ....#
+      .####
+      ...S#
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    8
+    13

@@ -9,10 +9,8 @@ statement:
     input.txtには置換表と日記のテンプレートが、この順に入っています。
     「---」だけの行が両者の区切りです。
 
-    置換表の各行は「キー=値」です。キーは小文字の英字だけからなり、重複しません。
-    値は日本語の文字だけからなり、空白や記号を含みません。
+    置換表の各行は「キー=値」です。
     本文中の「{{キー}}」を、置換表の対応する値で置き換えてください。
-    すべての穴に対応するキーがあり、同じ穴が複数回現れる場合もあります。
 
     出力するのは置換後の本文だけです。置換表と区切り行は出力しないでください。
     穴以外の文字・空白・改行は変更しないでください。
@@ -20,10 +18,8 @@ statement:
     input.txt contains a replacement table followed by a diary template.
     A line containing only "---" separates them.
 
-    Each table row is "key=value". Keys contain only lowercase ASCII letters and are unique.
-    Values contain only Japanese characters, with no spaces or punctuation.
+    Each table row is "key=value".
     Replace each "{{key}}" in the body with the corresponding value from the table.
-    Every placeholder has a matching key, and the same placeholder may occur more than once.
 
     Output only the completed body, without the table or separator.
     Preserve all other characters, spaces, and line breaks.

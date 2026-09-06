@@ -2,14 +2,16 @@ schema_version: 3
 id: STANDARD-00000025
 category: STANDARD
 title:
-  ja: 文字列の組み合わせ
-  en: String Combination
+  ja: 重複のない並べ方
+  en: Permutations Without Repetition
 statement:
   ja: |
-    AとBとCをそれぞれひとつずつ使用して組み合わせた文字列を全て出力してください。
+    A・B・Cを1回ずつ使ってできる3文字の文字列を、すべて出力してください。
+    ABCから始まる辞書順で、1行に1つずつ出力してください。
   en: |
-    Output all combined strings using one each of 'A', 'B', and 'C'.
-reference_solution: echo {A,B,C}{A,B,C}{A,B,C} | xargs -n1 | awk '{if(substr($0,1,1)!=substr($0,2,1)&&substr($0,1,1)!=substr($0,3,1)&&substr($0,2,1)!=substr($0,3,1)){print $0}}'
+    Output every three-letter string using A, B and C exactly once each.
+    Output one string per line in lexicographic order, starting with ABC.
+reference_solution: printf '%s\n' {A,B,C}{A,B,C}{A,B,C} | grep -Ev '(.).*\1'
 execution:
   stdin: ''
   fixtures: []

@@ -6,12 +6,12 @@ title:
   en: uniq 1
 statement:
   ja: |
-    練習：uniq, sort
-    uniqコマンドで入力ファイル"input.txt"の重複行を除いて出力してください。
+    練習：uniq
+    sortとuniqでinput.txtの重複行を除き、辞書順で出力してください。
   en: |
-    Exercise: uniq, sort
-    Output the input file "input.txt" without duplicate lines.
-reference_solution: cat input.txt | sort | uniq
+    Practice: uniq
+    Use sort and uniq to remove duplicate lines from input.txt and output them in lexicographic order.
+reference_solution: sort input.txt | uniq
 execution:
   stdin: ''
   fixtures:

@@ -7,10 +7,10 @@ title:
 statement:
   ja: |
     練習：echo
-    echoコマンドで文字列"SHELLGEI ONLINE JUDGE"を出力してください。
+    echoでSHELLGEI ONLINE JUDGEを1行で出力してください。
   en: |
-    Exercise: echo
-    Output the string "SHELLGEI ONLINE JUDGE".
+    Practice: echo
+    Use echo to output SHELLGEI ONLINE JUDGE on one line.
 reference_solution: echo "SHELLGEI ONLINE JUDGE"
 execution:
   stdin: ''

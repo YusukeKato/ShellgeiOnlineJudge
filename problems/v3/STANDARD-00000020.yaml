@@ -8,13 +8,11 @@ statement:
   ja: |
     input.txtの各行の整数を素因数分解し、ファイル全体で各素因数が何回現れるかを数えてください。
     例えば12は2×2×3なので、2を2回、3を1回と数えます。同じ整数の行が複数ある場合も、それぞれ数えます。
-    入力の整数は2以上10000以下です。
 
     素因数の小さい順に「素因数 回数」を1行ずつ、半角スペース1個で区切って出力してください。
   en: |
     Factor each integer in input.txt into primes and count the occurrences of each prime across the whole file.
     For example, 12 = 2 x 2 x 3 contributes two occurrences of 2 and one of 3. Count repeated input records separately.
-    Input integers are between 2 and 10000 inclusive.
 
     Output "prime count", one pair per line in ascending numeric order of prime, separated by one ASCII space.
 reference_solution: factor < input.txt | cut -d ' ' -f2- | tr ' ' '\n' | sort -n | uniq -c | awk '{print $2,$1}'

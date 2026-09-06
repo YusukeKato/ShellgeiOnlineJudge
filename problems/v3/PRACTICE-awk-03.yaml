@@ -7,11 +7,11 @@ title:
 statement:
   ja: |
     練習：awk
-    awkコマンドで入力ファイル"input.txt"の2列目と3列目を入れ替えて出力してください。
+    awkでinput.txtの2列目と3列目を入れ替えてください。出力は半角スペース1個で区切ってください。
   en: |
-    Exercise: awk
-    Swap the second and third columns of the input file "input.txt" and output the result.
-reference_solution: cat input.txt | awk '{print $1,$3,$2}'
+    Practice: awk
+    Use awk to swap fields 2 and 3 in input.txt. Separate output fields with one ASCII space.
+reference_solution: awk '{print $1,$3,$2}' input.txt
 execution:
   stdin: ''
   fixtures:

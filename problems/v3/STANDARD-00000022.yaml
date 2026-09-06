@@ -2,14 +2,16 @@ schema_version: 3
 id: STANDARD-00000022
 category: STANDARD
 title:
-  ja: 2の1024乗
-  en: 2 to the 1024th Power
+  ja: 大きな整数の桁数
+  en: Digits in a Large Integer
 statement:
   ja: |
-    2の1024乗の桁数を求めてください。
+    2の1024乗を十進数で表したときの桁数を出力してください。
+    改行や計算結果の折り返し記号は桁数に含めません。
   en: |
-    Find the number of digits to the 1024th power of 2.
-reference_solution: echo 'l(2)/l(10)' | bc -l | awk '{printf("%lf*1024\n",$0)}' | bc -l | awk '{print int($0)+1}'
+    Output the number of decimal digits in 2 raised to the power of 1024.
+    Do not count newlines or continuation markers in a wrapped calculation result.
+reference_solution: printf '2^1024\n' | bc | tr -d '\\\n' | wc -c
 execution:
   stdin: ''
   fixtures: []

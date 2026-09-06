@@ -6,12 +6,14 @@ title:
   en: Horizontal Line
 statement:
   ja: |
-    大きさ200x200[px]の赤色の画像の真ん中に50[px]の横線を引いてください。
-    画像はmedia/output.jpgとして作成してください。
+    200×200ピクセルの画像を作成してください。
+    赤（#FF0000）の背景に、横幅200・高さ50ピクセルの黒い帯を描いてください。帯は上から75〜124行目（0始まり）です。
+    ImageMagickのconvertを標準設定で使い、media/output.jpgへ保存してください。中間画像を使う場合はPNGやMIFFとし、JPEGへの保存は最後の1回だけにしてください。
   en: |
-    Draw a 50[px] horizontal line down the middle of the red 200x200[px] image.
-    Output image as media/output.jpg.
-reference_solution: convert -size 200x200 xc:#FF0000 jpg:- | convert - -stroke "#000000" -strokewidth 50 -draw "line 0,100 200,100" media/output.jpg
+    Create a 200 x 200 pixel image.
+    On a red (#FF0000) background, draw a black horizontal band 200 pixels wide and 50 pixels high, covering rows 75 through 124 (zero-based).
+    Use ImageMagick convert with its default settings and save to media/output.jpg. If you use intermediate images, use PNG or MIFF and save as JPEG only once, at the end.
+reference_solution: convert -size 200x200 xc:'#FF0000' -fill black -draw 'rectangle 0,75 199,124' media/output.jpg
 execution:
   stdin: ''
   fixtures: []

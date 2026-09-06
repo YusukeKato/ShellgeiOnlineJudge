@@ -2,14 +2,18 @@ schema_version: 3
 id: STANDARD-00000050
 category: STANDARD
 title:
-  ja: 四則演算
-  en: Four Arithmetic Operations
+  ja: 数式の結果を添える
+  en: Appending Calculation Results
 statement:
   ja: |
-    各行の数式の右辺を埋めてください。
+    input.txtの各行の末尾の=の後へ、計算結果を半角スペース1個で区切って追加してください。
+    数式は整数と+・-・*・/からなり、*と/を先に計算します。除算は小数部分を0の方向へ切り捨てます。
+    元の数式と空白はそのまま保ってください。
   en: |
-    Fill in the right-hand side of each equation.
-reference_solution: cat input.txt | tr -d '=' | sed 's/*/\\*/g;s/\//\\\//g' | awk '{cmd1="echo -n "$0"=;echo "$0" | bc";system(cmd1)}' | sed 's/=/= /g'
+    Append each expression result after the trailing = in input.txt, separated by one ASCII space.
+    Expressions contain integers and +, -, *, /. Multiplication and division take precedence. Division truncates the fractional part toward zero.
+    Preserve the original expressions and spacing.
+reference_solution: paste -d ' ' input.txt <(sed 's/=$//' input.txt | bc)
 execution:
   stdin: ''
   fixtures:

@@ -2,23 +2,25 @@ schema_version: 3
 id: STANDARD-00000039
 category: STANDARD
 title:
-  ja: 重複削除
-  en: Remove Duplicates
+  ja: 一度だけ現れる文字
+  en: Characters Appearing Once
 statement:
   ja: |
-    入力の文字列から重複している文字だけを削除してください。
+    input.txtの1行の文字列から、全体で1回だけ現れる文字を残してください。
+    残す文字は元の登場順に並べ、区切らず1行で出力してください。
   en: |
-    Delete only duplicate characters from the input string.
-reference_solution: cat input.txt | sed 's/\([a-z]\)/\1\n/g' | uniq -u | tr -d '\n'
+    Keep only characters that occur exactly once in the single line of input.txt.
+    Output the remaining characters on one line, without separators and in their original order.
+reference_solution: awk '{for(i=1;i<=length;i++)n[substr($0,i,1)]++;for(i=1;i<=length;i++){c=substr($0,i,1);if(n[c]==1)printf "%s",c}print ""}' input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      aabcccddeefggggg
+      azbaccdefbd
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    bf
+    zef

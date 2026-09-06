@@ -7,11 +7,11 @@ title:
 statement:
   ja: |
     練習：awk
-    awkコマンドで1から10を改行区切りで出力してください。
+    awkで1から10までの整数を1行に1つずつ出力してください。
   en: |
-    Exercise: awk
-    Output 1 through 10 separated by newlines.
-reference_solution: echo | awk '{for(i=1;i<=10;i++){print i}}'
+    Practice: awk
+    Use awk to output the integers 1 through 10, one per line.
+reference_solution: awk 'BEGIN{for(i=1;i<=10;i++)print i}'
 execution:
   stdin: ''
   fixtures: []

@@ -7,11 +7,11 @@ title:
 statement:
   ja: |
     練習：awk
-    awkコマンドで入力ファイル"input.txt"の奇数行だけ出力してください。
+    awkでinput.txtの1・3・5行目のように、奇数番目の行だけを元の順序で出力してください。
   en: |
-    Exercise: awk
-    Print only the odd lines of the input file "input.txt".
-reference_solution: cat input.txt | awk 'NR%2==1'
+    Practice: awk
+    Use awk to output the odd-numbered lines of input.txt (1, 3, 5, ...), preserving their order.
+reference_solution: awk 'NR%2' input.txt
 execution:
   stdin: ''
   fixtures:

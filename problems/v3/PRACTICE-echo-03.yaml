@@ -7,11 +7,11 @@ title:
 statement:
   ja: |
     練習：echo
-    echoコマンドで設定されているシェルを確認してください。
+    echoで環境変数SHELLの値を出力してください。
   en: |
-    Exercise: echo
-    Check the shell.
-reference_solution: echo $SHELL
+    Practice: echo
+    Use echo to output the value of the SHELL environment variable.
+reference_solution: echo "$SHELL"
 execution:
   stdin: ''
   fixtures: []

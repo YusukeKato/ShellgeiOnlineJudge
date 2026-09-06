@@ -7,15 +7,15 @@ title:
 statement:
   ja: |
     練習：find
-    findコマンドで"/ShellGeiData/sd201701" の中にあるファイルとディレクトリの一覧を出力してください。
-    出力はsortしてください。
-    使用データ : https://github.com/ryuichiueda/ShellGeiData/tree/master/sd201701
+    findで/ShellGeiData/sd201701以下を再帰的に探し、ファイルとディレクトリの絶対パスを列挙してください。探索開始点/ShellGeiData/sd201701/も末尾の/付きで含めてください。
+    結果は辞書順で1行ずつ出力してください。
+    使用データ：https://github.com/ryuichiueda/ShellGeiData/tree/master/sd201701
   en: |
-    Exercise: find
-    Output a list of files and directories in "/ShellGeiData/sd201701".
-    sort the output.
-    data: https://github.com/ryuichiueda/ShellGeiData/tree/master/sd201701
-reference_solution: find "/ShellGeiData/sd201701/" | sort
+    Practice: find
+    Use find to recursively search /ShellGeiData/sd201701 and list absolute paths of files and directories, including the starting path /ShellGeiData/sd201701/ with its trailing slash.
+    Output one path per line in lexicographic order.
+    Data: https://github.com/ryuichiueda/ShellGeiData/tree/master/sd201701
+reference_solution: find /ShellGeiData/sd201701/ | sort
 execution:
   stdin: ''
   fixtures: []

@@ -2,24 +2,23 @@ schema_version: 3
 id: STANDARD-00000035
 category: STANDARD
 title:
-  ja: 文字列の複製
-  en: Copy Strings
+  ja: 行の複製
+  en: Duplicating Lines
 statement:
   ja: |
-    各行を二行に複製して出力してください。
+    input.txtの各行を、同じ内容で連続する2行として出力してください。
+    行内の空白もそのまま保ってください。
   en: |
-    Duplicate each line into two lines of output.
-reference_solution: cat input.txt | awk '{print $1,$1}' | xargs -n1
+    Output each line of input.txt twice consecutively, preserving its contents including spaces.
+reference_solution: sed p input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
       shellgei
-      apple
-      switch
-      book
-      tomato
+      hello world
+      keep  spaces
   exit_code: ignore
   stderr: merge
 judge:
@@ -27,11 +26,7 @@ judge:
   expected_output: |
     shellgei
     shellgei
-    apple
-    apple
-    switch
-    switch
-    book
-    book
-    tomato
-    tomato
+    hello world
+    hello world
+    keep  spaces
+    keep  spaces

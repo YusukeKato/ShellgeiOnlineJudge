@@ -7,11 +7,11 @@ title:
 statement:
   ja: |
     練習：wc
-    wcコマンドで入力ファイル"input.txt"の文字数を出力してください（改行を含む）。
+    wcでinput.txtの文字数だけを出力してください。改行も1文字として数えます。
   en: |
-    Exercise: wc
-    Output the number of characters in the input file "input.txt"(Including line breaks).
-reference_solution: cat input.txt | wc -m
+    Practice: wc
+    Use wc to output only the character count of input.txt, counting the newline as one character.
+reference_solution: wc -m < input.txt
 execution:
   stdin: ''
   fixtures:

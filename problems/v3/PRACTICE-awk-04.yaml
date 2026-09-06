@@ -7,11 +7,11 @@ title:
 statement:
   ja: |
     練習：awk
-    awkコマンドで入力ファイル"input.txt"の行数をカウントしてください。
+    awkでinput.txtの行数を出力してください。
   en: |
-    Exercise: awk
-    Count the number of lines in the input file "input.txt".
-reference_solution: cat input.txt | awk 'BEGIN{cnt=0}{cnt+=1}END{print cnt}'
+    Practice: awk
+    Use awk to output the number of lines in input.txt.
+reference_solution: awk 'END{print NR}' input.txt
 execution:
   stdin: ''
   fixtures:

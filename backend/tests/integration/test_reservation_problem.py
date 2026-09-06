@@ -34,19 +34,19 @@ def test_reservation_solutions_and_common_mistakes_in_real_sandboxes() -> None:
         (repository.require(PROBLEM_ID).definition.reference_solution, True),
         (
             'awk \'$1=="arrived"{a[$2]=1} $1=="reserved"{r[$2]=1} '
-            "END{for(n in r)if(!(n in a))print n}' input.txt | LC_ALL=C sort",
+            "END{for(n in r)if(!(n in a))print n}' input.txt | sort",
             True,
         ),
-        (f"grep -Fxv -f <({ARRIVED}) <({RESERVED} | LC_ALL=C sort -u)", True),
+        (f"grep -Fxv -f <({ARRIVED}) <({RESERVED} | sort -u)", True),
         (
-            f"export LC_ALL=C; comm -13 <({RESERVED} | sort -u) <({ARRIVED} | sort -u)",
+            f"comm -13 <({RESERVED} | sort -u) <({ARRIVED} | sort -u)",
             False,
         ),
         (
-            f"export LC_ALL=C; comm -23 <({RESERVED} | sort) <({ARRIVED} | sort -u)",
+            f"comm -23 <({RESERVED} | sort) <({ARRIVED} | sort -u)",
             False,
         ),
-        (f"grep -Fv -f <({ARRIVED}) <({RESERVED} | LC_ALL=C sort -u)", False),
+        (f"grep -Fv -f <({ARRIVED}) <({RESERVED} | sort -u)", False),
     ]
     manager = ContainerManager(pool_size=1)
     client = ShellgeiDockerClient(

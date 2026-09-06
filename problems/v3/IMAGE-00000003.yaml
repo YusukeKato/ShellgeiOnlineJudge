@@ -6,12 +6,16 @@ title:
   en: Circle
 statement:
   ja: |
-    大きさ200x200[px]の赤色の画像の中央に半径50[px]の円を描いてください。
-    画像はmedia/output.jpgとして作成してください。
+    200×200ピクセルの画像を作成してください。
+    赤（#FF0000）の背景に、中心が(100,100)、半径50ピクセルの黒い円を塗りつぶして描いてください。
+    座標は左上を(0,0)とし、右向きがx、下向きがyです。
+    ImageMagickのconvertを標準設定で使い、media/output.jpgへ保存してください。中間画像を使う場合はPNGやMIFFとし、JPEGへの保存は最後の1回だけにしてください。
   en: |
-    Draw a circle with a radius of 50[px] in the center of the red 200x200[px] image.
-    Output image as media/output.jpg.
-reference_solution: convert -size 200x200 xc:#FF0000 jpg:- | convert - -draw "circle 100,100 100,150" media/output.jpg
+    Create a 200 x 200 pixel image.
+    On a red (#FF0000) background, draw a filled black circle centered at (100,100) with radius 50 pixels.
+    Coordinates start at (0,0) in the top-left corner, with x increasing rightwards and y downwards.
+    Use ImageMagick convert with its default settings and save to media/output.jpg. If you use intermediate images, use PNG or MIFF and save as JPEG only once, at the end.
+reference_solution: convert -size 200x200 xc:'#FF0000' -fill black -draw 'circle 100,100 100,150' media/output.jpg
 execution:
   stdin: ''
   fixtures: []

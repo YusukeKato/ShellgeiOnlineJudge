@@ -37,7 +37,7 @@ CASES: dict[int, list[tuple[str, bool]]] = {
             True,
         ),
         (
-            'LC_ALL=C; printf "%.10f\\n" "$(printf \'scale=20; 4*a(1)\\n\' | bc -l)"',
+            'printf "%.10f\\n" "$(printf \'scale=20; 4*a(1)\\n\' | bc -l)"',
             False,
         ),
     ],
@@ -65,14 +65,14 @@ CASES: dict[int, list[tuple[str, bool]]] = {
             True,
         ),
         (
-            r"""awk 'BEGIN{RS=""; ORS="\0"} {print $0 "\n"}' input.txt | LC_ALL=C sort -z | tr '\0' '\n' """.strip(),
+            r"""awk 'BEGIN{RS=""; ORS="\0"} {print $0 "\n"}' input.txt | sort -z | tr '\0' '\n' """.strip(),
             False,
         ),
         (
-            r"""awk 'BEGIN{RS=""; ORS="\0"} {print $0 "\n"}' input.txt | LC_ALL=C sort -zr | tr '\0' '\n' | tr -s ' ' """.strip(),
+            r"""awk 'BEGIN{RS=""; ORS="\0"} {print $0 "\n"}' input.txt | sort -zr | tr '\0' '\n' | tr -s ' ' """.strip(),
             False,
         ),
-        ("LC_ALL=C sort -r input.txt", False),
+        ("sort -r input.txt", False),
     ],
     10: [
         (
@@ -103,7 +103,7 @@ CASES: dict[int, list[tuple[str, bool]]] = {
     ],
     13: [
         (
-            r"""export LC_ALL=C; comm -23 <(printf '%s\n' {a..z}) <(fold -w1 input.txt | sort -u)""",
+            r"""comm -23 <(printf '%s\n' {a..z}) <(fold -w1 input.txt | sort -u)""",
             True,
         ),
         (
@@ -117,11 +117,11 @@ CASES: dict[int, list[tuple[str, bool]]] = {
             True,
         ),
         (
-            r"""LC_ALL=C sort -s -k2,2 input.txt | awk '$2!=team{if(NR>1)printf "\n";team=$2;printf "%s",team}{printf " %s",$1}END{print ""}' """.strip(),
+            r"""sort -s -k2,2 input.txt | awk '$2!=team{if(NR>1)printf "\n";team=$2;printf "%s",team}{printf " %s",$1}END{print ""}' """.strip(),
             False,
         ),
         (
-            r"""LC_ALL=C sort -k2,2n input.txt | awk '$2!=team{if(NR>1)printf "\n";team=$2;printf "%s",team}{printf " %s",$1}END{print ""}' """.strip(),
+            r"""sort -k2,2n input.txt | awk '$2!=team{if(NR>1)printf "\n";team=$2;printf "%s",team}{printf " %s",$1}END{print ""}' """.strip(),
             False,
         ),
     ],
@@ -144,10 +144,10 @@ CASES: dict[int, list[tuple[str, bool]]] = {
         ("cat input.txt", False),
     ],
     17: [
-        ("LC_ALL=C sort -s -k2,2nr input.txt | sed -n '1,3p'", True),
-        ("LC_ALL=C sort -s -k2,2r input.txt | head -n3", False),
-        ("LC_ALL=C sort -k2,2nr input.txt | head -n3", False),
-        ("LC_ALL=C sort -s -k2,2nr input.txt", False),
+        ("sort -s -k2,2nr input.txt | sed -n '1,3p'", True),
+        ("sort -s -k2,2r input.txt | head -n3", False),
+        ("sort -k2,2nr input.txt | head -n3", False),
+        ("sort -s -k2,2nr input.txt", False),
     ],
     18: [
         (

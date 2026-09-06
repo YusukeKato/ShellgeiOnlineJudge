@@ -6,12 +6,10 @@ title:
   en: Recovering the Original String
 statement:
   ja: |
-    input.txtの各行は、空でない文字列をちょうど3回連結したものです。連結する前の文字列を、1行ずつ出力してください。
-    入力は半角の大文字英字だけで、文字列の長さは行によって異なります。
+    input.txtの各行は、文字列をちょうど3回連結したものです。連結する前の文字列を、1行ずつ出力してください。
     例えば、GGGGGGから取り出すのはGではなくGGです。
   en: |
-    Each line of input.txt was formed by concatenating a nonempty string exactly three times. Output the original string, one per line.
-    The input contains only uppercase ASCII letters, and lengths vary between lines.
+    Each line of input.txt was formed by concatenating a string exactly three times. Output the original string, one per line.
     For example, recover GG from GGGGGG, not G.
 reference_solution: awk '{print substr($0,1,length($0)/3)}' input.txt
 execution:

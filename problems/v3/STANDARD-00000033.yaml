@@ -2,14 +2,14 @@ schema_version: 3
 id: STANDARD-00000033
 category: STANDARD
 title:
-  ja: 文字カウント1
-  en: Character Count 1
+  ja: 同じ文字の行を数える
+  en: Counting a Repeated Character
 statement:
   ja: |
-    各行の文字数をカウントしてください。
+    input.txtの各行の文字とその個数を、「文字 個数」の形式で入力順に出力してください。区切りは半角スペース1個です。改行は個数に含めません。
   en: |
-    Count the number of characters in each line.
-reference_solution: cat input.txt | awk '{print substr($1,1,1), length($1)}'
+    Output the letter and its count on each line of input.txt as "letter count", in input order, separated by one ASCII space. Do not count the newline.
+reference_solution: awk '{print substr($0,1,1),length($0)}' input.txt
 execution:
   stdin: ''
   fixtures:

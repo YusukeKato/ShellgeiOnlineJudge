@@ -7,21 +7,16 @@ title:
 statement:
   ja: |
     練習：wc
-    wcコマンドで入力ファイル"input.txt"の単語数を出力してください。
+    wcでinput.txtの単語数だけを出力してください。単語はスペース・タブ・改行で区切られています。
   en: |
-    Exercise: wc
-    Output the number of words in the input file "input.txt".
-reference_solution: cat input.txt | wc -w
+    Practice: wc
+    Use wc to output only the word count of input.txt. Words are separated by spaces, tabs or newlines.
+reference_solution: wc -w < input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
-    content: |
-      apple train
-      tomato
-      SHELL ONLINE JUDGE
-      test text think
-      good nice
+    content: "apple  train\ntomato\nSHELL\tONLINE JUDGE\ntest text think\ngood nice\n"
   exit_code: ignore
   stderr: merge
 judge:

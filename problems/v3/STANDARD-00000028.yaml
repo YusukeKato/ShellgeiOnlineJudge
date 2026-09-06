@@ -2,24 +2,33 @@ schema_version: 3
 id: STANDARD-00000028
 category: STANDARD
 title:
-  ja: 模様の描画1
-  en: Pattern Drawing 1
+  ja: 同心の数字模様
+  en: Concentric Number Pattern
 statement:
   ja: |
-    次の想定出力のような模様を描いてください。
+    input.txtの整数Nから、一辺が2N-1文字の正方形を作ってください。
+    外周をN、1つ内側をN-1とし、中心が1になるよう数字を配置してください。
+    各行は数字を区切らずに出力してください。
   en: |
-    Output the same pattern as the expected output.
-reference_solution: echo | awk '{for(i=0;i<5;i++){for(j=0;j<5;j++){if(i==0||i==4||j==0||j==4){printf("3")}else if((i==1||i==3||j==1||j==3)){printf("2")}else{printf("1")}};printf("\n")}}'
+    For the integer N in input.txt, produce a square of side length 2N-1 characters.
+    Fill the outer ring with N, the next ring with N-1, and continue to 1 at the center.
+    Output each row without separators between digits.
+reference_solution: awk '{n=$1;for(r=1;r<2*n;r++){for(c=1;c<2*n;c++){x=r-n;if(x<0)x=-x;y=c-n;if(y<0)y=-y;printf "%d",1+(x>y?x:y)}print ""}}' input.txt
 execution:
   stdin: ''
-  fixtures: []
+  fixtures:
+  - path: input.txt
+    content: |
+      4
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    33333
-    32223
-    32123
-    32223
-    33333
+    4444444
+    4333334
+    4322234
+    4321234
+    4322234
+    4333334
+    4444444

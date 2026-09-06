@@ -6,12 +6,14 @@ title:
   en: Checkered Pattern
 statement:
   ja: |
-    200x200[px]の画像に赤色と黒色で市松模様を描いてください。
-    画像はmedia/output.jpgとして作成してください。
+    200×200ピクセルの画像を作成してください。
+    赤（#FF0000）の背景を100×100ピクセルの4区画に分け、左上と右下を黒で塗りつぶしてください。
+    ImageMagickのconvertを標準設定で使い、media/output.jpgへ保存してください。中間画像を使う場合はPNGやMIFFとし、JPEGへの保存は最後の1回だけにしてください。
   en: |
-    Draw a checkered pattern in black on a red 200x200[px] image.
-    Output image as media/output.jpg.
-reference_solution: convert -size 200x200 xc:#FF0000 jpg:- | convert - -draw "rectangle 0,0 100,100" - | convert - -draw "rectangle 100,100, 200, 200" media/output.jpg
+    Create a 200 x 200 pixel image.
+    Divide a red (#FF0000) background into four 100 x 100 pixel quadrants. Fill the top-left and bottom-right quadrants with black.
+    Use ImageMagick convert with its default settings and save to media/output.jpg. If you use intermediate images, use PNG or MIFF and save as JPEG only once, at the end.
+reference_solution: convert -size 200x200 xc:'#FF0000' -fill black -draw 'rectangle 0,0 99,99 rectangle 100,100 199,199' media/output.jpg
 execution:
   stdin: ''
   fixtures: []

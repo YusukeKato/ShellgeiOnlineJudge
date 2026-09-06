@@ -7,11 +7,11 @@ title:
 statement:
   ja: |
     練習：awk
-    awkコマンドで入力ファイル"input.txt"の2行目と3行目を入れ替えて出力してください。
+    awkでinput.txtの2行目と3行目を入れ替えてください。それ以外の行と、各行の内容は変えないでください。
   en: |
-    Exercise: awk
-    Swap the second and third lines of the input file "input.txt".
-reference_solution: cat input.txt | awk 'NR==2{a=$0}NR==3{print $0;print a}NR!=2&&NR!=3{print $0}'
+    Practice: awk
+    Use awk to swap lines 2 and 3 of input.txt. Preserve all other lines and the contents of every line.
+reference_solution: awk 'NR==2{a=$0} NR==3{print;print a} NR!=2&&NR!=3' input.txt
 execution:
   stdin: ''
   fixtures:

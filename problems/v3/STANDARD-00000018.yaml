@@ -7,12 +7,12 @@ title:
 statement:
   ja: |
     1以上100以下の整数Nのうち、input.txtの条件をすべて満たすものを、小さい順に1行に1個ずつ出力してください。
-    各行は「N > 整数」または「N < 整数」です。条件の整数は0以上200以下で、区切りは半角スペース1個です。
-    「>」「<」は等しい値を含みません。条件を満たすNは必ず1つ以上あります。
+    各行は「N > 整数」または「N < 整数」です。
+    「>」「<」は等しい値を含みません。
   en: |
     Output every integer N from 1 through 100 that satisfies all conditions in input.txt, in ascending order, one per line.
-    Each line is "N > integer" or "N < integer", with integers from 0 through 200 and fields separated by one ASCII space.
-    Both comparisons are strict: equality does not satisfy them. At least one valid N exists.
+    Each line is "N > integer" or "N < integer".
+    Both comparisons are strict: equality does not satisfy them.
 reference_solution: awk 'BEGIN{lo=1; hi=100} $2==">" && $3>=lo {lo=$3+1} $2=="<" && $3<=hi {hi=$3-1} END{print lo,hi}' input.txt | xargs seq
 execution:
   stdin: ''

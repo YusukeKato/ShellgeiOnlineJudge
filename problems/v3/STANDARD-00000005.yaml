@@ -7,15 +7,15 @@ title:
 statement:
   ja: |
     倉庫にある品物の初期在庫は0個です。
-    input.txtの各行には、入出庫の時刻と在庫の増減が、半角スペース1個で区切られています。
-    正の数は入庫、負の数は出庫を表します。記録は時刻順で、在庫が負になることはありません。
+    input.txtの各行には、入出庫の時刻と在庫の増減が記録されています。
+    正の数は入庫、負の数は出庫を表します。
 
     各記録を処理した直後の「時刻 在庫数」を、入力と同じ順序で1行ずつ出力してください。
     時刻と在庫数は半角スペース1個で区切ってください。
   en: |
     The warehouse starts with 0 items in stock.
-    Each line of input.txt contains a time and an inventory change, separated by one ASCII space.
-    Positive numbers are arrivals; negative numbers are departures. Records are chronological, and stock never becomes negative.
+    Each line of input.txt contains a time and an inventory change.
+    Positive numbers are arrivals; negative numbers are departures.
 
     For each record, output "time stock" after applying that change, in input order, one record per line.
     Separate the time and stock with one ASCII space.

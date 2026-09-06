@@ -7,11 +7,9 @@ title:
 statement:
   ja: |
     input.txtの行列を、時計回りに90度回転させてください。
-    各行の要素数は同じで、整数が半角スペース1個で区切られています。
     出力も要素を半角スペース1個で区切り、行列の1行を1行ずつ出力してください。
   en: |
     Rotate the matrix in input.txt 90 degrees clockwise.
-    Each row has the same number of integer elements, separated by one ASCII space.
     Separate output elements with one ASCII space and output one matrix row per line.
 reference_solution: tac input.txt | rs -T | awk '{$1=$1; print}'
 execution:

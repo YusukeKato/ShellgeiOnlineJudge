@@ -6,14 +6,18 @@ title:
   en: Square Pattern
 statement:
   ja: |
-    200x200[px]の赤色の画像に10[px]間隔で四角を描いてください。
-    端は5[px]あけてください。
-    画像はmedia/output.jpgとして作成してください。
+    200×200ピクセルの画像を作成してください。
+    赤（#FF0000）の背景に、10×10ピクセルの黒い正方形を縦横10個ずつ並べてください。
+    正方形どうしの間隔は10ピクセル、画像の外周の余白は5ピクセルです。左上の正方形は(5,5)から(14,14)です。
+    座標は左上を(0,0)とし、右向きがx、下向きがyです。
+    ImageMagickのconvertを標準設定で使い、media/output.jpgへ保存してください。中間画像を使う場合はPNGやMIFFとし、JPEGへの保存は最後の1回だけにしてください。
   en: |
-    Draw squares at 10[px] intervals on a red 200x200[px] image.
-    Leave 5[px] space at the edges.
-    Output image as media/output.jpg.
-reference_solution: convert -size 200x200 xc:#FF0000 media/output.jpg; for i in {0..9};do for j in {0..9};do convert media/output.jpg -draw "rectangle $((i*20+5)),$((j*20+5)) $((i*20+15)),$((j*20+15))" media/output.jpg; done; done
+    Create a 200 x 200 pixel image.
+    On a red (#FF0000) background, arrange black 10 x 10 pixel squares in ten rows and ten columns.
+    Leave gaps of 10 pixels between squares and a 5 pixel margin at the image edges. The top-left square spans (5,5) through (14,14).
+    Coordinates start at (0,0) in the top-left corner, with x increasing rightwards and y downwards.
+    Use ImageMagick convert with its default settings and save to media/output.jpg. If you use intermediate images, use PNG or MIFF and save as JPEG only once, at the end.
+reference_solution: convert -size 200x200 xc:'#FF0000' -fill black -draw "$(for y in {0..9}; do for x in {0..9}; do printf 'rectangle %d,%d %d,%d ' "$((20*x+5))" "$((20*y+5))" "$((20*x+14))" "$((20*y+14))"; done; done)" media/output.jpg
 execution:
   stdin: ''
   fixtures: []

@@ -7,10 +7,10 @@ title:
 statement:
   ja: |
     練習：cat
-    catコマンドで入力ファイル"input.txt"の各行の先頭に行番号を付けて出力してください。
+    catでinput.txtの全行に、空行も含めて1から行番号を付けてください。番号は幅6文字に右揃えし、行の内容との間にタブ1個を入れてください。
   en: |
-    Exercise: cat
-    Output the input file "input.txt" with line numbers.
+    Practice: cat
+    Use cat to number every line of input.txt starting at 1, including empty lines. Right-align each number in six characters, then insert one tab before the original line.
 reference_solution: cat -n input.txt
 execution:
   stdin: ''
@@ -18,10 +18,11 @@ execution:
   - path: input.txt
     content: |
       SHELLGEI
+
       ONLINE
       JUDGE
   exit_code: ignore
   stderr: merge
 judge:
   type: text
-  expected_output: "     1\tSHELLGEI\n     2\tONLINE\n     3\tJUDGE\n"
+  expected_output: "     1\tSHELLGEI\n     2\t\n     3\tONLINE\n     4\tJUDGE\n"

@@ -7,41 +7,37 @@ title:
 statement:
   ja: |
     練習：grep
-    grepコマンドで入力ファイル"input.txt"から拡張子".txt"が付いていない行だけを出力してください。
+    grepでinput.txtから、.txtで終わらない行を元の順序で出力してください。
   en: |
-    Exercise: grep
-    Output only lines from the input file "input.txt" that do not have a ".txt" extension.
-reference_solution: cat input.txt | grep -v ".txt"
+    Practice: grep
+    Use grep to output lines of input.txt that do not end in .txt, in input order.
+reference_solution: grep -v '\.txt$' input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      file_01.txt
-      file_02.txt
-      file_03.png
-      file_05.c
-      file_06.cpp
-      file_09
-      file_10.jpg
-      file_11.png
-      file_12.jpg
-      file_13.txt
-      file_15.py
-      file_16.php
-      file_18.jpg
+      photoXjpg
+      photo.jpg.bak
+      photo.jpg
+      photo.png
+      photoXpng
+      photo.png.old
+      notes.txt
+      notes.txt.bak
+      notesXtxt
+      README
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    file_03.png
-    file_05.c
-    file_06.cpp
-    file_09
-    file_10.jpg
-    file_11.png
-    file_12.jpg
-    file_15.py
-    file_16.php
-    file_18.jpg
+    photoXjpg
+    photo.jpg.bak
+    photo.jpg
+    photo.png
+    photoXpng
+    photo.png.old
+    notes.txt.bak
+    notesXtxt
+    README

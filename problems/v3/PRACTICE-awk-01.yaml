@@ -7,11 +7,11 @@ title:
 statement:
   ja: |
     練習：awk
-    awkコマンドで文字列"SHELLGEI ONLINE JUDGE"を出力してください。
+    awkでSHELLGEI ONLINE JUDGEを1行で出力してください。
   en: |
-    Exercise: awk
-    Output the string "SHELLGEI ONLINE JUDGE".
-reference_solution: echo | awk '{print "SHELLGEI ONLINE JUDGE"}'
+    Practice: awk
+    Use awk to output SHELLGEI ONLINE JUDGE on one line.
+reference_solution: awk 'BEGIN{print "SHELLGEI ONLINE JUDGE"}'
 execution:
   stdin: ''
   fixtures: []

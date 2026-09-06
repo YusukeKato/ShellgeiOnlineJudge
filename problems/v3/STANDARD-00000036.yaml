@@ -6,37 +6,35 @@ title:
   en: Output N N Times
 statement:
   ja: |
-    入力の数字NをN回出力してください。
+    input.txtの各行の整数Nを、1行に1個ずつN回出力してください。
+    入力順に処理し、結果の間に空行は入れないでください。
   en: |
-    Output the input number N, N times.
-reference_solution: cat input.txt | awk '{for(i=0;i<s$1;i++){print $1}}'
+    For each integer N in input.txt, output N on its own line N times.
+    Process input lines in order with no blank lines between results.
+reference_solution: awk '{for(i=0;i<$1;i++)print $1}' input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
       1
+      10
       2
-      3
-      4
-      5
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
     1
+    10
+    10
+    10
+    10
+    10
+    10
+    10
+    10
+    10
+    10
     2
     2
-    3
-    3
-    3
-    4
-    4
-    4
-    4
-    5
-    5
-    5
-    5
-    5
