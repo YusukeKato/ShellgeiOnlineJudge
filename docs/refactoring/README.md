@@ -20,14 +20,14 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Baseline commit: `991ef334f2785cce81a2e33206ec1f00f3487c9b`
 - Baseline commit subject: `docs: update maintenance history`
 - Baseline date: 2026-08-25
-- Overall status: `Final frontend refinement awaiting review`
+- Overall status: `Release-scope refactoring completed`
 - Total refactoring units: 31
 - Ready: 0
 - Planned: 0
 - Pending (`Ready` + `Planned`): 0
 - In Progress: 0
-- Review: 1
-- Completed: 29
+- Review: 0
+- Completed: 30
 - Blocked: 0
 - Deferred: 1
 - Superseded: 0
@@ -184,7 +184,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
 | R3-029 | P2 | Completed | F | Organize shared, backend, and runner packages | R3-023, R3-024 | `b71663e` |
 | R3-030 | P2 | Deferred | D | Support display of generated GIF artifacts | artifact contract review | - |
-| R3-031 | P2 | Review | D | Refresh the responsive frontend and add language selection | R3-019, R3-020, R3-028 | - |
+| R3-031 | P2 | Completed | D | Refresh the responsive frontend and add language selection | R3-019, R3-020, R3-028 | `118ba5d` |
 
 Size estimates use `XS` (under about 100 changed lines), `S` (100--250),
 `M` (250--600), and `L` (over 600 or a large mechanical data migration).
@@ -644,7 +644,7 @@ They are planning aids, not acceptance criteria.
 
 ### R3-031: Refresh the responsive frontend and add language selection
 
-- Priority / Status: P2 / `Review`
+- Priority / Status: P2 / `Completed`
 - Goal: v3公開前の最終UI改善として、問題・入力・結果へ集中できるPC/スマートフォンの画面と日英切替を整備する
 - Scope: 共通header/footer、問題選択、PCの2列・スマートフォンの1列、入力と結果の表示、Aboutを統一。日本語既定で選択を端末内保存し、問題データの日英fieldを表示時に選ぶ。依頼者指定によりエラー説明は英語とし、API・DB・sandboxと提出制御を維持する。GIF実装はR3-030へ維持
 - Main files/components: `frontend/src/`、frontend README、browser E2Eと関連文書
@@ -655,7 +655,7 @@ They are planning aids, not acceptance criteria.
   文言・配置のレビュー指摘反映後にもfrontend基本5検査・53件が成功し、同じ7画面幅で問題選択と問題文の幅、結果の位置、関連リンクの整列・文字サイズを実ブラウザで確認した。
   API・DB・sandbox・依存lockは変更していないため、全92問回帰と本番5 imageの再build・供給網scanは再実行していない。
   実機iOS/Android・ソフトウェアキーボード、本番反映は未確認。
-- Completion: -
+- Completion: commit `118ba5d3e67a1a65c91bc56e99237ceff8f9e13c` / date `2026-09-06` / note 依頼者によるローカル画面確認・文言と配置の修正レビュー承認後にcommit。検証結果は上記参照
 
 ## Deferred follow-up
 
