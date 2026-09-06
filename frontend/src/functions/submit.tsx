@@ -2,6 +2,7 @@ import { ApiClientError, submitSolution } from "../api/client";
 import { ExecutionResultV3, SubmissionResponseV3 } from "../api/types";
 import { escapeShellgei } from "./escape_str";
 import { judgeResult } from "./judge_result";
+import { Language } from "../language";
 
 export interface IdleSubmissionState {
   kind: "idle";
@@ -46,7 +47,7 @@ export type SubmissionTerminalState =
 export interface SubmissionDisplay {
   output: string;
   verdict: string;
-  image: string;
+  image: string | null;
   commandStatus: string;
 }
 
@@ -142,23 +143,22 @@ export const submit = async (
 
 export const submissionDisplay = (
   state: SubmissionState,
-  defaultImage: string,
+  language: Language = "ja",
 ): SubmissionDisplay => {
-  // 判別可能な提出stateを既存Result componentの4表示値へ変換して返す。
-  // 成功時だけtyped responseを参照し、それ以外では既定画像と固定messageを使用する。
+  // 保存済みのstateを表示時の言語で変換する。エラーは英文を保ち、存在しない画像は返さない。
   if (state.kind === "idle") {
     return {
       output: "Output will be displayed here.",
-      verdict: "Judgment result will be displayed here.",
-      image: defaultImage,
+      verdict: language === "ja" ? "未実行" : "Not run yet",
+      image: null,
       commandStatus: "Executed command will be displayed here.",
     };
   }
   if (state.kind === "running") {
     return {
       output: "Running...",
-      verdict: "Running...",
-      image: defaultImage,
+      verdict: language === "ja" ? "実行中…" : "Running…",
+      image: null,
       commandStatus: `Running ${state.problemId}...`,
     };
   }
@@ -166,7 +166,7 @@ export const submissionDisplay = (
     return {
       output: state.message,
       verdict: state.message,
-      image: defaultImage,
+      image: null,
       commandStatus: state.message,
     };
   }
@@ -174,14 +174,14 @@ export const submissionDisplay = (
   const image = artifact === null ? null : imageDataUrl(artifact.data, artifact.media_type);
   return {
     output: executionOutput(state.response.execution),
-    verdict: judgeResult(state.response.verdict, state.response.reason),
-    image: image ?? defaultImage,
+    verdict: judgeResult(state.response.verdict, state.response.reason, language),
+    image,
     commandStatus:
-      "SHELLGEI ID: " +
-      (state.response.submission_id ?? "not saved") +
-      "\nDATE: " +
+      (language === "ja" ? "提出ID: " : "Submission ID: ") +
+      (state.response.submission_id ?? "—") +
+      (language === "ja" ? "\n日時: " : "\nDate: ") +
       state.response.submitted_at +
-      "\nYOUR SHELLGEI: " +
+      (language === "ja" ? "\nコマンド: " : "\nCommand: ") +
       state.shellgei,
   };
 };

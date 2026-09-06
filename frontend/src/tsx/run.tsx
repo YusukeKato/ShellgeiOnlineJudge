@@ -1,10 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { prepareSubmission, submit, SubmissionState } from "../functions/submit";
-import "../css/code.css";
-import "../css/button.css";
-import "../css/common.css";
-import blue_image from "../images/Blue.jpg";
-import sample_gif from "../images/sample.gif";
+import { useLanguage } from "../language";
 
 interface SojValuesInterface {
   shellgei_limit: number;
@@ -31,6 +27,8 @@ const SojRun: React.FC<SojValuesInterface> = ({
   submissionState,
   setSubmissionState,
 }) => {
+  // 言語の変更は入力・提出の世代やAbortControllerを変更しない。
+  const { text } = useLanguage();
   const submissionVersion = useRef(0);
   const activeSubmission = useRef<ActiveSubmission | null>(null);
 
@@ -82,93 +80,103 @@ const SojRun: React.FC<SojValuesInterface> = ({
     }
   };
   return (
-    <div className="soj-main">
-      <h2>実行 / RUN</h2>
-      <details>
-        <summary>注意点 / IMPORTANT NOTES</summary>
-        <h4>注意点 / IMPORTANT NOTES</h4>
-        <ul>
-          <li>入力の取得 / How to read input : "cat input.txt"</li>
-          <li>画像の出力先 / Image output path : "media/output.jpg"</li>
-          <li>GIF画像の出力先 / GIF Image output path : "media/output.gif"</li>
-          <li>
-            出力は想定出力&想定画像と一致すること / Your output must exactly match the expected
-            output and image.
-          </li>
-          <li>
-            危険なシェル芸（危険シェル芸）は禁止 / Malicious shell commands are strictly prohibited.
-          </li>
-          <li>
-            余計な空白や改行は正誤判定に影響する可能性あり / Extra spaces and line breaks may affect
-            the final verdict.
-          </li>
-        </ul>
-        <h4>実行制限 / CONSTRAINTS</h4>
-        <ul>
-          <li>実行時間 / Time Limit : 10.0s</li>
-          <li>入出力文字数 / I/O Size Limit : 1000 characters</li>
-        </ul>
-        <h4>実行環境 / EXECUTION ENVIRONMENT</h4>
-        <ul>
-          <li>cat /etc/os-release</li>
-          <li>echo $SHELL</li>
-          <li>bash --version</li>
-          <li>python3 -V</li>
-        </ul>
-      </details>
-      <details>
-        <summary>シェル芸例 / EXAMPLES SHELL-GEI</summary>
-        <p>Example 1: Calculating a Sum</p>
-        <div className="code-block">
-          <pre>
-            <code className="code-font">seq 10 | paste -s -d+ | bc # Output: 55</code>
-          </pre>
-        </div>
-        <p>Example 2: Generating an Image</p>
-        <div className="code-block">
-          <pre>
-            <code className="code-font">
-              textimg SOJ -F50 | convert -size 200x200 xc:#0000AA - -gravity center -composite
-              media/output.jpg
-            </code>
-          </pre>
-        </div>
-        <div className="soj-centering">
-          <img className="soj-image" src={blue_image} id="blue-image" alt="blue-image" />
-        </div>
-        <p>Example 3: Generating a GIF Image</p>
-        <div className="code-block">
-          <pre>
-            <code className="code-font">
-              seq 0 9 | xargs -I@ bash -c 'textimg "$1" -F100 | convert - miff:-' _ @ | convert
-              -delay 10 miff:- media/output.gif
-            </code>
-          </pre>
-        </div>
-        <div className="soj-centering">
-          <img className="soj-image" src={sample_gif} id="sample-gif" alt="sample-gif" />
-        </div>
-      </details>
-      <div className="soj-centering">
+    <section className="panel editor-panel" aria-labelledby="editor-heading">
+      <div className="editor-toolbar">
+        <h2 id="editor-heading">{text("コマンド", "Command")}</h2>
+        <span className="muted">Bash</span>
+      </div>
+      <label htmlFor="cmdline" className="sr-only">
+        {text("コマンドを入力", "Enter a command")}
+      </label>
+      <div className="editor-surface">
+        <span className="editor-caption" aria-hidden="true">
+          $
+        </span>
         <textarea
+          className="command-input"
           value={inputShellgei}
           onChange={changeInputShellgei}
           onKeyDown={handleKeyDown}
-          cols={50}
-          rows={12}
+          rows={4}
           id="cmdline"
-          placeholder="ここにシェル芸を入力... / Type your shell one-liner here..."
-        ></textarea>
-        <input
+          spellCheck={false}
+          autoCapitalize="off"
+          autoCorrect="off"
+          aria-describedby="command-limit"
+          aria-invalid={inputShellgei.length > shellgei_limit}
+          placeholder={text("ここにシェル芸を入力…", "Write your shell one-liner…")}
+        />
+      </div>
+      <div className="run-toolbar">
+        <span
+          className="char-count"
+          id="command-limit"
+          data-over-limit={inputShellgei.length > shellgei_limit}
+        >
+          {inputShellgei.length} / {shellgei_limit} {text("文字", "characters")}
+        </span>
+        <button
           type="button"
-          value="実行 / RUN (Ctrl+Enter)"
           className="run-button"
           id="submit-button"
           aria-busy={submissionState.kind === "running"}
           onClick={submitClick}
-        />
+        >
+          {submissionState.kind === "running"
+            ? text("実行中…", "Running…")
+            : text("実行する", "Run command")}
+          <span aria-hidden="true"> ↗</span>
+        </button>
       </div>
-    </div>
+      <p className="run-help">{text("Ctrl + Enter で実行", "Run with Ctrl + Enter")}</p>
+      <details className="help-details">
+        <summary>{text("使い方と実行条件", "Instructions & limits")}</summary>
+        <ul>
+          <li>
+            {text("入力ファイル：", "Input file: ")}
+            <code>cat input.txt</code>
+          </li>
+          <li>
+            {text("画像問題の出力先：", "Image problem output: ")}
+            <code>media/output.jpg</code>
+          </li>
+          <li>
+            {text(
+              "コマンドは1,000文字まで。実行時間の上限は10秒です。",
+              "Commands can contain up to 1,000 characters. The time limit is 10 seconds.",
+            )}
+          </li>
+          <li>
+            {text(
+              "空白や改行も判定に影響します。問題の想定出力を確認してください。",
+              "Spaces and line breaks can affect the verdict. Check the expected output.",
+            )}
+          </li>
+          <li>{text("危険なシェル芸は禁止です。", "Malicious shell commands are prohibited.")}</li>
+          <li>
+            {text(
+              "生成したGIFの表示は現在未対応です。",
+              "Displaying generated GIFs is not currently supported.",
+            )}
+          </li>
+        </ul>
+        <p>
+          {text("環境の確認：", "Inspect the environment: ")}
+          <code>cat /etc/os-release</code> / <code>bash --version</code>
+        </p>
+      </details>
+      <details className="help-details">
+        <summary>{text("コマンドの例", "Command examples")}</summary>
+        <p>{text("1から10までの合計を求める", "Sum the numbers from 1 to 10")}</p>
+        <pre className="code-output" tabIndex={0}>
+          <code>seq 10 | paste -s -d+ | bc</code>
+        </pre>
+        <p>{text("画像問題で文字を画像にする", "Create a text image in an image problem")}</p>
+        <pre className="code-output" tabIndex={0}>
+          <code>textimg SOJ -F50 | convert - media/output.jpg</code>
+        </pre>
+      </details>
+    </section>
   );
 };
 

@@ -1,9 +1,12 @@
+import io
 import json
 import os
+import tarfile
 import time
 import urllib.error
 import uuid
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
 import docker
@@ -222,7 +225,7 @@ def test_runner_outage_and_crash_recovery(stack: ComposeStack) -> None:
     assert stack.submit("echo test")["verdict"] == "accepted"
 
 
-def test_browser_submissions_and_display(stack: ComposeStack) -> None:
+def test_browser_submissions_and_display(stack: ComposeStack, tmp_path: Path) -> None:
     # socket・DB secretを持たないChromiumから実UIを操作し、表示とDBの保存を照合する。
     browser = stack.client.containers.create(
         stack.browser_image,
@@ -243,6 +246,10 @@ def test_browser_submissions_and_display(stack: ComposeStack) -> None:
         ids = json.loads(output)["submission_ids"]
         assert len(ids) == 5
         assert len(db_rows(stack, ids)) == 5
+        # 実データはtest専用の提出だけとし、表示review用画像をcontainerの回収前に保存する。
+        archive, _ = browser.get_archive("/tmp/soj-ui")
+        with tarfile.open(fileobj=io.BytesIO(b"".join(archive))) as screenshots:
+            screenshots.extractall(tmp_path, filter="data")
     finally:
         browser.remove(force=True, v=True)
 

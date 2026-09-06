@@ -1,8 +1,6 @@
-import React from "react";
-import "../css/summary.css";
-import "../css/headline.css";
-import "../css/code.css";
-import "../css/common.css";
+import React, { type ReactNode } from "react";
+import { useLanguage } from "../language";
+import { CONTACT_FORM_URL } from "../links";
 
 interface AboutPageProps {
   update_date: string;
@@ -14,6 +12,29 @@ interface AboutPageProps {
   mixi2_url: string;
 }
 
+// 外部ページを別タブで開くことを支援技術にも伝え、リンク元のwindowを共有しない。
+function ExternalLink({
+  href,
+  children,
+  className,
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  const { text } = useLanguage();
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+      {children}
+      <span aria-hidden="true"> ↗</span>
+      <span className="visually-hidden">
+        {text("（別タブで開きます）", " (opens in a new tab)")}
+      </span>
+    </a>
+  );
+}
+
+// 遊び方から問い合わせ・関連情報へ読み進められる順に、選択中の言語だけを表示する。
 const AboutPage: React.FC<AboutPageProps> = ({
   update_date,
   current_version,
@@ -23,223 +44,220 @@ const AboutPage: React.FC<AboutPageProps> = ({
   blog_url,
   mixi2_url,
 }) => {
+  const { text } = useLanguage();
+
   return (
-    <>
-      {/* 概要 / INFORMATION */}
-      <div className="soj-main">
-        <h2>最終更新日 / LAST UPDATED</h2>
-        <ul>
-          <li>update: {update_date}</li>
-          <li>version: {current_version}</li>
-        </ul>
+    <div className="about-page">
+      <div className="page-heading">
+        <p className="eyebrow">{text("ガイド", "Guide")}</p>
+        <h1>{text("使い方・情報", "About this playground")}</h1>
+        <p className="muted">
+          {text(
+            "シェルのコマンドを組み合わせて、ワンライナーで問題を解いてみましょう。",
+            "Combine shell commands into a one-liner and solve a problem.",
+          )}
+        </p>
+        <p className="version-label">version: {current_version}</p>
+        {update_date && (
+          <p className="muted">
+            {text("最終更新日", "Last updated")}: {update_date}
+          </p>
+        )}
       </div>
 
-      {/* 詳細 / DETAILS */}
-      <div className="soj-main">
-        <h2>情報 / INFOMATION</h2>
-        <h3>シェル芸オンラインジャッジとは / WHAT IS SHELLGEI ONLINE JUDGE</h3>
-        <p>
-          シェル芸で問題を解いて遊べるシェル芸非公式のウェブサイトです。実行結果の正誤判定が自動で行われます。
-        </p>
-        <p>
-          SHELLGEI ONLINE JUDGE is an unofficial website that automatically judges the correctness
-          of your execution results.
-        </p>
-        <h3>シェル芸とは / WHAT IS SHELL-GEI</h3>
-        <p>
-          シェル芸とはCLI環境におけるシェルのワンライナーで様々なタスクをこなすことを指します。詳しくは
-          <a href="https://b.ueda.tech/?page=01434" target="_blank" rel="noopener noreferrer">
-            シェル芸のトップページ
-          </a>
-          を参照してください。
-        </p>
-        <p>
-          Shell-gei refers to the art of performing various tasks using shell one-liners in a CLI
-          environment.
-        </p>
-        <h3>GITHUB</h3>
-        <ul>
-          <li>
-            <a href={github_repository_url} target="_blank" rel="noopener noreferrer">
-              GitHub - ShellgeiOnlineJudge
-            </a>
-          </li>
-          <li>
-            <a
-              href={`${github_repository_url}/discussions`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub - SHELLGEI ONLINE JUDGE Discussions
-            </a>
-          </li>
-          <li>
-            <a
-              href={`${github_repository_url}/blob/main/UPDATE_HISTORY.md`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub - Update History
-            </a>
-          </li>
-        </ul>
-        <h3>遊び方 / HOW TO USE</h3>
-        <ol>
-          <li>問題を選択 / Select Problem</li>
-          <li>シェル芸を記入 / Enter Shell One-liner</li>
-          <li>シェル芸を実行 / Execute Shell One-liner</li>
-          <li>正誤判定の結果を確認 / Check Result</li>
-        </ol>
-        <h3>謝辞 / ACKNOWLEDGMENTS</h3>
-        <ul>
-          <li>
-            <a
-              href="https://github.com/theoremoon/ShellgeiBot-Image"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              ShellgeiBot-Image
-            </a>
-            を旧sandboxで利用していました
-          </li>
-          <li>
-            <a href="https://github.com/jiro4989/websh" target="_blank" rel="noopener noreferrer">
-              websh
-            </a>
-            のシステム構成を参考にしています
-          </li>
-          <li>
-            <a
-              href="https://github.com/ryuichiueda/ShellGeiData"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              ShellGeiData
-            </a>
-            を利用しています
-          </li>
-        </ul>
-      </div>
+      <div className="about-grid">
+        <section className="panel about-section" aria-labelledby="about-overview">
+          <h2 id="about-overview">
+            {text("シェル芸オンラインジャッジとは", "What is Shellgei Online Judge?")}
+          </h2>
+          <p>
+            {text(
+              "シェル芸で問題を解いて遊べる非公式のウェブサイトです。実行したコマンドの出力を、問題の期待する結果と自動で比較します。",
+              "An unofficial playground for solving problems with shell one-liners. Your command output is automatically checked against the expected result.",
+            )}
+          </p>
+          <p>
+            {text(
+              "シェル芸とは、CLI環境でシェルのワンライナーを使い、さまざまなタスクをこなすことです。",
+              "Shell-gei is the art of accomplishing tasks with shell one-liners in a command-line environment.",
+            )}
+          </p>
+          <ExternalLink href="https://b.ueda.tech/?page=01434">
+            {text("シェル芸について詳しく知る", "Learn more about shell-gei")}
+          </ExternalLink>
+        </section>
 
-      {/* お問い合わせ / CONTACT */}
-      <div className="soj-main">
-        <h2>お問い合わせ / CONTACT</h2>
-        <p>
-          <a
-            href="https://docs.google.com/forms/d/e/1FAIpQLSe8XIueiVyEXZBlVzwTYzqF241MLRkYK17PCtKy8Y94Fs7z1A/viewform?usp=dialog"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            お問い合わせフォーム / Contact form（Googleフォーム・別タブで開きます）
-          </a>
-        </p>
-        <h3>SNS</h3>
-        <ul>
-          <li>
-            X/Twitter：
-            <a href={x_url} target="_blank" rel="noopener noreferrer">
-              @yusukekato_main
-            </a>
-          </li>
-          <li>タグ：#シェル芸オンラインジャッジ</li>
-          <li>Tag：#ShellgeiOnlineJudge</li>
-          <li>
-            mixi2：
-            <a href={mixi2_url} target="_blank" rel="noopener noreferrer">
-              シェル芸オンラインジャッジのコミュニティ / Community
-            </a>
-          </li>
-        </ul>
-        <h3>GITHUB</h3>
-        <ul>
-          <li>
-            <a
-              href={`${github_repository_url}/discussions`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub - Discussions
-            </a>
-          </li>
-          <li>
-            <a href={`${github_repository_url}/issues`} target="_blank" rel="noopener noreferrer">
-              GitHub - Issues
-            </a>
-          </li>
-        </ul>
-        <h3>AUTHOR</h3>
-        <ul>
-          <li>
-            GitHub :{" "}
-            <a href={github_author_url} target="_blank" rel="noopener noreferrer">
-              YusukeKato
-            </a>
-          </li>
-          <li>
-            Blog :{" "}
-            <a href={blog_url} target="_blank" rel="noopener noreferrer">
-              yusukekato.jp
-            </a>
-          </li>
-        </ul>
-      </div>
+        <section className="panel about-section" aria-labelledby="about-how-to">
+          <h2 id="about-how-to">{text("遊び方", "How to play")}</h2>
+          <ol>
+            <li>
+              {text(
+                "カテゴリと問題を選び、問題文と入出力を確認します。",
+                "Choose a category and problem, then read the statement and expected input and output.",
+              )}
+            </li>
+            <li>
+              {text(
+                "コマンド欄にシェルのワンライナーを入力します。",
+                "Write a shell one-liner in the command editor.",
+              )}
+            </li>
+            <li>
+              {text(
+                "「実行する」を押して、判定と出力を確認します。",
+                "Select Run to see the verdict and command output.",
+              )}
+            </li>
+            <li>
+              {text(
+                "コマンドを工夫して、何度でも挑戦できます。",
+                "Refine your command and try again.",
+              )}
+            </li>
+          </ol>
+          <p className="muted">
+            {text(
+              "実行したコマンド等の情報は記録されます。秘密情報は入力しないでください。",
+              "Executed commands and related information are recorded. Do not enter secrets.",
+            )}
+          </p>
+        </section>
 
-      {/* その他 / OTHERS */}
-      <div className="soj-main">
-        <h2>その他 / OTHERS</h2>
-        <h3>注意事項 / DISCLAIMER</h3>
-        <p>
-          このウェブサイトは第三者のアクセス解析JavaScriptを読み込みません。
-          このウェブサイトの利用によって生じる損害等について一切責任を負いません。
-          実行されたコマンド等の情報は記録されます。
-        </p>
-        <p>
-          This website does not load third-party analytics JavaScript. We are not responsible for
-          any damages caused by the use of this website. Information about executed commands will be
-          recorded.
-        </p>
-        <h3>有志の方々 / CONTRIBUTORS</h3>
-        <p>回答例を提供いただき、誠にありがとうございます。</p>
-        <p>Thank you very much to everyone who provided the example answers.</p>
-        <ul>
-          <li>
-            <a
-              href="https://gist.github.com/eggplants/71c0459f38028938a15d35b19bab47b5"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              eggplants/ans.csv
-            </a>
-          </li>
-        </ul>
-        <h3>回答例 / SAMPLE SOLUTIONS</h3>
-        <a
-          href={`${github_repository_url}/tree/main/problems/v3`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          GitHub - problems/v3/
-        </a>
-        <h3>おすすめ / RECOMMENDATIONS</h3>
-        <p>さらに難しい問題や面白い問題が解きたい方には以下がおすすめです。</p>
-        <p>
-          For those who want to solve more difficult and interesting problems, we recommend the
-          following.
-        </p>
-        <ul>
-          <li>
-            <a href="https://b.ueda.tech/?page=00684" target="_blank" rel="noopener noreferrer">
-              シェル芸勉強会問題一覧
-            </a>
-          </li>
-          <li>
-            <a href="https://atcoder.jp/" target="_blank" rel="noopener noreferrer">
-              AtCoder: 競技プログラミングサイト / Competitive Programming Website
-            </a>
-          </li>
-        </ul>
+        <section className="panel about-section" aria-labelledby="about-contact">
+          <h2 id="about-contact">{text("お問い合わせ", "Contact")}</h2>
+          <p>
+            {text(
+              "不具合の報告、ご質問、ご意見はこちらからお送りください。",
+              "Send a bug report, ask a question, or share feedback.",
+            )}
+          </p>
+          <ExternalLink href={CONTACT_FORM_URL} className="primary-link">
+            {text("お問い合わせフォーム", "Contact form")}
+          </ExternalLink>
+          <p className="muted">
+            {text("Googleフォームを別タブで開きます。", "Opens Google Forms in a new tab.")}
+          </p>
+          <ul className="link-list">
+            <li>
+              <ExternalLink href={`${github_repository_url}/discussions`}>
+                GitHub Discussions
+              </ExternalLink>
+            </li>
+            <li>
+              <ExternalLink href={`${github_repository_url}/issues`}>GitHub Issues</ExternalLink>
+            </li>
+            {x_url && (
+              <li>
+                <ExternalLink href={x_url}>X / @yusukekato_main</ExternalLink>
+              </li>
+            )}
+            {mixi2_url && (
+              <li>
+                <ExternalLink href={mixi2_url}>
+                  {text("mixi2 コミュニティ", "mixi2 community")}
+                </ExternalLink>
+              </li>
+            )}
+          </ul>
+          <p className="social-tag">
+            {text(
+              "SNS等で使用するタグ：#シェル芸オンラインジャッジ",
+              "Hashtag for social media: #ShellgeiOnlineJudge",
+            )}
+          </p>
+        </section>
+
+        <section className="panel about-section" aria-labelledby="about-resources">
+          <h2 id="about-resources">{text("関連情報", "Explore further")}</h2>
+          <ul className="link-list">
+            <li>
+              <ExternalLink href={github_repository_url}>
+                {text("ソースコード", "Source code")}
+              </ExternalLink>
+            </li>
+            <li>
+              <ExternalLink href={`${github_repository_url}/blob/main/UPDATE_HISTORY.md`}>
+                {text("更新履歴", "Update history")}
+              </ExternalLink>
+            </li>
+            <li>
+              <ExternalLink href={`${github_repository_url}/tree/main/problems/v3`}>
+                {text("問題データ・回答例", "Problem data and sample solutions")}
+              </ExternalLink>
+            </li>
+            <li>
+              <ExternalLink href="https://b.ueda.tech/?page=00684">
+                {text("シェル芸勉強会の問題一覧", "Shell-gei workshop problems")}
+              </ExternalLink>
+            </li>
+          </ul>
+          {(github_author_url || blog_url) && (
+            <>
+              <h3>{text("作者", "Author")}</h3>
+              <ul className="link-list">
+                {github_author_url && (
+                  <li>
+                    <ExternalLink href={github_author_url}>GitHub / YusukeKato</ExternalLink>
+                  </li>
+                )}
+                {blog_url && (
+                  <li>
+                    <ExternalLink href={blog_url}>Blog / yusukekato.jp</ExternalLink>
+                  </li>
+                )}
+              </ul>
+            </>
+          )}
+        </section>
+
+        <section className="panel about-section" aria-labelledby="about-thanks">
+          <h2 id="about-thanks">{text("謝辞", "Acknowledgments")}</h2>
+          <ul className="link-list">
+            <li>
+              <ExternalLink href="https://github.com/jiro4989/websh">websh</ExternalLink>
+              <p className="muted">
+                {text("システム構成を参考にしています。", "Inspired the system architecture.")}
+              </p>
+            </li>
+            <li>
+              <ExternalLink href="https://github.com/ryuichiueda/ShellGeiData">
+                ShellGeiData
+              </ExternalLink>
+              <p className="muted">{text("問題で利用しています。", "Used in the problems.")}</p>
+            </li>
+            <li>
+              <ExternalLink href="https://github.com/theoremoon/ShellgeiBot-Image">
+                ShellgeiBot-Image
+              </ExternalLink>
+              <p className="muted">
+                {text("旧sandboxで利用していました。", "Used in the previous sandbox.")}
+              </p>
+            </li>
+            <li>
+              <ExternalLink href="https://gist.github.com/eggplants/71c0459f38028938a15d35b19bab47b5">
+                eggplants/ans.csv
+              </ExternalLink>
+              <p className="muted">
+                {text(
+                  "回答例のご提供に感謝します。",
+                  "Thank you for contributing sample solutions.",
+                )}
+              </p>
+            </li>
+          </ul>
+        </section>
+
+        <section className="panel about-section" aria-labelledby="about-notice">
+          <h2 id="about-notice">{text("利用上の注意", "Usage notes")}</h2>
+          <p>
+            {text(
+              "このウェブサイトの利用によって生じる損害等について一切責任を負いません。",
+              "We are not responsible for any damages caused by the use of this website.",
+            )}
+          </p>
+        </section>
       </div>
-    </>
+    </div>
   );
 };
 

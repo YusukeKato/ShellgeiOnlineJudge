@@ -111,7 +111,7 @@ describe("typed frontend API and display behavior", () => {
     });
 
     const state = await executeSubmission("convert image", "IMAGE-00000001");
-    const display = submissionDisplay(state, "default-image");
+    const display = submissionDisplay(state);
 
     expect(display.output).toBe("");
     expect(display.image).toBe("data:image/jpeg;base64,encoded-image");
@@ -138,12 +138,12 @@ describe("typed frontend API and display behavior", () => {
       ),
     });
     const state = await executeSubmission("convert image", "IMAGE-00000001");
-    const display = submissionDisplay(state, "default-image");
+    const display = submissionDisplay(state);
 
     expect(display.output).toBe("");
-    expect(display.verdict).toBe("正解 / Correct !!😄!!");
+    expect(display.verdict).toBe("正解");
     expect(display.image).toBe("data:image/jpeg;base64,encoded-image");
-    expect(display.commandStatus).toContain("SHELLGEI ID: 44");
+    expect(display.commandStatus).toContain("提出ID: 44");
   });
 
   test("keeps a missing image result distinct from a transport error", async () => {
@@ -168,12 +168,12 @@ describe("typed frontend API and display behavior", () => {
       ),
     });
     const state = await executeSubmission("true", "IMAGE-00000001");
-    const display = submissionDisplay(state, "default-image");
+    const display = submissionDisplay(state);
 
     expect(display.output).toBe("");
-    expect(display.verdict).toBe("不正解 / Incorrect ...😭...");
-    expect(display.image).toBe("default-image");
-    expect(display.commandStatus).toContain("SHELLGEI ID: 45");
+    expect(display.verdict).toBe("不正解");
+    expect(display.image).toBeNull();
+    expect(display.commandStatus).toContain("提出ID: 45");
   });
 
   test("shows a failed HTTP request as an error instead of a verdict", async () => {
@@ -190,12 +190,12 @@ describe("typed frontend API and display behavior", () => {
       }),
     });
     const state = await executeSubmission("true", "IMAGE-00000001");
-    const display = submissionDisplay(state, "default-image");
+    const display = submissionDisplay(state);
     const errorMessage = "Error: HTTP error! status: 503";
     expect(display.output).toBe(errorMessage);
     expect(display.verdict).toBe(errorMessage);
     expect(display.commandStatus).toBe(errorMessage);
-    expect(display.image).toBe("default-image");
+    expect(display.image).toBeNull();
   });
 
   test("preserves a typed API error and server request ID", async () => {
@@ -265,10 +265,10 @@ describe("typed frontend API and display behavior", () => {
 
     const state = await result;
     expect(state).toEqual({ kind: "failed", message: "Timeout: 20.0s" });
-    expect(submissionDisplay(state, "default-image")).toEqual({
+    expect(submissionDisplay(state)).toEqual({
       output: "Timeout: 20.0s",
       verdict: "Timeout: 20.0s",
-      image: "default-image",
+      image: null,
       commandStatus: "Timeout: 20.0s",
     });
   });
@@ -328,8 +328,8 @@ describe("typed frontend API and display behavior", () => {
     expect(imageDataUrl("svg-data", "image/svg+xml")).toBeNull();
   });
 
-  test("maps problem details and empty values to the displayed legacy values", async () => {
-    // 問題文の連結、空値のNULL表示、画像URLの組み立てを確認する。
+  test("keeps both problem languages and maps empty values without a new request", async () => {
+    // 日英文を分離して保持し、空値のNULL表示と画像URLを言語切り替え前にも維持する。
     fetchMock.mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue({
@@ -344,24 +344,29 @@ describe("typed frontend API and display behavior", () => {
     });
     const problem = await updateProblem(SOJ_URL, "STANDARD-00000001", new AbortController().signal);
 
-    expect(problem.statement).toBe(
-      "日本語タイトル\n日本語本文\n\nEnglish title\nEnglish statement",
-    );
+    expect(problem.title).toEqual({ ja: "日本語タイトル", en: "English title" });
+    expect(problem.statement).toEqual({ ja: "日本語本文", en: "English statement" });
     expect(problem.input).toBe("NULL");
     expect(problem.output).toBe("NULL");
     expect(problem.image).toBe(`${SOJ_URL}/image/STANDARD-00000001.jpg`);
   });
 
   test.each([
-    ["accepted", "正解 / Correct !!😄!!"],
-    ["wrong_answer", "不正解 / Incorrect ...😭..."],
-    ["wrong_image", "不正解 / Incorrect ...😭..."],
-    ["wrong_text_and_image", "不正解 / Incorrect ...😭..."],
-    ["execution_failure", "実行失敗: コマンドの実行に失敗しました / Command execution failed"],
-    ["judge_error", "判定エラー: 判定処理でエラーが発生しました / Judging failed"],
-  ])("maps typed verdict %s to its display label", (verdict, label) => {
-    // reasonがない契約内の値でも、正解・不正解・実行失敗・判定エラーを区別する。
-    expect(judgeResult(verdict, null)).toBe(label);
+    ["accepted", "正解", "Accepted"],
+    ["wrong_answer", "不正解", "Wrong answer"],
+    ["wrong_image", "不正解", "Wrong answer"],
+    ["wrong_text_and_image", "不正解", "Wrong answer"],
+    [
+      "execution_failure",
+      "Execution failed: Command execution failed",
+      "Execution failed: Command execution failed",
+    ],
+    ["judge_error", "Judge error: Judging failed", "Judge error: Judging failed"],
+  ])("maps typed verdict %s to its display label", (verdict, japanese, english) => {
+    // 正誤だけを選択言語で表示し、実行失敗・判定エラーは日英どちらでも英語で区別する。
+    expect(judgeResult(verdict, null)).toBe(japanese);
+    expect(judgeResult(verdict, null, "ja")).toBe(japanese);
+    expect(judgeResult(verdict, null, "en")).toBe(english);
   });
 
   test.each([
@@ -369,44 +374,34 @@ describe("typed frontend API and display behavior", () => {
       "timed_out",
       "execution_failure",
       { status: "timed_out", exit_code: null, timed_out: true },
-      "実行失敗: 実行がタイムアウトしました / Execution timed out",
+      "Execution failed: Execution timed out",
     ],
     [
       "output_truncated",
       "execution_failure",
       { status: "output_limit", exit_code: null, truncated: true },
-      "実行失敗: 出力上限を超えました / Output limit exceeded",
+      "Execution failed: Output limit exceeded",
     ],
     [
       "execution_error",
       "execution_failure",
       { status: "error", exit_code: null },
-      "実行失敗: コマンドの実行に失敗しました / Command execution failed",
+      "Execution failed: Command execution failed",
     ],
     [
       "non_zero_exit",
       "execution_failure",
       { exit_code: 1 },
-      "実行失敗: コマンドが非0の終了コードで終了しました / Command exited with a non-zero status",
+      "Execution failed: Command exited with a non-zero status",
     ],
     [
       "stderr_not_empty",
       "execution_failure",
       { stderr: "diagnostic" },
-      "実行失敗: 許可されていない標準エラー出力がありました / Standard error output is not allowed",
+      "Execution failed: Standard error output is not allowed",
     ],
-    [
-      "invalid_problem_id",
-      "judge_error",
-      {},
-      "判定エラー: 判定処理でエラーが発生しました / Judging failed",
-    ],
-    [
-      "problem_not_found",
-      "judge_error",
-      {},
-      "判定エラー: 判定処理でエラーが発生しました / Judging failed",
-    ],
+    ["invalid_problem_id", "judge_error", {}, "Judge error: Judging failed"],
+    ["problem_not_found", "judge_error", {}, "Judge error: Judging failed"],
   ])(
     "renders the API failure reason %s distinctly from wrong answers",
     async (reason, verdict, execution, label) => {
@@ -425,10 +420,12 @@ describe("typed frontend API and display behavior", () => {
 
       const state = await executeSubmission("test command");
       expect(state.kind).toBe("succeeded");
-      render(<SojResult submissionState={state} defaultImage="default-image" />);
+      render(<SojResult submissionState={state} />);
 
       expect(document.querySelector("#result-text")?.textContent).toBe(label);
-      expect(screen.queryByText("不正解 / Incorrect ...😭...")).not.toBeInTheDocument();
+      expect(screen.queryByText("不正解")).not.toBeInTheDocument();
+      expect(judgeResult(verdict, reason, "ja")).toBe(label);
+      expect(judgeResult(verdict, reason, "en")).toBe(label);
     },
   );
 
@@ -444,7 +441,7 @@ describe("typed frontend API and display behavior", () => {
     });
 
     const state = await executeSubmission("test command");
-    expect(submissionDisplay(state, "default-image").verdict).toBe("正解 / Correct !!😄!!");
+    expect(submissionDisplay(state).verdict).toBe("正解");
   });
 
   test("rejects an unknown reason before it reaches display mapping", async () => {
@@ -484,16 +481,45 @@ describe("typed frontend API and display behavior", () => {
             artifact: { data: "encoded-image", media_type: "image/jpeg" },
           }),
         }}
-        defaultImage="default-image"
       />,
     );
 
     expect(document.querySelector("#user-output-text")?.textContent).toBe("line 1\nline 2");
-    expect(screen.getByText("正解 / Correct !!😄!!")).toBeInTheDocument();
-    expect(document.querySelector("#shellgei-text")?.textContent).toContain("SHELLGEI ID: 42");
-    expect(screen.getByAltText("result-image")).toHaveAttribute(
+    expect(screen.getByText("正解")).toBeInTheDocument();
+    expect(document.querySelector("#shellgei-text")?.textContent).toContain("提出ID: 42");
+    expect(document.querySelector("#result-image")).toHaveAttribute(
       "src",
       "data:image/jpeg;base64,encoded-image",
     );
+  });
+
+  test.each([
+    ["idle", { kind: "idle" }],
+    [
+      "running",
+      {
+        kind: "running",
+        requestKey: "request",
+        shellgei: "printf result",
+        problemId: "STANDARD-00000001",
+      },
+    ],
+    ["failed", { kind: "failed", message: "Error: Failed to submit solution" }],
+    ["validation_error", { kind: "validation_error", message: "No input provided" }],
+    [
+      "succeeded without an artifact",
+      {
+        kind: "succeeded",
+        shellgei: "printf result",
+        problemId: "STANDARD-00000001",
+        response: submissionResponse(),
+      },
+    ],
+  ])("does not show a placeholder image for %s", (_name, state) => {
+    // 実画像のない提出状態では画像DOMを作らず、既定画像を実行結果と誤認させない。
+    expect(submissionDisplay(state).image).toBeNull();
+    render(<SojResult submissionState={state} />);
+    expect(document.querySelector("#result-image")).not.toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
   });
 });

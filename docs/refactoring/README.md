@@ -20,13 +20,13 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Baseline commit: `991ef334f2785cce81a2e33206ec1f00f3487c9b`
 - Baseline commit subject: `docs: update maintenance history`
 - Baseline date: 2026-08-25
-- Overall status: `Implementation complete; release verification pending`
-- Total refactoring units: 30
+- Overall status: `Final frontend refinement awaiting review`
+- Total refactoring units: 31
 - Ready: 0
 - Planned: 0
 - Pending (`Ready` + `Planned`): 0
 - In Progress: 0
-- Review: 0
+- Review: 1
 - Completed: 29
 - Blocked: 0
 - Deferred: 1
@@ -183,6 +183,8 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-027 | P3 | Completed | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | `c7b2b52` |
 | R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
 | R3-029 | P2 | Completed | F | Organize shared, backend, and runner packages | R3-023, R3-024 | `b71663e` |
+| R3-030 | P2 | Deferred | D | Support display of generated GIF artifacts | artifact contract review | - |
+| R3-031 | P2 | Review | D | Refresh the responsive frontend and add language selection | R3-019, R3-020, R3-028 | - |
 
 Size estimates use `XS` (under about 100 changed lines), `S` (100--250),
 `M` (250--600), and `L` (over 600 or a large mechanical data migration).
@@ -640,17 +642,32 @@ They are planning aids, not acceptance criteria.
   GitHub上のCI・署名・required checks、本番反映、タグ・Release公開は未実施。
 - Completion: commit `c7b2b5286ca077e19cc732fec106fd728987b5d6` / date `2026-09-06` / note 依頼者のreview承認後にcommit。公開前の環境確認はリリース準備文書・security trackerで管理
 
+### R3-031: Refresh the responsive frontend and add language selection
+
+- Priority / Status: P2 / `Review`
+- Goal: v3公開前の最終UI改善として、問題・入力・結果へ集中できるPC/スマートフォンの画面と日英切替を整備する
+- Scope: 共通header/footer、問題選択、PCの2列・スマートフォンの1列、入力と結果の表示、Aboutを統一。日本語既定で選択を端末内保存し、問題データの日英fieldを表示時に選ぶ。依頼者指定によりエラー説明は英語とし、API・DB・sandboxと提出制御を維持する。GIF実装はR3-030へ維持
+- Main files/components: `frontend/src/`、frontend README、browser E2Eと関連文書
+- Expected tests: frontend基本5検査、言語切替時の入力・選択・取得中/提出中の通信・完了結果の保持、英語エラー、rootless Compose/browserの実提出・保存・画像表示、日英7画面幅のoverflow・問題選択確認
+- Review validation: 2026-09-06、frontendのformat・lint・typecheck・53 test・production build、Pythonのruff・format・mypyと非Docker646件が成功。
+  新しいfrontend配信資産・browser検査を既存の検証済みruntime imageへ重ね、rootless ComposeのAPI経路・browserの2件が成功。
+  実提出5件の判定・画像・DB保存と、日英の320・375・390・430・768・1,024・1,440pxでの表示・操作を確認し、PC日英・スマートフォンのスクリーンショットを保存した。
+  文言・配置のレビュー指摘反映後にもfrontend基本5検査・53件が成功し、同じ7画面幅で問題選択と問題文の幅、結果の位置、関連リンクの整列・文字サイズを実ブラウザで確認した。
+  API・DB・sandbox・依存lockは変更していないため、全92問回帰と本番5 imageの再build・供給網scanは再実行していない。
+  実機iOS/Android・ソフトウェアキーボード、本番反映は未確認。
+- Completion: -
+
 ## Deferred follow-up
 
 ### R3-030: Support display of generated GIF artifacts
 
 - Priority / Status: P2 / `Deferred`
-- Goal: 画面に掲載しているGIF生成例について、生成した画像をユーザーが確認できるようにする
-- Current limitation: sandboxはGIF・MIFFを許可し、API・frontendも`image/gif`を扱えるが、runnerは画像判定の問題定義に指定されたartifactだけを回収する。現在の問題定義には`media/output.gif`の指定がなく、生成に成功しても表示へ届かない。画面のGIF出力先・サンプル説明と実装に不整合がある
-- Reproduction: 画面掲載例の`seq 0 9 | xargs -I@ bash -c 'textimg "$1" -F100 | convert - miff:-' _ @ | convert -delay 10 miff:- media/output.gif`。コマンドの生成成否と、artifactの回収・表示の成否を分けて確認する
+- Goal: 生成したGIF画像をユーザーが画面で確認できるようにする
+- Current limitation: sandboxはGIF・MIFFを許可し、API・frontendも`image/gif`を扱えるが、runnerは画像判定の問題定義に指定されたartifactだけを回収する。現在の問題定義には`media/output.gif`の指定がなく、生成に成功しても表示へ届かない。R3-031では画面に表示未対応と明記し、GIFの生成例を案内から外した
+- Reproduction: `seq 0 9 | xargs -I@ bash -c 'textimg "$1" -F100 | convert - miff:-' _ @ | convert -delay 10 miff:- media/output.gif`。コマンドの生成成否と、artifactの回収・表示の成否を分けて確認する
 - Main files/components: `backend/soj_runner/sandbox_executor.py`、runner/public APIのartifact contract、frontendの画像表示と`frontend/src/tsx/run.tsx`、関連API文書
 - Scope: 問題の判定用artifactと表示用GIFの扱いを整理し、回収・返却・表示の経路を設計する。既存の判定結果を変えず、path・形式・サイズの検証とsandbox制限を維持する。API変更が必要なら互換性を確認し、画面の説明も実装と同期する
-- Acceptance / Expected tests: 掲載例のアニメーションGIFがブラウザで表示されることをrootless Docker・API・browser経路で確認する。画像欠損・不正形式・上限超過時の挙動と、既存のtext/image判定・JPEG表示の回帰も確認する
+- Acceptance / Expected tests: 上記の再現例で生成したアニメーションGIFがブラウザで表示されることをrootless Docker・API・browser経路で確認する。画像欠損・不正形式・上限超過時の挙動と、既存のtext/image判定・JPEG表示の回帰も確認する
 - Deferral: 2026-09-06、依頼者の指示により実装は後日とする。再開時にartifact contractと回収処理を再確認する
 
 ## Known design decisions

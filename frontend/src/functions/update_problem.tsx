@@ -1,7 +1,8 @@
 import { getProblem } from "../api/client";
 
 export interface ProblemDisplay {
-  statement: string;
+  title: { ja: string; en: string };
+  statement: { ja: string; en: string };
   input: string;
   output: string;
   image: string;
@@ -12,13 +13,12 @@ export const updateProblem = async (
   selectedProblem: string,
   signal: AbortSignal,
 ): Promise<ProblemDisplay> => {
-  // 選択IDの型検証済み問題詳細を取得し、画面用の問題文・入出力・画像URLを返す。
-  // 呼出側signalのabortや取得失敗は伝播し、最新requestかを判定する呼出側だけがstateを更新する。
+  // 両言語を保持して取得し、表示言語の切替では通信や問題選択をやり直さない。
+  // 取得失敗とabortは呼出側へ伝播し、世代管理下で画面へ反映する。
   const data = await getProblem(sojUrl, selectedProblem, { signal });
-  const statement =
-    `${data.title_ja}\n${data.statement_ja}\n\n${data.title_en}\n${data.statement_en}`.trim();
   return {
-    statement: statement || "NULL",
+    title: { ja: data.title_ja, en: data.title_en },
+    statement: { ja: data.statement_ja, en: data.statement_en },
     input: data.input || "NULL",
     output: data.expected_output || "NULL",
     image: sojUrl + data.image,

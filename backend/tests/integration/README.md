@@ -36,6 +36,8 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 テストでは下記を確認します。
 
 - 本番5 imageのOCI versionラベルと、ブラウザのversion表示が製品versionの正本と一致すること
+- 日英の表示切替・言語設定保存・入力と結果の維持、320〜1,440pxの7画面幅での問題選択・案内画面・コード枠の横スクロール。Chromiumのviewport検査であり、実機のiOS/Android・ソフトウェアキーボードは別途確認する
+- ブラウザ検査のPC日英・スマートフォン画面をpytest一時ディレクトリの`soj-ui/`へ保存する（test専用の提出だけを含む）
 
 - 接続先daemonがrootlessであること
 - cgroup v2によるCPU・メモリ・PID制限が実際に反映されていること

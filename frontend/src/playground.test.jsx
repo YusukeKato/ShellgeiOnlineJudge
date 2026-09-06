@@ -1,14 +1,53 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { LanguageProvider, useLanguage } from "./language";
 import Playground from "./tsx/playground";
 
 const SOJ_URL = "https://soj.example";
 const DEFAULT_PROBLEM_ID = "STANDARD-00000001";
 const SECOND_PROBLEM_ID = "STANDARD-00000002";
+const IMAGE_PROBLEM_ID = "IMAGE-00000001";
+
+const LanguageControls = () => {
+  // 実際のcontext操作で言語だけを切り替え、通信や提出stateが維持されるか検証可能にする。
+  const { setLanguage } = useLanguage();
+  return (
+    <>
+      <button onClick={() => setLanguage("en")}>Test English</button>
+      <button onClick={() => setLanguage("ja")}>Test Japanese</button>
+    </>
+  );
+};
+
+const renderPlayground = () => {
+  // 本番と同じproviderを通して問題画面を描画し、表示言語と入力・通信の関係を確認する。
+  return render(
+    <LanguageProvider>
+      <LanguageControls />
+      <Playground soj_url={SOJ_URL} />
+    </LanguageProvider>,
+  );
+};
+
+const runButton = () => {
+  // 待機中と実行中のどちらでも、文言だけが変わった同じ提出操作を利用する。
+  return screen.getByRole("button", {
+    name: /実行する|実行中…|Run command|Running…/,
+  });
+};
+
+const selectProblem = async (title) => {
+  // 初期状態で閉じている問題選択を利用者と同じ操作で開き、選択可能なbuttonを押す。
+  const summary = screen.getByText(/問題を選ぶ|Choose problem/).closest("summary");
+  if (!summary.parentElement.open) {
+    fireEvent.click(summary);
+  }
+  fireEvent.click(await screen.findByRole("button", { name: new RegExp(title) }));
+};
 
 const problemListResponse = () => ({
-  // 2問を含む問題一覧responseを返し、初期選択と選択raceのテストで共用する。
+  // 通常問題2問と画像問題を返し、選択raceとカテゴリ別の画像表示を確認できるようにする。
   ok: true,
   json: async () => [
     {
@@ -22,6 +61,12 @@ const problemListResponse = () => ({
       category: "STANDARD",
       title_ja: "標準問題2",
       title_en: "Standard problem 2",
+    },
+    {
+      id: IMAGE_PROBLEM_ID,
+      category: "IMAGE",
+      title_ja: "画像問題1",
+      title_en: "Image problem 1",
     },
   ],
 });
@@ -95,6 +140,7 @@ describe("playground default problem", () => {
   beforeEach(() => {
     // 問題一覧・問題詳細・投稿APIをURL別に応答させ、初期表示と送信内容を外部通信なしで確認する。
     fetchMock.mockImplementation(defaultFetchResponse);
+    localStorage.clear();
     Object.defineProperty(globalThis, "fetch", {
       configurable: true,
       writable: true,
@@ -105,27 +151,33 @@ describe("playground default problem", () => {
   afterEach(() => {
     // 呼び出し履歴とmock実装を破棄し、後続テストへ通信状態を持ち越さない。
     fetchMock.mockReset();
+    localStorage.clear();
+    vi.restoreAllMocks();
   });
 
   test("selects and loads standard problem 1 on the initial render", async () => {
     // 利用者が操作しなくても標準問題1番が選択され、その問題詳細と選択行が表示されることを確認する。
-    render(<Playground soj_url={SOJ_URL} />);
+    renderPlayground();
 
     expect(document.querySelector("#selected-text")?.textContent).toBe(DEFAULT_PROBLEM_ID);
     expect(await screen.findByText(/日本語の問題文1/)).toBeInTheDocument();
-    expect(document.querySelector(".problem-table tr.selected-row")?.textContent).toContain(
-      DEFAULT_PROBLEM_ID,
+    const summary = screen.getByText(/問題を選ぶ/).closest("summary");
+    expect(summary.parentElement.open).toBe(false);
+    fireEvent.click(summary);
+    expect(screen.getByRole("button", { name: /標準問題1/ })).toHaveAttribute(
+      "aria-current",
+      "true",
     );
   });
 
   test("submits standard problem 1 without an explicit problem click", async () => {
     // 初期状態のままコマンドを実行した場合も、有効な標準問題1番のIDが投稿APIへ送られることを確認する。
-    render(<Playground soj_url={SOJ_URL} />);
+    renderPlayground();
 
-    fireEvent.change(screen.getByPlaceholderText(/Type your shell one-liner here/), {
+    fireEvent.change(screen.getByRole("textbox"), {
       target: { value: "printf ok" },
     });
-    fireEvent.click(screen.getByDisplayValue(/RUN/));
+    fireEvent.click(runButton());
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
@@ -152,14 +204,14 @@ describe("playground default problem", () => {
       }
       return defaultFetchResponse(url, options);
     });
-    render(<Playground soj_url={SOJ_URL} />);
+    renderPlayground();
     await screen.findByText(/日本語の問題文1/);
-    fireEvent.change(screen.getByPlaceholderText(/Type your shell one-liner here/), {
+    fireEvent.change(screen.getByRole("textbox"), {
       target: { value: "sleep 1" },
     });
 
-    fireEvent.click(screen.getByDisplayValue(/RUN/));
-    fireEvent.click(screen.getByDisplayValue(/RUN/));
+    fireEvent.click(runButton());
+    fireEvent.click(runButton());
 
     await waitFor(() => {
       const submissions = fetchMock.mock.calls.filter(
@@ -181,14 +233,14 @@ describe("playground default problem", () => {
       }
       return defaultFetchResponse(url, options);
     });
-    render(<Playground soj_url={SOJ_URL} />);
+    renderPlayground();
     await screen.findByText(/日本語の問題文1/);
-    const input = screen.getByPlaceholderText(/Type your shell one-liner here/);
+    const input = screen.getByRole("textbox");
 
     fireEvent.change(input, { target: { value: "printf first" } });
-    fireEvent.click(screen.getByDisplayValue(/RUN/));
+    fireEvent.click(runButton());
     fireEvent.change(input, { target: { value: "printf second" } });
-    fireEvent.click(screen.getByDisplayValue(/RUN/));
+    fireEvent.click(runButton());
 
     expect(submittedSignals[0].aborted).toBe(true);
     await act(async () => {
@@ -218,8 +270,8 @@ describe("playground default problem", () => {
       }
       return defaultFetchResponse(url, options);
     });
-    render(<Playground soj_url={SOJ_URL} />);
-    fireEvent.click(await screen.findByText(/標準問題2 \/ Standard problem 2/));
+    renderPlayground();
+    await selectProblem("標準問題2");
 
     await act(async () => {
       second.resolve(problemDetailResponse(SECOND_PROBLEM_ID));
@@ -231,5 +283,148 @@ describe("playground default problem", () => {
     });
     expect(screen.getByText(/日本語の問題文2/)).toBeInTheDocument();
     expect(screen.queryByText(/日本語の問題文1/)).not.toBeInTheDocument();
+  });
+
+  test("changes language during a pending problem request without resetting the command", async () => {
+    // 問題取得中に言語を変えても同じ通信を維持し、完了時は最新言語で選択した問題を表示する。
+    const pendingDetail = deferredResponse();
+    let detailSignal;
+    fetchMock.mockImplementation((url, options) => {
+      if (url === `${SOJ_URL}/api/problems/${SECOND_PROBLEM_ID}`) {
+        detailSignal = options.signal;
+        return pendingDetail.promise;
+      }
+      return defaultFetchResponse(url, options);
+    });
+    renderPlayground();
+    await screen.findByText(/日本語の問題文1/);
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "printf '入力を保持'" } });
+    await selectProblem("標準問題2");
+    const callsBeforeSwitch = fetchMock.mock.calls.length;
+
+    fireEvent.click(screen.getByRole("button", { name: "Test English" }));
+
+    expect(input).toHaveValue("printf '入力を保持'");
+    expect(document.querySelector("#selected-text")?.textContent).toBe(SECOND_PROBLEM_ID);
+    expect(detailSignal.aborted).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(callsBeforeSwitch);
+    await act(async () => {
+      pendingDetail.resolve(problemDetailResponse(SECOND_PROBLEM_ID));
+    });
+    expect(await screen.findByText("English statement 2")).toBeInTheDocument();
+    expect(screen.queryByText("日本語の問題文2")).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(callsBeforeSwitch);
+  });
+
+  test("changes language during a pending submission without aborting or resending it", async () => {
+    // 提出中の言語変更は入力・提出先・通信を維持し、完了した判定だけを選択言語で表示する。
+    const pendingSubmission = deferredResponse();
+    let submissionSignal;
+    fetchMock.mockImplementation((url, options) => {
+      if (url === `${SOJ_URL}/api/v3/submissions`) {
+        submissionSignal = options.signal;
+        return pendingSubmission.promise;
+      }
+      return defaultFetchResponse(url, options);
+    });
+    renderPlayground();
+    await screen.findByText(/日本語の問題文1/);
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "printf 日本語" } });
+    fireEvent.click(runButton());
+    const callsBeforeSwitch = fetchMock.mock.calls.length;
+
+    fireEvent.click(screen.getByRole("button", { name: "Test English" }));
+
+    expect(screen.getByRole("button", { name: /Running…/ })).toBeEnabled();
+    expect(input).toHaveValue("printf 日本語");
+    expect(document.querySelector("#selected-text")?.textContent).toBe(DEFAULT_PROBLEM_ID);
+    expect(submissionSignal.aborted).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(callsBeforeSwitch);
+    await act(async () => {
+      pendingSubmission.resolve(submissionResponse("日本語の出力\n", 7));
+    });
+    expect(document.querySelector("#result-text")?.textContent).toBe("Accepted");
+    expect(document.querySelector("#user-output-text")?.textContent).toBe("日本語の出力\n");
+    expect(document.querySelector("#shellgei-text")?.textContent).toContain("printf 日本語");
+    expect(fetchMock).toHaveBeenCalledTimes(callsBeforeSwitch);
+  });
+
+  test("keeps completed results and input while changing the display language", async () => {
+    // 取得済みの問題・結果を再取得せずに翻訳し、入力や実行出力の空白・改行を変更しない。
+    renderPlayground();
+    await screen.findByText(/日本語の問題文1/);
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "printf ok" } });
+    fireEvent.click(runButton());
+    await waitFor(() => {
+      expect(document.querySelector("#result-text")?.textContent).toBe("正解");
+    });
+    fireEvent.change(input, { target: { value: "printf '次の入力'" } });
+    const callsBeforeSwitch = fetchMock.mock.calls.length;
+
+    fireEvent.click(screen.getByRole("button", { name: "Test English" }));
+
+    expect(screen.getByText("English statement 1")).toBeInTheDocument();
+    expect(document.querySelector("#result-text")?.textContent).toBe("Accepted");
+    expect(document.querySelector("#user-output-text")?.textContent).toBe("ok");
+    expect(document.querySelector("#shellgei-text")?.textContent).toContain("printf ok");
+    expect(input).toHaveValue("printf '次の入力'");
+    expect(document.querySelector("#selected-text")?.textContent).toBe(DEFAULT_PROBLEM_ID);
+    fireEvent.click(screen.getByRole("button", { name: "Test Japanese" }));
+    expect(screen.getByText("日本語の問題文1")).toBeInTheDocument();
+    expect(document.querySelector("#result-text")?.textContent).toBe("正解");
+    expect(fetchMock).toHaveBeenCalledTimes(callsBeforeSwitch);
+  });
+
+  test("keeps validation and API errors in English in either display language", async () => {
+    // 入力検証と通信の失敗は日本語画面でも英語で表示し、切替時に再提出しない。
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    fetchMock.mockImplementation((url, options) => {
+      if (url === `${SOJ_URL}/api/v3/submissions`) {
+        return Promise.resolve({ ok: false, status: 503, json: async () => ({}) });
+      }
+      return defaultFetchResponse(url, options);
+    });
+    renderPlayground();
+    await screen.findByText(/日本語の問題文1/);
+    fireEvent.click(runButton());
+    expect(document.querySelector("#result-text")?.textContent).toBe("No input provided");
+    fireEvent.click(screen.getByRole("button", { name: "Test English" }));
+    expect(document.querySelector("#result-text")?.textContent).toBe("No input provided");
+
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "true" } });
+    fireEvent.click(runButton());
+    await waitFor(() => {
+      expect(document.querySelector("#result-text")?.textContent).toBe(
+        "Error: HTTP error! status: 503",
+      );
+    });
+    const callsBeforeSwitch = fetchMock.mock.calls.length;
+    fireEvent.click(screen.getByRole("button", { name: "Test Japanese" }));
+    expect(document.querySelector("#result-text")?.textContent).toBe(
+      "Error: HTTP error! status: 503",
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(callsBeforeSwitch);
+  });
+
+  test("shows expected images only for image problems and no result placeholder", async () => {
+    // 通常問題と未実行結果では画像領域を作らず、画像カテゴリの問題だけに想定画像を表示する。
+    renderPlayground();
+    await screen.findByText(/日本語の問題文1/);
+    expect(document.querySelector("#expected-image")).not.toBeInTheDocument();
+    expect(document.querySelector("#result-image")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText(/問題を選ぶ/).closest("summary"));
+    fireEvent.click(screen.getByRole("button", { name: /^画像/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /画像問題1/ }));
+
+    await waitFor(() => {
+      expect(document.querySelector("#expected-image")).toHaveAttribute(
+        "src",
+        `${SOJ_URL}/image/${IMAGE_PROBLEM_ID}.jpg`,
+      );
+    });
+    expect(document.querySelector("#result-image")).not.toBeInTheDocument();
   });
 });
