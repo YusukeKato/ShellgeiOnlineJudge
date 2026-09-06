@@ -74,5 +74,117 @@
       "title_ja"
     ],
     "definition_sha256": "ec42e58192cb183030210beaa8a3cc97123b46f5fb77fabf0d4753d821c7d948"
+  },
+  "STANDARD-00000011": {
+    "changed_fields": [
+      "answer",
+      "expected_output",
+      "input",
+      "statement_en",
+      "statement_ja"
+    ],
+    "definition_sha256": "c52f8779a869280824b58ab668230c1a11599204e5b4238c9559e2d5af4820e8"
+  },
+  "STANDARD-00000012": {
+    "changed_fields": [
+      "answer",
+      "expected_output",
+      "input",
+      "statement_en",
+      "statement_ja",
+      "title_en"
+    ],
+    "definition_sha256": "ebe464e00e4a116c91fc35e6bb141cb02e10af38d1bab41fd916c8f3b4c8cbe8"
+  },
+  "STANDARD-00000013": {
+    "changed_fields": [
+      "answer",
+      "expected_output",
+      "input",
+      "statement_en",
+      "statement_ja",
+      "title_en",
+      "title_ja"
+    ],
+    "definition_sha256": "32431373afc51d6228497840eeb86d74c7dd61b8856d61ac3ba797ab52e79eb5"
+  },
+  "STANDARD-00000014": {
+    "changed_fields": [
+      "answer",
+      "expected_output",
+      "input",
+      "statement_en",
+      "statement_ja",
+      "title_en"
+    ],
+    "definition_sha256": "7b342007b6df713fe151b23c4467c78e69608f2498ff068502a247c9cdb16e82"
+  },
+  "STANDARD-00000015": {
+    "changed_fields": [
+      "answer",
+      "expected_output",
+      "input",
+      "statement_en",
+      "statement_ja",
+      "title_en"
+    ],
+    "definition_sha256": "b73aeba2332d1c346659f3047eab043d23d014bb2792e0235d9c2cc1938f7549"
+  },
+  "STANDARD-00000016": {
+    "changed_fields": [
+      "answer",
+      "expected_output",
+      "input",
+      "statement_en",
+      "statement_ja",
+      "title_en",
+      "title_ja"
+    ],
+    "definition_sha256": "7d274e5cfbf9db5a451ec74d1ec808136ebd248ddc9d2167767ecfce893c80c1"
+  },
+  "STANDARD-00000017": {
+    "changed_fields": [
+      "answer",
+      "expected_output",
+      "input",
+      "statement_en",
+      "statement_ja",
+      "title_en",
+      "title_ja"
+    ],
+    "definition_sha256": "f2b576b6ad5a4bc4dd402e5b30a2c271ea0661c13c9b0054be664131dae4fa05"
+  },
+  "STANDARD-00000018": {
+    "changed_fields": [
+      "answer",
+      "expected_output",
+      "input",
+      "statement_en",
+      "statement_ja",
+      "title_en",
+      "title_ja"
+    ],
+    "definition_sha256": "5a9ff70ebdfbafef387a04b8b1e1d910227fb4c4b2938bf39be49983de4ff79d"
+  },
+  "STANDARD-00000019": {
+    "changed_fields": [
+      "answer",
+      "statement_en",
+      "statement_ja",
+      "title_en"
+    ],
+    "definition_sha256": "c5ee8ea743b9ba448f50b67b05b52e81c0f093a4efd4d1023d93ae38a2ca4266"
+  },
+  "STANDARD-00000020": {
+    "changed_fields": [
+      "answer",
+      "expected_output",
+      "input",
+      "statement_en",
+      "statement_ja",
+      "title_en",
+      "title_ja"
+    ],
+    "definition_sha256": "56a14642e6649964dcb83a2b1f6c43989bcb319f028f9a693f72b7a751a5465a"
   }
 }

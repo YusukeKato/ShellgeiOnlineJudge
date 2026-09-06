@@ -2,29 +2,41 @@ schema_version: 3
 id: STANDARD-00000016
 category: STANDARD
 title:
-  ja: HTMLテスト
-  en: HTML Test
+  ja: HTMLのコードを掲載する
+  en: Preparing HTML for Display
 statement:
   ja: |
-    入力のHTMLタグをそのまま出力してください。
+    HTMLのコードを文章として掲載するため、input.txtの文字を次の対応で変換してください。
+    & → &amp;
+    < → &lt;
+    > → &gt;
+
+    変換対象は入力にもともとある文字だけです。例えば、入力の「&lt;」は「&amp;lt;」になります。
+    それ以外の文字・空白・改行はそのまま保ってください。
   en: |
-    Output the HTML tags of the input as is.
-reference_solution: cat input.txt
+    To display HTML code as text, replace characters in input.txt using these mappings:
+    & -> &amp;
+    < -> &lt;
+    > -> &gt;
+
+    Apply the mappings only to characters in the original input. For example, input "&lt;" becomes "&amp;lt;".
+    Preserve all other characters, spaces, and line breaks.
+reference_solution: sed 's/\&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      <h1>タイトル</h1>
-      <p>何かの文章</p>
-      <a href="https://shellgei-online-judge.com">シェル芸オンラインジャッジ</a>
-      <marquee>タグのテスト</marquee>
+      <h1>Shell & Tools</h1>
+      <p title="A & B">1 < 2 && 3 > 2</p>
+      例：&lt;tag&gt;
+      plain  text
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    <h1>タイトル</h1>
-    <p>何かの文章</p>
-    <a href="https://shellgei-online-judge.com">シェル芸オンラインジャッジ</a>
-    <marquee>タグのテスト</marquee>
+    &lt;h1&gt;Shell &amp; Tools&lt;/h1&gt;
+    &lt;p title="A &amp; B"&gt;1 &lt; 2 &amp;&amp; 3 &gt; 2&lt;/p&gt;
+    例：&amp;lt;tag&amp;gt;
+    plain  text

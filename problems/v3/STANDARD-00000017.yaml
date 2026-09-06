@@ -2,41 +2,40 @@ schema_version: 3
 id: STANDARD-00000017
 category: STANDARD
 title:
-  ja: ソート1
-  en: Sort 1
+  ja: 遅いリクエストを探す
+  en: Finding Slow Requests
 statement:
   ja: |
-    sortコマンドを使用せずに昇順にソートしてください。
+    input.txtには「リクエストID 応答時間」の形式でログが記録されています。
+    区切りは半角スペース1個で、応答時間はミリ秒単位の非負整数です。
+
+    応答時間が長い順に上位3件の行を出力してください。
+    同じ応答時間の行は、入力で先に登場したものを優先してください。
   en: |
-    Sort in ascending order without using the sort command.
-reference_solution: cat input.txt | awk 'BEGIN{a=0}{b[a]=$1;a+=1}END{for(i=0;i<length(b);i++){for(j=i+1;j<length(b);j++){if(b[i]>b[j]){c=b[i];b[i]=b[j];b[j]=c}}};for(k=0;k<length(b);k++){print b[k]}}'
+    Each line of input.txt is a log record in the form "request_id response_time", separated by one ASCII space.
+    Response times are nonnegative integers in milliseconds.
+
+    Output the three records with the longest response times, from longest to shortest.
+    For equal response times, give priority to records that appear earlier in the input.
+reference_solution: LC_ALL=C sort -s -k2,2nr input.txt | head -n 3
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      8
-      99
-      12
-      7
-      1024
-      999
-      1
-      5
-      10
-      1000
+      req-z 900
+      req-b 20
+      req-c 1200
+      req-d 85
+      req-y 900
+      req-a 900
+      req-f 100
+      req-g 9
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    1
-    5
-    7
-    8
-    10
-    12
-    99
-    999
-    1000
-    1024
+    req-c 1200
+    req-z 900
+    req-y 900

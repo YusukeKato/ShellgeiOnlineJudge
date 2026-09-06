@@ -3,46 +3,44 @@ id: STANDARD-00000014
 category: STANDARD
 title:
   ja: グループ分け
-  en: Grouping
+  en: Grouping by Team
 statement:
   ja: |
-    メンバーのリストが入力として与えられるので、各メンバーをチームごとに並べてください。
-    入力の一列目はメンバーの名前、二列目はチーム番号です。
-    出力の一列目はチーム番号、二列目以降はメンバーの名前としてください。
-    また、メンバーの名前はリストで上になっている人が先にくるように並べてください。
+    input.txtのメンバーをチームごとにまとめてください。
+    各行は「名前 チーム番号」で、半角スペース1個で区切られています。名前に空白はなく、チーム番号は先頭に0のない正の整数です。
+
+    チーム番号の小さい順に、1チームを1行で出力してください。
+    各行は「チーム番号 名前 名前 ...」とし、同じチームの名前は入力で登場した順に並べてください。
+    項目は半角スペース1個で区切ってください。
   en: |
-    Group the members by team.
+    Group the members in input.txt by team.
+    Each line is "name team_number", separated by one ASCII space. Names contain no whitespace; team numbers are positive integers with no leading zeros.
 
-    Input:
-    - first row: the member's name
-    - second row: the team number
-
-    Output:
-    - first row: the team number
-    - second row: the member's name
-reference_solution: cat input.txt | sort -s -k 2,2 | awk 'BEGIN{a=1;printf("%d",a)}{if($2==a){printf(" %s",$1)}else{a+=1;printf("\n%d %s",a,$1)}}'
+    Output one team per line in ascending numeric order of team number.
+    Use "team_number name name ...", keeping names within each team in their original input order.
+    Separate fields with one ASCII space.
+reference_solution: LC_ALL=C sort -s -k2,2n input.txt | awk '$2!=team {if(NR>1) printf "\n"; team=$2; printf "%s",team} {printf " %s",$1} END {print ""}'
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      田中 2
-      鈴木 1
-      二階堂 1
-      佐藤 3
-      加藤 1
-      大久保 2
-      米田 4
-      森 2
-      大谷 5
-      源田 5
+      田中 10
+      鈴木 2
+      二階堂 2
+      佐藤 5
+      加藤 2
+      大久保 10
+      米田 5
+      森 10
+      大谷 20
+      源田 20
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    1 鈴木 二階堂 加藤
-    2 田中 大久保 森
-    3 佐藤
-    4 米田
-    5 大谷 源田
+    2 鈴木 二階堂 加藤
+    5 佐藤 米田
+    10 田中 大久保 森
+    20 大谷 源田

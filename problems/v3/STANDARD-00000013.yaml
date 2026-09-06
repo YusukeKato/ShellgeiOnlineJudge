@@ -2,23 +2,30 @@ schema_version: 3
 id: STANDARD-00000013
 category: STANDARD
 title:
-  ja: アルファベットの調査
-  en: Alphabet Investigation
+  ja: 使われていないアルファベット
+  en: Missing Letters
 statement:
   ja: |
-    26種類のアルファベットのうち、足りないものを出力してください。
+    input.txt全体に一度も登場しない小文字の英字を、a〜zの順に1行に1文字ずつ出力してください。
+    入力は小文字の英字と改行だけで、同じ文字が複数回登場することがあります。
   en: |
-    Please output the missing alphabets.
-reference_solution: echo {a..z} | tr $(cat input.txt) '                         ' | awk '{print $1}'
+    Output the lowercase letters that never appear anywhere in input.txt, one per line in a-to-z order.
+    The input contains only lowercase ASCII letters and newlines. Letters may occur more than once.
+reference_solution: printf '%s' {a..z} | tr -d "$(tr -d '\n' < input.txt)" | fold -w 1
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      qwertyuiopasdfhjklzxcvbnm
+      qwrtyuiop
+      asdfhjkl
+      xcvbnm
+      qqwwyy
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
+    e
     g
+    z

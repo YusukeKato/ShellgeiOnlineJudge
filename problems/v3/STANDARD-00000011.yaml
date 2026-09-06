@@ -6,23 +6,28 @@ title:
   en: Matrix Rotation
 statement:
   ja: |
-    行列を時計回りに90度回転させてください。
+    input.txtの行列を、時計回りに90度回転させてください。
+    各行の要素数は同じで、整数が半角スペース1個で区切られています。
+    出力も要素を半角スペース1個で区切り、行列の1行を1行ずつ出力してください。
   en: |
-    Rotate the matrix 90 degrees clockwise.
-reference_solution: cat input.txt | rs -T | awk '{print $3,$2,$1}'
+    Rotate the matrix in input.txt 90 degrees clockwise.
+    Each row has the same number of integer elements, separated by one ASCII space.
+    Separate output elements with one ASCII space and output one matrix row per line.
+reference_solution: tac input.txt | rs -T | awk '{$1=$1; print}'
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      1 2 3
-      4 5 6
-      7 8 9
+      1 20 -3
+      40 5 60
+      7 -80 9
+      100 11 12
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    7 4 1
-    8 5 2
-    9 6 3
+    100 7 40 1
+    11 -80 5 20
+    12 9 60 -3

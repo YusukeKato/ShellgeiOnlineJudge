@@ -3,22 +3,32 @@ id: STANDARD-00000012
 category: STANDARD
 title:
   ja: ビットの反転
-  en: Bit Reversal
+  en: Bit Inversion
 statement:
   ja: |
-    0は1に、1は0に、反転させてください。
+    input.txtの0を1に、1を0に変えてください。
+    文字の順序と改行はそのまま保ってください。
   en: |
-    Invert 0 to 1 and 1 to 0.
-reference_solution: cat input.txt | tr 01 10
+    Change every 0 in input.txt to 1, and every 1 to 0.
+    Preserve the character order and line breaks.
+reference_solution: tr 01 10 < input.txt
 execution:
   stdin: ''
   fixtures:
   - path: input.txt
     content: |
-      010100110011000111000111000011110000111100000111110000011111
+      00101
+      1111
+      0
+      101100
+      000
   exit_code: ignore
   stderr: merge
 judge:
   type: text
   expected_output: |
-    101011001100111000111000111100001111000011111000001111100000
+    11010
+    0000
+    1
+    010011
+    111
