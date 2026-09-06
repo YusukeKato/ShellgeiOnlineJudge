@@ -20,14 +20,14 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 - Baseline commit: `991ef334f2785cce81a2e33206ec1f00f3487c9b`
 - Baseline commit subject: `docs: update maintenance history`
 - Baseline date: 2026-08-25
-- Overall status: `GIF display awaiting review`
+- Overall status: `Release-scope refactoring completed`
 - Total refactoring units: 31
 - Ready: 0
 - Planned: 0
 - Pending (`Ready` + `Planned`): 0
 - In Progress: 0
-- Review: 1
-- Completed: 30
+- Review: 0
+- Completed: 31
 - Blocked: 0
 - Deferred: 0
 - Superseded: 0
@@ -35,7 +35,7 @@ unitの実装が完了したのにtrackerだけが古い状態を残さないで
 `2.8.0`は今回の計画で宣言されたproduct baselineです。
 製品versionの正本・転記先・更新手順はR3-027で整備し、
 [リリース準備](../RELEASE.md)に記載しています。
-R3-030は依頼者の実装指示により再開し、GIF表示を判定処理から分離して整備します。
+R3-030のGIF表示も完了し、全31項目をレビュー承認・commit済みです。
 
 ## Goals
 
@@ -183,7 +183,7 @@ Codexが実装とtestを終えた時点は`Review`です。
 | R3-027 | P3 | Completed | F | Establish canonical v3.0.0 version and release documentation | 自身を除く全release対象unit | `c7b2b52` |
 | R3-028 | P1 | Completed | D | Distinguish execution failures and judge errors in frontend results | R3-019, R3-020 | `eb9e458` |
 | R3-029 | P2 | Completed | F | Organize shared, backend, and runner packages | R3-023, R3-024 | `b71663e` |
-| R3-030 | P2 | Review | D | Support display of generated GIF artifacts | artifact contract review | - |
+| R3-030 | P2 | Completed | D | Support display of generated GIF artifacts | artifact contract review | `5428cb3` |
 | R3-031 | P2 | Completed | D | Refresh the responsive frontend and add language selection | R3-019, R3-020, R3-028 | `118ba5d` |
 
 Size estimates use `XS` (under about 100 changed lines), `S` (100--250),
@@ -661,7 +661,7 @@ They are planning aids, not acceptance criteria.
 
 ### R3-030: Support display of generated GIF artifacts
 
-- Priority / Status: P2 / `Review`
+- Priority / Status: P2 / `Completed`
 - Goal: 生成したGIF画像をユーザーが画面で確認できるようにする
 - Implementation: 全問題の固定pathから表示用GIFを回収し、判定用artifactと分離する。画像の合計byte枠を維持し、backendで形式・総画素上限を検証して公開artifactへ優先表示する。公開API・DB schema・sandbox制限を維持し、内部protocolは4へ更新する
 - Reproduction: `seq 0 9 | xargs -I@ bash -c 'textimg "$1" -F100 | convert - miff:-' _ @ | convert -delay 10 miff:- media/output.gif`。コマンドの生成成否と、artifactの回収・表示の成否を分けて確認する
@@ -675,8 +675,8 @@ They are planning aids, not acceptance criteria.
   decoder補強後の最終backend imageでComposeのAPI・browser・全92問の3件を再実行して成功。
   既存の検証済みruntime imageへ変更したソース・配信資産を重ねて検証し、依存更新・sandbox再build・供給網再scanは行っていない。
   public response schemaは変更前と一致し、文書のローカル参照先99件を確認した。
-  ローカル確認環境も更新。本番反映・commit・pushは未実施。backendとrunnerは内部protocol 4へ同時更新が必要。
-- Completion: -
+  ローカル確認環境も更新。本番反映・pushは未実施。backendとrunnerは内部protocol 4へ同時更新が必要。
+- Completion: commit `5428cb3b51cc84d3e641702d8bbcdb528a2f9c50` / date `2026-09-06` / note 依頼者のレビュー承認後にcommit。検証結果は上記参照
 
 ## Known design decisions
 
