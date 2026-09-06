@@ -154,6 +154,11 @@ DependabotでActions・Poetry・frontend依存の週次PRを提案します。�
 scannerは`ci/tools.json`、Poetry/Yarn bootstrapはworkflowの固定値をreviewして更新します。
 本番image digestは[本番運用](./PRODUCTION.md#image-digestの更新)の手順を使用します。
 
+Alpineの配布indexでは旧package revisionが置き換わるため、base imageのdigest固定だけでは
+後続の`apk add package=version`の再取得を保証できません。固定versionを取得できなくなった場合は、
+対象baseの`apk policy`で配布中のrevisionを確認し、同じpackageを固定しているDockerfileを
+合わせて更新します。固定指定を外して回避せず、更新imageのbuild・scan・関連統合testを確認してください。
+
 1. 公式のrelease情報・source commit・配布checksumを確認する。
 2. versionとSHAを同じ差分で更新し、tool配布物のhashを照合する。
 3. actionlint、policy test、scanner fixture、実依存/imageのscanを実行する。

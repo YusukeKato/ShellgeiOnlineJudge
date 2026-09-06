@@ -33,7 +33,7 @@ FROM nginx:alpine@sha256:72ba65eb42c10344912a84ff42408db7d34f2feb642204570ab8fc5
 LABEL org.opencontainers.image.version="3.0.0"
 
 # baseを維持し、util-linux由来の検出に対応するlibraryだけを固定更新する。
-RUN apk add --no-cache --upgrade libuuid=2.42.3-r0
+RUN apk add --no-cache --upgrade libuuid=2.42.3-r1
 
 # ビルド成果物をNginxの公開ディレクトリにコピー
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
