@@ -460,7 +460,7 @@ DB networkに限定して実行後に削除します。通常のCompose upでは
 権限を持つため、backend侵害時の実行ログ流出・削除まで防ぐものではありません。
 任意に追加されたDB objectや管理者による事後の権限変更は別途運用管理が必要です。
 設定と移行手順は[backend文書](./backend/README.md#実行ログとdb-migration)と
-[本番更新](./docs/PRODUCTION.md#8-更新デプロイ)を参照してください。
+[本番更新](./docs/PRODUCTION.md#更新デプロイ)を参照してください。
 
 rootless daemonやホストへの侵害から管理資格情報を保護する保証は追加していません。
 

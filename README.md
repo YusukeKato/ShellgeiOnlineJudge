@@ -19,7 +19,8 @@ SHELLGEI ONLINE JUDGE is a shell one-liner playground: https://shellgei-online-j
 | [Public API](./docs/API.md) | API利用者・開発者 | v3 submission DTO、HTTP status、上限、legacy互換性 |
 | [開発環境](./docs/DEVELOPMENT.md) | 開発者 | ローカル環境、静的検査、テスト、Compose起動 |
 | [CI・供給網の検査](./docs/CI.md) | 開発者・運用者 | CI権限、scan、SBOM、provenance、依存更新 |
-| [本番運用](./docs/PRODUCTION.md) | 運用者 | 本番構成、デプロイ、更新、ロールバック、監視 |
+| [本番デプロイ](./docs/PRODUCTION.md) | 運用者 | 必要な設定、build、DB更新、起動、動作確認、障害対応 |
+| [本番ホスト設定](./docs/PRODUCTION_HOST.md) | サーバ管理者 | 初回のrootless Docker、公開経路、TLS、再起動確認 |
 | [セキュリティ](./SECURITY.md) | 開発者・運用者 | 現在のセキュリティモデル、sandbox制限、既知の制約 |
 | [セキュリティ課題](./docs/security/README.md) | 開発者・運用者 | 現在の課題、対応状況、優先順位、作業再開手順 |
 | [v3.0.0リファクタリング計画](./docs/refactoring/README.md) | 開発者 | v3の設計方針、作業unit、優先順位、進捗、完了commit |

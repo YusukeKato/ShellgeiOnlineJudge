@@ -44,8 +44,8 @@ sandboxの収録コマンドは[sandbox README](../deploy/sandbox/README.md)を�
 | API利用者 | 新規clientは`/api/v3/submissions`へ対応。旧`/api/shellgei`は互換用に維持 | [API移行](./API.md) |
 | 問題データ | v3変換・validation・全92問回帰を実施し、backendとrunnerのrevisionを一致させる | [問題データ](../problems/README.md) |
 | サーバ設定 | rootless socket、runner認証、DB通常用／migration用URL、sandboxのimmutable IDを設定 | [本番運用](./PRODUCTION.md) |
-| DB | 整合性のあるbackupと旧設定を保存。旧frontend/backendを停止して管理処理を実施 | [更新デプロイ](./PRODUCTION.md#8-更新デプロイ) |
-| 障害時 | 旧image・commit・設定を保持。schema・権限・port公開の互換性を確認して復帰 | [ロールバック](./PRODUCTION.md#9-ロールバック) |
+| DB | 整合性のあるbackupと旧設定を保存。旧frontend/backendを停止して管理処理を実施 | [更新デプロイ](./PRODUCTION.md#更新デプロイ) |
+| 障害時 | 旧image・commit・設定を保持。schema・権限・port公開の互換性を確認して復帰 | [ロールバック](./PRODUCTION.md#ロールバック) |
 
 DB migration失敗時はサービス更新へ進みません。単に旧コードへ戻すだけではDB schemaと権限は戻りません。
 復帰手順に従い、必要に応じて保護されたbackupを使用します。

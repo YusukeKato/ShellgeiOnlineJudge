@@ -335,7 +335,7 @@ Status: Resolved（依頼者のreview承認後に`4eec07b`でcommit済み）。
   既存特権role・所有者・他role所属は自動降格せず拒否する。
 - 権限の正本は[SECURITY.md](../../SECURITY.md#dbの管理用資格情報と通常実行role)、
   設定・transactionの扱いは[backend文書](../../backend/README.md#実行ログとdb-migration)、
-  初回移行・password更新・旧backendへ戻す制約は[本番運用](../PRODUCTION.md#8-更新デプロイ)を参照する。
+  初回移行・password更新・旧backendへ戻す制約は[本番運用](../PRODUCTION.md#更新デプロイ)を参照する。
 - 起動時処理の既存testを変更し、実装前に2件のREDを確認した。
   実PostgreSQLで保存・retention成功、DDL・migration表更新・setval・role昇格の拒否、
   列単位やPUBLICへの追加権限の拒否、旧行・所有者保持とrollback/re-upgradeを検証した。
@@ -365,7 +365,7 @@ SOJ-011で内部network上の管理serviceが整ったため、DB管理手段を
   GitHub CI、本番反映、脆弱性scanは未実施です。
 
 設定と管理手順は[DBへの管理アクセス](../DEVELOPMENT.md#dbへの管理アクセス)、
-本番で既存client・backup・監視を切り替える手順は[更新デプロイ](../PRODUCTION.md#8-更新デプロイ)を参照してください。
+本番で既存client・backup・監視を切り替える手順は[更新デプロイ](../PRODUCTION.md#更新デプロイ)を参照してください。
 DB schema・保存内容・APIは維持します。host portの廃止は、rootless daemonやhostの管理者からのDB隔離を保証しません。
 
 ## Open issue details

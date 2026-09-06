@@ -244,7 +244,7 @@ ComposeのDBは内部networkだけで使用し、loopbackを含むhost portへ�
 管理方法は次の手順を使用してください。
 
 CLIと権限設定の契約は[backendの実行ログとDB migration](../backend/README.md#実行ログとdb-migration)、
-既存環境の移行・rollbackは[本番運用](./PRODUCTION.md#8-更新デプロイ)を参照してください。
+既存環境の移行・rollbackは[本番運用](./PRODUCTION.md#更新デプロイ)を参照してください。
 
 ### DBへの管理アクセス
 

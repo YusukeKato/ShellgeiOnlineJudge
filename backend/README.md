@@ -140,8 +140,8 @@ DBのPUBLIC CREATE/TEMP、public schemaのPUBLIC CREATE、管理対象表・sequ
 
 明示revisionへのrollbackはschemaだけを戻し、roleを削除しません。
 低水準の`database_migrations` CLIはschema単体の検証用に残しますが、本番更新は管理CLIを使用します。
-[本番の更新・既存環境移行](../docs/PRODUCTION.md#8-更新デプロイ)と
-[ロールバック](../docs/PRODUCTION.md#9-ロールバック)を参照してください。
+[本番の更新・既存環境移行](../docs/PRODUCTION.md#更新デプロイ)と
+[ロールバック](../docs/PRODUCTION.md#ロールバック)を参照してください。
 
 text判定は`ExecutionResult`から`TextJudgeInput`へ必要項目だけを渡し、
 file I/Oを行わないpure functionへ分離しています。判定規則の正本は

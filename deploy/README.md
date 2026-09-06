@@ -4,7 +4,8 @@
 環境構築、テスト、本番運用の手順は、次の文書を正本とします。
 
 - [開発環境の構築・テスト・起動](../docs/DEVELOPMENT.md)
-- [本番環境の構築・デプロイ・運用](../docs/PRODUCTION.md)
+- [本番デプロイ・更新・障害対応](../docs/PRODUCTION.md)
+- [本番ホストの初期設定](../docs/PRODUCTION_HOST.md)
 - [Docker統合テスト](../backend/tests/integration/README.md)
 - [セキュリティモデルと制約](../SECURITY.md)
 
