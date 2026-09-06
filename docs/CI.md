@@ -95,6 +95,12 @@ source・frontend・DB・sandboxにはこの例外を適用しません。
 ## Rootless image検証
 
 専用のGitHub-hosted Ubuntu runnerに、固定versionのDockerをrootlessで構築します。
+`ci/prepare_rootless.sh`でuser systemd・D-Busとcgroupの委譲を準備します。
+setup Actionは独自の`XDG_RUNTIME_DIR`と`sudo`を使うため、runnerに限って
+`DBUS_SESSION_BUS_ADDRESS`をsudo経由でも保持し、実際のuser busへ接続します。
+この準備はGitHub-hosted runner専用です。本番・開発ホストでは実行しません。
+backend imageのbuild直後に、scanと同じCPU・メモリ・PID制限付きPython検査を実行します。
+user busやcgroup設定の不備はそこで失敗させ、制限の解除や検査のskipは行いません。
 明示されたUnix socketとdaemonの`SecurityOptions`を確認してからbuild・scan・testを行います。
 確認できない場合は失敗し、host上のrootful daemonへfallbackしません。
 

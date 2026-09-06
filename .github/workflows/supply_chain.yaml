@@ -42,7 +42,7 @@ jobs:
       - name: Validate workflows and policy
         run: |
           "$RUNNER_TEMP/soj-tools/actionlint"
-          poetry run pytest backend/tests/test_ci_policy.py backend/tests/test_supply_chain.py
+          poetry run pytest backend/tests/test_ci_policy.py backend/tests/test_supply_chain.py backend/tests/test_rootless_ci.py
       - name: Scan complete Git history and current files
         run: |
           "$RUNNER_TEMP/soj-tools/gitleaks" git . --redact=100 --no-banner --log-opts=--all
@@ -83,6 +83,8 @@ jobs:
           python -m pip install poetry==2.4.1
           poetry check --lock
           poetry install --no-interaction
+      - name: Prepare user systemd and D-Bus for rootless cgroups
+        run: bash ci/prepare_rootless.sh
       - name: Set up isolated rootless Docker
         uses: docker/setup-docker-action@77e84dbf09b47d1e29270283c22f16145aa85ca1 # v5.4.0
         with:
@@ -95,6 +97,8 @@ jobs:
           docker build --file deploy/sandbox/Dockerfile --tag soj-sandbox:ci .
           printf 'SANDBOX_IMAGE_ID=%s\n' "$(docker image inspect soj-sandbox:ci --format '{{.Id}}')" >> "$GITHUB_ENV"
           docker build --file backend/Dockerfile --target backend --tag soj-backend:ci .
+          # 長いbuild・scanの前に、実際に資源制限付きcontainerを起動できるか検証する。
+          poetry run python -c 'import subprocess; from ci.supply_chain import inspect_python_runtime; image = subprocess.check_output(["docker", "image", "inspect", "soj-backend:ci", "--format", "{{.Id}}"], text=True).strip(); print(inspect_python_runtime(image))'
           docker build --file backend/Dockerfile --target runner --tag soj-runner:ci .
           docker build --file frontend/Dockerfile --build-arg VITE_SOJ_URL= --tag soj-frontend:ci .
           docker build --file deploy/postgres/Dockerfile --tag soj-db:ci .
