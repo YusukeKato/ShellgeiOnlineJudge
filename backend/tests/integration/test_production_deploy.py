@@ -135,6 +135,7 @@ def test_production_update_preserves_db_and_checks_public_execution(
         if migration_failure:
             with pytest.raises(subprocess.CalledProcessError):
                 task.execute()
+            assert task.phase == "database migration"
             assert (state / "FAILED").is_file()
             assert stack.service("backend").status == "exited"
             assert stack.service("frontend").status == "exited"

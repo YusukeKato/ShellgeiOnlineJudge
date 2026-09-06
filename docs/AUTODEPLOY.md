@@ -16,6 +16,8 @@ DB migrationとsandbox更新を含み、サービス停止から起動確認ま�
    CI imageはLinux amd64用なので、本番も同じarchitectureを使う。
    `systemd-run --user --wait docker version`が専用ユーザーで成功することも確認する。
    Docker CLIを独自pathへ導入している場合は、user systemdからも実行できるようにする。
+   更新processの`DOCKER_HOST`が指定済みなら、そのローカルUnix socketを使用する。
+   未指定時は`/run/user/<UID>/docker.sock`を使用し、どちらもrootless・cgroup v2を確認する。
 2. 自動更新機能を含むcommitを本番checkoutにも取得する。作業treeをcleanにし、
    `.env`、TLS、DB資格情報、`SERVER_URL`が有効な状態にする。
    mainでもdetached HEADでも使用できるが、対象mainへfast-forwardできる必要がある。

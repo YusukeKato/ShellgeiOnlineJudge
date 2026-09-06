@@ -195,8 +195,16 @@ class Deployment:
             raise RuntimeError("previous deployment needs manual recovery")
         if os.getuid() == 0:
             raise DeploymentError("run as the rootless Docker owner")
-        os.environ["DOCKER_HOST"] = f"unix:///run/user/{os.getuid()}/docker.sock"
-        os.environ["DOCKER_SOCKET_PATH"] = f"/run/user/{os.getuid()}/docker.sock"
+        # CIの専用socketも尊重する。未指定の本番loginだけ標準rootless socketを使う。
+        docker_host = os.environ.get(
+            "DOCKER_HOST", f"unix:///run/user/{os.getuid()}/docker.sock"
+        )
+        if not docker_host.startswith("unix:///") or not docker_host.removeprefix(
+            "unix://"
+        ).strip("/"):
+            raise DeploymentError("DOCKER_HOST must be a local Unix socket")
+        os.environ["DOCKER_HOST"] = docker_host
+        os.environ["DOCKER_SOCKET_PATH"] = docker_host.removeprefix("unix://")
         info = json.loads(run("docker", "info", "--format", "{{json .}}"))
         if (
             "name=rootless" not in info["SecurityOptions"]

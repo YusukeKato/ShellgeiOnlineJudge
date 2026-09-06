@@ -3,6 +3,7 @@
 import copy
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 from typing import Any
@@ -261,6 +262,8 @@ def deployment(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> tuple[host.Deployment, list[str], dict]:
     """外部processだけを置換し、実際の更新分岐・記録file・migration順序を試す。"""
+    monkeypatch.setenv("DOCKER_HOST", "unix:///tmp/ci-daemon/docker.sock")
+    monkeypatch.setenv("DOCKER_SOCKET_PATH", "/tmp/ci-daemon/docker.sock")
     state = tmp_path / ".soj-deploy"
     state.mkdir()
     incoming = state / "incoming-123-1"
@@ -380,6 +383,39 @@ def deployment(
     monkeypatch.setattr(host.time, "sleep", lambda _: None)
     monkeypatch.setattr(host.os, "getuid", lambda: 1000)
     return host.Deployment(tmp_path, incoming, SHA), events, controls
+
+
+@pytest.mark.parametrize(
+    "docker_host", [None, "unix:///tmp/isolated-daemon/docker.sock"]
+)
+def test_deployment_selects_local_rootless_socket(
+    deployment: tuple, monkeypatch: pytest.MonkeyPatch, docker_host: str | None
+) -> None:
+    """専用socketを保持し、未指定だけ標準socketへ補完してComposeのmount先も揃える。"""
+    task, _, _ = deployment
+    if docker_host is None:
+        monkeypatch.delenv("DOCKER_HOST")
+    else:
+        monkeypatch.setenv("DOCKER_HOST", docker_host)
+    monkeypatch.setenv("DOCKER_SOCKET_PATH", "/wrong/socket")
+    task.execute()
+    expected = docker_host or "unix:///run/user/1000/docker.sock"
+    assert os.environ["DOCKER_HOST"] == expected
+    assert os.environ["DOCKER_SOCKET_PATH"] == expected.removeprefix("unix://")
+
+
+@pytest.mark.parametrize(
+    "docker_host", ["", "tcp://localhost:2375", "unix://relative", "unix:///"]
+)
+def test_deployment_rejects_nonlocal_socket_before_updates(
+    deployment: tuple, monkeypatch: pytest.MonkeyPatch, docker_host: str
+) -> None:
+    """不正な接続先は標準daemonへfallbackせず、Git・image・service変更前に拒否する。"""
+    task, events, _ = deployment
+    monkeypatch.setenv("DOCKER_HOST", docker_host)
+    with pytest.raises(host.DeploymentError, match="local Unix socket"):
+        task.execute()
+    assert not events
 
 
 def test_deployment_promotes_exact_images_without_backup(deployment: tuple) -> None:
