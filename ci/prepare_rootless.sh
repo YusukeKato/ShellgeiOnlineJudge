@@ -11,8 +11,13 @@ soj_runner_user="$(id -un)"
 [[ $soj_runner_user =~ ^[a-z_][a-z0-9_-]*$ ]]
 sudo apt-get update
 sudo apt-get install --yes dbus-user-session
+# Delegateは既存serviceへset-propertyできないため、runtime drop-inから読み込ませる。
+sudo mkdir -p /run/systemd/system/user@1001.service.d
+printf '[Service]\nDelegate=cpu cpuset io memory pids\n' \
+  | sudo tee /run/systemd/system/user@1001.service.d/soj-delegate.conf > /dev/null
+sudo systemctl daemon-reload
 sudo systemctl start user@1001.service
-sudo systemctl set-property --runtime user@1001.service 'Delegate=cpu cpuset io memory pids'
+sudo systemctl show user@1001.service --property=Delegate --property=DelegateControllers
 export XDG_RUNTIME_DIR=/run/user/1001
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1001/bus
 systemctl --user start dbus.service

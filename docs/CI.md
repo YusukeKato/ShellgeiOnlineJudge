@@ -96,6 +96,8 @@ source・frontend・DB・sandboxにはこの例外を適用しません。
 
 専用のGitHub-hosted Ubuntu runnerに、固定versionのDockerをrootlessで構築します。
 `ci/prepare_rootless.sh`でuser systemd・D-Busとcgroupの委譲を準備します。
+委譲は`/run/systemd/system/user@1001.service.d/`の一時drop-inと`daemon-reload`で設定します。
+既存serviceへの`systemctl set-property Delegate=...`は使用しません。
 setup Actionは独自の`XDG_RUNTIME_DIR`と`sudo`を使うため、runnerに限って
 `DBUS_SESSION_BUS_ADDRESS`をsudo経由でも保持し、実際のuser busへ接続します。
 この準備はGitHub-hosted runner専用です。本番・開発ホストでは実行しません。
