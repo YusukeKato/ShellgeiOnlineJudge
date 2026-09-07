@@ -1,0 +1,41 @@
+schema_version: 3
+id: STANDARD-00000053
+category: STANDARD
+title:
+  ja: 機器の最新状態
+  en: Latest Device Status
+statement:
+  ja: |
+    input.txtには、「機器名 状態」が古い順に記録されています。
+    各機器の最後の記録を、機器名の辞書順に出力してください。
+    各行は「機器名 状態」とし、半角スペース1つで区切ってください。
+  en: |
+    input.txt records "device status" from oldest to newest.
+    Output the last record for each device in dictionary order of device name.
+    Separate the device name and status with one space on each line.
+reference_solution: tac input.txt | awk '!seen[$1]++' | sort -k1,1
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      printer ready
+      router online
+      camera idle
+      printer busy
+      sensor warm
+      router offline
+      printer ready
+      camera recording
+      router online
+      sensor ready
+      camera idle
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    camera idle
+    printer ready
+    router online
+    sensor ready

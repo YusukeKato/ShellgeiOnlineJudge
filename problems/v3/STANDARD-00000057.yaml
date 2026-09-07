@@ -1,0 +1,42 @@
+schema_version: 3
+id: STANDARD-00000057
+category: STANDARD
+title:
+  ja: 拡張子別のファイル数
+  en: Count Files by Extension
+statement:
+  ja: |
+    input.txtには1行に1つのファイル名があります。最後のドットより後ろを拡張子とします。
+    拡張子の英字の大文字・小文字を区別せず、拡張子ごとのファイル数を数えてください。
+    拡張子を小文字にして辞書順に並べ、各行を「拡張子 件数」の半角スペース1つ区切りで出力してください。
+  en: |
+    input.txt contains one filename per line. The extension is the part after the last dot.
+    Count files by extension, treating uppercase and lowercase letters as equivalent.
+    Print lowercase extensions in dictionary order, with each line formatted as "extension count" separated by one space.
+reference_solution: sed 's/.*\.//' input.txt | tr '[:upper:]' '[:lower:]' | sort | uniq -c | awk '{print $2,$1}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      report.TXT
+      photo.jpg
+      backup.tar.GZ
+      notes.txt
+      plot.PNG
+      portrait.JPG
+      archive.gz
+      meeting notes.TxT
+      icon.png
+      data.csv
+      summary.final.txt
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    csv 1
+    gz 2
+    jpg 2
+    png 2
+    txt 4

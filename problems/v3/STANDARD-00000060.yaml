@@ -1,0 +1,59 @@
+schema_version: 3
+id: STANDARD-00000060
+category: STANDARD
+title:
+  ja: 同時利用数の変化
+  en: Concurrent Usage over Time
+statement:
+  ja: |
+    input.txtの各行は「利用ID 開始時刻 終了時刻」です。時刻は同じ日のHH:MM形式です。
+
+    09:00から11:00まで、10分刻みで、その時刻に利用中の件数を数えてください。
+    出力する時刻は09:00、09:10、09:20、…、10:50、11:00の13個です。
+
+    開始時刻ちょうどは利用中、終了時刻ちょうどは利用終了として数えます。
+    例えば09:00〜09:20の利用は、09:00と09:10では数えますが、09:20では数えません。
+
+    「時刻 件数」を半角スペース1つ区切りで、1時刻につき1行、時刻を昇順にして出力してください。
+    利用中の件数が0の時刻も出力してください。
+  en: |
+    Each line of input.txt is "usage_id start_time end_time", with times in HH:MM format on the same day.
+
+    Count active usages every ten minutes from 09:00 through 11:00, inclusive.
+    Output these 13 times: 09:00, 09:10, 09:20, ..., 10:50, 11:00.
+
+    A usage is active at its exact start time, but no longer active at its exact end time.
+    For example, a usage from 09:00 to 09:20 counts at 09:00 and 09:10, but not at 09:20.
+
+    Output one line per time in ascending time order, formatted as "time count" with one space between them.
+    Include times with zero active usages.
+reference_solution: 'awk -F ''[: ]'' ''{d[$2*60+$3]++;d[$4*60+$5]--} END{for(t=0;t<=660;t++){n+=d[t];if(t>=540&&t%10==0)printf "%02d:%02d %d\n",t/60,t%60,n}}'' input.txt'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      c 09:10 09:30
+      a 09:00 09:20
+      f 10:00 10:10
+      d 09:20 09:40
+      b 09:00 09:10
+      e 09:20 09:30
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    09:00 2
+    09:10 2
+    09:20 3
+    09:30 1
+    09:40 0
+    09:50 0
+    10:00 1
+    10:10 0
+    10:20 0
+    10:30 0
+    10:40 0
+    10:50 0
+    11:00 0

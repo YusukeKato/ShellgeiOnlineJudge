@@ -26,12 +26,13 @@ ARRIVED = "sed -n 's/^arrived //p' input.txt"
 
 
 def test_reservation_solutions_and_common_mistakes_in_real_sandboxes() -> None:
-    # 参照解答・別解を受理し、逆の差・重複残存・部分一致による除外を実sandboxで区別する。
+    # 参照解答・別解を受理し、逆の差・重複残存・部分一致・初出判定前の予約抽出を区別する。
     repository = build_problem_repository(
         PROBLEMS / "v3", PROBLEMS / "image", PROBLEMS / "v3/manifest.json"
     )
     cases = [
         (repository.require(PROBLEM_ID).definition.reference_solution, True),
+        (f"comm -23 <({RESERVED} | sort -u) <({ARRIVED} | sort -u)", True),
         (
             'awk \'$1=="arrived"{a[$2]=1} $1=="reserved"{r[$2]=1} '
             "END{for(n in r)if(!(n in a))print n}' input.txt | sort",
@@ -47,6 +48,11 @@ def test_reservation_solutions_and_common_mistakes_in_real_sandboxes() -> None:
             False,
         ),
         (f"grep -Fv -f <({ARRIVED}) <({RESERVED} | sort -u)", False),
+        (
+            "cat input.txt | awk '{print $2,$1}' | sort -u | "
+            "awk '$2==\"reserved\" && !seen[$1]++{print $1}'",
+            False,
+        ),
     ]
     manager = ContainerManager(pool_size=1)
     client = ShellgeiDockerClient(

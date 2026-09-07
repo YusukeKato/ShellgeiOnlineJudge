@@ -1,0 +1,54 @@
+schema_version: 3
+id: STANDARD-00000059
+category: STANDARD
+title:
+  ja: タブの可視化
+  en: Make Tab Widths Visible
+statement:
+  ja: |
+    input.txtに含まれるタブを、移動する文字数と同じ個数の>に置き換えてください。
+
+    この問題では、各行を左から4文字分ずつの区画に分けて考えます。
+    タブが現れたら、今いる区画の残りを>で埋め、次の区画の先頭へ進みます。
+    区画の先頭にいる場合は、>を4個入れて次の区画へ進みます。
+
+    以下の例では、[TAB]はタブ1個を表します。
+    a[TAB]b → a>>>b
+    abcd[TAB]x → abcd>>>>x
+    [TAB]start → >>>>start
+    xy[TAB][TAB]end → xy>>>>>>end
+
+    元からあるスペースを含め、タブ以外の文字と改行はそのまま残してください。
+    入力のタブ以外の文字はASCIIで、1文字が1文字分の幅を占めます。
+  en: |
+    Replace each tab in input.txt with one > for every character position it advances.
+
+    For this problem, think of each line as blocks of four character positions, starting from the left.
+    At each tab, fill the rest of the current block with > characters and move to the start of the next block.
+    If already at the start of a block, insert four > characters to reach the next block.
+
+    In these examples, [TAB] means one tab.
+    a[TAB]b → a>>>b
+    abcd[TAB]x → abcd>>>>x
+    [TAB]start → >>>>start
+    xy[TAB][TAB]end → xy>>>>>>end
+
+    Preserve all other characters and newlines, including spaces already in the input.
+    All non-tab characters in the input are ASCII and each occupies one character position.
+reference_solution: awk '{while(p=index($0,"\t")) $0=substr($0,1,p-1) substr(">>>>",1,4-(p-1)%4) substr($0,p+1);print}' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: "a\tb\tc\nabcd\tx\n\tstart\nxy\t\tend\nplain  text\nabcdef\tz\n"
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    a>>>b>>>c
+    abcd>>>>x
+    >>>>start
+    xy>>>>>>end
+    plain  text
+    abcdef>>z

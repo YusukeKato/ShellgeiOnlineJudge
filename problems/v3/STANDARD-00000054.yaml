@@ -1,0 +1,39 @@
+schema_version: 3
+id: STANDARD-00000054
+category: STANDARD
+title:
+  ja: 測定値の変化
+  en: Changes Between Measurements
+statement:
+  ja: |
+    input.txtの各行は「時刻 測定値」で、時刻順に並んでいます。
+    2行目以降の各測定について、その測定値から直前の測定値を引いた差を求めてください。
+    元の順序で「時刻 差」を半角スペース1つ区切りで出力してください。最初の測定は出力しません。
+  en: |
+    Each line of input.txt is "time value", ordered by time.
+    For every measurement after the first, subtract the previous value from the current value.
+    Output "time difference" in the original order, separated by one space. Do not output the first measurement.
+reference_solution: paste input.txt <(tail -n +2 input.txt) | awk 'NF==4{print $3,$4-$2}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      09:00 8
+      09:05 12
+      09:10 12
+      09:15 -3
+      09:20 7
+      09:25 105
+      09:30 9
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    09:05 4
+    09:10 0
+    09:15 -15
+    09:20 10
+    09:25 98
+    09:30 -96

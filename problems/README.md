@@ -125,7 +125,7 @@ fixtureとartifactのpathはabsolute path、`..`、`.`、空segment、backslash�
 NULを許可しません。同一fixture pathの重複と、提出command用に予約した
 `z.bash`も拒否します。
 
-`v3/`にはSTANDARD 52問、PRACTICE 36問、IMAGE 5問の計93問があります。
+`v3/`にはSTANDARD 60問、PRACTICE 36問、IMAGE 5問の計101問があります。
 移行元92問のうち未改訂の問題は、legacyからの決定的な再生成結果との一致を検査します。
 意図した改訂は、[改訂登録](../backend/tests/fixtures/problem_revisions.json)の変更field一覧と
 定義hashで限定し、画像改訂は現行JPEGのhashも登録します。旧JPEGは`legacy_image/`へ保存し、

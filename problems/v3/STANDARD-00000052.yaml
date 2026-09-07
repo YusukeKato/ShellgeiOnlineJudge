@@ -20,7 +20,7 @@ statement:
 
     Output the names that have a reservation record but no check-in record.
     Print each name once, one per line, in alphabetical dictionary order.
-reference_solution: comm -23 <(sed -n 's/^reserved //p' input.txt | sort -u) <(sed -n 's/^arrived //p' input.txt | sort -u)
+reference_solution: cat input.txt | awk '{print $2,$1}' | sort -u | awk '!seen[$1]++ && $2=="reserved"{print $1}'
 execution:
   stdin: ''
   fixtures:

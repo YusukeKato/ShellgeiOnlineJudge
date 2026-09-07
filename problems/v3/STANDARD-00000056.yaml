@@ -1,0 +1,28 @@
+schema_version: 3
+id: STANDARD-00000056
+category: STANDARD
+title:
+  ja: 空欄のある連絡先
+  en: Contacts with Empty Fields
+statement:
+  ja: |
+    input.txtはタブ区切りの表です。列は左からID、表示名、メールアドレス、備考で、見出し行はありません。
+    連続するタブの間も1つの空欄の列として扱います。
+    各行からIDとメールアドレスを取り出し、元の行順でタブ1つ区切りで出力してください。
+    メールアドレスが空欄の行も、IDの後ろにタブを付けて出力してください。
+  en: |
+    input.txt is a tab-separated table with the columns ID, display name, email address, and notes, without a header.
+    An empty field between consecutive tabs still counts as a column.
+    Extract the ID and email address from each row, preserving row order and separating them with one tab.
+    For an empty email address, still print a tab after the ID.
+reference_solution: cut -f1,3 input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: "u03\tMio Sato\tmio@example.test\tstaff\nu01\t\taki@example.test\t\nu04\tRen\t\tpending\nu02\tYui\tyui@example.test\tremote\nu05\t\t\tguest\n"
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: "u03\tmio@example.test\nu01\taki@example.test\nu04\t\nu02\tyui@example.test\nu05\t\n"

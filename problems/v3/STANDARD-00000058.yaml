@@ -1,0 +1,51 @@
+schema_version: 3
+id: STANDARD-00000058
+category: STANDARD
+title:
+  ja: 担当者への配布一覧
+  en: Document Distribution List
+statement:
+  ja: |
+    input.txtのteam行は「team チーム名 担当者名」、file行は「file チーム名 資料名」です。
+    各資料を、同じチームの担当者全員へ配ります。
+    配布するすべての組を「チーム名 担当者名 資料名」の半角スペース1つ区切りで出力してください。
+    チーム名、担当者名、資料名の順に辞書順で並べてください。
+    担当者または資料がないチームは出力しません。
+  en: |
+    Each team line in input.txt is "team team_name person", and each file line is "file team_name document".
+    Each document is distributed to every person on the same team.
+    Output all distribution combinations as "team_name person document", separated by single spaces.
+    Sort in dictionary order by team name, then person, then document.
+    Omit teams with no people or no documents.
+reference_solution: join <(sed -n 's/^team //p' input.txt | sort) <(sed -n 's/^file //p' input.txt | sort) | sort -k1,1 -k2,2 -k3,3
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      file blue guide
+      team red yui
+      team blue ren
+      file red schedule
+      team green nao
+      file blue checklist
+      team red aki
+      file yellow memo
+      team blue mio
+      file red handbook
+      file red map
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    blue mio checklist
+    blue mio guide
+    blue ren checklist
+    blue ren guide
+    red aki handbook
+    red aki map
+    red aki schedule
+    red yui handbook
+    red yui map
+    red yui schedule

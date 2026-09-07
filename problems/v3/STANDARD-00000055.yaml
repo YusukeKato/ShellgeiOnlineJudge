@@ -1,0 +1,45 @@
+schema_version: 3
+id: STANDARD-00000055
+category: STANDARD
+title:
+  ja: 公開区間の取り出し
+  en: Extract Published Sections
+statement:
+  ja: |
+    input.txtでは、BEGINだけの行と、その次のENDだけの行の間が公開する本文です。
+    すべての公開区間の本文を、元の順序で出力してください。
+    境界のBEGIN・END行と区間外の行は出力せず、本文の空行やスペースはそのまま残してください。
+    区間どうしの間に行を追加しないでください。
+  en: |
+    In input.txt, published text lies between a line containing only BEGIN and the next line containing only END.
+    Output the text of every published section in its original order.
+    Omit the boundary lines and all text outside the sections. Preserve blank lines and spaces within the text.
+    Do not add lines between sections.
+reference_solution: sed -n '/^BEGIN$/,/^END$/{/^BEGIN$/d;/^END$/d;p;}' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      internal notes
+      BEGIN
+      Welcome  everyone
+
+      BEGIN is a marker
+      END
+      not published
+      BEGIN
+      Second section
+      The END is near
+      END
+      private footer
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    Welcome  everyone
+
+    BEGIN is a marker
+    Second section
+    The END is near
