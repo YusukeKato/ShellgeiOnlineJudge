@@ -1,0 +1,33 @@
+schema_version: 3
+id: REGEX-00000009
+category: REGEX
+title:
+  ja: 転送装置の配線
+  en: Rewiring the Teleporter
+statement:
+  ja: |
+    正規表現を使って解いてください。
+    転送装置の配線が逆向きです。input.txtのすべての「出発点->到着点」を「到着点->出発点」に入れ替えてください。
+    各地点の名前はそのまま残し、配線の並び順、半角スペース、改行も変えないでください。
+  en: |
+    Solve this using regular expressions.
+    The teleporter connections point the wrong way. Swap every origin->destination in input.txt to destination->origin.
+    Keep each place name intact. Preserve the order of connections, spaces, and line breaks.
+reference_solution: |
+  sed -E 's/([a-z]+)->([a-z]+)/\2->\1/g' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      red->blue green->gold
+      north->south
+      key->door echo->echo
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    blue->red gold->green
+    south->north
+    door->key echo->echo

@@ -1,0 +1,39 @@
+schema_version: 3
+id: REGEX-00000007
+category: REGEX
+title:
+  ja: 隣り合わない宝石
+  en: No Matching Neighbors
+statement:
+  ja: |
+    正規表現を使って解いてください。
+    input.txtの各行は、R・G・Bの宝石を一列に並べたものです。同じ色の宝石が隣り合わない列だけを元の順序で出力してください。
+    同じ色が離れた位置に再び現れても構いません。先頭と末尾は隣り合いません。
+  en: |
+    Solve this using regular expressions.
+    Each line of input.txt is a straight row of R, G, and B gems. Output only rows with no adjacent gems of the same color, in their original order.
+    A color may appear again later. The first and last gems are not neighbors.
+reference_solution: |
+  grep -v '\([RGB]\)\1' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      RGBR
+      RRG
+      GBBG
+      RGRGR
+      B
+      BRRG
+      RGBB
+      GRBG
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    RGBR
+    RGRGR
+    B
+    GRBG

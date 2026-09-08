@@ -1,0 +1,39 @@
+schema_version: 3
+id: REGEX-00000005
+category: REGEX
+title:
+  ja: 呪文の聞き分け
+  en: Recognizing the Spell
+statement:
+  ja: |
+    正規表現を使って解いてください。
+    扉を開く呪文はopenです。input.txtから、openがひとつの語として現れる行を元の順序で出力してください。
+    語の区切りは半角スペースまたは行の先頭・末尾です。open-doorはひとつの語なので対象外です。
+  en: |
+    Solve this using regular expressions.
+    The spell that opens the door is open. Output lines of input.txt containing open as a separate word, in their original order.
+    Words are separated by spaces or the start or end of a line. open-door is one word and does not qualify.
+reference_solution: |
+  grep -E '(^| )open( |$)' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      open
+      reopen
+      open sesame
+      door open now
+      opened
+      open-door
+      door open
+      OPEN
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    open
+    open sesame
+    door open now
+    door open

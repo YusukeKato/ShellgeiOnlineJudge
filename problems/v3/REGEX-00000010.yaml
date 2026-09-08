@@ -1,0 +1,39 @@
+schema_version: 3
+id: REGEX-00000010
+category: REGEX
+title:
+  ja: 繰り返された合言葉
+  en: Repeated Password Words
+statement:
+  ja: |
+    正規表現を使って解いてください。
+    合言葉を記録したところ、一部の単語が繰り返されてしまいました。input.txtの各行で、同じ単語が連続する部分を1個の単語にまとめてください。
+    単語は半角スペースで区切られています。離れた位置に再び現れる単語は残し、行ごとに処理してください。
+  en: |
+    Solve this using regular expressions.
+    Some words were accidentally repeated when the passwords were recorded. In each line of input.txt, collapse consecutive occurrences of the same word to one occurrence.
+    Words are separated by spaces. Keep words that reappear later, and process each line separately.
+reference_solution: |
+  sed -E 's/\<([a-z]+)( \1)+\>/\1/g' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      go go go stop stop go
+      red red blue blue blue red
+      go go going
+      echo cho cho
+      a ab ab
+      ab ab
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    go stop go
+    red blue red
+    go going
+    echo cho
+    a ab
+    ab

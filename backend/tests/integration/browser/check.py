@@ -180,9 +180,9 @@ def submit(page: Page, command: str, verdict: str, label: str) -> int:
 
 
 def check_regex_problems(page: Page) -> list[int]:
-    """例題と3問を日英・PCとスマートフォン幅で表示し、実提出とスクリーンショットを確認する。"""
+    """正規表現1〜10番を日英・PCとスマートフォン幅で表示し、実提出とスクリーンショットを確認する。"""
     ids = []
-    for number in (1, 2, 3, 4):
+    for number in range(1, 11):
         problem_id = f"REGEX-{number:08}"
         page.goto(f"https://frontend/?problem={problem_id}", wait_until="networkidle")
         detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
@@ -202,7 +202,7 @@ def check_regex_problems(page: Page) -> list[int]:
                         exact=True,
                     )
                 ).to_have_attribute("aria-pressed", "true")
-                expect(picker.locator(".problem-option")).to_have_count(4)
+                expect(picker.locator(".problem-option")).to_have_count(10)
                 expect(picker.locator("summary")).to_contain_text(
                     detail[f"title_{language}"]
                 )
@@ -324,7 +324,7 @@ def main() -> None:
         check_responsive_playground(page)
         check_about_page(page)
         ids.extend(check_regex_problems(page))
-        assert len(submissions) == 11
+        assert len(submissions) == 17
         assert not errors
         browser.close()
         print(json.dumps({"submission_ids": ids}))

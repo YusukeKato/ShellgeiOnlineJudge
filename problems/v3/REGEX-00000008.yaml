@@ -1,0 +1,37 @@
+schema_version: 3
+id: REGEX-00000008
+category: REGEX
+title:
+  ja: 数字を封じる魔法
+  en: A Spell to Seal Numbers
+statement:
+  ja: |
+    正規表現を使って解いてください。
+    数字を封じる魔法をかけます。input.txtの連続する半角数字を、かたまりごとに1個の#へ置き換えてください。
+    数字以外の文字と改行はそのまま残してください。
+  en: |
+    Solve this using regular expressions.
+    Cast a spell to seal the numbers. Replace each consecutive run of ASCII digits in input.txt with a single #.
+    Keep all other characters and line breaks unchanged.
+reference_solution: |
+  sed -E 's/[0-9]+/#/g' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      A12B003C
+      door007-key42
+      9+88=97
+      no-digits
+      0 00 000
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    A#B#C
+    door#-key#
+    #+#=#
+    no-digits
+    # # #

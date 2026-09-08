@@ -244,8 +244,8 @@ def test_browser_submissions_and_display(stack: ComposeStack, tmp_path: Path) ->
         output = browser.logs(tail=100).decode()
         assert status["StatusCode"] == 0, output
         ids = json.loads(output)["submission_ids"]
-        assert len(ids) == 11
-        assert len(db_rows(stack, ids)) == 11
+        assert len(ids) == 17
+        assert len(db_rows(stack, ids)) == 17
         # 実データはtest専用の提出だけとし、表示review用画像をcontainerの回収前に保存する。
         archive, _ = browser.get_archive("/tmp/soj-ui")
         with tarfile.open(fileobj=io.BytesIO(b"".join(archive))) as screenshots:

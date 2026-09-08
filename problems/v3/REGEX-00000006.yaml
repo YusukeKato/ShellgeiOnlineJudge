@@ -1,0 +1,37 @@
+schema_version: 3
+id: REGEX-00000006
+category: REGEX
+title:
+  ja: 小箱の中の宝物
+  en: Treasures in Little Boxes
+statement:
+  ja: |
+    正規表現を使って解いてください。
+    input.txtには、<と>で囲まれた小箱が隠れています。空の小箱<>を除き、小箱の中身だけを出現順に1行ずつ出力してください。
+    同じ行に複数の小箱がある場合は左から順に取り出します。<と>は出力しません。
+  en: |
+    Solve this using regular expressions.
+    Little boxes enclosed in < and > are hidden in input.txt. Output only the contents of each nonempty box, one per line, in order of appearance.
+    When a line has several boxes, extract them from left to right. Do not output < or >.
+reference_solution: |
+  grep -oE '<[^<>]+>' input.txt | tr -d '<>'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      dust<KEY>sand<MAP>
+      <COIN>...<>...<BLUE-GEM>
+      nothing here
+      <RING><KEY>
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    KEY
+    MAP
+    COIN
+    BLUE-GEM
+    RING
+    KEY

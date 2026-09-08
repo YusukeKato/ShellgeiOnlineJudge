@@ -1,4 +1,4 @@
-"""正規表現の例題と3問の別解と典型的な誤答を、実sandboxとjudgeで検査する。"""
+"""正規表現1〜10番の別解と典型的な誤答を、実sandboxとjudgeで検査する。"""
 
 import asyncio
 import os
@@ -34,11 +34,29 @@ CASES = [
         r"sed -n '/^\([a-z]\)\([a-z]\)\2\1$/p' input.txt",
         "grep -E '^[a-z]{4}$' input.txt",
     ),
+    (5, "sed -nE '/(^| )open( |$)/p' input.txt", "grep -w 'open' input.txt"),
+    (
+        6,
+        "awk -F'[<>]' '{for(i=2;i<=NF;i+=2)if($i!=\"\")print $i}' input.txt",
+        "grep -oE '<.*>' input.txt | tr -d '<>'",
+    ),
+    (7, r"sed '/\([RGB]\)\1/d' input.txt", "grep -v 'RR' input.txt"),
+    (8, "sed 's/[0-9][0-9]*/#/g' input.txt", "sed 's/[0-9]/#/g' input.txt"),
+    (
+        9,
+        r"sed 's/\([a-z][a-z]*\)->\([a-z][a-z]*\)/\2->\1/g' input.txt",
+        r"sed -E 's/([a-z]+)->([a-z]+)/\2->\1/' input.txt",
+    ),
+    (
+        10,
+        'awk \'{for(i=1;i<=NF;i++)if(i==1||$i!=$(i-1)){printf "%s%s",sep,$i;sep=" "}print "";sep=""}\' input.txt',
+        r"sed -E 's/([a-z]+)( \1)+/\1/g' input.txt",
+    ),
 ]
 
 
 def test_regex_solutions_and_mistakes() -> None:
-    # 参照解答・別解は正解、部分一致・文字集合だけ・文字数だけの誤答は不正解になる。
+    # 参照解答・別解は正解、部分一致・過剰な抽出・反復や境界の取り違えによる誤答は不正解になる。
     repository = build_problem_repository(
         PROBLEMS / "v3", PROBLEMS / "image", PROBLEMS / "v3/manifest.json"
     )

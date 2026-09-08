@@ -71,7 +71,7 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - コンテナ削除
 - 実行中コンテナからの上限付き画像取得
 - 元のGIF生成コマンドの全10frame・delay保持、固定回収path・symlink・FIFO・byte上限・timeout・出力上限・次の提出への非残存（`test_gif_display_docker.py`）
-- browser上のGIFアニメーションと、JPEGでの採点・GIF表示の両立。browserで正規表現の例題と3問を含む実提出11件とDB保存を照合
+- browser上のGIFアニメーションと、JPEGでの採点・GIF表示の両立。browserで正規表現10問を含む実提出17件とDB保存を照合
 - workerの回復
 - 実nginxで、sandboxを開始しないrequestが
   正常requestと共有の実行開始枠を消費しないこと
@@ -85,7 +85,7 @@ runnerとjudgeには起動時検証済みの同じ不変problem repositoryを注
 期待出力、正解画像がrequestごとのfile再読込なしで利用される経路を検証します。
 legacy `yaml_data/`とのsemantic一致と意図した改訂の範囲は、
 [問題データ仕様](../../../problems/README.md)に従いnon-Docker testで別途検証します。
-`test_regex_solutions.py`は正規表現の例題と3問の参照解答・別解と、部分一致・文字集合だけ・文字数だけの誤答を検査します。
+`test_regex_solutions.py`は正規表現1〜10番の参照解答・別解と、部分一致・過剰な抽出・反復や境界の取り違えによる誤答を検査します。
 `test_reservation_problem.py`は未受付者を求める問題の参照解答と3つの別解を実行し、
 集合差の逆転・重複の残存・部分一致による除外・初出判定前の予約抽出を不正解として区別します。
 `test_remaining_problem_solutions.py`は通常21〜51・練習問題の改訂に関係する別解と誤答を検証します。
