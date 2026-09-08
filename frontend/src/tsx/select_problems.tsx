@@ -54,6 +54,7 @@ const SojSelectProblems: React.FC<SojValuesInterface> = ({
     { id: "STANDARD", label: text("通常", "Standard") },
     { id: "PRACTICE", label: text("練習", "Practice") },
     { id: "IMAGE", label: text("画像", "Image") },
+    { id: "REGEX", label: text("正規表現", "Regex") },
   ];
   const select = (id: string) => {
     // 折りたたみで選択buttonが隠れても、focusが失われないようsummaryへ戻す。

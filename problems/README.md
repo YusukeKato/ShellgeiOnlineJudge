@@ -69,7 +69,7 @@ schema v3の実行可能な型定義は
 | フィールド | 用途 |
 | --- | --- |
 | `schema_version` | 固定値`3` |
-| `id` / `category` | problem IDと`STANDARD`、`PRACTICE`、`IMAGE`の分類 |
+| `id` / `category` | problem IDと`STANDARD`、`PRACTICE`、`IMAGE`、`REGEX`の分類 |
 | `title` / `statement` | `ja`と`en`を持つ日英metadata |
 | `reference_solution` | 参照解答。public problem detail APIで公開する |
 | `execution.stdin` | commandへ渡す標準入力。legacy移行では空文字列 |
@@ -125,7 +125,7 @@ fixtureとartifactのpathはabsolute path、`..`、`.`、空segment、backslash�
 NULを許可しません。同一fixture pathの重複と、提出command用に予約した
 `z.bash`も拒否します。
 
-`v3/`にはSTANDARD 60問、PRACTICE 36問、IMAGE 5問の計101問があります。
+`v3/`にはSTANDARD 60問、PRACTICE 36問、IMAGE 5問、REGEX 4問（例題1問を含む）の計105問があります。
 移行元92問のうち未改訂の問題は、legacyからの決定的な再生成結果との一致を検査します。
 意図した改訂は、[改訂登録](../backend/tests/fixtures/problem_revisions.json)の変更field一覧と
 定義hashで限定し、画像改訂は現行JPEGのhashも登録します。旧JPEGは`legacy_image/`へ保存し、

@@ -73,9 +73,9 @@ def check_problem_picker(page: Page, language: str) -> None:
     summary.click()
     expect(picker).to_have_attribute("open", "")
     categories = (
-        ("通常", "練習", "画像")
+        ("通常", "練習", "画像", "正規表現")
         if language == "ja"
-        else ("Standard", "Practice", "Image")
+        else ("Standard", "Practice", "Image", "Regex")
     )
     for category in categories:
         button = picker.get_by_role("button", name=category, exact=True)
@@ -179,6 +179,54 @@ def submit(page: Page, command: str, verdict: str, label: str) -> int:
     return int(result["submission_id"])
 
 
+def check_regex_problems(page: Page) -> list[int]:
+    """例題と3問を日英・PCとスマートフォン幅で表示し、実提出とスクリーンショットを確認する。"""
+    ids = []
+    for number in (1, 2, 3, 4):
+        problem_id = f"REGEX-{number:08}"
+        page.goto(f"https://frontend/?problem={problem_id}", wait_until="networkidle")
+        detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
+        expect(page.locator("#selected-text")).to_have_text(problem_id)
+        expect(page.locator("#input-text")).to_have_text(detail["input"])
+        expect(page.locator("#expected-image")).to_have_count(0)
+        for width in (320, 1440):
+            page.set_viewport_size({"width": width, "height": 1000})
+            for language in ("ja", "en"):
+                switch_language(page, language)
+                picker = page.locator("details.problem-picker")
+                picker.locator("summary").click()
+                expect(
+                    picker.get_by_role(
+                        "button",
+                        name="正規表現" if language == "ja" else "Regex",
+                        exact=True,
+                    )
+                ).to_have_attribute("aria-pressed", "true")
+                expect(picker.locator(".problem-option")).to_have_count(4)
+                expect(picker.locator("summary")).to_contain_text(
+                    detail[f"title_{language}"]
+                )
+                expect(picker.locator(".problem-option").first).to_contain_text(
+                    "REGEX-00000001"
+                )
+                if number == 1:
+                    expect(page.locator("#problem-text")).to_contain_text(
+                        detail["answer"].strip()
+                    )
+                assert_page_width(page)
+                page.screenshot(
+                    path=f"/tmp/soj-ui/regex-{number}-{width}-{language}.png",
+                    full_page=True,
+                )
+                picker.locator("summary").click()
+        switch_language(page, "ja")
+        ids.append(submit(page, detail["answer"], "accepted", "正解"))
+        expect(page.locator("#user-output-text")).to_have_text(
+            detail["expected_output"]
+        )
+    return ids
+
+
 def main() -> None:
     """外部通信・mockなしでtext、実行失敗、画像の表示を検証し、保存IDだけを出力する。"""
     with sync_playwright() as playwright:
@@ -275,7 +323,8 @@ def main() -> None:
         )
         check_responsive_playground(page)
         check_about_page(page)
-        assert len(submissions) == 7
+        ids.extend(check_regex_problems(page))
+        assert len(submissions) == 11
         assert not errors
         browser.close()
         print(json.dumps({"submission_ids": ids}))

@@ -17,7 +17,7 @@ MAX_FIXTURES = 16
 MAX_PROBLEM_PATH_BYTES = 255
 MAX_ARTIFACT_BYTES = 750_000
 
-ProblemCategory = Literal["STANDARD", "PRACTICE", "IMAGE"]
+ProblemCategory = Literal["STANDARD", "PRACTICE", "IMAGE", "REGEX"]
 ExitCodePolicy = Literal["ignore", "zero"]
 StderrPolicy = Literal["merge", "ignore", "must_be_empty"]
 ImageMediaType = Literal["image/jpeg", "image/gif"]

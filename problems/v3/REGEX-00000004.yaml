@@ -1,0 +1,41 @@
+schema_version: 3
+id: REGEX-00000004
+category: REGEX
+title:
+  ja: 鏡の間の合言葉
+  en: Passwords for the Mirror Room
+statement:
+  ja: |
+    正規表現を使って解いてください。
+    鏡の間の扉が開く合言葉は、英小文字4文字で、左から読んでも右から読んでも同じになるものです。同じ文字を4回使ったものも有効です。
+    input.txtから、扉を開けられる合言葉を元の順序で出力してください。
+  en: |
+    Solve this using regular expressions.
+    A password opens the mirror room if it consists of exactly four lowercase English letters and reads the same forwards and backwards. Using the same letter four times is also valid.
+    Output the valid passwords from input.txt in their original order.
+reference_solution: |
+  grep '^\([a-z]\)\([a-z]\)\2\1$' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      abba
+      baab
+      aaaa
+      abca
+      abab
+      cddc
+      abcba
+      a11a
+      zzzz
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    abba
+    baab
+    aaaa
+    cddc
+    zzzz

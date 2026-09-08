@@ -50,7 +50,7 @@ const selectProblem = async (title) => {
 };
 
 const problemListResponse = () => ({
-  // 通常問題2問・練習問題・画像問題を返し、選択raceとカテゴリ別の画像表示を確認できるようにする。
+  // 通常問題2問・練習問題・画像問題・正規表現問題を返し、選択raceとカテゴリ別の画像表示を確認できるようにする。
   ok: true,
   json: async () => [
     {
@@ -70,6 +70,12 @@ const problemListResponse = () => ({
       category: "PRACTICE",
       title_ja: "練習問題1",
       title_en: "Practice problem 1",
+    },
+    {
+      id: "REGEX-00000002",
+      category: "REGEX",
+      title_ja: "宝箱の鍵",
+      title_en: "Keys to the Treasure Chest",
     },
     {
       id: IMAGE_PROBLEM_ID,
@@ -165,7 +171,7 @@ describe("playground default problem", () => {
     vi.restoreAllMocks();
   });
 
-  test.each([SECOND_PROBLEM_ID, IMAGE_PROBLEM_ID, "PRACTICE-00000001"])(
+  test.each([SECOND_PROBLEM_ID, IMAGE_PROBLEM_ID, "PRACTICE-00000001", "REGEX-00000002"])(
     "opens the problem in a shared URL: %s",
     async (id) => {
       // 直接開いたURLから詳細を取得し、初期問題や提出を余分に要求しない。
@@ -182,13 +188,42 @@ describe("playground default problem", () => {
         ? "画像"
         : id.startsWith("PRACTICE")
           ? "練習"
-          : "通常";
+          : id.startsWith("REGEX")
+            ? "正規表現"
+            : "通常";
       expect(screen.getByRole("button", { name: category, exact: true })).toHaveAttribute(
         "aria-pressed",
         "true",
       );
     },
   );
+
+  test("selects and submits a regex problem in both languages", async () => {
+    // 新カテゴリの日英表示から問題を選択し、提出先IDと通常のテキスト結果を確認する。
+    renderPlayground();
+    await screen.findByText(/日本語の問題文1/);
+    fireEvent.click(screen.getByText("問題を選ぶ").closest("summary"));
+    fireEvent.click(screen.getByRole("button", { name: "正規表現", exact: true }));
+    expect(screen.getByRole("button", { name: /宝箱の鍵/ })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Test English" }));
+    expect(screen.getByRole("button", { name: "Regex", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await selectProblem("Keys to the Treasure Chest");
+    await screen.findByText(/English statement 2/);
+    expect(window.location.search).toBe("?problem=REGEX-00000002");
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "grep pattern input.txt" } });
+    fireEvent.click(runButton());
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(
+          ([, options]) =>
+            options?.method === "POST" && JSON.parse(options.body).problem_id === "REGEX-00000002",
+        ),
+      ).toBe(true),
+    );
+  });
 
   test.each(["", "../../about", "<script>", "A".repeat(65)])(
     "replaces an invalid problem URL and explains the fallback: %s",

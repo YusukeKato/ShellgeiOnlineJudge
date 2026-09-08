@@ -151,6 +151,9 @@ legacy APIの200・404・422にも`Cache-Control: no-store`と
 
 ## problem API
 
+カテゴリの値は[問題データ仕様](../problems/README.md#schema-v3)を参照してください。
+正規表現カテゴリ`REGEX`も同じ一覧・詳細・提出APIを使用します。カテゴリを固定列挙するclientは追加値への対応が必要です。
+
 問題一覧`GET /api/problems`は、`id`、`category`、`title_ja`、`title_en`を持つ配列を
 返します。問題詳細`GET /api/problems/{problem_id}`は、`title_ja`、`statement_ja`、
 `title_en`、`statement_en`、`input`、`expected_output`、`answer`、`image`を返します。

@@ -1,0 +1,40 @@
+schema_version: 3
+id: REGEX-00000003
+category: REGEX
+title:
+  ja: 壊れた信号機
+  en: The Broken Traffic Light
+statement:
+  ja: |
+    正規表現を使って解いてください。
+    信号機の正常な点灯パターンはRYGとRGの2種類です。正常な記録は、これらのパターンを1回以上、隙間なくつないだものです。2種類を混ぜても構いません。
+    input.txtから、途中でパターンが切れたり、余計な点灯が混ざったりしていない正常な記録を元の順序で出力してください。
+  en: |
+    Solve this using regular expressions.
+    The two valid light patterns are RYG and RG. A valid record consists of one or more of these patterns joined together without gaps. The two patterns may be mixed.
+    Output the valid records from input.txt in their original order, excluding incomplete patterns and extra lights.
+reference_solution: |
+  grep -E '^(RY?G)+$' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      RYG
+      RG
+      RYGRG
+      RGRYGRG
+      RY
+      RRYG
+      RYGG
+      YRG
+      RGR
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    RYG
+    RG
+    RYGRG
+    RGRYGRG

@@ -1,0 +1,36 @@
+schema_version: 3
+id: REGEX-00000001
+category: REGEX
+title:
+  ja: 例題：正規表現で行を選ぶ
+  en: "Example: Selecting Lines with Regex"
+statement:
+  ja: |
+    input.txtから、英大文字のAで始まる行を元の順序で出力してください。
+
+    解答例：
+    grep '^A' input.txt
+  en: |
+    Output the lines of input.txt that start with uppercase A, in their original order.
+
+    Example solution:
+    grep '^A' input.txt
+reference_solution: |
+  grep '^A' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      Apple
+      Banana
+      CAT
+      Apricot
+      apple
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    Apple
+    Apricot

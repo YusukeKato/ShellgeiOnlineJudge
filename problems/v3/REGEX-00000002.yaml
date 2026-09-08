@@ -1,0 +1,39 @@
+schema_version: 3
+id: REGEX-00000002
+category: REGEX
+title:
+  ja: 宝箱の鍵
+  en: Keys to the Treasure Chest
+statement:
+  ja: |
+    正規表現を使って解いてください。
+    宝箱を開ける鍵には、最初に英大文字のR、G、Bのいずれか1文字、続いて数字がちょうど3文字、最後に!が1個または2個刻まれています。それ以外の文字は付きません。
+    input.txtから、宝箱を開けられる鍵を元の順序で出力してください。
+  en: |
+    Solve this using regular expressions.
+    A key opens the treasure chest if its inscription starts with one uppercase R, G, or B, followed by exactly three digits and then one or two exclamation marks (!), with no other characters.
+    Output the valid keys from input.txt in their original order.
+reference_solution: |
+  grep -E '^[RGB][0-9]{3}!{1,2}$' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      R007!
+      G123!!
+      B900!!!
+      R12!
+      XR007!
+      B042!!
+      G123!!x
+      Y123!
+      R1234!
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    R007!
+    G123!!
+    B042!!
