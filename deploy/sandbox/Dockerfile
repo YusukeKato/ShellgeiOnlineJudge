@@ -1,5 +1,5 @@
 # 公式Ubuntuの最小rootfsを使用し、ShellgeiBotImageの実行file・layerを継承しない。
-FROM ubuntu:24.04@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS problem-data
+FROM ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS problem-data
 
 # Gitは取得revisionの記録にだけ使用し、実行用imageへ持ち込まない。
 RUN apt-get update \
@@ -13,7 +13,7 @@ RUN git -C /ShellGeiData rev-parse HEAD > /shellgeidata-revision \
     && rm -rf /ShellGeiData/.git
 
 # textimgだけを修正版Go・固定moduleでbuildし、Go環境は実行用imageへ持ち込まない。
-FROM golang:1.26-alpine@sha256:ce864e7223ac17b1775e6fd0b4c0db580c2eb50e7953a427916379e4b92a1628 AS textimg-build
+FROM golang:1.26-alpine@sha256:51a7c389a5ddaf82f527191a1e9bff9928655130a44e4975dd1d7e0acf59f1ae AS textimg-build
 WORKDIR /build
 COPY deploy/sandbox/textimg/go.mod deploy/sandbox/textimg/go.sum ./
 ENV CGO_ENABLED=0 GOTOOLCHAIN=local
@@ -35,7 +35,7 @@ RUN mkdir -p /out/licenses/go \
        fi; \
        done
 
-FROM ubuntu:24.04@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517
+FROM ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3
 LABEL org.opencontainers.image.version="3.0.0"
 
 # Ubuntuの署名済みrepositoryからsecurity更新を適用する。確定した生成物はIDで固定しscanする。

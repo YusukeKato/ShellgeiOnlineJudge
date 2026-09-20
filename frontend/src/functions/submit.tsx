@@ -40,9 +40,7 @@ export type SubmissionState =
   | ValidationErrorSubmissionState;
 
 export type SubmissionTerminalState =
-  | SucceededSubmissionState
-  | FailedSubmissionState
-  | ValidationErrorSubmissionState;
+  SucceededSubmissionState | FailedSubmissionState | ValidationErrorSubmissionState;
 
 export interface SubmissionDisplay {
   output: string;

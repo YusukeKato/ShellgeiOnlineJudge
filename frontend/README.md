@@ -74,6 +74,12 @@ Node.js、Yarn、静的検査、テスト、buildの手順は、
 [ComposeとブラウザのE2E](../backend/tests/integration/README.md#composeとブラウザのe2e)を参照してください。
 
 開発serverとproduction buildにはVite、component testにはVitestとjsdom、型検査にはTypeScript、
-lintにはESLint flat configを使用します。build時の`VITE_*`は
+lintにはESLint flat configを使用します。TypeScriptは`typescript-eslint`の対応範囲に合わせて
+6.0系を使用し、`tsconfig.json`の`paths`は設定ファイルからの相対pathで指定します。
+TypeScriptを更新する場合はlint側のpeer dependencyも確認してください。
+Vitestは`@testing-library/jest-dom`のmatcher型宣言と互換性のある4系を使用します。
+5系へ移行する前に、両packageの`Assertion`型宣言が一致することを型検査で確認してください。
+
+build時の`VITE_*`は
 ブラウザへ公開される値です。設定条件とsecurity上の制約は
 [SECURITY.md](../SECURITY.md#frontendのbrowser境界)を参照してください。

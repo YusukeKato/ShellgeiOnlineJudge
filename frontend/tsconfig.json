@@ -29,10 +29,9 @@
     "checkJs": false,
     "types": ["node", "vite/client", "vitest/globals"],
 
-    /* Paths */
-    "baseUrl": "./",
+    /* pathsはこの設定ファイルからの相対pathで指定し、非推奨のbaseUrlに依存しない。 */
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src", "vite.config.ts"],

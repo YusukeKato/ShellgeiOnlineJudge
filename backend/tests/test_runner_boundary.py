@@ -417,7 +417,7 @@ def test_runner_readiness_reflects_problem_revision_and_pool_state(
     else:
         assert isinstance(response, JSONResponse)
         assert response.status_code == 503
-        assert json.loads(response.body) == {
+        assert json.loads(bytes(response.body)) == {
             "protocol_version": RUNNER_PROTOCOL_VERSION,
             "problem_revision": TEST_PROBLEM_REVISION,
             "status": expected_status.value,

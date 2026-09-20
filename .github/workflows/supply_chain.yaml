@@ -32,7 +32,7 @@ jobs:
           python-version: "3.14"
       - name: Install locked development dependencies
         run: |
-          python -m pip install poetry==2.4.1
+          python -m pip install poetry==2.5.1
           poetry check --lock
           poetry install --no-interaction
       - name: Install verified scanners
@@ -80,7 +80,7 @@ jobs:
           python-version: "3.14"
       - name: Install locked development dependencies
         run: |
-          python -m pip install poetry==2.4.1
+          python -m pip install poetry==2.5.1
           poetry check --lock
           poetry install --no-interaction
       - name: Prepare user systemd and D-Bus for rootless cgroups
@@ -88,7 +88,7 @@ jobs:
       - name: Set up isolated rootless Docker
         uses: docker/setup-docker-action@2bf61fb9464cc67f0cbdeabed6aa0380accd1c70 # v5.5.0
         with:
-          version: v29.7.2
+          version: v29.8.1
           rootless: true
           set-host: true
       - name: Validate rootless daemon and build current targets

@@ -1,7 +1,7 @@
 FROM python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9 AS build-tools
 
 # Poetryはbuild stageだけに置き、lock済み依存をruntime専用venvへ導入する。
-RUN pip install --no-cache-dir poetry==2.4.1 \
+RUN pip install --no-cache-dir poetry==2.5.1 \
     && python -m venv /opt/venv
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="/opt/venv/bin:${PATH}"

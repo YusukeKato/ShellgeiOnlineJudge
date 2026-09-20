@@ -301,6 +301,9 @@ poetry run pytest -m "not docker"
 
 CIは、[前提環境](#1-前提環境)に記載したすべてのPython versionで
 同じ検査を実行します。
+Ruffのlint対象は`pyproject.toml`の`lint.select`に明記しています。
+Ruff本体の更新で検査範囲が意図せず増えないよう、従来の`E4`・`E7`・`E9`・`F`を維持します。
+新しいルールの導入は、必要なコード修正と合わせて別途レビューします。
 pytestの収集時はtest専用のmemory SQLite URLを明示し、ホストのDB設定を引き継ぎません。
 実PostgreSQLを使用するtestは専用fixtureで接続先を準備します。
 CIの権限・workflow検証・secret/依存/image scan・SBOM・provenanceは

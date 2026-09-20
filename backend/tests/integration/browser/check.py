@@ -240,9 +240,11 @@ def main() -> None:
         submissions: list[str] = []
         page.on(
             "request",
-            lambda request: submissions.append(request.url)
-            if request.method == "POST" and "/api/v3/submissions" in request.url
-            else None,
+            lambda request: (
+                submissions.append(request.url)
+                if request.method == "POST" and "/api/v3/submissions" in request.url
+                else None
+            ),
         )
         expect(page.locator("html")).to_have_attribute("lang", "ja")
         expect(page.locator("#result-image")).to_have_count(0)

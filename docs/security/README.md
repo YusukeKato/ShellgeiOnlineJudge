@@ -109,31 +109,29 @@ SOJ-020は下記の実装・検証により`Resolved`としました。未解決
 
 ## SOJ-022の現在の停止対象
 
-2026-09-20、`a41144c`からAnyIOとPython base imageを更新したworktreeを検査しました。
-固定済みSyft・Grypeと当日取得した同一DBを使用し、対象はpackageと脆弱性の組合せ数です。
+2026-09-20、`bcacb77`から依存・検証tool・互換性を維持したimageを一括更新したworktreeを検査しました。
+固定済みSyft 1.52.0・Grype 0.119.0と当日取得した同一DBを使用し、全5 imageを再buildしました。
+対象はpackageと脆弱性の組合せ数です。
 
-| 対象 | 更新前 | 更新後の停止対象 |
-| --- | ---: | ---: |
-| Python / frontend lock file | 1 | 0 |
-| backend image | 未検査 | 1 |
-| runner image | 23 | 1 |
-| frontend image | 未検査 | 0 |
-| DB image | 未検査 | 0 |
-| sandbox image | 未検査 | 0 |
+| 対象 | 現在の停止対象 |
+| --- | ---: |
+| Python / frontend lock file | 0 |
+| backend image | 1 |
+| runner image | 1 |
+| frontend image | 0 |
+| DB image | 0 |
+| sandbox image | 0 |
 
-- AnyIOを4.12.1から4.15.1へ更新し、
-  [GHSA-82r6-8w77-94w6](https://github.com/advisories/GHSA-82r6-8w77-94w6)の修正版4.14.2以降を採用しました。
-  必須の間接依存typing_extensionsも4.16.0へ更新しています。
-- `backend/Dockerfile`の両stageを同じ更新版Python 3.12-slim digestへ揃え、
-  libc、Perl、gzip、PCRE2、SQLiteの停止対象を解消しました。Python対応範囲とruntime境界は維持しています。
-- backend・runnerを再buildし、実Python 3.12.14／Expat 2.8.3を確認しました。
-  frontend・DB・sandboxは既存の検証済みimageを再scanしました。
-  停止対象0は全脆弱性0という意味ではなく、低severity・未修正等の検出はreportに残しています。
+lock fileでは停止対象以外も含めて検出0件でした。imageの停止対象0は全脆弱性0を意味せず、
+低severity・未修正等の検出はreportに残しています。
+既に是正したAnyIO・OS libraryの停止対象は再導入されていません。
+Python base imageの追加対応は保留し、backend・runnerの実Python 3.12.14／Expat 2.8.3と
+対応Pythonの範囲・runtime境界を維持しています。
 
 残る各1件はPython標準libraryの`CVE-2026-82049`（High）です。
 tarfileの`data`／`tar` filterが、symlinkへのhard linkを使うarchiveで展開先外への影響を防げない問題です。
 [公式issue](https://github.com/python/cpython/issues/157190)と
-[3.12向け修正PR](https://github.com/python/cpython/pull/157454)を確認しましたが、同日時点ではPRが未mergeで、
+[3.12向け修正PR](https://github.com/python/cpython/pull/157454)を確認しましたが、同日の先行調査時点ではPRが未mergeで、
 採用可能な公式3.12修正版はありません。Grypeは3.14.0b1以降を修正版と判定します。
 公式3.14.7 imageも実測しましたが、内蔵Expatが2.8.2へ後退し、
 [2.8.3の修正](https://github.com/python/cpython/issues/155558)を維持する既存runtime testに失敗するため採用しません。
@@ -154,17 +152,20 @@ runnerの`execution_archive.py`は通常fileのtarを作成し、展開はsandbo
 
 今回の検証:
 
-- lock整合性、ruff・format・mypy、非Docker 793件が成功。
-- 更新したbackend・runnerを使うrootless統合17件がすべて成功（skipなし）。
+- lock整合性、ruff・format・mypy、非Docker 793件がPython 3.12・3.13・3.14で成功。
+- 更新した全imageを使うrootless統合26件がすべて成功（skipなし）。
   実runtime境界、Compose経由の全111問・DB保存、browser表示、認証・revision拒否、
-  DB・runner停止復帰、配備時のDB保持とmigration失敗時の受付停止を確認しました。
+  DB・runner停止復帰、配備時のDB保持とmigration失敗時の受付停止、PostgreSQL更新・復帰互換性、
+  sandboxの収録command・画像生成を確認しました。
+- Goの不要checksum整理後もsandboxを再buildし、textimg binaryの一致、sandbox統合8件とscanを再確認しました。
 - 同一DBでlockと全5 imageをscanし、実scannerの合成secret・脆弱package・破損SBOM検査も成功。
   上表の残存検出によりruntime scan全体は不合格です。
-- frontendのcode・依存は変更していないためfrontend基本5検査は再実行していません。
+- frontendのformat・lint・typecheck・68 test・buildが成功。
 
-検査reportと対象のimmutable IDはlocalの`.soj-deploy/security-refresh/`に保存しています。
+検査reportと対象のimmutable IDはlocalの`.soj-deploy/batch-review/`に保存しています。
 更新・再検査の手順は[CI文書](../CI.md#ローカルでの検証)を参照してください。
-GitHub上のCI・署名・本番反映は未実施です。過去のPRのruntime CI失敗が同じ検出によるものかは断定しません。
+今回の変更でのGitHub上のCI・署名・本番反映は未実施です。
+CI用Dockerの更新版によるfresh rootless setup・cleanupはGitHub runner上での確認が残ります。
 
 ## SOJ-022：依存・imageの是正記録
 

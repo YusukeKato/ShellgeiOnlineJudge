@@ -179,6 +179,11 @@ workflowやpin変更のreview保護もGitHub側で設定してください。
 DependabotでActions・Poetry・frontend依存の週次PRを提案します。自動mergeは行いません。
 React・React DOMと両方の型定義は、通常のversion更新を同じPRへまとめます。
 ReactとReact DOMはlockされた実versionを揃え、既存の画面テストで起動互換性を確認します。
+`@types/node`は実行環境と同じmajorを維持し、Dependabotのmajor更新提案を除外します。
+Node本体のmajorを移行するときに、型定義・CI・build imageを合わせて見直します。
+複数の依存をまとめて更新する場合も、peer dependencyと対応Python・Nodeの条件を照合し、
+lock fileを再解決した後に単体・型検査と本番imageの統合検証を行います。
+最新版を組み合わせられない場合は、互換性を確認できた版に留め、理由を記録します。
 scannerは`ci/tools.json`、Poetry/Yarn bootstrapはworkflowの固定値をreviewして更新します。
 本番image digestは[本番運用](./PRODUCTION.md#image-digestの更新)の手順を使用します。
 

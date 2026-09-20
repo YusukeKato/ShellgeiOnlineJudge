@@ -1,5 +1,5 @@
 # --- Build Stage ---
-FROM node:22@sha256:0557ac14e0d45d02ed563067b82856ca5e7aa3437fa28d98d4350ea9c3d9494a AS builder
+FROM node:22@sha256:dd5847a04b0deee391fa145f1f4c6d214196668b6bcc7988ebed67249f226844 AS builder
 
 WORKDIR /app/frontend
 
@@ -29,7 +29,7 @@ RUN yarn typecheck
 RUN yarn build
 
 # --- Serve Stage ---
-FROM nginx:alpine@sha256:72ba65eb42c10344912a84ff42408db7d34f2feb642204570ab8fc5ffd29f1d3
+FROM nginx:alpine@sha256:62ff2089abf5a9ed33bd232895bef5e22f7bb4b200675cec49a5ebc48e3d4ac8
 LABEL org.opencontainers.image.version="3.0.0"
 
 # baseを維持し、util-linux由来の検出に対応するlibraryだけを固定更新する。
