@@ -1,4 +1,4 @@
-FROM python:3.12-slim@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea AS build-tools
+FROM python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9 AS build-tools
 
 # Poetryはbuild stageだけに置き、lock済み依存をruntime専用venvへ導入する。
 RUN pip install --no-cache-dir poetry==2.4.1 \
@@ -14,7 +14,7 @@ RUN poetry install --only main,backend --no-root --no-interaction --no-ansi
 FROM build-tools AS runner-dependencies
 RUN poetry install --only main,runner --no-root --no-interaction --no-ansi
 
-FROM python:3.12-slim@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea AS runtime-common
+FROM python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9 AS runtime-common
 LABEL org.opencontainers.image.version="3.0.0"
 ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONDONTWRITEBYTECODE=1 \

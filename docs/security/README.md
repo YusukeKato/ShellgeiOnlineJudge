@@ -35,8 +35,8 @@ git diff 34a9041
 
 ## Current security status
 
-- SOJ-022は、[直近の再スキャン](#soj-022の現在の停止対象)でlock fileとrunner imageに
-  新たな停止対象があり、未解決です。過去の全5 imageの検査成功を現在の結果へ流用しません。
+- SOJ-022は、[直近の再スキャン](#soj-022の現在の停止対象)でbackend・runner imageに
+  停止対象が各1件残り、未解決です。過去の全5 imageの検査成功を現在の結果へ流用しません。
   scannerのseverityとサービスでの悪用可能性を区別し、本番反映は別途確認します。
 - インターネット公開には、外側proxyまたはWAFの
   実client単位の受付制御を別途確認する必要があります。
@@ -86,10 +86,10 @@ Statusは次の意味で使用します。
   - 次: 実CIとOIDC署名を確認し、required checks・workflow変更のreview保護を設定する。
     bootstrapの間接依存・第三者imageの供給元検証を整備し、[SSH自動更新](../AUTODEPLOY.md)の実接続と復旧を確認する
 - `SOJ-022` — High/Critical（scanner分類） / P1 / Partially resolved
-  - 概要: 依存・imageの是正後、最新DBで新たな停止対象を検出。既存のPython例外は対象を限定して維持
+  - 概要: AnyIOとPython base imageを更新。残るtarfileの停止対象は既存のPython例外の対象外
   - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、`deploy/postgres/Dockerfile`、`ci/python-runtime-exceptions.json`、`deploy/sandbox/`、runtime image
   - 確認: [是正記録](#soj-022依存imageの是正記録)に変更範囲、検出比較、未解決範囲を記載
-  - 次: [現在の停止対象](#soj-022の現在の停止対象)を是正し、全5 imageとGitHub CIを再検証する。
+  - 次: [現在の停止対象](#soj-022の現在の停止対象)に対する公式修正版を確認し、更新後に全5 imageとGitHub CIを再検証する。
     Python例外も期限前に根拠・実装を再確認する。本番反映は未確認
 - `SOJ-021` — Low / P3 / Partially resolved
   - 概要: command/output保持の目的・最小field・backup方針は確定したが、
@@ -109,23 +109,55 @@ SOJ-020は下記の実装・検証により`Resolved`としました。未解決
 
 ## SOJ-022の現在の停止対象
 
-2026-09-20、`f43fc73`にPR #93のDocker SDK・型定義更新とcontext互換性修正を加えた
-worktreeを、固定済みSyft・Grypeと当日取得したDBで検査しました。
-lock fileの停止対象は1件、buildしたrunner imageは23件（packageと脆弱性の組合せ数）です。
-runnerの対象IDは`sha256:3bca8ab4db9c868692c5e6e068e538c7e571faca8e9c1554fd4b9048b14e932c`です。
+2026-09-20、`a41144c`からAnyIOとPython base imageを更新したworktreeを検査しました。
+固定済みSyft・Grypeと当日取得した同一DBを使用し、対象はpackageと脆弱性の組合せ数です。
 
-- lock・runner共通: AnyIO 4.12.1に
-  [GHSA-82r6-8w77-94w6](https://github.com/advisories/GHSA-82r6-8w77-94w6)（Critical）。
-  公式修正版は4.14.2。非ASCII hostnameを使うTLS接続が対象で、サービスでの到達性は別途評価する。
-- runnerのOS package: libc、Perl、gzip、PCRE2、SQLiteに修正版ありのHigh/Criticalを検出。
-  固定base imageの更新候補と配布元の修正情報を確認し、build・scan・統合testを行う。
-- runnerのPython 3.12.14: `CVE-2026-82049`をHighとして検出。
-  実際の影響範囲・修正版を公式情報で確認する。既存の期限付き例外の対象外であり、自動追加しない。
+| 対象 | 更新前 | 更新後の停止対象 |
+| --- | ---: | ---: |
+| Python / frontend lock file | 1 | 0 |
+| backend image | 未検査 | 1 |
+| runner image | 23 | 1 |
+| frontend image | 未検査 | 0 |
+| DB image | 未検査 | 0 |
+| sandbox image | 未検査 | 0 |
 
-Docker SDK自体には停止対象の検出はありません。上記AnyIOとbase image指定は今回の更新前と同じです。
-backend・frontend・DB・sandbox imageの再スキャン、本番での成立性評価は未実施です。
-過去のPRのruntime CI失敗が同じ検出によるものかは、当該runのreportを未取得のため断定しません。
-更新・再検査は[CIのscan手順](../CI.md#ローカルでの検証)に従い、ignore追加や判定基準の緩和で通過させません。
+- AnyIOを4.12.1から4.15.1へ更新し、
+  [GHSA-82r6-8w77-94w6](https://github.com/advisories/GHSA-82r6-8w77-94w6)の修正版4.14.2以降を採用しました。
+  必須の間接依存typing_extensionsも4.16.0へ更新しています。
+- `backend/Dockerfile`の両stageを同じ更新版Python 3.12-slim digestへ揃え、
+  libc、Perl、gzip、PCRE2、SQLiteの停止対象を解消しました。Python対応範囲とruntime境界は維持しています。
+- backend・runnerを再buildし、実Python 3.12.14／Expat 2.8.3を確認しました。
+  frontend・DB・sandboxは既存の検証済みimageを再scanしました。
+  停止対象0は全脆弱性0という意味ではなく、低severity・未修正等の検出はreportに残しています。
+
+残る各1件はPython標準libraryの`CVE-2026-82049`（High）です。
+tarfileの`data`／`tar` filterが、symlinkへのhard linkを使うarchiveで展開先外への影響を防げない問題です。
+[公式issue](https://github.com/python/cpython/issues/157190)と
+[3.12向け修正PR](https://github.com/python/cpython/pull/157454)を確認しましたが、同日時点ではPRが未mergeで、
+採用可能な公式3.12修正版はありません。Grypeは3.14.0b1以降を修正版と判定します。
+公式3.14.7 imageも実測しましたが、内蔵Expatが2.8.2へ後退し、
+[2.8.3の修正](https://github.com/python/cpython/issues/155558)を維持する既存runtime testに失敗するため採用しません。
+公式修正版の公開後、PythonとExpatの両条件を満たすimageで再build・scan・統合testを行ってください。
+
+現行のbackend・runnerに利用者提供tarの展開処理はありません。
+runnerの`execution_archive.py`は通常fileのtarを作成し、展開はsandbox内の別処理です。
+この到達性の確認を理由に検出除外は追加せず、runtime CIの停止を維持します。
+既存Python例外のCVE・期限・hashも変更していません。今回のDBでは既存3件は停止対象外で、例外適用は0件です。
+更新imageの一部binary hashは旧policyと異なるため、将来再検出されても旧policyで自動的に通過させません。
+
+今回の検証:
+
+- lock整合性、ruff・format・mypy、非Docker 793件が成功。
+- 更新したbackend・runnerを使うrootless統合17件がすべて成功（skipなし）。
+  実runtime境界、Compose経由の全111問・DB保存、browser表示、認証・revision拒否、
+  DB・runner停止復帰、配備時のDB保持とmigration失敗時の受付停止を確認しました。
+- 同一DBでlockと全5 imageをscanし、実scannerの合成secret・脆弱package・破損SBOM検査も成功。
+  上表の残存検出によりruntime scan全体は不合格です。
+- frontendのcode・依存は変更していないためfrontend基本5検査は再実行していません。
+
+検査reportと対象のimmutable IDはlocalの`.soj-deploy/security-refresh/`に保存しています。
+更新・再検査の手順は[CI文書](../CI.md#ローカルでの検証)を参照してください。
+GitHub上のCI・署名・本番反映は未実施です。過去のPRのruntime CI失敗が同じ検出によるものかは断定しません。
 
 ## SOJ-022：依存・imageの是正記録
 
@@ -182,10 +214,10 @@ R3-025と同じ固定scannerと、2026-09-05に取得した同一の脆弱性DB�
 
 ### Python判定と内蔵Expatの検査
 
-backend・runnerの各3件はPythonの公式修正情報とNVDのversion範囲の不一致です。
+2026-09-05に検出したbackend・runnerの各3件はPythonの公式修正情報とNVDのversion範囲の不一致でした。
 例外の対象・根拠・期限・実装hashは[`ci/python-runtime-exceptions.json`](../../ci/python-runtime-exceptions.json)、
 適用条件と失効時の挙動は[CIの期限付き例外](../CI.md#python-runtimeの期限付き例外)を正本とします。
-現行の固定image、Python対応範囲、アプリ依存lockを維持しています。
+この例外policyは当時の固定image専用です。現在の検出・適用状況は[現在の停止対象](#soj-022の現在の停止対象)を参照してください。
 `4120a76`の検証ではGrypeのraw検出をbackend 193件・runner 194件のまま保持し、そのうち各3件を例外へ分類しました。
 包括的なignoreやscanner自体のfilterは追加していません。
 
@@ -234,11 +266,11 @@ Pythonの期限付き例外（`4120a76`）:
 
 ### 残存項目
 
-- backend・runnerの各3件は`CVE-2026-3644`、`CVE-2026-4224`、`CVE-2026-7210`です。
+- 2026-09-05に検出したbackend・runnerの各3件は`CVE-2026-3644`、`CVE-2026-4224`、`CVE-2026-7210`です。
   [Python 3.12.14の公式修正情報](https://www.python.org/downloads/release/python-31214/)と、
   [Expat修正条件を含む公式リリース説明](https://blog.python.org/2026/08/python-31214-31116-31021/)を確認しました。
-  実imageはPython 3.12.14／Expat 2.8.3であり、修正済みversionに対するscanner判定の不一致です。
-  期限付き例外でCIの停止対象から区別していますが、NVD側の判定が訂正されたことを意味しません。
+  当時の実imageはPython 3.12.14／Expat 2.8.3であり、修正済みversionに対するscanner判定の不一致でした。
+  期限付き例外で区別した当時の結果は、NVD側の判定が訂正されたことを意味しません。
   期限前に再評価し、DB側で不一致が解消した場合は例外を削除してください。
 - 低severity・未修正の検出は引き続きreportに残します。sandboxで実行できる任意コードと
   host kernelの境界は、scannerの成功だけで安全性を保証できません。
