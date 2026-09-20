@@ -177,6 +177,8 @@ workflowやpin変更のreview保護もGitHub側で設定してください。
 ## 更新方針
 
 DependabotでActions・Poetry・frontend依存の週次PRを提案します。自動mergeは行いません。
+React・React DOMと両方の型定義は、通常のversion更新を同じPRへまとめます。
+ReactとReact DOMはlockされた実versionを揃え、既存の画面テストで起動互換性を確認します。
 scannerは`ci/tools.json`、Poetry/Yarn bootstrapはworkflowの固定値をreviewして更新します。
 本番image digestは[本番運用](./PRODUCTION.md#image-digestの更新)の手順を使用します。
 
