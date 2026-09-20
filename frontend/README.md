@@ -77,8 +77,11 @@ Node.js、Yarn、静的検査、テスト、buildの手順は、
 lintにはESLint flat configを使用します。TypeScriptは`typescript-eslint`の対応範囲に合わせて
 6.0系を使用し、`tsconfig.json`の`paths`は設定ファイルからの相対pathで指定します。
 TypeScriptを更新する場合はlint側のpeer dependencyも確認してください。
-Vitestは`@testing-library/jest-dom`のmatcher型宣言と互換性のある4系を使用します。
-5系へ移行する前に、両packageの`Assertion`型宣言が一致することを型検査で確認してください。
+Vitest 5では、`setupTests.js`でjest-domの公開matcherを`expect.extend`へ登録し、
+`vitest.d.ts`で`Matchers<R, T>`を拡張しています。jest-dom 7.0.1の`/vitest` entryは
+旧`Assertion`型を宣言して衝突するため使用しません。同期・非同期の戻り値の型と
+一致・不一致時の動作は`matchers.test.ts`で確認します。
+jest-domの連携方法を更新するときも、型検査を省略せずこの契約を維持してください。
 
 build時の`VITE_*`は
 ブラウザへ公開される値です。設定条件とsecurity上の制約は
