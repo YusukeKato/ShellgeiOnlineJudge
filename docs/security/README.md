@@ -139,6 +139,13 @@ tarfileの`data`／`tar` filterが、symlinkへのhard linkを使うarchiveで�
 [2.8.3の修正](https://github.com/python/cpython/issues/155558)を維持する既存runtime testに失敗するため採用しません。
 公式修正版の公開後、PythonとExpatの両条件を満たすimageで再build・scan・統合testを行ってください。
 
+GitHub上でも`3d4114a`の[Supply Chain CI](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/35507570995)で
+同じCVEをbackend・runnerから各1件検出しました。Python・React・source jobは成功していますが、
+runtime scanが終了code 2で停止したため、後続のE2Eと署名登録は実行されていません。
+[Production deploy](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/35507570991)も
+同じcommitのCI成功待ちで停止し、AWS認証・SSH配備は実行されていません。
+この失敗は認証Actionの更新では解消せず、上記のPython修正版が必要です。
+
 現行のbackend・runnerに利用者提供tarの展開処理はありません。
 runnerの`execution_archive.py`は通常fileのtarを作成し、展開はsandbox内の別処理です。
 この到達性の確認を理由に検出除外は追加せず、runtime CIの停止を維持します。

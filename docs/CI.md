@@ -36,6 +36,8 @@ Python・React・Supply Chainの同じSHAのpush runを最大55分待ちます�
 Session Manager pluginは`ci/install_session_manager.sh`の公式deb URL・version・SHA-256へ固定し、
 job専用directoryへ展開します。AWS CLIはGitHub-hosted Ubuntu runnerの導入済み版を使用します。
 本番の資格情報は`production` Environmentへ限定します。
+AWS認証ActionはNode.js 24で動作するため、Actions runner v2.327.1以降が必要です。
+GitHub-hosted runnerを使用し、Action更新時は実jobログのrunner versionと公式の要件を照合します。
 設定と失敗時の停止・復旧は[自動更新手順](./AUTODEPLOY.md)を正本とします。
 
 ## Scannerと停止条件
