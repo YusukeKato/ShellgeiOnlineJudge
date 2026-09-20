@@ -15,7 +15,7 @@ FROM build-tools AS runner-dependencies
 RUN poetry install --only main,runner --no-root --no-interaction --no-ansi
 
 FROM python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9 AS runtime-common
-LABEL org.opencontainers.image.version="3.0.0"
+LABEL org.opencontainers.image.version="3.0.1"
 ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

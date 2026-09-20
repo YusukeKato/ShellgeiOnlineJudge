@@ -36,7 +36,7 @@ RUN mkdir -p /out/licenses/go \
        done
 
 FROM ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3
-LABEL org.opencontainers.image.version="3.0.0"
+LABEL org.opencontainers.image.version="3.0.1"
 
 # Ubuntuの署名済みrepositoryからsecurity更新を適用する。確定した生成物はIDで固定しscanする。
 # 推奨packageや開発環境を導入せず、全92問・runnerの固定操作とtextimgに必要なpackageを追加する。

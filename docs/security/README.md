@@ -91,7 +91,7 @@ Statusは次の意味で使用します。
   - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、`deploy/postgres/Dockerfile`、`ci/python-runtime-exceptions.json`、`deploy/sandbox/`、runtime image
   - 確認: [是正記録](#soj-022依存imageの是正記録)に変更範囲、検出比較、未解決範囲を記載
   - 次: [現在の停止対象](#soj-022の現在の停止対象)に対する公式修正版を確認し、更新後に全5 imageとGitHub CIを再検証する。
-    [一時許容の撤去作業](#soj-022の一時許容と撤去条件)と既存の誤検出例外の再評価を期限前に行う。本番反映は未確認
+    [一時許容の撤去作業](#soj-022の一時許容と撤去条件)と既存の誤検出例外の再評価を期限前に行う。一時許容版の本番反映は依頼者が確認済み
 - `SOJ-021` — Low / P3 / Partially resolved
   - 概要: command/output保持の目的・最小field・backup方針は確定したが、
     非公開脆弱性報告手順は未整備
@@ -206,7 +206,8 @@ runnerの`execution_archive.py`は通常fileのtarを作成し、展開はsandbo
 - アプリ・依存・imageの変更はなく、検証済みimageを再利用しました。今回のE2E・全問題回帰は再実行していません。
   localの検証記録は`.soj-deploy/risk-review/`に保存しています。
 
-許容を含む変更の本番反映と自動更新の成功は、commit・push後のGitHub実行で確認が必要です。
+依頼者から`aabdd58`の自動デプロイ成功・本番更新完了の報告を受けました。
+一時許容を含む変更は本番反映済みです。脆弱性自体は未修正であり、上記の期限前の是正・撤去作業は引き続き必要です。
 更新・再検査の手順は[CI文書](../CI.md#ローカルでの検証)を参照してください。
 今回の変更でのGitHub上のCI・署名・本番反映は未実施です。
 CI用Dockerの更新版によるfresh rootless setup・cleanupはGitHub runner上での確認が残ります。
