@@ -19,6 +19,7 @@ from soj_shared.version import APP_VERSION
 
 ROOT = Path(__file__).resolve().parents[1]
 PYTHON_EXCEPTION_POLICY = ROOT / "ci/python-runtime-exceptions.json"
+PYTHON_RISK_POLICY = ROOT / "ci/python-runtime-risk-acceptance.json"
 PYTHON_RUNTIME_FILES = (
     "/usr/local/bin/python3.12",
     "/usr/local/lib/libpython3.12.so.1.0",
@@ -26,6 +27,7 @@ PYTHON_RUNTIME_FILES = (
     "/usr/local/lib/python3.12/lib-dynload/pyexpat.cpython-312-x86_64-linux-gnu.so",
     "/usr/local/lib/python3.12/lib-dynload/_elementtree.cpython-312-x86_64-linux-gnu.so",
 )
+PYTHON_RISK_FILES = (*PYTHON_RUNTIME_FILES, "/usr/local/lib/python3.12/tarfile.py")
 
 
 def utc_today() -> date:
@@ -33,9 +35,11 @@ def utc_today() -> date:
     return datetime.now(timezone.utc).date()
 
 
-def load_python_exception_policy() -> dict[str, Any]:
+def load_python_exception_policy(
+    path: Path | None = None, files: tuple[str, ...] = PYTHON_RUNTIME_FILES
+) -> dict[str, Any]:
     """根拠・有限期限・実装hashを必須とし、不完全な例外設定はCI障害として拒否する。"""
-    policy = json.loads(PYTHON_EXCEPTION_POLICY.read_text())
+    policy = json.loads((path or PYTHON_EXCEPTION_POLICY).read_text())
     if policy["schema_version"] != 1:
         raise ValueError("unknown Python exception policy schema")
     duration = date.fromisoformat(policy["expires_on"]) - date.fromisoformat(
@@ -57,7 +61,7 @@ def load_python_exception_policy() -> dict[str, Any]:
         for key in ("python", "expat")
     ):
         raise ValueError("invalid Python exception runtime")
-    if set(runtime["files"]) != set(PYTHON_RUNTIME_FILES) or not all(
+    if set(runtime["files"]) != set(files) or not all(
         isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest)
         for digest in runtime["files"].values()
     ):
@@ -76,7 +80,9 @@ def load_python_exception_policy() -> dict[str, Any]:
     return policy
 
 
-def inspect_python_runtime(image_id: str) -> dict[str, Any]:
+def inspect_python_runtime(
+    image_id: str, files: tuple[str, ...] = PYTHON_RUNTIME_FILES
+) -> dict[str, Any]:
     """scan対象IDのPython・Expat・実装hashを隔離containerで読み、timeoutや例外でも回収する。"""
     if not re.fullmatch(r"sha256:[0-9a-f]{64}", image_id):
         raise ValueError("Python inspection requires an immutable image ID")
@@ -97,7 +103,7 @@ print(json.dumps(dict(python=list(sys.version_info[:3]), expat=list(pyexpat.vers
         container = client.containers.create(
             image_id,
             entrypoint="/usr/local/bin/python3.12",
-            command=["-I", "-c", script, json.dumps(PYTHON_RUNTIME_FILES)],
+            command=["-I", "-c", script, json.dumps(files)],
             working_dir="/",
             user="10001:10001",
             network_mode="none",
@@ -127,11 +133,51 @@ def python_runtime_exceptions(
     blocked: list[dict[str, Any]], source: str, target: str, reports: Path
 ) -> list[dict[str, Any]]:
     """本番Pythonの期限付き例外を実装hashまで照合し、元reportを変更せず適用記録と対象を返す。"""
+    return evaluate_python_policy(blocked, source, target, reports, risk=False)
+
+
+def python_runtime_risk_acceptances(
+    blocked: list[dict[str, Any]], source: str, target: str, reports: Path
+) -> list[dict[str, Any]]:
+    """承認された未修正CVEだけを一時許容し、修正済み誤検出とは別の監査記録へ残す。"""
+    return evaluate_python_policy(blocked, source, target, reports, risk=True)
+
+
+def load_python_risk_policy() -> dict[str, Any]:
+    """今回承認されたCVE・対象・最大14日と撤去条件を必須にし、包括的な許容を拒否する。"""
+    policy = load_python_exception_policy(PYTHON_RISK_POLICY, PYTHON_RISK_FILES)
+    if (
+        policy.get("kind") != "risk-acceptance"
+        or policy.get("targets") != ["backend", "runner"]
+        or [item["id"] for item in policy["vulnerabilities"]] != ["CVE-2026-82049"]
+        or any(
+            not isinstance(policy.get(key), str) or not policy[key].strip()
+            for key in ("accepted_by", "exposure", "remediation", "revoke_when")
+        )
+        or (
+            date.fromisoformat(policy["expires_on"])
+            - date.fromisoformat(policy["reviewed_on"])
+        ).days
+        > 14
+    ):
+        raise ValueError("invalid temporary Python risk acceptance")
+    return policy
+
+
+def evaluate_python_policy(
+    blocked: list[dict[str, Any]],
+    source: str,
+    target: str,
+    reports: Path,
+    *,
+    risk: bool,
+) -> list[dict[str, Any]]:
+    """誤検出とリスク受容に同じ厳密照合を使い、許容理由・実装・適用件数を別fileへ記録する。"""
     if target not in {"backend", "runner"}:
         return []
     if not re.fullmatch(r"docker:sha256:[0-9a-f]{64}", source):
         raise ValueError("Python exceptions require the scanned immutable image ID")
-    policy = load_python_exception_policy()
+    policy = load_python_risk_policy() if risk else load_python_exception_policy()
     today = utc_today()
     active = (
         date.fromisoformat(policy["reviewed_on"])
@@ -155,6 +201,7 @@ def python_runtime_exceptions(
         == set(PYTHON_RUNTIME_FILES[:2])
     ]
     record: dict[str, Any] = {
+        "kind": "risk-acceptance" if risk else "verified-fix",
         "policy": policy,
         "evaluated_on": today.isoformat(),
         "source": source,
@@ -163,12 +210,18 @@ def python_runtime_exceptions(
     }
     if not active:
         record["status"] = "inactive"
-    path = reports / f"{target}.python-exceptions.json"
+    suffix = "python-risk-acceptance" if risk else "python-exceptions"
+    path = reports / f"{target}.{suffix}.json"
     # probe障害時も適用していないことと評価時のpolicyをartifactへ残す。
     path.write_text(json.dumps(record, indent=2) + "\n")
     exempted = []
     if active and candidates:
-        record["runtime"] = inspect_python_runtime(source.removeprefix("docker:"))
+        image_id = source.removeprefix("docker:")
+        record["runtime"] = (
+            inspect_python_runtime(image_id, PYTHON_RISK_FILES)
+            if risk
+            else inspect_python_runtime(image_id)
+        )
         record["status"] = "runtime-mismatch"
         if record["runtime"] == policy["runtime"]:
             exempted = candidates
@@ -189,7 +242,7 @@ def run(command: list[str], *, expected: tuple[int, ...] = (0,)) -> int:
 
 
 def scan(tools: Path, source: str, reports: Path, name: str) -> bool:
-    """SBOMと全検出を保存し、検証済み期限付き例外を除く修正可能なHigh/CriticalでFalseを返す。"""
+    """全検出を保存し、誤検出例外・期限付きリスク受容後も残る停止対象でFalseを返す。"""
     sbom = reports / f"{name}.syft.json"
     run(
         [
@@ -215,17 +268,21 @@ def scan(tools: Path, source: str, reports: Path, name: str) -> bool:
     result = json.loads(report.read_text())
     blocked = blocking_findings(result)
     exempted = python_runtime_exceptions(blocked, source, name, reports)
+    accepted = python_runtime_risk_acceptances(
+        [match for match in blocked if match not in exempted], source, name, reports
+    )
     summary = {
         "target": name,
         "packages": len(inventory["artifacts"]),
         "findings": len(result["matches"]),
         "blocking_before_exceptions": len(blocked),
         "exceptions": len(exempted),
-        "blocking": len(blocked) - len(exempted),
+        "risk_acceptances": len(accepted),
+        "blocking": len(blocked) - len(exempted) - len(accepted),
     }
     (reports / f"{name}.summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(json.dumps(summary), flush=True)
-    return len(blocked) == len(exempted)
+    return len(blocked) == len(exempted) + len(accepted)
 
 
 def blocking_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
@@ -339,6 +396,9 @@ def write_record(
         ).hexdigest(),
         "python_exception_policy_sha256": hashlib.sha256(
             PYTHON_EXCEPTION_POLICY.read_bytes()
+        ).hexdigest(),
+        "python_risk_acceptance_policy_sha256": hashlib.sha256(
+            PYTHON_RISK_POLICY.read_bytes()
         ).hexdigest(),
         "files": files,
     }

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "id": "SOJ-022-CVE-2026-82049-temporary",
+  "kind": "risk-acceptance",
+  "reviewed_on": "2026-09-20",
+  "expires_on": "2026-10-04",
+  "accepted_by": "repository owner (2026-09-20 review request)",
+  "targets": [
+    "backend",
+    "runner"
+  ],
+  "artifact": {
+    "name": "python",
+    "version": "3.12.14",
+    "type": "binary",
+    "purl": "pkg:generic/python@3.12.14"
+  },
+  "namespace": "nvd:cpe",
+  "exposure": "本番backend・runnerは利用者提供tarをPythonで展開しない。runnerは通常fileのtarを生成しsandbox内で展開する。利用者入力から脆弱なtarfile展開への経路は現行コードで確認されていないが、未修正の脆弱性は残る。",
+  "remediation": "公式修正状況を期限前に再確認し、PythonとExpatの修正条件を満たす固定imageへ更新する。全5 imageのscan・rootless統合test・実CIを確認後に本許容を撤去する。未公開なら修正の先行適用を検討し、期限だけを自動延長しない。",
+  "revoke_when": "Pythonで信頼できないarchiveを展開する機能・依存経路を追加する場合、悪用可能性が判明した場合、対象実装を変更した場合は期限前でも再評価して許容を撤回する。",
+  "runtime": {
+    "python": [
+      3,
+      12,
+      14
+    ],
+    "expat": [
+      2,
+      8,
+      3
+    ],
+    "files": {
+      "/usr/local/bin/python3.12": "0e6475dfda68a9b2d93501449fc47593ca169010e8f4881577b97463fd0c1263",
+      "/usr/local/lib/libpython3.12.so.1.0": "60badb35175743f87894f8f44ace744ab56fde25e71c5d551741f66f645bfa47",
+      "/usr/local/lib/python3.12/http/cookies.py": "6387f676095ae5374943eff99fbcd2d9c681172c00209fadf54c311cf7228149",
+      "/usr/local/lib/python3.12/lib-dynload/pyexpat.cpython-312-x86_64-linux-gnu.so": "21a0c9743a2400d67fdc32e901207d2b3bae7001161b73f6885a2e937e229729",
+      "/usr/local/lib/python3.12/lib-dynload/_elementtree.cpython-312-x86_64-linux-gnu.so": "c2f7119fce28f635c108237749b2d37038eab2b3af5b8b0cb1bbb78ca54e5ffc",
+      "/usr/local/lib/python3.12/tarfile.py": "41a9f1930e5285455b4b0db2b9394247cce312c3fa1ef586a58e66c0100668d5"
+    }
+  },
+  "vulnerabilities": [
+    {
+      "id": "CVE-2026-82049",
+      "reason": "自動デプロイ復旧のため、現行サービスの到達性を評価して期限付きでリスクを受容する。修正済み・誤検出とは扱わない。",
+      "evidence": [
+        "https://github.com/python/cpython/issues/157190",
+        "https://github.com/python/cpython/pull/157454"
+      ]
+    }
+  ]
+}

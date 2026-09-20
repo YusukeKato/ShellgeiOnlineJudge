@@ -36,7 +36,8 @@ git diff 34a9041
 ## Current security status
 
 - SOJ-022は、[直近の再スキャン](#soj-022の現在の停止対象)でbackend・runner imageに
-  停止対象が各1件残り、未解決です。過去の全5 imageの検査成功を現在の結果へ流用しません。
+  未修正の検出が各1件残り、[期限付きでリスクを受容](#soj-022の一時許容と撤去条件)しています。
+  課題は未解決です。過去の全5 imageの検査成功を現在の結果へ流用しません。
   scannerのseverityとサービスでの悪用可能性を区別し、本番反映は別途確認します。
 - インターネット公開には、外側proxyまたはWAFの
   実client単位の受付制御を別途確認する必要があります。
@@ -86,11 +87,11 @@ Statusは次の意味で使用します。
   - 次: 実CIとOIDC署名を確認し、required checks・workflow変更のreview保護を設定する。
     bootstrapの間接依存・第三者imageの供給元検証を整備し、[SSH自動更新](../AUTODEPLOY.md)の実接続と復旧を確認する
 - `SOJ-022` — High/Critical（scanner分類） / P1 / Partially resolved
-  - 概要: AnyIOとPython base imageを更新。残るtarfileの停止対象は既存のPython例外の対象外
+  - 概要: AnyIOとPython base imageを更新。残るtarfileの未修正リスクを期限付きで一時許容
   - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、`deploy/postgres/Dockerfile`、`ci/python-runtime-exceptions.json`、`deploy/sandbox/`、runtime image
   - 確認: [是正記録](#soj-022依存imageの是正記録)に変更範囲、検出比較、未解決範囲を記載
   - 次: [現在の停止対象](#soj-022の現在の停止対象)に対する公式修正版を確認し、更新後に全5 imageとGitHub CIを再検証する。
-    Python例外も期限前に根拠・実装を再確認する。本番反映は未確認
+    [一時許容の撤去作業](#soj-022の一時許容と撤去条件)と既存の誤検出例外の再評価を期限前に行う。本番反映は未確認
 - `SOJ-021` — Low / P3 / Partially resolved
   - 概要: command/output保持の目的・最小field・backup方針は確定したが、
     非公開脆弱性報告手順は未整備
@@ -113,7 +114,7 @@ SOJ-020は下記の実装・検証により`Resolved`としました。未解決
 固定済みSyft 1.52.0・Grype 0.119.0と当日取得した同一DBを使用し、全5 imageを再buildしました。
 対象はpackageと脆弱性の組合せ数です。
 
-| 対象 | 現在の停止対象 |
+| 対象 | リスク受容を適用する前の停止対象 |
 | --- | ---: |
 | Python / frontend lock file | 0 |
 | backend image | 1 |
@@ -125,8 +126,8 @@ SOJ-020は下記の実装・検証により`Resolved`としました。未解決
 lock fileでは停止対象以外も含めて検出0件でした。imageの停止対象0は全脆弱性0を意味せず、
 低severity・未修正等の検出はreportに残しています。
 既に是正したAnyIO・OS libraryの停止対象は再導入されていません。
-Python base imageの追加対応は保留し、backend・runnerの実Python 3.12.14／Expat 2.8.3と
-対応Pythonの範囲・runtime境界を維持しています。
+backend・runnerの実Python 3.12.14／Expat 2.8.3と対応Pythonの範囲・runtime境界を維持し、
+追加修正までの[一時許容と撤去条件](#soj-022の一時許容と撤去条件)を定めています。
 
 残る各1件はPython標準libraryの`CVE-2026-82049`（High）です。
 tarfileの`data`／`tar` filterが、symlinkへのhard linkを使うarchiveで展開先外への影響を防げない問題です。
@@ -142,15 +143,17 @@ GitHub上でも`3d4114a`の[Supply Chain CI](https://github.com/YusukeKato/Shell
 runtime scanが終了code 2で停止したため、後続のE2Eと署名登録は実行されていません。
 [Production deploy](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/35507570991)も
 同じcommitのCI成功待ちで停止し、AWS認証・SSH配備は実行されていません。
-この失敗は認証Actionの更新では解消せず、上記のPython修正版が必要です。
+`8fb15e7`の[Supply Chain CI](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/35514463599)でも
+runtime scanが失敗し、[Production deploy](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/35514463622)は
+CI成功待ちで停止しました。認証Actionの更新では解消せず、Python修正または下記の明示的なリスク受容が必要です。
 
 現行のbackend・runnerに利用者提供tarの展開処理はありません。
 runnerの`execution_archive.py`は通常fileのtarを作成し、展開はsandbox内の別処理です。
-この到達性の確認を理由に検出除外は追加せず、runtime CIの停止を維持します。
-既存Python例外のCVE・期限・hashも変更していません。今回のDBでは既存3件は停止対象外で、例外適用は0件です。
+この到達性を評価し、下記の未修正リスク受容を別policyとして追加します。
+既存の修正済みPython例外のCVE・期限・hashは変更しません。今回のDBでは既存3件は停止対象外で、誤検出例外適用は0件です。
 更新imageの一部binary hashは旧policyと異なるため、将来再検出されても旧policyで自動的に通過させません。
 
-今回の検証:
+一括更新時の検証（リスク受容を適用する前）:
 
 - lock整合性、ruff・format・mypy、非Docker 793件がPython 3.12・3.13・3.14で成功。
 - 更新した全imageを使うrootless統合26件がすべて成功（skipなし）。
@@ -163,6 +166,47 @@ runnerの`execution_archive.py`は通常fileのtarを作成し、展開はsandbo
 - frontendのformat・lint・typecheck・68 test・buildが成功。
 
 検査reportと対象のimmutable IDはlocalの`.soj-deploy/batch-review/`に保存しています。
+
+## SOJ-022の一時許容と撤去条件
+
+2026-09-20、依頼者は自動デプロイ復旧のため、現行コードで影響が限定的であることを条件に
+未修正リスクの一時許容を指示しました。CVEの修正完了・誤検出とは扱わず、SOJ-022は未解決のままです。
+対象・期限・承認主体・実装hash・撤回条件は
+[`ci/python-runtime-risk-acceptance.json`](../../ci/python-runtime-risk-acceptance.json)を正本とします。
+適用・失効時の挙動は[CIのリスク受容](../CI.md#未修正python脆弱性の一時的なリスク受容)を参照してください。
+
+影響評価の根拠:
+
+- 本番APIはcommandとproblem IDを受け取り、認証付きrunnerへ渡し、結果を判定してDBへ保存します。
+  利用者提供tarをbackend・runnerのPythonで展開する処理はありません。
+- `backend/soj_runner/execution_archive.py`は通常fileだけのtarを生成します。
+  command本文でtarのentry種別やlink先を指定することはできず、展開はsandbox内の別処理です。
+- CI toolのinstallerは固定hashを検証し、通常fileのみ`extractfile`で取得します。
+  browser E2Eには専用browser containerが作った画像archiveの`extractall(filter="data")`がありますが、
+  本番backend・runnerの処理ではなく、この許容をCI実行環境全体へ適用するものではありません。
+- 上記は現行の利用経路に基づく評価であり、依存全体の未知の経路や将来の変更まで安全と保証しません。
+  信頼できないarchiveのPython展開を導入する場合、または悪用経路が判明した場合は直ちに再評価・撤回します。
+
+担当はリポジトリ保守者です。失効日より前に以下を実施してください。
+
+1. 上記のCPython issue・3.12向けPRと公式imageを再確認する。
+2. Pythonのtarfile修正と既存Expat修正を両立するimageをdigest固定で採用する。
+   公式版が間に合わない場合は修正の先行適用を検討する。期限だけを自動延長しない。
+3. 全5 imageのscan、rootless統合・全問題回帰を実行し、許容なしで対象CVEが停止しないことを確認する。
+   修正済み実装への誤検出が残る場合は、修正根拠を確認して別途レビューする。
+4. このリスク受容policyと専用処理・testを撤去し、GitHubの同じcommitでCI・署名・本番自動更新を確認する。
+
+一時許容の検証（2026-09-20）:
+
+- Python 3.14でruff・format・mypy、非Docker test 831件が成功。
+  失効日当日、別CVE・製品・package・path、実装hash不一致、probe障害を許容しないことを確認しました。
+- 更新確認した脆弱性DBと実rootless imageを使い、全5 imageのscanが成功。
+  backend・runnerのraw検出は各170件のまま保持し、各1件だけをリスク受容へ分類、適用後の停止対象は全製品0件です。
+  実装は未修正のままです。policyと評価記録を含むbuild recordも生成しました。
+- アプリ・依存・imageの変更はなく、検証済みimageを再利用しました。今回のE2E・全問題回帰は再実行していません。
+  localの検証記録は`.soj-deploy/risk-review/`に保存しています。
+
+許容を含む変更の本番反映と自動更新の成功は、commit・push後のGitHub実行で確認が必要です。
 更新・再検査の手順は[CI文書](../CI.md#ローカルでの検証)を参照してください。
 今回の変更でのGitHub上のCI・署名・本番反映は未実施です。
 CI用Dockerの更新版によるfresh rootless setup・cleanupはGitHub runner上での確認が残ります。
@@ -634,7 +678,7 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 この文書では[未解決security課題](#open--partially-resolved--deferred)と
 本番環境での確認事項を管理し、完了済みunitを次作業として再掲しません。
 
-SOJ-022のPython例外を期限前に再評価し、GitHubの実CIと承認済みimageの本番反映を確認してください。
+SOJ-022の[一時許容の撤去作業](#soj-022の一時許容と撤去条件)とPython誤検出例外の再評価を期限前に行い、GitHubの実CIと承認済みimageの本番反映を確認してください。
 その他の課題も1項目ずつ、または密接に関連する小さな単位で差分をレビューして進めてください。
 
 ## 作業再開手順

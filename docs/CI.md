@@ -106,6 +106,26 @@ source・frontend・DB・sandboxにはこの例外を適用しません。
 継続が必要な場合も、根拠・実image・hashを再検証して差分をreviewします。
 日付だけの自動更新や、検出を消す目的での対象拡張は行いません。
 
+### 未修正Python脆弱性の一時的なリスク受容
+
+依頼者が承認した未修正脆弱性の一時許容は、修正済み誤検出と区別して
+[`ci/python-runtime-risk-acceptance.json`](../ci/python-runtime-risk-acceptance.json)で管理します。
+対象CVE・package・実装hash・承認者・評価日・失効日・影響評価・撤去条件はこのfileが正本です。
+現在の未解決課題と修正への移行手順は[SOJ-022](./security/README.md#soj-022の一時許容と撤去条件)を参照してください。
+
+上記のimmutable ID・package・install path・実version照合と隔離probeを共用し、
+さらに`tarfile.py`を含む全6 fileのSHA-256を照合します。対象はbackend・runnerに限定し、
+今回承認されたCVE以外を設定しても拒否します。有効期間は最大14日で、UTCの失効日当日から
+許容を適用しません。期限だけの自動延長は行いません。実装不一致なら対象検出は停止対象のままです。
+不完全な設定やprobe障害はCI障害とし、他のCVEや製品の停止判定は維持します。
+
+raw Grype reportを保持し、summaryでは`exceptions`（修正済み誤検出）と
+`risk_acceptances`（未修正リスクの許容）を分けます。`blocking`は両者の適用後に残る件数です。
+`backend.python-risk-acceptance.json`・`runner.python-risk-acceptance.json`に評価時のpolicy、
+対象image ID、実装確認結果、適用した検出を保存し、policyと評価記録のhashをbuild recordに含めます。
+CI成功やprovenanceは、未修正脆弱性がなくなったことを意味しません。
+許容中も全5 imageのscan、E2E、署名、同一commitのCI成功を配備条件とします。
+
 ## Rootless image検証
 
 専用のGitHub-hosted Ubuntu runnerに、固定versionのDockerをrootlessで構築します。
@@ -146,9 +166,9 @@ sandboxの展開には大きな一時領域が必要です。小さなtmpfsを�
 source/runtimeのscanを開始した場合は、検出でjobが失敗してもreportを保存します。
 保存期間と対象pathはworkflowで固定し、workspace全体やhidden fileをuploadしません。
 
-- 各対象のSyft JSON、CycloneDX JSON、Grype JSON、検出数summaryとPython例外の評価記録
+- 各対象のSyft JSON、CycloneDX JSON、Grype JSON、検出数summaryとPython例外・リスク受容の評価記録
 - scanした本番5 imageの`runtime.tar`。image IDでexportするため、元のtagを保持する保証はありません
-- `build-record.json`: 製品version、検査時のcheckout commit、dirty状態、image ID、外部image reference、tool manifest・Python例外policy・生成fileのSHA-256
+- `build-record.json`: 製品version、検査時のcheckout commit、dirty状態、image ID、外部image reference、tool manifest・Python例外／リスク受容policy・生成fileのSHA-256
 
 localのbuild recordは検査対象を追跡する未署名の記録です。既存imageを渡した場合、
 そのimageが記録中のcheckout commitからbuildされたことまでは証明しません。
