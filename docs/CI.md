@@ -117,6 +117,8 @@ backend imageのbuild直後に、scanと同じCPU・メモリ・PID制限付きP
 user busやcgroup設定の不備はそこで失敗させ、制限の解除や検査のskipは行いません。
 明示されたUnix socketとdaemonの`SecurityOptions`を確認してからbuild・scan・testを行います。
 確認できない場合は失敗し、host上のrootful daemonへfallbackしません。
+setup Actionは終了処理にも`rootless`入力を引き継ぐ版を使用します。
+更新時は起動・buildだけでなく、job終了時のrootless daemonのcleanup成功も確認してください。
 
 Dockerの固定versionは[Supply Chain CI](../.github/workflows/supply_chain.yaml)の
 `Set up isolated rootless Docker`を正本とします。更新時はActionが参照する
