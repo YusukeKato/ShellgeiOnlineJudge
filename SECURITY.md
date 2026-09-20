@@ -477,6 +477,10 @@ rootless daemonやホストへの侵害から管理資格情報を保護する�
 ## runnerとDocker socketの権限
 
 rootless Docker socketは、外部HTTP requestを処理しないrunnerだけにmountします。
+runnerのDocker SDKはCLI contextの自動選択を無効にし、`DOCKER_CONTEXT`や
+CLI設定の`currentContext`で接続先を切り替えません。Composeでは`DOCKER_HOST`を
+mount先のUnix socketへ固定し、Compose外でもlocal rootless Unix socketを明示します。
+接続後のrootless・cgroup確認に失敗した場合はclientを閉じ、sandboxを作成しません。
 backendとrunnerは専用の内部Docker networkで接続し、runnerのportはホスト、
 frontend、DBへ公開しません。
 backendのrunner HTTP clientはproxyを明示的に無効化し、

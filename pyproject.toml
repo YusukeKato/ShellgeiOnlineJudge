@@ -23,14 +23,14 @@ sqlalchemy = "^2.0.47"
 psycopg2-binary = "^2.9.11"
 
 [tool.poetry.group.runner.dependencies]
-docker = "^7.1.0"
+docker = "^7.2.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.2"
 ruff = "^0.12.12"
 mypy = "^1.17.1"
 types-requests = "^2.32.4.20250809"
-types-docker = "^7.1.0.20250822"
+types-docker = "^7.2.0.20260827"
 types-pyyaml = "^6.0.12"
 
 # ブラウザE2Eとそのscriptの型検査専用。本番imageには導入しない。

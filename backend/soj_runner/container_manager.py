@@ -110,6 +110,8 @@ class ContainerManager:
             if self.client is None:
                 client = docker.from_env(
                     timeout=DOCKER_API_TIMEOUT_SECONDS,
+                    # CLI contextの変更で接続先が変わらないよう、従来の環境変数経由に限定する。
+                    use_context=False,
                 )
                 try:
                     daemon_info = client.info()

@@ -72,7 +72,9 @@ def stack(tmp_path_factory: pytest.TempPathFactory) -> Iterator[ComposeStack]:
             yield environment
         finally:
             environment.close()
-            owned = {"label": f"com.docker.compose.project={project}"}
+            owned: dict[str, str | list[str] | bool] = {
+                "label": f"com.docker.compose.project={project}"
+            }
             assert not client.containers.list(all=True, filters=owned)
             assert not client.networks.list(filters=owned)
             assert not client.volumes.list(filters=owned)

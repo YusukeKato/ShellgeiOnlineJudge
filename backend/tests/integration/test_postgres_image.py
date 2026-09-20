@@ -101,6 +101,8 @@ def test_existing_database_survives_image_upgrade_and_rollback() -> None:
                 previous_version = version
                 status = container.exec_run(["cat", "/proc/1/status"])
                 assert status.exit_code == 0
+                # streamを使わないexecの結果はbyte列として受け取る。
+                assert isinstance(status.output, bytes)
                 uid = next(
                     line
                     for line in status.output.decode().splitlines()

@@ -156,7 +156,9 @@ def test_production_update_preserves_db_and_checks_public_execution(
     finally:
         if stack is not None:
             stack.close()
-            owned = {"label": f"com.docker.compose.project={stack.project}"}
+            owned: dict[str, str | list[str] | bool] = {
+                "label": f"com.docker.compose.project={stack.project}"
+            }
             assert not client.containers.list(all=True, filters=owned)
             assert not client.volumes.list(filters=owned)
         client.close()

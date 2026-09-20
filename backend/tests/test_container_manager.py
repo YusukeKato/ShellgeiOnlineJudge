@@ -1,5 +1,8 @@
+import hashlib
+import json
 import threading
 import time
+from pathlib import Path
 from typing import Any
 
 import docker
@@ -241,10 +244,12 @@ def assert_capacity_error(manager: ContainerManager) -> None:
 def test_default_docker_client_is_created_lazily(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """起動時だけclientを生成し、timeoutとCLI context無効化をSDKへ渡す。"""
     client = FakeDockerClient()
     calls: list[dict[str, Any]] = []
 
     def fake_from_env(**kwargs: Any) -> FakeDockerClient:
+        """SDKへの引数を記録し、実daemonを使わず遅延初期化を検証する。"""
         calls.append(kwargs)
         return client
 
@@ -255,9 +260,65 @@ def test_default_docker_client_is_created_lazily(
 
     manager.initialize_pool()
 
-    assert calls == [{"timeout": 15}]
+    assert calls == [{"timeout": 15, "use_context": False}]
     assert client.info_calls == 1
     manager.shutdown_pool()
+
+
+@pytest.mark.parametrize("context_source", ["environment", "config"])
+@pytest.mark.parametrize("host", [None, "unix:///run/user/1000/soj-test.sock"])
+def test_default_docker_client_ignores_cli_context(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    context_source: str,
+    host: str | None,
+) -> None:
+    """実SDKの接続先選択がCLI contextへ流れず、明示hostを維持することを検証する。"""
+    for name in (
+        "DOCKER_HOST",
+        "DOCKER_CONTEXT",
+        "DOCKER_TLS_VERIFY",
+        "DOCKER_CERT_PATH",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("DOCKER_CONFIG", str(tmp_path))
+    config = {}
+    if context_source == "environment":
+        monkeypatch.setenv("DOCKER_CONTEXT", "unrelated-context")
+    else:
+        config["currentContext"] = "unrelated-context"
+    (tmp_path / "config.json").write_text(json.dumps(config))
+    context_id = hashlib.sha256(b"unrelated-context").hexdigest()
+    context_dir = tmp_path / "contexts" / "meta" / context_id
+    context_dir.mkdir(parents=True)
+    (context_dir / "meta.json").write_text(
+        json.dumps(
+            {
+                "Name": "unrelated-context",
+                "Metadata": {},
+                "Endpoints": {"docker": {"Host": "tcp://unrelated.invalid:2375"}},
+            }
+        )
+    )
+    if host is not None:
+        monkeypatch.setenv("DOCKER_HOST", host)
+    api = FakeDockerClient()
+    calls: list[dict[str, Any]] = []
+
+    def fake_api_client(**kwargs: Any) -> FakeDockerClient:
+        """接続先の決定後だけを代替し、実daemonへの接続を防いで引数を記録する。"""
+        calls.append(kwargs)
+        return api
+
+    monkeypatch.setattr("docker.client.APIClient", fake_api_client)
+    manager = ContainerManager(pool_size=1)
+    client = manager._get_client()
+    try:
+        assert len(calls) == 1
+        assert calls[0].get("base_url") == host
+        assert api.info_calls == 1
+    finally:
+        client.close()
 
 
 def test_default_docker_client_rejects_rootful_daemon(

@@ -35,11 +35,9 @@ git diff 34a9041
 
 ## Current security status
 
-- SOJ-022のアプリ依存・nginx・派生DB更新でlock file、frontend・DB imageの停止対象は0件です。
-  backend・runnerは修正済みPythonの期限付き例外を各3件適用し、適用後の停止対象は0件です。
-  独自sandboxとlibuuidの是正後、ローカル検査で全5 imageの停止対象は0件です。
-  GitHub上のCIと本番反映は未確認です。
-  scannerのseverityとサービスでの悪用可能性は区別し、残存項目はSOJ-022で追跡します。
+- SOJ-022は、[直近の再スキャン](#soj-022の現在の停止対象)でlock fileとrunner imageに
+  新たな停止対象があり、未解決です。過去の全5 imageの検査成功を現在の結果へ流用しません。
+  scannerのseverityとサービスでの悪用可能性を区別し、本番反映は別途確認します。
 - インターネット公開には、外側proxyまたはWAFの
   実client単位の受付制御を別途確認する必要があります。
 - runner異常終了後のsandboxは再起動時に回収します。
@@ -88,11 +86,11 @@ Statusは次の意味で使用します。
   - 次: 実CIとOIDC署名を確認し、required checks・workflow変更のreview保護を設定する。
     bootstrapの間接依存・第三者imageの供給元検証を整備し、[SSH自動更新](../AUTODEPLOY.md)の実接続と復旧を確認する
 - `SOJ-022` — High/Critical（scanner分類） / P1 / Partially resolved
-  - 概要: アプリ依存とsandboxを含む本番imageの停止対象を是正。Pythonは実装確認付きの期限付き例外で扱う
+  - 概要: 依存・imageの是正後、最新DBで新たな停止対象を検出。既存のPython例外は対象を限定して維持
   - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、`deploy/postgres/Dockerfile`、`ci/python-runtime-exceptions.json`、`deploy/sandbox/`、runtime image
   - 確認: [是正記録](#soj-022依存imageの是正記録)に変更範囲、検出比較、未解決範囲を記載
-  - 次: Python例外の期限前に公式advisory・DBと実装を再確認し、更新imageをreviewする。
-    本番反映とGitHub上のCI確認は未実施
+  - 次: [現在の停止対象](#soj-022の現在の停止対象)を是正し、全5 imageとGitHub CIを再検証する。
+    Python例外も期限前に根拠・実装を再確認する。本番反映は未確認
 - `SOJ-021` — Low / P3 / Partially resolved
   - 概要: command/output保持の目的・最小field・backup方針は確定したが、
     非公開脆弱性報告手順は未整備
@@ -108,6 +106,26 @@ Statusは次の意味で使用します。
 - Severity: High/Critical 1件、Medium 4件、Low 1件
 
 SOJ-020は下記の実装・検証により`Resolved`としました。未解決は上記6件です。
+
+## SOJ-022の現在の停止対象
+
+2026-09-20、`f43fc73`にPR #93のDocker SDK・型定義更新とcontext互換性修正を加えた
+worktreeを、固定済みSyft・Grypeと当日取得したDBで検査しました。
+lock fileの停止対象は1件、buildしたrunner imageは23件（packageと脆弱性の組合せ数）です。
+runnerの対象IDは`sha256:3bca8ab4db9c868692c5e6e068e538c7e571faca8e9c1554fd4b9048b14e932c`です。
+
+- lock・runner共通: AnyIO 4.12.1に
+  [GHSA-82r6-8w77-94w6](https://github.com/advisories/GHSA-82r6-8w77-94w6)（Critical）。
+  公式修正版は4.14.2。非ASCII hostnameを使うTLS接続が対象で、サービスでの到達性は別途評価する。
+- runnerのOS package: libc、Perl、gzip、PCRE2、SQLiteに修正版ありのHigh/Criticalを検出。
+  固定base imageの更新候補と配布元の修正情報を確認し、build・scan・統合testを行う。
+- runnerのPython 3.12.14: `CVE-2026-82049`をHighとして検出。
+  実際の影響範囲・修正版を公式情報で確認する。既存の期限付き例外の対象外であり、自動追加しない。
+
+Docker SDK自体には停止対象の検出はありません。上記AnyIOとbase image指定は今回の更新前と同じです。
+backend・frontend・DB・sandbox imageの再スキャン、本番での成立性評価は未実施です。
+過去のPRのruntime CI失敗が同じ検出によるものかは、当該runのreportを未取得のため断定しません。
+更新・再検査は[CIのscan手順](../CI.md#ローカルでの検証)に従い、ignore追加や判定基準の緩和で通過させません。
 
 ## SOJ-022：依存・imageの是正記録
 
