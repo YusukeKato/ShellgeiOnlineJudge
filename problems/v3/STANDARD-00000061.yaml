@@ -1,0 +1,49 @@
+schema_version: 3
+id: STANDARD-00000061
+category: STANDARD
+title:
+  ja: エラーの前後を取り出す
+  en: Error Lines with Context
+statement:
+  ja: |
+    input.txtは1行に1件のログです。ERRORと半角スペースで始まる行をエラー行とします。
+    各エラー行と、その直前・直後の1行を、元の順序で出力してください。
+    同じ行が複数のエラー行の前後に含まれても、出力は1回だけにしてください。内容が同じでも、入力の別の行ならそれぞれ残してください。
+    ファイルの先頭・末尾に存在しない行は追加しません。区間の間に区切り行や空行を加えず、各行の内容をそのまま残してください。
+  en: |
+    input.txt contains one log entry per line. An error line starts with ERROR followed by one ASCII space.
+    Output each error line and the one line immediately before and after it, preserving input order.
+    Output each input line only once, even when it belongs to the context of multiple errors. Preserve separate input lines even when their contents are identical.
+    Do not add missing lines at the beginning or end of the file, blank lines, or separators between selected sections. Preserve each line's contents.
+reference_solution: grep -C 1 --no-group-separator '^ERROR ' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      ERROR boot failed
+      INFO retry started
+      ERROR retry failed
+      INFO fallback ready
+      ERROR_COUNT 4
+      INFO text mentions ERROR
+      INFO request started
+      ERROR request timed out
+      INFO retry started
+      INFO idle
+      INFO flushing
+      ERROR flush failed
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    ERROR boot failed
+    INFO retry started
+    ERROR retry failed
+    INFO fallback ready
+    INFO request started
+    ERROR request timed out
+    INFO retry started
+    INFO flushing
+    ERROR flush failed
