@@ -883,3 +883,24 @@ REGEX1〜4番追加時の検証済み範囲：non-Docker 783テスト、ruff、m
 上記のsandbox image IDで、正規表現1〜10番の参照解答・別解・誤答と全111問回帰が成功した。
 専用ComposeのAPI・browser 2テストも成功し、日英・320/1440pxの全10問表示と実提出、
 17件の提出のDB保存を確認した。新問のPC・スマートフォン画像を目視確認した。実機iOS/Androidは未検証。
+
+## STANDARD-00000061：エラーの前後を取り出す
+
+- 問題データ：[STANDARD-00000061.yaml](../problems/v3/STANDARD-00000061.yaml)
+- 狙い・発見：一致した行だけでなく、その前後を文脈として選び、重なる範囲を二重出力せずに扱う。
+- 解法の核：grepの文脈抽出と区間区切りの抑制へ、直前行の保存・次の行の取得・重なりの統合を任せる。
+  別解はawkで元の行と出力対象の行番号集合を記録し、行番号順に出力する方法。
+- 入力の意図：先頭・末尾のエラー、1行を共有する文脈、離れた区間、本文中だけにERRORがある行を含める。
+  ERROR_COUNTでERROR直後のスペースを確認し、同内容の別行は両方残すことで行番号と内容の重複を区別する。
+  期待値は出力候補の各行から前後を調べ、どれかがERRORとスペースで始まるかを独立に判定する。
+- 難易度・既存との差：初級。行抽出と行頭の正規表現が前提で、前後の範囲という1つの見方を加える。
+  PRACTICE-grep-04は一致行のみを抽出する。STANDARD-00000055は開始・終了マーカー間の可変長区間から
+  境界を除くが、本問は一致行を含む固定幅の区間を選び、その重なりも統合する。
+- 検証済み：[独立期待値と白JPEGのdecode](../backend/tests/test_error_context_problem.py)、manifest、
+  non-Docker 833テスト（Linux検証コピーで826件、Git情報を必要とする7件は読取参照を指定して分割確認）、
+  Ruff check・format、mypyが成功した。
+  [rootless sandbox](../backend/tests/integration/test_error_context_solutions.py)で参照解答・別解・6誤答を確認し、
+  Compose経由で全112問の参照解答・判定・DB保存が成功した。
+  使用した3.0.1 sandbox imageは`sha256:a9a6a25df3caf28ca3559d4279b46c79957bd63160b4921a7aefdeb201b75222`。
+  新問の日英それぞれを1440px・320pxで実UIから提出し、4件の正解判定・DB保存と4画面の目視確認を完了した。
+  実機iOS/Androidは未検証。

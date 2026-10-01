@@ -13,11 +13,11 @@ from ci.install_tools import extract_binary
 from ci.supply_chain import blocking_findings, write_record
 
 
-@pytest.mark.parametrize("blocked_product", ["db", "sandbox"])
-def test_runtime_scan_records_and_archives_the_built_database(
+@pytest.mark.parametrize("blocked_product", ["frontend", "db", "sandbox"])
+def test_runtime_scan_records_and_archives_the_built_runtime_images(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, blocked_product: str
 ) -> None:
-    # DBまたはsandboxだけの検出でも失敗し、scanした全5 imageのIDをarchive・recordへ含める。
+    # frontend・DB・sandboxのいずれかだけの検出でも失敗し、全5 imageのIDをarchive・recordへ含める。
     products = {
         name: f"soj-{name}:review"
         for name in ("backend", "runner", "frontend", "db", "sandbox")
