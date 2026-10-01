@@ -35,8 +35,9 @@ git diff 34a9041
 
 ## Current security status
 
-- SOJ-022は、[直近の再スキャン](#soj-022の現在の停止対象)でbackend・runner imageに
-  未修正の検出が各1件残り、[期限付きでリスクを受容](#soj-022の一時許容と撤去条件)しています。
+- SOJ-022は、[現在の停止対象](#soj-022の現在の停止対象)でfrontend imageのlibexpatを
+  固定version更新し、全5 imageのローカルscanで適用後の停止対象0件を確認しました。backend・runner imageに残る
+  tarfileの未修正リスクは[期限付きで受容](#soj-022の一時許容と撤去条件)しています。
   課題は未解決です。過去の全5 imageの検査成功を現在の結果へ流用しません。
   scannerのseverityとサービスでの悪用可能性を区別し、本番反映は別途確認します。
 - インターネット公開には、外側proxyまたはWAFの
@@ -87,7 +88,7 @@ Statusは次の意味で使用します。
   - 次: 実CIとOIDC署名を確認し、required checks・workflow変更のreview保護を設定する。
     bootstrapの間接依存・第三者imageの供給元検証を整備し、[SSH自動更新](../AUTODEPLOY.md)の実接続と復旧を確認する
 - `SOJ-022` — High/Critical（scanner分類） / P1 / Partially resolved
-  - 概要: AnyIOとPython base imageを更新。残るtarfileの未修正リスクを期限付きで一時許容
+  - 概要: frontend libexpatを修正しローカル検証済み。既存のPython tarfile未修正リスクは期限付きで一時許容
   - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、`deploy/postgres/Dockerfile`、`ci/python-runtime-exceptions.json`、`deploy/sandbox/`、runtime image
   - 確認: [是正記録](#soj-022依存imageの是正記録)に変更範囲、検出比較、未解決範囲を記載
   - 次: [現在の停止対象](#soj-022の現在の停止対象)に対する公式修正版を確認し、更新後に全5 imageとGitHub CIを再検証する。
@@ -109,6 +110,54 @@ Statusは次の意味で使用します。
 SOJ-020は下記の実装・検証により`Resolved`としました。未解決は上記6件です。
 
 ## SOJ-022の現在の停止対象
+
+### 2026-09-30: frontend libexpatの是正
+
+`eb386f0`のclean worktreeに対応するbuild recordと、2026-09-29T16:57:28Zの
+Grype 0.119.0によるfrontend検査reportを照合しました。Alpine 3.24の
+`libexpat 2.8.4-r0`に`CVE-2026-93990`（High、CVSS 4.0 8.7）が1件あります。
+対象は71 packages、全検出10件、停止対象1件、例外適用0件です。
+[Alpine公式security DB](https://secdb.alpinelinux.org/v3.24/main.json)は修正版を
+`2.8.5-r0`としています。[公式package情報](https://pkgs.alpinelinux.org/package/v3.24/main/x86_64/libexpat)
+でも同じbranchのpackageと`libexpat.so.1`の提供を確認しました。
+
+依頼者の実装承認に基づき、`frontend/Dockerfile`の既存nginx digestとlibuuid固定更新を維持し、
+`libexpat=2.8.5-r0`の限定更新を追加しました。frontendだけの停止対象でもruntime scanを失敗させる
+既存policy testのcaseを追加しています。Pythonの期限付き例外・リスク受容は変更していません。
+
+この変更はreview前のworktree差分です。`test_supply_chain.py`、`test_runtime_image_pins.py`、
+`test_nginx_config.py`の関連する非Docker検査26件と`git diff --check`が成功しました。
+同じSyft・Grypeと更新済みDB（2026-09-30T06:32:47Z build）で全5 imageを検査し、
+既存policy適用後の停止対象はすべて0件です。
+
+| 対象 | packages | 全検出 | 誤検出例外 | リスク受容 | 適用後の停止対象 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| backend | 120 | 215 | 0 | 1 | 0 |
+| runner | 121 | 215 | 0 | 1 | 0 |
+| frontend | 71 | 9 | 0 | 0 | 0 |
+| db | 50 | 5 | 0 | 0 | 0 |
+| sandbox | 155 | 792 | 0 | 0 | 0 |
+
+更新frontendの実packageは`libexpat 2.8.5-r0`で、`CVE-2026-93990`の検出は0件です。
+残る9件（High 3件、Medium 6件）はscannerの修正版情報が未設定で、既存policyの停止対象外です。
+raw reportから除外していません。backend・runnerは各1件の既存Pythonリスク受容を維持しており、
+この成功をPython脆弱性の是正完了とは扱いません。
+
+- Linux LF検証copyでRuff check・format（150 files）、mypy（127 files）、非Docker test計833件が成功。
+  Windows checkoutの既存shell scriptのCRLFによる失敗はLF copyで解消し、Git metadataが必要な7件は
+  process限定で元repositoryを参照して再検証しました。
+- frontendのformat・lint・typecheck・buildとVitest 70件が成功。
+- 今回buildした全imageを使うrootless統合16件が成功。Compose E2E 6件、runtime image 9件、
+  新問の実行検証1件を含み、browser・DB保存・DB/runner停止復帰と全112問の参照解答を確認しました。
+
+更新frontendのimmutable IDは`sha256:8e82432a251ae8c41828d6c5dcc4e2b478c70adc2289f124c24b089fc3223930`です。
+今回のworkspaceの`validation/runtime-scan/`へ全検出report、SBOM、`runtime.tar`と`build-record.json`を保存しました。
+build recordは`eb386f0`・未commit差分ありとして、全5 image IDと各fileのSHA-256を記録しています。
+LF検証copyの対応は`validation/snapshot-record.json`、統合結果は`validation/integration-results.xml`に保存しました。
+GitHub CIの再実行、本番配備、commitは行っていません。
+下記9月20日の検査記録と今回の結果を区別し、SOJ-022全体は未解決のままとします。
+
+### 2026-09-20の再スキャン記録
 
 2026-09-20、`bcacb77`から依存・検証tool・互換性を維持したimageを一括更新したworktreeを検査しました。
 固定済みSyft 1.52.0・Grype 0.119.0と当日取得した同一DBを使用し、全5 imageを再buildしました。
