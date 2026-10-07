@@ -1,0 +1,40 @@
+schema_version: 3
+id: STANDARD-00000062
+category: STANDARD
+title:
+  ja: バージョン番号順に並べる
+  en: Sort Version Numbers
+statement:
+  ja: |
+    input.txtのバージョン番号を昇順に並べ、1行に1つずつ出力してください。
+    vに続く3つの整数を左から数値として比較し、最初に異なる整数が小さいものを先にします。
+    各行の表記は変更しないでください。
+  en: |
+    Sort the version numbers in input.txt in ascending order and output one per line.
+    Compare the three integers after v numerically from left to right. At the first differing integer, put the version with the smaller value first.
+    Preserve each line's original text.
+reference_solution: sort -V input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      v1.10.0
+      v2.0.0
+      v1.2.12
+      v10.0.0
+      v1.9.0
+      v1.2.3
+      v1.2.0
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    v1.2.0
+    v1.2.3
+    v1.2.12
+    v1.9.0
+    v1.10.0
+    v2.0.0
+    v10.0.0
