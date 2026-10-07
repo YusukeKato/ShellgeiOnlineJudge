@@ -1,3 +1,4 @@
+import re
 import tomllib
 from pathlib import Path
 
@@ -27,4 +28,9 @@ def test_python_support_policy_matches_ci_and_production_image() -> None:
         workflow["jobs"]["linting_and_testing"]["strategy"]["matrix"]["python-version"]
         == SUPPORTED_PYTHON_VERSIONS
     )
-    assert backend_dockerfile.startswith("FROM python:3.12-slim@sha256:")
+    production_base = re.fullmatch(
+        r"FROM python:3\.12\.(\d+)-slim-trixie@sha256:[0-9a-f]{64} AS build-tools",
+        backend_dockerfile.splitlines()[0],
+    )
+    assert production_base is not None
+    assert int(production_base.group(1)) >= 15

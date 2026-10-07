@@ -12,7 +12,8 @@ FROM postgres:15-alpine@sha256:a46e076249ce434e41203b8c1dadfaa025b9726331d72390d
 LABEL org.opencontainers.image.version="3.0.1"
 
 # PostgreSQL・entrypoint・PGDATAは継承し、検出のあるOpenSSL・libuuidだけを固定versionへ更新する。
-RUN apk add --no-cache --upgrade libcrypto3=3.5.8-r0 libssl3=3.5.8-r0 libuuid=2.42.3-r1
+# zlibのCVE-2026-85091修正版も限定更新し、既存のOpenSSL/libuuid固定値を維持する。
+RUN apk add --no-cache --upgrade libcrypto3=3.5.8-r0 libssl3=3.5.8-r0 libuuid=2.42.3-r1 zlib=1.3.2-r1
 COPY --from=gosu-build /out/gosu /usr/local/bin/gosu
 COPY --from=gosu-build /build/gosu-1.19/LICENSE /usr/local/share/licenses/gosu/LICENSE
 RUN gosu nobody true
