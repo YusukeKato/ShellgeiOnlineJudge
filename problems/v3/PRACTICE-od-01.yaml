@@ -1,0 +1,40 @@
+schema_version: 3
+id: PRACTICE-od-01
+category: PRACTICE
+title:
+  ja: 文字列のバイト表示
+  en: Displaying Text as Bytes
+statement:
+  ja: |
+    練習：od
+    odを使って、UTF-8で符号化されたinput.txtの各バイトを先頭から順に出力してください。
+    各バイトは小文字の16進数2桁で表し、1行に1つずつ出力してください。
+    スペースと改行（LF）も対象です。アドレスや省略記号は出力しないでください。
+  en: |
+    Practice: od
+    Use od to output each byte of the UTF-8-encoded input.txt in its original order.
+    Represent each byte as two lowercase hexadecimal digits, one byte per line.
+    Include spaces and line feeds (LF). Do not output addresses or omission markers.
+reference_solution: od -An -v -tx1 -w1 input.txt | tr -d ' '
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      A  é
+      猫
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    41
+    20
+    20
+    c3
+    a9
+    0a
+    e7
+    8c
+    ab
+    0a
