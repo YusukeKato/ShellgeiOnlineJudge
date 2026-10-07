@@ -16,28 +16,31 @@
 
 ## Current baseline
 
-- 最終コード照合日: 2026-09-06
-- branch: `main`
-- 確認対象commit: `34a9041`
-- commit subject: `security: build dedicated Ubuntu sandbox and scan all runtime images (SOJ-022)`
-- 今回の変更開始時のworktree: clean
-- 対象: repositoryのコード・設定・文書・テストの照合
-- 直近の変更: SOJ-022の独自sandbox・libuuid是正と、同じimage IDを使うCI・runner設定。review承認後にcommit済み
-- 対象外: 本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
+- 最終照合日: 2026-10-07
+- branch: `integration/security-and-three-problems-20261007`
+- 確認対象commit: `e52b19b780fef0af5a5676c4613707e6127eae7e`
+- commit subject: `Merge runtime security fixes and three new problems`
+- 確認時のworktree: clean
+- 対象: SOJ-022の限定更新と問題62・63・PRACTICE-od-01の統合差分、ローカル検証、同一commitのGitHub CI
+- 直近の変更: Python・対象OS library・source-map-jsの更新と3問追加を統合。詳細は[統合候補の検証結果](#2026-10-07の統合候補とgithub-ci)を参照
+- 対象外: 未解決課題全体の再監査、本番host、外側reverse proxy、WAF、実際の本番DBと監視基盤
+
+全体監査の過去baselineは2026-09-06の`34a9041`です。今回の限定確認によって、他の未解決課題を解決済みとは扱いません。
 
 baseline以降に変更がある場合は、先に差分を確認してください。
 
 ```sh
 git status --short
 git log -1 --oneline
-git diff 34a9041
+git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 ```
 
 ## Current security status
 
-- SOJ-022のローカル候補は、承認された限定更新でsourceと全5製品の停止対象が0になりました。
-  [更新候補の検証結果](#soj-022の現在の停止対象)を参照してください。rootless回帰は成功しました。
-  原報告の非ブロック指摘とWindows mypyのOSポリシー拒否は残り、GitHub CI・本番反映は未実施です。
+- SOJ-022の限定更新と3問追加を統合した`e52b19b`は、GitHubのFastAPI・React・Supply Chain CIが成功しました。
+  [統合候補の検証結果](#2026-10-07の統合候補とgithub-ci)を参照してください。
+  sourceと全5製品の停止対象・例外・リスク受容は0ですが、runtimeの非ブロック指摘は残ります。
+  Windows mypyのOSポリシー拒否自体は未解決です。本番の状態は、mainの同一SHAのCI・署名・配備結果と照合します。
 - インターネット公開には、外側proxyまたはWAFの
   実client単位の受付制御を別途確認する必要があります。
 - runner異常終了後のsandboxは再起動時に回収します。
@@ -81,16 +84,16 @@ Statusは次の意味で使用します。
 - `SOJ-019` — Medium / P2 / Partially resolved
   - 概要: CI権限・timeout・Action SHA、secret/依存/image scan、SBOMとmain限定provenanceを構成した。
     同じmain SHAの全CI成功・署名検証後のSSH promotionも構成した。
-    GitHub・本番上の実運用、required checks・review保護は導入時の確認が必要で、第三者供給元署名は未導入
+    統合候補のGitHub CIは確認済み。本番の署名・配備、required checks・review保護は対象main SHAでの確認が必要で、第三者供給元署名は未導入
   - 関連: `.github/workflows/`、[CI文書](../CI.md)
-  - 次: 実CIとOIDC署名を確認し、required checks・workflow変更のreview保護を設定する。
+  - 次: 対象main SHAのCIとOIDC署名、required checks・workflow変更のreview保護を確認する。設定変更は別途レビューする。
     bootstrapの間接依存・第三者imageの供給元検証を整備し、[SSH自動更新](../AUTODEPLOY.md)の実接続と復旧を確認する
 - `SOJ-022` — High/Critical（scanner分類） / P1 / Partially resolved
-  - 概要: frontend libexpatを修正しローカル検証済み。既存のPython tarfile未修正リスクは期限付きで一時許容
+  - 概要: Python 3.12.15 / Expat 2.8.5と対象OS libraryへ更新し、統合候補のCIで例外・受容なしの停止対象0を確認。非ブロック指摘は残る
   - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、`deploy/postgres/Dockerfile`、`ci/python-runtime-exceptions.json`、`deploy/sandbox/`、runtime image
   - 確認: [是正記録](#soj-022依存imageの是正記録)に変更範囲、検出比較、未解決範囲を記載
-  - 次: [現在の停止対象](#soj-022の現在の停止対象)に対する公式修正版を確認し、更新後に全5 imageとGitHub CIを再検証する。
-    [一時許容の撤去作業](#soj-022の一時許容と撤去条件)と既存の誤検出例外の再評価を期限前に行う。一時許容版の本番反映は依頼者が確認済み
+  - 次: [現在の検出と検証結果](#soj-022の現在の停止対象)を基に残存指摘と公式修正版を再評価し、mainの同一SHAのCI・署名・本番反映を確認する。
+    [失効した旧policy](#soj-022の一時許容と撤去条件)は非適用の監査記録として残る。policy・専用処理の撤去は未実施で、別の変更としてレビューする
 - `SOJ-021` — Low / P3 / Partially resolved
   - 概要: command/output保持の目的・最小field・backup方針は確定したが、
     非公開脆弱性報告手順は未整備
@@ -109,7 +112,32 @@ SOJ-020は下記の実装・検証により`Resolved`としました。未解決
 
 ## SOJ-022の現在の停止対象
 
-### 2026-10-07の更新候補と検証結果
+### 2026-10-07の統合候補とGitHub CI
+
+2026-10-07 16:07:22 UTCまでに、統合commit
+[`e52b19b`](https://github.com/YusukeKato/ShellgeiOnlineJudge/commit/e52b19b780fef0af5a5676c4613707e6127eae7e)の
+[FastAPI CI](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/37648101019)、
+[React CI](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/37648101003)、
+[Supply Chain CI](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/37648101067)が成功しました。
+Python 3.12 / 3.13 / 3.14各839件・mypy 131 files、React 70件、policy等61件、
+manifestの全115問のCompose提出・DB保存を含むrootless 26件を確認しています。
+
+ローカルでは、既存の正規Linux環境でRuff・mypyと非Docker 839件、frontend 70件とbuild、
+今回buildしたimageでrootless統合29件が成功しました。
+新3問の別解・誤答を含む20コマンドと、日英それぞれの1440px / 320pxの12画面・DB保存12件も確認しました。
+このローカル検証をGitHubの26件と区別します。Windowsで拒否されたDLLは使用せず、OS設定も変更していません。
+実機iOS / Androidは未検証です。
+
+GitHubの認証済み完了jobログで、sourceは322 packages / findings 0、runtime findingsは
+backend 178 / runner 178 / frontend 35 / db 30 / sandbox 775でした。
+全対象の`blocking_before_exceptions`・`exceptions`・`risk_acceptances`・`blocking`は0です。
+停止対象0は全脆弱性0を意味しません。残存指摘はraw reportに保持し、例外追加・期限延長は行っていません。
+
+source artifact `11494918848`はZIPと内部4 JSONのhash、cleanな`e52b19b`のbuild recordを照合済みです。
+runtime artifact `11495851863`は完了jobログとmetadataで確認し、archive本文・image ID・report hashの独立照合は未実施です。
+feature branchのprovenanceは設計どおりskipされました。main取込み後の同一SHAのCI・署名・配備確認とは別の結果です。
+
+### 2026-10-07の統合前候補の検証結果
 
 remote main `dd3bddb`の専用cloneで、source-map-jsを`1.2.2`、backend/runnerのPython baseを
 `3.12.15-slim-trixie@sha256:e2e1e343308c173790faed72f2b2592fb201619fcde30af505883ded3f474ea5`へ更新しました。
@@ -155,9 +183,10 @@ Debian PCRE2のvendor backportは[公式tracker](https://security-tracker.debian
   対象限定更新とsandboxのfresh buildによる全package差分も記録しています。
 
 Windows mypyは正式な実行承認後もアプリケーション制御ポリシーでDLL読込を拒否され、未解決です。
-mypyと拒否DLLをLinux等の別経路で実行していません。PR116の2.1.1案も別cloneの未検証案として分離しています。
-新除外・期限延長・OSセキュリティ設定変更、共有checkout変更、commit/push、PR変更、CI再実行、merge/deployは行っていません。
-期限切れpolicyは非適用の監査記録のままです。ローカルscan gate成功をGitHub CI・本番反映承認の代わりに扱いません。
+この統合前候補の検証では、mypyと拒否DLLをLinux等の別経路で実行していません。
+PR116の2.1.1案も別cloneの未検証案として分離しました。
+当時は新除外・期限延長・OSセキュリティ設定変更、共有checkout変更、commit/push、PR変更、CI再実行、merge/deployを行っていません。
+期限切れpolicyは非適用の監査記録のままです。その後の統合とGitHub CIは[上の確認結果](#2026-10-07の統合候補とgithub-ci)を参照してください。
 
 [GitHub CI run 37605925305](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/37605925305)は
 問題branch `b54b66b`で、ログの停止matchはbackend14/runner14/frontend2/db1/sandbox0、source1でした。
@@ -273,6 +302,10 @@ runnerの`execution_archive.py`は通常fileのtarを作成し、展開はsandbo
 
 ## SOJ-022の一時許容と撤去条件
 
+統合候補`e52b19b`では例外・リスク受容の適用は0です。
+旧リスク受容policyは2026-10-04、旧Python誤検出例外は2026-10-05に失効し、非適用の監査記録として残っています。
+policy・専用処理の撤去は未実施です。以下は2026-09-20当時の承認条件と検証履歴であり、現在の許容を与えるものではありません。
+
 2026-09-20、依頼者は自動デプロイ復旧のため、現行コードで影響が限定的であることを条件に
 未修正リスクの一時許容を指示しました。CVEの修正完了・誤検出とは扱わず、SOJ-022は未解決のままです。
 対象・期限・承認主体・実装hash・撤回条件は
@@ -291,7 +324,7 @@ runnerの`execution_archive.py`は通常fileのtarを作成し、展開はsandbo
 - 上記は現行の利用経路に基づく評価であり、依存全体の未知の経路や将来の変更まで安全と保証しません。
   信頼できないarchiveのPython展開を導入する場合、または悪用経路が判明した場合は直ちに再評価・撤回します。
 
-担当はリポジトリ保守者です。失効日より前に以下を実施してください。
+2026-09-20当時に定めた撤去条件（担当: リポジトリ保守者）:
 
 1. 上記のCPython issue・3.12向けPRと公式imageを再確認する。
 2. Pythonのtarfile修正と既存Expat修正を両立するimageをdigest固定で採用する。
@@ -310,11 +343,10 @@ runnerの`execution_archive.py`は通常fileのtarを作成し、展開はsandbo
 - アプリ・依存・imageの変更はなく、検証済みimageを再利用しました。今回のE2E・全問題回帰は再実行していません。
   localの検証記録は`.soj-deploy/risk-review/`に保存しています。
 
-依頼者から`aabdd58`の自動デプロイ成功・本番更新完了の報告を受けました。
-一時許容を含む変更は本番反映済みです。脆弱性自体は未修正であり、上記の期限前の是正・撤去作業は引き続き必要です。
-更新・再検査の手順は[CI文書](../CI.md#ローカルでの検証)を参照してください。
-今回の変更でのGitHub上のCI・署名・本番反映は未実施です。
-CI用Dockerの更新版によるfresh rootless setup・cleanupはGitHub runner上での確認が残ります。
+当時、依頼者から`aabdd58`の自動デプロイ成功・本番更新完了の報告を受けました。
+当時の一時許容を含む本番反映は、脆弱性の修正完了を意味しませんでした。
+現在の更新・検証結果は[統合候補の確認](#2026-10-07の統合候補とgithub-ci)、
+再検査の手順は[CI文書](../CI.md#ローカルでの検証)を参照してください。
 
 ## SOJ-022：依存・imageの是正記録
 
@@ -750,7 +782,7 @@ Deferredは不要という意味ではありません。
   - 実PostgreSQLのmigration・transactional DDL rollback、期間・件数制限、
     NUL保存、lock timeoutとrollback後の再保存
 - `backend/tests/integration/test_full_problem_regression.py`
-  - 現在の112問の正解commandとjudge互換性
+  - manifestに登録された全問題の正解commandとjudge互換性
 - `backend/tests/integration/test_runtime_images.py`
   - build済み本番imageの非root・依存境界・socket group、内部network上の実行・判定・DB保存
 - `backend/tests/integration/test_compose_e2e.py`
@@ -768,7 +800,7 @@ Deferredは不要という意味ではありません。
 
 - Docker create応答timeoutとdaemon停止を使うfailure test
 - 外側proxyを含むpublic Host allowlistとsecurity header
-- GitHub上でのCI・OIDC署名・required checksの実運用確認
+- 対象main SHAでのOIDC署名・required checks・本番配備の実運用確認（統合候補のCIは確認済み）
 - 外側proxyと複数送信元を含む負荷・公平性test
 
 fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行しません。
@@ -783,7 +815,8 @@ fork bomb、host disk枯渇、daemon停止等は、通常の開発PCで実行し
 この文書では[未解決security課題](#open--partially-resolved--deferred)と
 本番環境での確認事項を管理し、完了済みunitを次作業として再掲しません。
 
-SOJ-022の[一時許容の撤去作業](#soj-022の一時許容と撤去条件)とPython誤検出例外の再評価を期限前に行い、GitHubの実CIと承認済みimageの本番反映を確認してください。
+SOJ-022の残存指摘と公式修正版を再評価し、mainの同一SHAのCI・署名・承認済みimageの本番反映を確認してください。
+[失効したリスク受容・誤検出例外policy](#soj-022の一時許容と撤去条件)と専用処理の撤去は、監査記録を保持する別の変更としてレビューしてください。
 その他の課題も1項目ずつ、または密接に関連する小さな単位で差分をレビューして進めてください。
 
 ## 作業再開手順
