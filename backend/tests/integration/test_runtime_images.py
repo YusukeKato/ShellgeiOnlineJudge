@@ -76,9 +76,9 @@ from pathlib import Path
 from soj_shared.problem_repository import load_problem_repository
 
 service = os.environ['SOJ_TEST_SERVICE']
-# SOJ-022の修正版を維持し、scannerが取りこぼす内蔵ExpatのCVE-2026-72522も再導入しない。
-assert sys.version_info[:3] >= (3, 12, 14)
-assert pyexpat.version_info >= (2, 8, 3)
+# tarfile修正済みPythonと内蔵Expatの修正版を要求し、scannerの取りこぼしによる後退も拒否する。
+assert sys.version_info[:3] >= (3, 12, 15)
+assert pyexpat.version_info >= (2, 8, 5)
 package = importlib.import_module('soj_backend' if service == 'backend' else 'soj_runner')
 shared = importlib.import_module('soj_shared')
 for base in (shared, package):

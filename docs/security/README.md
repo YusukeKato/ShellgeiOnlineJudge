@@ -35,11 +35,9 @@ git diff 34a9041
 
 ## Current security status
 
-- SOJ-022は、[現在の停止対象](#soj-022の現在の停止対象)でfrontend imageのlibexpatを
-  固定version更新し、全5 imageのローカルscanで適用後の停止対象0件を確認しました。backend・runner imageに残る
-  tarfileの未修正リスクは[期限付きで受容](#soj-022の一時許容と撤去条件)しています。
-  課題は未解決です。過去の全5 imageの検査成功を現在の結果へ流用しません。
-  scannerのseverityとサービスでの悪用可能性を区別し、本番反映は別途確認します。
+- SOJ-022のローカル候補は、承認された限定更新でsourceと全5製品の停止対象が0になりました。
+  [更新候補の検証結果](#soj-022の現在の停止対象)を参照してください。rootless回帰は成功しました。
+  原報告の非ブロック指摘とWindows mypyのOSポリシー拒否は残り、GitHub CI・本番反映は未実施です。
 - インターネット公開には、外側proxyまたはWAFの
   実client単位の受付制御を別途確認する必要があります。
 - runner異常終了後のsandboxは再起動時に回収します。
@@ -110,6 +108,63 @@ Statusは次の意味で使用します。
 SOJ-020は下記の実装・検証により`Resolved`としました。未解決は上記6件です。
 
 ## SOJ-022の現在の停止対象
+
+### 2026-10-07の更新候補と検証結果
+
+remote main `dd3bddb`の専用cloneで、source-map-jsを`1.2.2`、backend/runnerのPython baseを
+`3.12.15-slim-trixie@sha256:e2e1e343308c173790faed72f2b2592fb201619fcde30af505883ded3f474ea5`へ更新しました。
+source-map-jsは既存`^1.2.1`制約と他のlock entryを維持しています。
+`GHSA-68fv-2mgg-jv7q` / `CVE-2026-93749`は同じsource脆弱性の別IDです。
+
+2026-10-07 11:42 UTCの追加更新承認に基づき、backend/runnerの`libpcre2-8-0=10.46-1~deb13u3`、
+frontendの`pcre2=10.49-r0` / `zlib=1.3.2-r1`、DBの`zlib=1.3.2-r1`を限定更新しました。
+sandboxは既存Dockerfileをno-cacheでfresh buildし、既存`apt upgrade`で
+`libssl3t64=3.0.13-0ubuntu3.16`を含む9 OS packageが更新されました。sandboxのソース・境界設定は変更していません。
+
+全5製品と検証用browserを固有tagでbuildし、scanと回帰にimmutable IDを指定しました。
+実package版・SBOM版・source commit・対象ID・raw report hashの対応を照合しています。
+実backendのPythonは3.12.15、Expatは2.8.5です。frontend/DBはAlpine 3.24.2で、
+apk repositoriesは公式`https://dl-cdn.alpinelinux.org/alpine/v3.24/main`と`community`でした。
+
+Syft 1.52.0 / Grype 0.119.0、同じDB built `2026-10-07T06:31:48Z`での比較:
+
+| target | OS追加更新前 全match / 停止 | 更新後 全match / 停止 | 例外/受容 |
+| --- | ---: | ---: | ---: |
+| source locks (322 packages) | 0 / 0 | 0 / 0 | 0 |
+| backend (120 packages) | 179 / 1 | 178 / 0 | 0 |
+| runner (121 packages) | 179 / 1 | 178 / 0 | 0 |
+| frontend (71 packages) | 37 / 2 | 35 / 0 | 0 |
+| db (50 packages) | 31 / 1 | 30 / 0 | 0 |
+| sandbox (155 packages) | 823 / 1 | 775 / 0 | 0 |
+
+source/runtime scanとも終了code 0です。修正版のあるHigh/Criticalの停止対象6 matches / 3 CVE
+（CVE-2026-103111、CVE-2026-85091、CVE-2026-84782）は追加更新で0になりました。
+原報告には非ブロックのHigh/Critical指摘128 matches / 20 IDが残ります。
+fix stateはwont-fix 102、not-fixed 8、unknown 16、空状態2で、修正版の報告はありません。
+Medium/Low等もraw reportに保持しています。これらを一括誤検知・安全として扱わず、追加更新・除外・受容は行っていません。
+Debian PCRE2のvendor backportは[公式tracker](https://security-tracker.debian.org/tracker/CVE-2026-103111)で照合しています。
+
+最終OS候補の検証:
+
+- Ruff check/format、Linux non-Docker 833件成功。Docker 116件成功、失敗・skip 0。
+- Compose/browser、DB role・migration・保存・旧image互換、runtime境界、sandbox制限、
+  manifestの全112問を含みます。main候補の検証で、問題branchの追加62/63等との統合検証ではありません。
+- frontend source/lockは前段から同一で、前段のformat/lint/typecheck、Vitest 70件、buildが成功。
+  最終OS候補もDocker内typecheck/buildとbrowser回帰が成功しました。
+- immutable IDs、raw Grype/Syft/CycloneDX、summary、runtime archive/hash、dirty build recordを保持。
+  対象限定更新とsandboxのfresh buildによる全package差分も記録しています。
+
+Windows mypyは正式な実行承認後もアプリケーション制御ポリシーでDLL読込を拒否され、未解決です。
+mypyと拒否DLLをLinux等の別経路で実行していません。PR116の2.1.1案も別cloneの未検証案として分離しています。
+新除外・期限延長・OSセキュリティ設定変更、共有checkout変更、commit/push、PR変更、CI再実行、merge/deployは行っていません。
+期限切れpolicyは非適用の監査記録のままです。ローカルscan gate成功をGitHub CI・本番反映承認の代わりに扱いません。
+
+[GitHub CI run 37605925305](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/37605925305)は
+問題branch `b54b66b`で、ログの停止matchはbackend14/runner14/frontend2/db1/sandbox0、source1でした。
+Oct6 mainのfrontend1/db0は過去の値です。GitHub artifact転送はHTTP403で元JSON未取得のため、
+元CIの個別IDとの前後比較は未完了です。上の比較は今回の専用候補のraw report同士によります。
+Windows通常file補助scanのOpenSSL13件も、元CIの13件と同一視・一括除外していません。
+以下の9月記録は過去の検証です。
 
 ### 2026-09-30: frontend libexpatの是正
 
@@ -695,7 +750,7 @@ Deferredは不要という意味ではありません。
   - 実PostgreSQLのmigration・transactional DDL rollback、期間・件数制限、
     NUL保存、lock timeoutとrollback後の再保存
 - `backend/tests/integration/test_full_problem_regression.py`
-  - 現在の92問の正解commandとjudge互換性
+  - 現在の112問の正解commandとjudge互換性
 - `backend/tests/integration/test_runtime_images.py`
   - build済み本番imageの非root・依存境界・socket group、内部network上の実行・判定・DB保存
 - `backend/tests/integration/test_compose_e2e.py`
