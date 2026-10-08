@@ -1,0 +1,41 @@
+schema_version: 3
+id: STANDARD-00000063
+category: STANDARD
+title:
+  ja: 作業の実行順を復元する
+  en: Restore the Task Order
+statement:
+  ja: |
+    input.txtの各行「A B」は、作業Aを作業Bより先に行うことを表します。
+    すべての前後関係を満たす順序で、すべての作業名を1回ずつ、1行に1つずつ出力してください。
+    この入力では順序は一意に決まります。
+  en: |
+    Each line A B in input.txt means that task A must come before task B.
+    Output every task name exactly once, one per line, in an order that satisfies all these relationships.
+    This input has exactly one valid order.
+reference_solution: tsort input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      test package
+      fetch compile
+      package deploy
+      verify test
+      compile test
+      fetch verify
+      test deploy
+      verify compile
+      compile package
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    fetch
+    verify
+    compile
+    test
+    package
+    deploy

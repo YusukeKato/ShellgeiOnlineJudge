@@ -1,4 +1,4 @@
-FROM python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9 AS build-tools
+FROM python:3.12.15-slim-trixie@sha256:e2e1e343308c173790faed72f2b2592fb201619fcde30af505883ded3f474ea5 AS build-tools
 
 # Poetryはbuild stageだけに置き、lock済み依存をruntime専用venvへ導入する。
 RUN pip install --no-cache-dir poetry==2.5.1 \
@@ -14,8 +14,14 @@ RUN poetry install --only main,backend --no-root --no-interaction --no-ansi
 FROM build-tools AS runner-dependencies
 RUN poetry install --only main,runner --no-root --no-interaction --no-ansi
 
-FROM python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9 AS runtime-common
+FROM python:3.12.15-slim-trixie@sha256:e2e1e343308c173790faed72f2b2592fb201619fcde30af505883ded3f474ea5 AS runtime-common
 LABEL org.opencontainers.image.version="3.0.1"
+
+# Python baseを維持し、CVE-2026-103111の修正済みPCRE2だけを限定更新する。
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends --only-upgrade libpcre2-8-0=10.46-1~deb13u3 \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
