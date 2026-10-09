@@ -34,7 +34,7 @@ LABEL org.opencontainers.image.version="3.0.1"
 
 # baseを維持し、util-linux・Expat由来の検出に対応するlibraryだけを固定更新する。
 # PCRE2/zlibも公開済み修正版へ限定更新し、既存baseと他の固定値は維持する。
-RUN apk add --no-cache --upgrade libuuid=2.42.3-r1 libexpat=2.8.5-r0 pcre2=10.49-r0 zlib=1.3.2-r1
+RUN apk add --no-cache --upgrade libuuid=2.42.3-r1 libexpat=2.8.5-r0 pcre2=10.49-r0 zlib=1.3.2-r1 tiff=4.7.2-r0
 
 # ビルド成果物をNginxの公開ディレクトリにコピー
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
