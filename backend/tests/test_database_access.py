@@ -70,6 +70,33 @@ def test_management_urls_accept_encoded_password_and_default_port(monkeypatch):
     assert app.password == "app@pass"
 
 
+def test_maintenance_cli_uses_installed_postgres_driver_without_connecting(
+    monkeypatch, capsys
+):
+    # driver省略の管理URLもpsycopg2で初期化し、encode済みpasswordと接続先を維持する。
+    monkeypatch.setenv(
+        "MIGRATION_DATABASE_URL", "postgresql://admin:admin%40pass@db/app"
+    )
+    monkeypatch.setenv("DATABASE_URL", "postgresql://app:app-pass@db/app")
+    factory = Mock(wraps=create_engine)
+    monkeypatch.setattr("soj_backend.database_admin.create_engine", factory)
+    monkeypatch.setattr(
+        "soj_backend.database_admin.migrate_database", Mock(return_value=("head",))
+    )
+    monkeypatch.setattr("soj_backend.database_admin.provision_runtime_role", Mock())
+
+    assert main([]) == 0
+    url = factory.call_args.args[0]
+    assert url.drivername == "postgresql+psycopg2"
+    assert (url.username, url.password, url.host, url.database) == (
+        "admin",
+        "admin@pass",
+        "db",
+        "app",
+    )
+    assert capsys.readouterr().out == "head\n"
+
+
 @pytest.mark.parametrize("role", ["admin;DROP ROLE x", "pg_reserved", "", "A" * 64])
 def test_role_validation_precedes_database_changes(role):
     # role識別子の不正値はtransaction開始前に拒否する。

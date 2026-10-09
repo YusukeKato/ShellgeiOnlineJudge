@@ -67,7 +67,7 @@ def admin_database() -> Iterator[Engine]:
         )
         engine = create_engine(
             URL.create(
-                "postgresql",
+                "postgresql+psycopg2",
                 username="role_admin",
                 password=password,
                 host="127.0.0.1",

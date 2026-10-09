@@ -87,7 +87,7 @@ def _stamp_unversioned_legacy_database(connection: Connection) -> None:
     入力DBにversion記録がなく、旧必須列が揃う場合だけbaselineをstampする。
     構造化列を含む不明なschemaは誤認せず例外にする。戻り値はない。
     """
-    applied = set(connection.scalars(select(_migration_table.c.revision)))
+    applied: set[str] = set(connection.scalars(select(_migration_table.c.revision)))
     if applied:
         return
     columns = _legacy_execution_log_columns(connection)
@@ -111,7 +111,7 @@ def _stamp_unversioned_legacy_database(connection: Connection) -> None:
 
 def _applied_revisions(connection: Connection) -> tuple[str, ...]:
     """適用済みrevisionを定義順で返し、未知または途中抜けなら例外にする。"""
-    applied = set(connection.scalars(select(_migration_table.c.revision)))
+    applied: set[str] = set(connection.scalars(select(_migration_table.c.revision)))
     known = tuple(migration.revision for migration in MIGRATIONS)
     unknown = applied.difference(known)
     if unknown:
