@@ -9,6 +9,7 @@ from soj_backend.database_migrations import (
     DatabaseMigrationError,
     migrate_database,
 )
+from soj_backend.models.model_db import ExecutionLog
 
 
 def _memory_engine():
@@ -48,6 +49,49 @@ def test_fresh_database_migrates_to_head_idempotently() -> None:
     assert (
         set(migration_module.v0002_structured_execution_logs.STRUCTURED_COLUMNS)
         <= columns
+    )
+
+
+def test_orm_schema_matches_migrated_database() -> None:
+    # typed ORMで列型、legacyのNULL許容、primary key、server defaultとindexを維持する。
+    migrated = _memory_engine()
+    mapped = _memory_engine()
+    migrate_database(migrated)
+    ExecutionLog.metadata.create_all(mapped)
+    # SQLiteのmigrationはSET NOT NULLを省略するため、その6列だけは別途検査する。
+    required = {
+        "execution_status",
+        "stdout",
+        "stderr",
+        "timed_out",
+        "truncated",
+        "verdict",
+    }
+
+    def schema(engine) -> tuple:
+        """入力engineの実行ログ表を反映し、列とindexの互換性比較用signatureを返す。"""
+        inspector = inspect(engine)
+        columns = sorted(
+            (
+                c["name"],
+                str(c["type"]),
+                None if c["name"] in required else c["nullable"],
+                c["primary_key"],
+                c["default"],
+            )
+            for c in inspector.get_columns("execution_logs")
+        )
+        indexes = sorted(
+            (i["name"], tuple(i["column_names"]), i["unique"])
+            for i in inspector.get_indexes("execution_logs")
+        )
+        return columns, indexes
+
+    assert schema(mapped) == schema(migrated)
+    assert all(
+        not c["nullable"]
+        for c in inspect(mapped).get_columns("execution_logs")
+        if c["name"] in required
     )
 
 

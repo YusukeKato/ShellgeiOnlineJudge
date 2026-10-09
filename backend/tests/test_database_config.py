@@ -22,8 +22,11 @@ def _import_database(value: str | None) -> subprocess.CompletedProcess[str]:
             "-c",
             "import os; from sqlalchemy.engine import make_url; "
             "from soj_backend.database import engine; "
-            "assert engine.url == make_url(os.environ['DATABASE_URL']); "
-            "print(engine.dialect.name)",
+            "url = make_url(os.environ['DATABASE_URL']); "
+            "expected = url.set(drivername='postgresql+psycopg2') "
+            "if url.drivername == 'postgresql' else url; "
+            "assert engine.url == expected; "
+            "print(engine.dialect.name + '+' + engine.dialect.driver)",
         ],
         env=environment,
         capture_output=True,
@@ -61,8 +64,10 @@ def test_invalid_database_url_does_not_expose_credentials(value: str) -> None:
 @pytest.mark.parametrize(
     "value,dialect",
     [
-        ("sqlite:///:memory:", "sqlite"),
-        ("postgresql://app:explicit-password@db:5432/app", "postgresql"),
+        ("sqlite:///:memory:", "sqlite+pysqlite"),
+        ("postgresql://app:explicit-password@db:5432/app", "postgresql+psycopg2"),
+        ("postgresql+psycopg2://app:explicit-password@db/app", "postgresql+psycopg2"),
+        ("postgresql://app:encoded%40%2F%3Apass@db/app", "postgresql+psycopg2"),
     ],
 )
 def test_explicit_database_url_initializes_without_connecting(

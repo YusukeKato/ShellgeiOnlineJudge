@@ -122,6 +122,8 @@ SQLiteの単体testではschema revisionだけを検査します。権限境界�
 接続設定の条件は[共通する環境変数](../docs/DEVELOPMENT.md#共通する環境変数の条件)、
 許可する権限は[DB権限境界](../SECURITY.md#dbの管理用資格情報と通常実行role)を参照してください。
 CLIは`.env`を自動読込せず、失敗時にURL・SQL・内部例外を出力しません。
+backendと管理CLIは、driver省略の`postgresql://`を`postgresql+psycopg2://`として
+初期化します。SQLAlchemyの既定driverに依存せず、収録済みpsycopg2と既存のURL設定を維持します。
 
 ComposeのDBにはhost portを設けません。管理service・コンテナ内clientの使用方法は
 [DBへの管理アクセス](../docs/DEVELOPMENT.md#dbへの管理アクセス)を参照してください。

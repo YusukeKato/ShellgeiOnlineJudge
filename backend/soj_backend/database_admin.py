@@ -7,6 +7,8 @@ from collections.abc import Sequence
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL, make_url
 
+from soj_backend.database_url import database_driver_url
+
 from soj_backend.database_access import ROLE_NAME, provision_runtime_role
 from soj_backend.database_migrations import (
     BASE_REVISION,
@@ -53,7 +55,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         admin, app = database_urls()
         engine = create_engine(
-            admin,
+            database_driver_url(admin),
             hide_parameters=True,
             connect_args={
                 "connect_timeout": 5,
