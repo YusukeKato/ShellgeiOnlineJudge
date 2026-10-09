@@ -964,3 +964,28 @@ Compose統合6テストでは全115問の参照解答・判定・DB保存を確�
 同じbuild済みimageで新問を日英それぞれ1440px・320pxの実UIから提出し、
 4件の正解判定・DB保存、入力の2個のスペースとUTF-8 byte列の保持、4画面の目視確認を完了した。
 実機iOS/Androidは未検証。
+
+## PRACTICE-base64-01：Base64のメッセージを復元する
+
+- 問題データ：[PRACTICE-base64-01.yaml](../problems/v3/PRACTICE-base64-01.yaml)
+- 狙い・発見：Base64の復号を学び、入力の折り返しと復号後の改行を別のものとして捉える。
+  行ごとに独立した文字列ではなく、ファイル全体で1つの符号化データを構成する。
+- 解法の核：base64の復号機能へファイル全体を渡す。自然な別解は標準入力から渡す方法と、
+  trで折り返しのLFを除いてから復号する方法。シェル解答・別解の実sandbox実行は未検証。
+- 入力の意図：全4行を4文字境界以外で折り返し、行単位の復号との違いを明確にする。
+  復号後はASCII、日本語、内部空行、連続する2個のスペースを含み、不要な整形を区別する。
+  末尾LFも期待値に保存するが、現行judgeでは末尾LFの有無を正誤の核にしない。
+  期待値は承認済みのメッセージのUTF-8 bytesを正本とし、Pythonで復号・再符号化して照合する。
+- 難易度・既存との差：初級。ファイルをコマンドへ渡す基礎と、base64の復号オプションが前提。
+  データの見方は全体で1つの符号化データ、組み合わせは不要、境界条件は内部空行と空白の保持。
+  PRACTICE-cat-03は行の境界を表示し、PRACTICE-od-01はUTF-8のバイト値を観察するが、
+  本問は符号化された表現からメッセージを復元する。base64の基礎練習として配置し、使用構文は採点しない。
+
+PRACTICE-base64-01の検証範囲：
+[非Docker検査](../backend/tests/test_base64_problem.py)で固定データ、全体復号、行単位復号の不成立、
+UTF-8 bytes、空白判定、正常終了policy、白JPEGのdecode、詳細APIでのデータ保持を確認した。
+2026-10-09にmanifestの再生成一致、non-Docker 853テスト、Ruff check・format、mypy、
+frontendのformat・lint・typecheck・70テスト・buildが成功した。
+[実sandbox検査](../backend/tests/integration/test_base64_solutions.py)も追加したが、
+2026-10-09のクラウド環境はrootless Dockerとsystemdを利用できず、参照解答・別解・誤答の実行、
+全116問回帰、Compose・DB保存、PC・スマートフォン幅での実UI確認は未実施。
