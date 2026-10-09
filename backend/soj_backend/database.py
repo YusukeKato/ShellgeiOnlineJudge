@@ -2,7 +2,9 @@ import os
 from typing import Any
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+
+from soj_backend.database_url import database_driver_url
 
 DEFAULT_DATABASE_OPERATION_TIMEOUT_SECONDS = 5
 
@@ -53,7 +55,7 @@ def _engine_options(database_url: str, timeout_seconds: int) -> dict[str, Any]:
 
 try:
     engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
+        database_driver_url(SQLALCHEMY_DATABASE_URL),
         **_engine_options(
             SQLALCHEMY_DATABASE_URL,
             DATABASE_OPERATION_TIMEOUT_SECONDS,
@@ -65,4 +67,7 @@ except Exception:
         "database engine initialization failed; check DATABASE_URL and driver"
     ) from None
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+
+
+class Base(DeclarativeBase):
+    """実行ログmodelの共通metadataと、静的検査可能な宣言型baseを提供する。"""

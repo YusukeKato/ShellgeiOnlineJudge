@@ -43,7 +43,7 @@ from soj_shared.structured_logging import SAFE_EVENT_LOGGER_NAME
 def _database_session() -> Session:
     """memory内SQLiteへ実行log tableを作成し、test用Sessionを返す。"""
     engine = create_engine("sqlite+pysqlite:///:memory:")
-    ExecutionLog.__table__.create(engine)
+    ExecutionLog.metadata.create_all(engine)
     return Session(engine)
 
 
