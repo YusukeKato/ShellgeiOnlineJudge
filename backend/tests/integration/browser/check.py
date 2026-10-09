@@ -227,6 +227,77 @@ def check_regex_problems(page: Page) -> list[int]:
     return ids
 
 
+def check_base64_problem(page: Page) -> list[int]:
+    """直接URL・練習カテゴリからBase64を開き、日英のLF・空白保持と実提出を画像付きで検証する。"""
+    problem_id = "PRACTICE-base64-01"
+    expected_input = "U0hFTExHRUkKC\nueMq+OBqOeKrA\nprZWVwICBzcGF\njZXMhCg==\n"
+    expected_output = "SHELLGEI\n\n猫と犬\nkeep  spaces!\n"
+    page.goto(f"https://frontend/?problem={problem_id}", wait_until="networkidle")
+    detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
+    assert detail["input"] == expected_input
+    assert detail["expected_output"] == expected_output
+    ids = []
+    for phase in ("direct", "submitted"):
+        if phase == "submitted":
+            page.goto(
+                "https://frontend/?problem=STANDARD-00000001",
+                wait_until="networkidle",
+            )
+            switch_language(page, "ja")
+            picker = page.locator("details.problem-picker")
+            picker.locator("summary").click()
+            picker.get_by_role("button", name="練習", exact=True).click()
+            picker.get_by_role("button", name=re.compile(problem_id)).click()
+            expect(page).to_have_url(re.compile(rf"\?problem={problem_id}$"))
+            expect(page.locator("#problem-heading")).to_have_text(detail["title_ja"])
+            ids.append(submit(page, detail["answer"], "accepted", "正解"))
+        for width in (320, 1440):
+            page.set_viewport_size({"width": width, "height": 1000})
+            for language in ("ja", "en"):
+                switch_language(page, language)
+                expect(page.locator("#selected-text")).to_have_text(problem_id)
+                expect(page.locator("#problem-heading")).to_have_text(
+                    detail[f"title_{language}"]
+                )
+                assert (
+                    page.locator("#problem-text").text_content()
+                    == detail[f"statement_{language}"]
+                )
+                # Playwrightの文字列比較は空白を正規化するため、DOMの生の文字列で照合する。
+                assert page.locator("#input-text").text_content() == expected_input
+                assert page.locator("#output-text").text_content() == expected_output
+                expect(page.locator("#expected-image")).to_have_count(0)
+                picker = page.locator("details.problem-picker")
+                picker.locator("summary").click()
+                expect(
+                    picker.get_by_role(
+                        "button",
+                        name="練習" if language == "ja" else "Practice",
+                        exact=True,
+                    )
+                ).to_have_attribute("aria-pressed", "true")
+                expect(
+                    picker.get_by_role("button", name=re.compile(problem_id))
+                ).to_contain_text(detail[f"title_{language}"])
+                picker.locator("summary").click()
+                if phase == "submitted":
+                    assert (
+                        page.locator("#user-output-text").text_content()
+                        == expected_output
+                    )
+                    expect(page.locator("#result-text")).to_have_text(
+                        "正解" if language == "ja" else "Accepted"
+                    )
+                    expect(page.locator("#cmdline")).to_have_value(detail["answer"])
+                assert_page_width(page)
+                page.screenshot(
+                    path=f"/tmp/soj-ui/base64-{phase}-{width}-{language}.png",
+                    full_page=True,
+                    animations="disabled",
+                )
+    return ids
+
+
 def main() -> None:
     """外部通信・mockなしでtext、実行失敗、画像の表示を検証し、保存IDだけを出力する。"""
     with sync_playwright() as playwright:
@@ -326,7 +397,8 @@ def main() -> None:
         check_responsive_playground(page)
         check_about_page(page)
         ids.extend(check_regex_problems(page))
-        assert len(submissions) == 17
+        ids.extend(check_base64_problem(page))
+        assert len(submissions) == 18
         assert not errors
         browser.close()
         print(json.dumps({"submission_ids": ids}))
