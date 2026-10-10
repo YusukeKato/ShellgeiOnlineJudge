@@ -30,7 +30,7 @@ RUN yarn build
 
 # --- Serve Stage ---
 FROM nginx:alpine@sha256:62ff2089abf5a9ed33bd232895bef5e22f7bb4b200675cec49a5ebc48e3d4ac8
-LABEL org.opencontainers.image.version="3.0.1"
+LABEL org.opencontainers.image.version="3.0.2"
 
 # baseを維持し、util-linux・Expat由来の検出に対応するlibraryだけを固定更新する。
 # PCRE2/zlibも公開済み修正版へ限定更新し、既存baseと他の固定値は維持する。

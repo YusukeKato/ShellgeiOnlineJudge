@@ -9,7 +9,7 @@ RUN tar -xzf /tmp/gosu.tar.gz \
     && CGO_ENABLED=0 GOTOOLCHAIN=local go build -mod=readonly -trimpath -o /out/gosu .
 
 FROM postgres:15-alpine@sha256:a46e076249ce434e41203b8c1dadfaa025b9726331d72390df038385d6dc29cd
-LABEL org.opencontainers.image.version="3.0.1"
+LABEL org.opencontainers.image.version="3.0.2"
 
 # PostgreSQL・entrypoint・PGDATAは継承し、検出のあるOpenSSL・libuuidだけを固定versionへ更新する。
 # zlibのCVE-2026-85091修正版も限定更新し、既存のOpenSSL/libuuid固定値を維持する。

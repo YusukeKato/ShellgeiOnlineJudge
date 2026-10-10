@@ -15,7 +15,7 @@ FROM build-tools AS runner-dependencies
 RUN poetry install --only main,runner --no-root --no-interaction --no-ansi
 
 FROM python:3.12.15-slim-trixie@sha256:e2e1e343308c173790faed72f2b2592fb201619fcde30af505883ded3f474ea5 AS runtime-common
-LABEL org.opencontainers.image.version="3.0.1"
+LABEL org.opencontainers.image.version="3.0.2"
 
 # Python baseを維持し、CVE-2026-103111の修正済みPCRE2だけを限定更新する。
 RUN apt-get update \
