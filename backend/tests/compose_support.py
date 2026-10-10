@@ -1,5 +1,6 @@
 """本番Composeの制約を使い、専用projectだけを操作するE2E補助。"""
 
+import http.client
 import json
 import os
 import re
@@ -238,20 +239,69 @@ class ComposeStack:
         )
 
     def request(
-        self, path: str, payload: dict[str, Any] | None = None
+        self, path: str, payload: dict[str, Any] | None = None, *, timeout: float = 40
     ) -> tuple[int, Any, bytes]:
-        """test nginxへTLS検証付きでアクセスし、HTTP errorも検証用の値として返す。"""
+        """TLS検証付きでアクセスし、指定したsocket timeoutとHTTP errorの返却を維持する。"""
         request = urllib.request.Request(
             self.url + path,
             data=None if payload is None else json.dumps(payload).encode(),
             headers={"Content-Type": "application/json"},
         )
         try:
-            response = self.http.open(request, timeout=40)
+            response = self.http.open(request, timeout=timeout)
         except urllib.error.HTTPError as error:
             response = error
         with response:
             return response.status, response.headers, response.read()
+
+    def readiness_diagnostics(self) -> dict[str, Any]:
+        """専用serviceの状態だけを取得し、本文・環境変数・credentialを診断へ含めない。"""
+        states = {}
+        for name in ("frontend", "backend", "runner", "db"):
+            try:
+                state = self.service(name).attrs["State"]
+                states[name] = {
+                    "status": state.get("Status"),
+                    "health": state.get("Health", {}).get("Status"),
+                    "exit_code": state.get("ExitCode"),
+                    "oom_killed": state.get("OOMKilled"),
+                }
+            except Exception as error:
+                # 診断の取得失敗で元の起動失敗を隠さず、例外本文に含まれる秘密値も出さない。
+                states[name] = {"inspection_error": type(error).__name__}
+        return states
+
+    def wait_api(self, *, timeout: float = 60) -> None:
+        """初回GETの一時的な通信失敗を期限内で待つ。証明書エラーは即時に伝播する。"""
+        deadline = time.monotonic() + timeout
+        last_result = "not attempted"
+        while (remaining := deadline - time.monotonic()) > 0:
+            try:
+                status, _, _ = self.request("/api/problems", timeout=min(5, remaining))
+                if status == 200:
+                    return
+                last_result = f"HTTP {status}"
+            except (
+                urllib.error.URLError,
+                ConnectionError,
+                TimeoutError,
+                ssl.SSLError,
+                http.client.IncompleteRead,
+            ) as error:
+                reason = (
+                    error.reason if isinstance(error, urllib.error.URLError) else error
+                )
+                if isinstance(reason, ssl.SSLCertVerificationError):
+                    raise
+                last_result = type(reason).__name__
+            remaining = deadline - time.monotonic()
+            if remaining > 0:
+                time.sleep(min(0.5, remaining))
+        raise TimeoutError(
+            f"Compose API did not become ready through TLS nginx within {timeout:g}s; "
+            f"last result: {last_result}; services: "
+            f"{json.dumps(self.readiness_diagnostics(), sort_keys=True)}"
+        )
 
     def submit(
         self, command: str, problem_id: str = "STANDARD-00000001", expected: int = 200

@@ -129,6 +129,7 @@ jobs:
         run: |
           poetry run python -c 'import subprocess; from tests.postgres_support import upstream_postgres_image; refs = [upstream_postgres_image()]; [subprocess.run(["docker", "pull", ref], check=True) for ref in refs]'
       - name: Full Compose regression and image boundary checks
+        id: regression
         env:
           SOJ_RUN_DOCKER_TESTS: "1"
           SOJ_RUN_COMPOSE_E2E: "1"
@@ -141,7 +142,15 @@ jobs:
           SOJ_COMPOSE_BROWSER_IMAGE: soj-browser:ci
           SOJ_BACKEND_RUNTIME_IMAGE: soj-backend:ci
           SOJ_RUNNER_RUNTIME_IMAGE: soj-runner:ci
-        run: poetry run pytest backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_production_deploy.py backend/tests/integration/test_runtime_images.py backend/tests/integration/test_postgres_image.py backend/tests/integration/test_sandbox_tools.py
+        run: poetry run pytest --basetemp "$RUNNER_TEMP/soj-compose-tests" backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_production_deploy.py backend/tests/integration/test_runtime_images.py backend/tests/integration/test_postgres_image.py backend/tests/integration/test_sandbox_tools.py backend/tests/integration/test_base64_solutions.py
+      - name: Retain Base64 browser review screenshots
+        if: ${{ always() && steps.regression.outcome != 'skipped' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: base64-ui-review
+          path: ${{ runner.temp }}/soj-compose-tests/**/soj-ui/base64-*.png
+          retention-days: 14
+          if-no-files-found: warn
       - name: Retain runtime inventory and candidate for review
         if: ${{ always() && steps.scan.outcome != 'skipped' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

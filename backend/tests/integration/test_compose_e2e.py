@@ -3,7 +3,6 @@ import json
 import os
 import tarfile
 import time
-import urllib.error
 import uuid
 from collections.abc import Iterator
 from pathlib import Path
@@ -59,16 +58,7 @@ def stack(tmp_path_factory: pytest.TempPathFactory) -> Iterator[ComposeStack]:
             port = frontend.attrs["NetworkSettings"]["Ports"]["443/tcp"][0]
             assert port["HostIp"] == "127.0.0.1"
             environment.url = f"https://127.0.0.1:{port['HostPort']}"
-            deadline = time.monotonic() + 90
-            while time.monotonic() < deadline:
-                try:
-                    if environment.request("/api/problems")[0] == 200:
-                        break
-                except (urllib.error.URLError, ConnectionError):
-                    pass
-                time.sleep(0.5)
-            else:
-                pytest.fail("Compose API did not become ready through TLS nginx")
+            environment.wait_api(timeout=90)
             yield environment
         finally:
             environment.close()
@@ -246,8 +236,8 @@ def test_browser_submissions_and_display(stack: ComposeStack, tmp_path: Path) ->
         output = browser.logs(tail=100).decode()
         assert status["StatusCode"] == 0, output
         ids = json.loads(output)["submission_ids"]
-        assert len(ids) == 17
-        assert len(db_rows(stack, ids)) == 17
+        assert len(ids) == 18
+        assert len(db_rows(stack, ids)) == 18
         # 実データはtest専用の提出だけとし、表示review用画像をcontainerの回収前に保存する。
         archive, _ = browser.get_archive("/tmp/soj-ui")
         with tarfile.open(fileobj=io.BytesIO(b"".join(archive))) as screenshots:

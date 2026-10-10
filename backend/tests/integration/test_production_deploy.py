@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-import time
 import uuid
 
 import docker
@@ -59,12 +58,7 @@ def test_production_update_preserves_db_and_checks_public_execution(
         ]["HostPort"]
         origin = f"https://127.0.0.1:{port}"
         stack.url = origin
-        for _ in range(60):
-            if stack.request("/api/problems")[0] == 200:
-                break
-            time.sleep(1)
-        else:
-            pytest.fail("initial fixture API did not become ready")
+        stack.wait_api()
         before = stack.submit("printf before-update")
         config = yaml.safe_load((tmp_path / "compose.yml").read_text())
         config["name"] = project

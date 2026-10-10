@@ -12,6 +12,14 @@ Docker統合テストは実際のsandboxコンテナを生成・削除するた�
 DB volumeと更新前のデータを保持し、PostgreSQLでdumpを読み取れることも確認します。
 Git取得とarchive loadは既存のlocal imageで代替し、SSH・systemd・GitHub署名検証は実行しません。
 
+初回HTTPSの起動待ちはCompose E2Eと共通の補助処理を使います。
+配備testは60秒、Compose E2Eは90秒の期限で、GETの通信失敗・HTTP非200を待ち直します。
+各requestのsocket timeoutは最大5秒か残り時間の短い方に制限し、証明書検証エラーは即座に失敗します。
+期限切れ時は直近のHTTP statusまたは例外の型と、専用serviceの状態・health・終了code・OOM状態を出力します。
+response本文、環境変数、credential、serviceの生ログは診断へ含めません。
+提出・配備処理そのものの失敗を、この起動待ちで再試行することはありません。
+待機・証明書エラー・期限切れ診断の回帰は[非Docker test](../test_compose_readiness.py)で検査します。
+
 次のイメージを、rootless daemonへ事前にbuild・取得してください。
 sandboxの指定・更新方針は[本番運用](../../../docs/PRODUCTION.md#sandbox専用image)を参照してください。
 
@@ -43,6 +51,7 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - 本番5 imageのOCI versionラベルと、ブラウザのversion表示が製品versionの正本と一致すること
 - 日英の表示切替・言語設定保存・入力と結果の維持、320〜1,440pxの7画面幅での問題選択・案内画面・コード枠の横スクロール。Chromiumのviewport検査であり、実機のiOS/Android・ソフトウェアキーボードは別途確認する
 - ブラウザ検査のPC日英・スマートフォン画面をpytest一時ディレクトリの`soj-ui/`へ保存する（test専用の提出だけを含む）
+- Base64練習は直接URLと練習カテゴリからの選択、日英・320/1,440pxで入力・想定出力・実提出結果の`text_content()`完全一致を検査する。空行、日本語、2個の連続スペース、末尾LFを保持し、8枚の専用画面画像をCIの`base64-ui-review` artifactへ14日間保存する
 
 - 接続先daemonがrootlessであること
 - cgroup v2によるCPU・メモリ・PID制限が実際に反映されていること
@@ -71,7 +80,7 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - コンテナ削除
 - 実行中コンテナからの上限付き画像取得
 - 元のGIF生成コマンドの全10frame・delay保持、固定回収path・symlink・FIFO・byte上限・timeout・出力上限・次の提出への非残存（`test_gif_display_docker.py`）
-- browser上のGIFアニメーションと、JPEGでの採点・GIF表示の両立。browserで正規表現10問を含む実提出17件とDB保存を照合
+- browser上のGIFアニメーションと、JPEGでの採点・GIF表示の両立。browserで正規表現10問とBase64練習を含む実提出18件とDB保存を照合
 - workerの回復
 - 実nginxで、sandboxを開始しないrequestが
   正常requestと共有の実行開始枠を消費しないこと
@@ -96,6 +105,9 @@ legacy `yaml_data/`とのsemantic一致と意図した改訂の範囲は、
 辞書順・数値比較方法・逆順・表記の変更・作業の欠落・関係の逆転による誤答を実sandboxで区別します。
 `test_byte_display_solutions.py`はod練習の参照解答・10進バイト経由の別解と、
 重複の省略・入力の空白やLFの削除・文字単位の変換・大文字16進数・アドレス混入の誤答を実sandboxで区別します。
+`test_base64_solutions.py`はBase64練習の参照解答・標準入力経由・折り返し除去の別解と、
+行ごとの復号・空行削除・連続スペースの圧縮・未復号の誤答を実sandboxで区別します。
+Supply Chain CIの既存Compose回帰にこの7ケースを含む1項目を追加し、6ファイルの27項目を実行します。全Docker統合テストとは別の選択実行です。
 現在登録されている全問題の参照解答は上記の全問題回帰で確認します。
 `test_new_standard_solutions.py`は通常53〜60の参照解答と別解、および初出優先、差の逆転、
 境界の部分一致、空欄を失う分割、大小文字の未統一、結合キーの重複除去、

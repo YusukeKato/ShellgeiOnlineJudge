@@ -1,0 +1,36 @@
+schema_version: 3
+id: PRACTICE-base64-01
+category: PRACTICE
+title:
+  ja: Base64のメッセージを復元する
+  en: Restoring a Base64 Message
+statement:
+  ja: |
+    練習：base64
+    base64を使って、input.txtにBase64で符号化されたメッセージを復号し、出力してください。
+    入力の改行は符号化データの折り返しです。ファイル全体を1つのメッセージとして復号してください。
+    復号後の空行とスペースもそのまま出力してください。
+  en: |
+    Practice: base64
+    Use base64 to decode and output the Base64-encoded message in input.txt.
+    The input line breaks wrap the encoded data. Decode the entire file as one message.
+    Preserve empty lines and spaces in the decoded message.
+reference_solution: base64 -d input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      U0hFTExHRUkKC
+      ueMq+OBqOeKrA
+      prZWVwICBzcGF
+      jZXMhCg==
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    SHELLGEI
+
+    猫と犬
+    keep  spaces!
