@@ -197,6 +197,9 @@ workflowやpin変更のreview保護もGitHub側で設定してください。
 ## 更新方針
 
 DependabotでActions・Poetry・frontend依存の週次PRを提案します。自動mergeは行いません。
+通常のversion更新PRの同時作成上限は、各エコシステムごとに
+[Dependabot設定](../.github/dependabot.yml)の`open-pull-requests-limit`で管理します。
+これはリポジトリ全体の合計上限ではなく、security更新PRには適用されません。
 React・React DOMと両方の型定義は、通常のversion更新を同じPRへまとめます。
 ReactとReact DOMはlockされた実versionを揃え、既存の画面テストで起動互換性を確認します。
 `@types/node`は実行環境と同じmajorを維持し、Dependabotのmajor更新提案を除外します。
