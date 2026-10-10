@@ -971,7 +971,7 @@ Compose統合6テストでは全115問の参照解答・判定・DB保存を確�
 - 狙い・発見：Base64の復号を学び、入力の折り返しと復号後の改行を別のものとして捉える。
   行ごとに独立した文字列ではなく、ファイル全体で1つの符号化データを構成する。
 - 解法の核：base64の復号機能へファイル全体を渡す。自然な別解は標準入力から渡す方法と、
-  trで折り返しのLFを除いてから復号する方法。シェル解答・別解の実sandbox実行は未検証。
+  trで折り返しのLFを除いてから復号する方法。
 - 入力の意図：全4行を4文字境界以外で折り返し、行単位の復号との違いを明確にする。
   復号後はASCII、日本語、内部空行、連続する2個のスペースを含み、不要な整形を区別する。
   末尾LFも期待値に保存するが、現行judgeでは末尾LFの有無を正誤の核にしない。
@@ -986,6 +986,13 @@ PRACTICE-base64-01の検証範囲：
 UTF-8 bytes、空白判定、正常終了policy、白JPEGのdecode、詳細APIでのデータ保持を確認した。
 2026-10-09にmanifestの再生成一致、non-Docker 853テスト、Ruff check・format、mypy、
 frontendのformat・lint・typecheck・70テスト・buildが成功した。
-[実sandbox検査](../backend/tests/integration/test_base64_solutions.py)も追加したが、
-2026-10-09のクラウド環境はrootless Dockerとsystemdを利用できず、参照解答・別解・誤答の実行、
-全116問回帰、Compose・DB保存、PC・スマートフォン幅での実UI確認は未実施。
+2026-10-10にPython 3.14.4・PRのlock fileから構築した環境でnon-Docker 875テスト、
+Ruff check・format、mypyが成功した。875件には初回HTTPS起動待ちの回帰14件を含む。
+明示したrootless daemonで現行ソースから専用imageをbuildし、
+[実sandbox検査](../backend/tests/integration/test_base64_solutions.py)の参照解答・別解・誤答7ケースを確認した。
+本番配備・Compose E2E・Base64・runtime image・PostgreSQL image・sandbox toolsの統合27テストが成功し、
+全116問の参照解答・判定・DB保存と、実ブラウザ提出18件のDB保存を確認した。
+Base64を日英それぞれ1440px・320pxで提出した4画面を目視し、内部空行と連続空白の表示も確認した。
+実機iOS/Android、Docker対象120件の一括実行、修正後のGitHub CI・本番反映は未実施。
+HTTPS切断自体の原因は未確定。起動待ちの例外処理と期限・診断は
+[Docker統合テスト文書](../backend/tests/integration/README.md)を参照。

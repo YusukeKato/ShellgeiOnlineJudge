@@ -12,6 +12,14 @@ Docker統合テストは実際のsandboxコンテナを生成・削除するた�
 DB volumeと更新前のデータを保持し、PostgreSQLでdumpを読み取れることも確認します。
 Git取得とarchive loadは既存のlocal imageで代替し、SSH・systemd・GitHub署名検証は実行しません。
 
+初回HTTPSの起動待ちはCompose E2Eと共通の補助処理を使います。
+配備testは60秒、Compose E2Eは90秒の期限で、GETの通信失敗・HTTP非200を待ち直します。
+各requestのsocket timeoutは最大5秒か残り時間の短い方に制限し、証明書検証エラーは即座に失敗します。
+期限切れ時は直近のHTTP statusまたは例外の型と、専用serviceの状態・health・終了code・OOM状態を出力します。
+response本文、環境変数、credential、serviceの生ログは診断へ含めません。
+提出・配備処理そのものの失敗を、この起動待ちで再試行することはありません。
+待機・証明書エラー・期限切れ診断の回帰は[非Docker test](../test_compose_readiness.py)で検査します。
+
 次のイメージを、rootless daemonへ事前にbuild・取得してください。
 sandboxの指定・更新方針は[本番運用](../../../docs/PRODUCTION.md#sandbox専用image)を参照してください。
 
