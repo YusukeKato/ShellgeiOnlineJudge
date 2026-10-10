@@ -57,7 +57,7 @@ jobs:
         run: poetry run python ci/supply_chain.py source --tools "$RUNNER_TEMP/soj-tools" --reports "$RUNNER_TEMP/dependency-reports"
       - name: Retain dependency reports even when vulnerabilities block the job
         if: ${{ always() && steps.scan.outcome != 'skipped' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dependency-reports
           path: ${{ runner.temp }}/dependency-reports/
@@ -145,7 +145,7 @@ jobs:
         run: poetry run pytest --basetemp "$RUNNER_TEMP/soj-compose-tests" backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_production_deploy.py backend/tests/integration/test_runtime_images.py backend/tests/integration/test_postgres_image.py backend/tests/integration/test_sandbox_tools.py backend/tests/integration/test_base64_solutions.py
       - name: Retain Base64 browser review screenshots
         if: ${{ always() && steps.regression.outcome != 'skipped' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: base64-ui-review
           path: ${{ runner.temp }}/soj-compose-tests/**/soj-ui/base64-*.png
@@ -153,7 +153,7 @@ jobs:
           if-no-files-found: warn
       - name: Retain runtime inventory and candidate for review
         if: ${{ always() && steps.scan.outcome != 'skipped' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: runtime-reports
           path: ${{ runner.temp }}/runtime-reports/
