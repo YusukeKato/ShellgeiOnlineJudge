@@ -1,0 +1,50 @@
+schema_version: 3
+id: STANDARD-00000068
+category: STANDARD
+title:
+  ja: ページ別の訪問者数
+  en: Unique Visitors by Page
+statement:
+  ja: |
+    input.txtの各行は「時刻 訪問者ID ページ 状態コード」です。
+    状態コードが200のアクセスだけを対象に、ページごとの訪問者数を求めてください。同じ訪問者が同じページへ何度アクセスしても、1人と数えます。
+
+    訪問者数の多い順に、各行を「ページ 訪問者数」の半角スペース1個区切りで出力してください。同数ならページを辞書順に並べ、対象となるアクセスがないページは出力しません。
+  en: |
+    Each line of input.txt is "time visitor_id page status_code".
+    Count unique visitors for each page, considering only accesses with status code 200. Repeated accesses by the same visitor to the same page count as one visitor.
+
+    Print "page visitor_count", separated by one ASCII space, in descending order of visitor count. Break ties by page in lexicographic order. Omit pages with no qualifying accesses.
+reference_solution: awk '$4==200 {print $3,$2}' input.txt | sort -u | cut -d' ' -f1 | uniq -c | sort -k1,1nr -k2,2 | awk '{print $2,$1}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      09:00 u03 /guide 200
+      09:01 u01 /tools 200
+      09:02 u02 /guide 200
+      09:03 u01 /guide 200
+      09:04 u02 /tools 500
+      09:05 u03 /guide 200
+      09:06 u04 /tools 200
+      09:07 u05 /news 200
+      09:08 u02 /tools 200
+      09:09 u01 /news 200
+      09:10 u01 /tools 200
+      09:11 u02 /guide 404
+      09:12 u06 /status 200
+      09:13 u07 /hidden 404
+      09:14 u03 /tools 200
+      09:15 u04 /news 200
+      09:16 u09 /guide 500
+      09:17 u06 /status 200
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    /tools 4
+    /guide 3
+    /news 3
+    /status 1
