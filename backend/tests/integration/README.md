@@ -80,7 +80,7 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - コンテナ削除
 - 実行中コンテナからの上限付き画像取得
 - 元のGIF生成コマンドの全10frame・delay保持、固定回収path・symlink・FIFO・byte上限・timeout・出力上限・次の提出への非残存（`test_gif_display_docker.py`）
-- browser上のGIFアニメーションと、JPEGでの採点・GIF表示の両立。browserで正規表現10問とBase64練習を含む実提出18件とDB保存を照合
+- browser上のGIFアニメーションと、JPEGでの採点・GIF表示の両立。browserで正規表現10問・Base64練習・通常68を含む実提出22件とDB保存を照合
 - workerの回復
 - 実nginxで、sandboxを開始しないrequestが
   正常requestと共有の実行開始枠を消費しないこと
@@ -107,7 +107,11 @@ legacy `yaml_data/`とのsemantic一致と意図した改訂の範囲は、
 重複の省略・入力の空白やLFの削除・文字単位の変換・大文字16進数・アドレス混入の誤答を実sandboxで区別します。
 `test_base64_solutions.py`はBase64練習の参照解答・標準入力経由・折り返し除去の別解と、
 行ごとの復号・空行削除・連続スペースの圧縮・未復号の誤答を実sandboxで区別します。
-Supply Chain CIの既存Compose回帰にこの7ケースを含む1項目を追加し、6ファイルの27項目を実行します。全Docker統合テストとは別の選択実行です。
+`test_unique_visitors_solutions.py`は通常68の参照解答・配列別解と、アクセス回数の集計・失敗の混入・
+訪問者全体や時刻付き全行の重複除去・隣接する組だけの除去・同率逆順の誤答を実sandboxで区別します。
+通常68は日英・320/1,440pxの実UIでカテゴリから選択・提出し、入力・期待出力・結果の文字列とDB保存を照合します。
+提出前後の8画面をCIの`unique-visitors-ui-review` artifactへ14日間保存します。
+Supply Chain CIは上記2問の検査を含む7ファイル・28項目を選択実行します。全Docker統合テストとは別です。
 現在登録されている全問題の参照解答は上記の全問題回帰で確認します。
 `test_new_standard_solutions.py`は通常53〜60の参照解答と別解、および初出優先、差の逆転、
 境界の部分一致、空欄を失う分割、大小文字の未統一、結合キーの重複除去、

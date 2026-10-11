@@ -996,3 +996,33 @@ Base64を日英それぞれ1440px・320pxで提出した4画面を目視し、�
 実機iOS/Android、Docker対象120件の一括実行、修正後のGitHub CI・本番反映は未実施。
 HTTPS切断自体の原因は未確定。起動待ちの例外処理と期限・診断は
 [Docker統合テスト文書](../backend/tests/integration/README.md)を参照。
+
+## STANDARD-00000068：ページ別の訪問者数
+
+- 問題データ：[STANDARD-00000068.yaml](../problems/v3/STANDARD-00000068.yaml)
+- 狙い・発見：アクセス回数と訪問者数を区別し、成功したページ・訪問者の組を重複除去してから集計する。
+- 解法の核：awkで状態コード200のページ・訪問者を抽出し、sort -uで組を一意にする。
+  cut・uniq -cでページ別に数え、sortで人数降順・同率時のページ辞書順に並べる。
+  別解はawkの連想配列で組の既出判定とページ別集計を行い、sortで順位を決める方法。
+- 入力の意図：時刻が異なる再訪、同じ人の複数ページ訪問、同じ組の成功と失敗、
+  失敗だけのページ、同率を含む。全行の重複除去や訪問者だけの重複除去では人数が変わる。
+  期待値は各ページに成功記録がある人を全行から調べ、手確認した集合の要素数と独立に照合する。
+- 難易度・既存との差：中級。基本的なパイプ・列操作を前提とし、集計単位と処理順を考える。
+  STANDARD-00000057の分類キーごとの件数から、複数列の組を一意にして数える処理へ進み、
+  STANDARD-00000051と同様に順位と同率時の順序を明示する。使用コマンドの構文は採点しない。
+
+STANDARD-00000068の検証範囲（2026-10-11）：
+[非Docker検査](../backend/tests/test_unique_visitors_problem.py)でページ別の訪問者集合から期待値を独立に確認し、
+入力の詳細API表示、白JPEG、人数・同率順序・正常終了policyを検査した。
+Ruff check・format、mypy、non-Docker 885件、frontendのformat・lint・typecheck・70件・buildが成功した。
+明示したrootless daemonで現行ソースのimageをbuildし、Docker全121件がskipなしで成功した（645.07秒）。
+全117問の参照解答・判定・DB保存、実ブラウザ提出22件のDB保存を含む。
+[実sandbox検査](../backend/tests/integration/test_unique_visitors_solutions.py)で参照解・別解の2正解と6誤答を確認した。
+通常68の日英それぞれ320px・1,440pxの提出結果4画面を目視し、提出前後8枚を保存した。
+sandbox imageは`sha256:9d2f1d2843c0ac5478bce6c744a23d3386f9e6ab6ebdde182c93e20727b54c9b`を使用した。
+実機iOS/Androidは未確認。
+
+CIのGo標準library指摘に対応し、Go 1.26.9でgosu・textimgを再buildしたimageでも、
+統合38件が成功した（362.46秒）。全117問・ブラウザ22提出・DB更新/rollback・GIF検査を含む。
+再検証のsandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`。
+初回の全121件一括検査と、この更新後の38件を区別する。
