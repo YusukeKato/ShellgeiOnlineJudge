@@ -298,6 +298,61 @@ def check_base64_problem(page: Page) -> list[int]:
     return ids
 
 
+def check_unique_visitors_problem(page: Page) -> list[int]:
+    """通常68を日英・320/1440pxで選択・提出し、文字列保持と結果を画像付きで確認する。"""
+    problem_id = "STANDARD-00000068"
+    expected_output = "/tools 4\n/guide 3\n/news 3\n/status 1\n"
+    detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
+    assert detail["expected_output"] == expected_output
+    ids = []
+    for width in (320, 1440):
+        page.set_viewport_size({"width": width, "height": 1000})
+        for language in ("ja", "en"):
+            page.goto(
+                "https://frontend/?problem=STANDARD-00000001", wait_until="networkidle"
+            )
+            switch_language(page, language)
+            picker = page.locator("details.problem-picker")
+            picker.locator("summary").click()
+            picker.get_by_role(
+                "button", name="通常" if language == "ja" else "Standard", exact=True
+            ).click()
+            picker.get_by_role("button", name=re.compile(problem_id)).click()
+            expect(page).to_have_url(re.compile(rf"\?problem={problem_id}$"))
+            expect(page.locator("#problem-heading")).to_have_text(
+                detail[f"title_{language}"]
+            )
+            assert (
+                page.locator("#problem-text").text_content()
+                == detail[f"statement_{language}"]
+            )
+            assert page.locator("#input-text").text_content() == detail["input"]
+            assert page.locator("#output-text").text_content() == expected_output
+            expect(page.locator("#expected-image")).to_have_count(0)
+            assert_page_width(page)
+            page.screenshot(
+                path=f"/tmp/soj-ui/visitors-before-{width}-{language}.png",
+                full_page=True,
+                animations="disabled",
+            )
+            ids.append(
+                submit(
+                    page,
+                    detail["answer"],
+                    "accepted",
+                    "正解" if language == "ja" else "Accepted",
+                )
+            )
+            assert page.locator("#user-output-text").text_content() == expected_output
+            assert_page_width(page)
+            page.screenshot(
+                path=f"/tmp/soj-ui/visitors-submitted-{width}-{language}.png",
+                full_page=True,
+                animations="disabled",
+            )
+    return ids
+
+
 def main() -> None:
     """外部通信・mockなしでtext、実行失敗、画像の表示を検証し、保存IDだけを出力する。"""
     with sync_playwright() as playwright:
@@ -398,7 +453,8 @@ def main() -> None:
         check_about_page(page)
         ids.extend(check_regex_problems(page))
         ids.extend(check_base64_problem(page))
-        assert len(submissions) == 18
+        ids.extend(check_unique_visitors_problem(page))
+        assert len(submissions) == 22
         assert not errors
         browser.close()
         print(json.dumps({"submission_ids": ids}))
