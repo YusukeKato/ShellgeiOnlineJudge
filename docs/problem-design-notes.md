@@ -1021,3 +1021,8 @@ Ruff check・format、mypy、non-Docker 885件、frontendのformat・lint・type
 通常68の日英それぞれ320px・1,440pxの提出結果4画面を目視し、提出前後8枚を保存した。
 sandbox imageは`sha256:9d2f1d2843c0ac5478bce6c744a23d3386f9e6ab6ebdde182c93e20727b54c9b`を使用した。
 実機iOS/Androidは未確認。
+
+CIのGo標準library指摘に対応し、Go 1.26.9でgosu・textimgを再buildしたimageでも、
+統合38件が成功した（362.46秒）。全117問・ブラウザ22提出・DB更新/rollback・GIF検査を含む。
+再検証のsandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`。
+初回の全121件一括検査と、この更新後の38件を区別する。

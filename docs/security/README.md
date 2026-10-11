@@ -112,6 +112,24 @@ SOJ-020は下記の実装・検証により`Resolved`としました。未解決
 
 ## SOJ-022の現在の停止対象
 
+### 2026-10-11のGo標準library更新
+
+通常68の[PR #142](https://github.com/YusukeKato/ShellgeiOnlineJudge/pull/142)で、
+[Supply Chain CI](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/38110477084)が停止した。
+DBの`/usr/local/bin/gosu`とsandboxの`/usr/local/bin/textimg`に静的linkされた
+Go 1.26.8の標準libraryに、各10件の修正可能なHigh/Criticalが検出された。
+対象IDはGO-2026-6603、6604、6605、6607、6608、6609、6610、6611、6612、6613。
+backend・runner・frontendの停止対象は0件だったが、非ブロックの検出は残る。
+
+[公式リリース](https://go.dev/doc/devel/release#go1.26.9)とCIの修正版情報を照合し、
+gosu・textimgのbuild用stageだけをGo 1.26.9の公式imageへdigest固定で更新した。
+gosu source・textimgのmodule lock、実行用OS、PostgreSQLのentrypoint・PGDATA、
+sandboxの隔離・制限、スキャンの停止基準・例外policyは維持する。
+修正版imageでrootless統合38件が成功した（362.46秒）。DBの更新・rollback、textimgの日本語・画像出力、
+GIF、通常68、全117問の参照解答・判定・DB保存、実ブラウザ22提出を含む。
+初回の問題追加時の全121件一括検査とは区別する。
+同一headの全CI成功を確認するまでマージ・本番配備は停止する。
+
 ### 2026-10-07の統合候補とGitHub CI
 
 2026-10-07 16:07:22 UTCまでに、統合commit
