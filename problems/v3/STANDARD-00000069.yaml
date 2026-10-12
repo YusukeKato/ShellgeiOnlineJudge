@@ -1,0 +1,56 @@
+schema_version: 3
+id: STANDARD-00000069
+category: STANDARD
+title:
+  ja: カテゴリ別の売上首位
+  en: Sales Leaders by Category
+statement:
+  ja: |
+    input.txtの各行は「カテゴリ 商品名 売上額」です。
+
+    カテゴリごとに、売上額が最大の商品をすべて出力してください。
+    同率首位の商品が複数ある場合は、すべて残してください。
+
+    出力は入力と同じ「カテゴリ 商品名 売上額」の形式にします。
+    カテゴリの辞書順に並べ、同じカテゴリでは商品名の辞書順に並べてください。
+    項目は半角スペース1個で区切ってください。
+  en: |
+    Each line of input.txt is "category product sales".
+
+    Output every product with the highest sales in its category.
+    Keep all products tied for the highest sales.
+
+    Use the same "category product sales" format as the input.
+    Sort categories lexicographically, then sort products within each category lexicographically by product name.
+    Separate fields with one ASCII space.
+reference_solution: sort -k1,1 -k3,3nr -k2,2 input.txt | awk '$1!=c {c=$1; m=$3} $3==m'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      tools drill 20
+      books novel 9
+      games chess 12
+      books guide 12
+      food tea 7
+      tools saw 100
+      games maze 9
+      books atlas 12
+      tools plane 9
+      games cards 12
+      books poems 2
+      tools vise 20
+      games word 12
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    books atlas 12
+    books guide 12
+    food tea 7
+    games cards 12
+    games chess 12
+    games word 12
+    tools saw 100
