@@ -1026,3 +1026,28 @@ CIのGo標準library指摘に対応し、Go 1.26.9でgosu・textimgを再build�
 統合38件が成功した（362.46秒）。全117問・ブラウザ22提出・DB更新/rollback・GIF検査を含む。
 再検証のsandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`。
 初回の全121件一括検査と、この更新後の38件を区別する。
+
+## STANDARD-00000069：カテゴリ別の売上首位
+
+- 問題データ：[STANDARD-00000069.yaml](../problems/v3/STANDARD-00000069.yaml)
+- 狙い・発見：グループごとの最大値を選ぶとき、同率首位を1件に絞らずすべて残す。
+- 解法の核：sortでカテゴリ・売上数値降順・商品名に整列し、awkでカテゴリの先頭値と一致する行を選ぶ。
+  別解はawkで2回読み、1回目にカテゴリ別最大値を記録、2回目に該当行を選んでsortする方法。
+- 入力の意図：カテゴリが交互に現れ、離れた同率首位、9・20・100、商品1件だけのカテゴリを含む。
+  期待値は各商品の同カテゴリに売上が上回る商品が存在しないことを全行から調べて独立に確認する。
+- 難易度・既存との差：初級〜中級。複数ソートキー、パイプ、awkの条件を前提とし、
+  グループ境界と同率の扱いを考える。STANDARD-00000014の入力順を保つグループ化と異なり、
+  売上順に並べて抽出する。STANDARD-00000051の打率計算と全体ランキングに対し、
+  カテゴリ別の最大値と同率集合を選ぶ。提出コマンドの構文は採点しない。
+
+STANDARD-00000069の検証範囲（2026-10-12）：
+[非Docker検査](../backend/tests/test_sales_leaders_problem.py)で期待値を全商品の比較から独立に確認し、
+詳細API入力・正常終了policy・白JPEGのdecodeを検査した。
+Ruff check・format、mypy、non-Docker 895件が成功した。
+明示したrootless daemonでDocker全122件がskipなしで成功した（662.64秒）。
+全118問の参照解答・判定・DB保存と、実ブラウザ提出26件のDB保存を含む。
+[実sandbox検査](../backend/tests/integration/test_sales_leaders_solutions.py)では参照解・別解の2正解と5誤答を確認した。
+通常69の日英それぞれ320px・1,440pxの提出結果4画面を目視し、提出前後8枚を保存した。
+sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
+backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
+実機iOS/Androidは未確認。
