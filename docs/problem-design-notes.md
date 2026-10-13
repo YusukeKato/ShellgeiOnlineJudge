@@ -1051,3 +1051,25 @@ Ruff check・format、mypy、non-Docker 895件が成功した。
 sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
+
+## PRACTICE-sha256sum-01：ファイルのSHA-256
+
+- 問題データ：[PRACTICE-sha256sum-01.yaml](../problems/v3/PRACTICE-sha256sum-01.yaml)
+- 狙い・発見：ファイル全体をバイト列としてハッシュ値へ変換し、内部のスペースと末尾LFも計算対象と捉える。
+- 解法の核：sha256sumで計算し、cutでハッシュ値だけを抽出する。別解は標準入力経由の計算とawkによる抽出。
+- 入力の意図：2行と内部スペースを持つ22 bytesで、末尾LFだけの欠落・全改行やスペースの削除を区別する。
+  期待値は参照解答を使わずPythonのhashlibと.NETのSHA256で独立に求め、一致を確認した。
+- 難易度・既存との差：初級。ファイル引数・パイプと列抽出が前提で、専用コマンドへ計算を任せる。
+  PRACTICE-od-01の各バイトの可視化に対し、本問は全体から固定長の値を計算する。
+  使用例のなかったsha256sumを扱う基礎練習とし、コマンドの構文は採点しない。
+
+PRACTICE-sha256sum-01の検証範囲（2026-10-13）：
+[非Docker検査](../backend/tests/test_sha256_problem.py)で独立期待値・入力変更の識別・詳細API・白JPEG・判定policyを検査した。
+Ruff check・format、mypy、non-Docker 907件が成功した。
+明示したrootless daemonでDocker全123件がskipなしで成功した（686.63秒）。
+全119問の参照解答・判定・DB保存と、実ブラウザ提出30件のDB保存を含む。
+[実sandbox検査](../backend/tests/integration/test_sha256_solutions.py)では参照解・別解の2正解と6誤答を確認した。
+日英それぞれ320px・1,440pxの提出結果4画面を目視し、提出前後8枚を保存した。
+sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
+backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
+実機iOS/Androidは未確認。

@@ -26,7 +26,7 @@ pytestmark = [
     [
         # 全問題のコマンドとrunnerの固定準備・取得コマンドが存在する。
         "for tool in bash cat seq awk bc cut tr sed sort factor rs find grep uniq wc "
-        'xargs convert textimg base64 tar head sleep mkdir ln; do command -v "$tool" >/dev/null '
+        'xargs convert textimg base64 sha256sum tar head sleep mkdir ln; do command -v "$tool" >/dev/null '
         '|| exit 1; done; test "$SHELL" = /bin/bash; test "$LANG" = ja_JP.UTF-8',
         # 非採用の言語・compiler、権限昇格・ネットワーク用toolを持ち込まない。
         "for tool in go gcc g++ make node npm python3 ruby pwsh clojure sudo ping "
