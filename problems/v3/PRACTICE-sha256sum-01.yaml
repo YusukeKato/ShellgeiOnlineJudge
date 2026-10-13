@@ -1,0 +1,31 @@
+schema_version: 3
+id: PRACTICE-sha256sum-01
+category: PRACTICE
+title:
+  ja: ファイルのSHA-256
+  en: SHA-256 of a File
+statement:
+  ja: |
+    練習：sha256sum
+    sha256sumを使って、input.txt全体のSHA-256ハッシュ値を求めてください。
+    スペースと改行（LF）も計算対象です。最後の行の末尾にもLFがあります。
+    ハッシュ値だけを小文字の16進数64桁で1行に出力してください。ファイル名は出力しないでください。
+  en: |
+    Practice: sha256sum
+    Use sha256sum to compute the SHA-256 digest of the entire input.txt file.
+    Include spaces and line feeds (LF). The last line also ends with LF.
+    Output only the digest as 64 lowercase hexadecimal digits on one line. Do not output the filename.
+reference_solution: sha256sum input.txt | cut -d' ' -f1
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      shellgei
+      online judge
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    f5ebb56e393995ff3fb5095d0c3bd1977567838eb234531341e8a10080a08b73
