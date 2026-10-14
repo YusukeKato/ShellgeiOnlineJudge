@@ -1073,3 +1073,26 @@ Ruff check・format、mypy、non-Docker 907件が成功した。
 sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
+
+## STANDARD-00000071：サービス一覧の変更点
+
+- 問題データ：[STANDARD-00000071.yaml](../problems/v3/STANDARD-00000071.yaml)
+- 狙い・発見：一覧の変更を件数ではなく所属で捉え、追加と削除の両方向を一度に求める。
+- 解法の核：sedで変更前後を抽出し、sort -uで集合へ変換する。comm -3の2列で出自を区別し、
+  awkでADD/REMOVEを付ける。commの併合順がサービス名順になる。別解はawkの2配列と名前キーのsort。
+- 入力の意図：前後の記録を交互に置き、共通名cache/docsの重複数を左右で変え、削除apiと追加api2も重複させる。
+  件数差や部分一致ではなく所属を比較する必要がある。期待値は各名前の前後への所属を全行から調べ、手確認した変更点と独立に照合する。
+- 難易度・既存との差：初級〜中級。パイプ・列操作に加え、集合への変換とcommの列を学ぶ。
+  最も近いSTANDARD-00000052は片方向の集合差であり、本問は両方向の差をラベル付きでまとめる。
+  commは既存の通常13・52で検証済み別解に登場するが、参照解答への採用は初めて。コマンドの構文は採点しない。
+
+STANDARD-00000071の検証範囲（2026-10-14）：
+[非Docker検査](../backend/tests/test_service_changes_problem.py)で所属から独立に求めた期待値・重複の意図・詳細API・白JPEG・出力順を検査した。
+Ruff check・format、mypy（144 source files）、non-Docker 916件が成功した。
+明示したrootless daemonでDocker全124件がskipなしで成功した（715.64秒）。
+全120問の参照解答・判定・DB保存と、実ブラウザ提出34件のDB保存を含む。
+[実sandbox検査](../backend/tests/integration/test_service_changes_solutions.py)で参照解・配列別解の2正解と6誤答を確認した。
+通常71を日英それぞれ320px・1,440pxで選択・提出し、提出結果4画面を目視、提出前後8枚を保存した。
+sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
+backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
+実機iOS/Androidは未確認。
