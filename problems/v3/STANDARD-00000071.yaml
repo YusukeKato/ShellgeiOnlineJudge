@@ -1,0 +1,63 @@
+schema_version: 3
+id: STANDARD-00000071
+category: STANDARD
+title:
+  ja: サービス一覧の変更点
+  en: Changes to a Service List
+statement:
+  ja: |
+    input.txtには、変更前と変更後のサービス一覧が記録されています。
+    各行は「状態 サービス名」の形式で、beforeは変更前、afterは変更後の一覧に含まれることを表します。
+    同じ一覧内でサービス名が重複している場合は、1件として扱ってください。
+
+    2つの一覧を比較し、変更点を次の形式で出力してください。
+
+    新しく加わったサービス：変更前の一覧にはなく、変更後の一覧にだけあるサービスです。「ADD サービス名」と出力してください。
+    一覧からなくなったサービス：変更前の一覧にはあり、変更後の一覧にはないサービスです。「REMOVE サービス名」と出力してください。
+
+    変更前と変更後の両方にあるサービスは出力しません。
+    出力はサービス名の辞書順に並べ、ADDまたはREMOVEとサービス名の間は半角スペース1個で区切ってください。
+  en: |
+    input.txt records the service lists before and after a change.
+    Each line has the format "state service_name": before means the service is in the old list, and after means it is in the new list.
+    Treat duplicate service names within each list as one entry.
+
+    Compare the two lists and output their changes as follows.
+
+    Added services are present only in the new list, not in the old list. Output "ADD service_name" for each.
+    Removed services are present in the old list but absent from the new list. Output "REMOVE service_name" for each.
+
+    Omit services present in both lists.
+    Sort the output lexicographically by service name, separating ADD or REMOVE from the name with one ASCII space.
+reference_solution: >-
+  comm -3 <(sed -n 's/^before //p' input.txt | sort -u) <(sed -n 's/^after //p' input.txt | sort -u) | awk '/^\t/ {print "ADD", $1; next} {print "REMOVE", $1}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      before docs
+      after mail
+      before api
+      after cache
+      before queue
+      after api2
+      before cache
+      after proxy
+      before cron
+      after docs
+      before api
+      after api2
+      before cache
+      after docs
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    REMOVE api
+    ADD api2
+    REMOVE cron
+    ADD mail
+    ADD proxy
+    REMOVE queue
