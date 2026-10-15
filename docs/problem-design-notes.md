@@ -1096,3 +1096,25 @@ Ruff check・format、mypy（144 source files）、non-Docker 916件が成功し
 sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
+
+## PRACTICE-paste-01：空欄を保って1行にまとめる
+
+- 問題データ：[PRACTICE-paste-01.yaml](../problems/v3/PRACTICE-paste-01.yaml)
+- 狙い・発見：空行も1項目と捉え、位置・順序・重複を保って縦の行を横の項目へ組み替える。
+- 解法の核：paste -sの直列結合と-dの区切り指定。別解はawkで2行目以降の項目の前へカンマを出す方法。
+- 入力の意図：連続する空行、離れた空行、pearの重複、辞書順ではない並びを含む。
+  期待値は参照解答とは独立にPythonのCSV writerと手確認した7項目で照合する。
+- 難易度・既存との差：初級。ファイル引数を前提とし、空欄と区切りを保つ1つの機能を学ぶ。
+  最も近いSTANDARD-00000029は4項目ずつ折り返すが、本問は全行を1行へまとめ、連続する空欄も保持する。
+  pasteは通常21・29・50・54の参照解答に登場するが、-sの直列結合は初採用。構文は採点しない。
+
+PRACTICE-paste-01の検証範囲（2026-10-15）：
+[非Docker検査](../backend/tests/test_paste_problem.py)でCSV writerによる独立期待値・7項目の配置・詳細API・白JPEGを検査した。
+Ruff check・format、mypy（146 source files）、non-Docker 918件が成功した。
+明示したrootless daemonでDocker全125件がskipなしで成功した（706.95秒）。
+全121問の参照解答・判定・DB保存と、実ブラウザ提出38件のDB保存を含む。
+[実sandbox検査](../backend/tests/integration/test_paste_solutions.py)で参照解・awk別解の2正解と6誤答を確認した。
+日英それぞれ320px・1,440pxの提出結果4画面を目視し、提出前後8枚を保存した。
+sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
+backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
+実機iOS/Androidは未確認。
