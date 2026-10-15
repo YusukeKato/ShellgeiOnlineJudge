@@ -1,0 +1,31 @@
+schema_version: 3
+id: PRACTICE-paste-01
+category: PRACTICE
+title:
+  ja: 空欄を保って1行にまとめる
+  en: Combining Lines While Preserving Empty Fields
+statement:
+  ja: |
+    練習：paste
+
+    input.txtの各行を1項目として、カンマ区切りの1行にまとめてください。
+    空行は空の項目として残し、行の順序と重複を保ってください。
+    項目の間を半角のカンマ1個で区切り、余分なカンマや空白を加えないでください。
+  en: |
+    Practice: paste
+
+    Treat each line of input.txt as one field and combine all fields into one comma-separated line.
+    Keep empty lines as empty fields, and preserve input order and duplicates.
+    Separate adjacent fields with one ASCII comma. Do not add extra commas or spaces.
+reference_solution: paste -s -d ',' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: "pear\n\n\napple\npear\n\nplum\n"
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    pear,,,apple,pear,,plum
