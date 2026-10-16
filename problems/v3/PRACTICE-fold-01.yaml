@@ -1,0 +1,39 @@
+schema_version: 3
+id: PRACTICE-fold-01
+category: PRACTICE
+title:
+  ja: 8文字ずつに折り返す
+  en: Wrapping Lines Every Eight Characters
+statement:
+  ja: |
+    練習：fold
+
+    input.txtの各行を、先頭から8文字ずつに分けて出力してください。
+    行の最後に8文字未満の部分が残った場合も、そのまま1行として出力してください。
+    元の行同士はつなげず、文字と行の順序を保ってください。
+  en: |
+    Practice: fold
+
+    Split each line of input.txt into chunks of eight characters, starting from the beginning of the line.
+    Output any remaining chunk shorter than eight characters as its own line.
+    Do not join separate input lines. Preserve character order and input-line order.
+reference_solution: fold -w 8 input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      AB12CD34EF56GH78Z9
+      00012345XY9
+      Q7R8S9T0
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    AB12CD34
+    EF56GH78
+    Z9
+    00012345
+    XY9
+    Q7R8S9T0

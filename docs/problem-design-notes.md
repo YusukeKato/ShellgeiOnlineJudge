@@ -1118,3 +1118,27 @@ Ruff check・format、mypy（146 source files）、non-Docker 918件が成功し
 sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
+
+## PRACTICE-fold-01：8文字ずつに折り返す
+
+- 問題データ：[PRACTICE-fold-01.yaml](../problems/v3/PRACTICE-fold-01.yaml)
+- 狙い・発見：各行を一定幅の部分文字列へ捉え直し、元の改行と最後の短い部分を保つ。
+- 解法の核：fold -w 8による幅指定。別解はawkで8文字ずつsubstrを出力する方法。
+- 入力の意図：18・11・8文字の3行で端数・先頭の0・幅ちょうどを区別する。
+  期待値は手確認した6部分と、参照解答を使わないPythonの正規表現分割で独立に照合する。
+- 難易度・既存との差：初級。ファイル引数が前提で、組み合わせは不要。
+  通常13・40・48のfold -w1による1文字単位への変換に対し、幅指定と元の行境界を学ぶ。
+  通常29のpasteによる行の横並びとは変換の方向・単位が異なる。
+  公開入力は英数字のため文字数と表示幅が一致する。構文は採点しない。
+
+PRACTICE-fold-01の検証範囲（2026-10-16）：
+[非Docker検査](../backend/tests/test_fold_problem.py)で独立期待値・行境界・詳細API・正常終了policy・白JPEGを確認した。
+Ruff check・format、mypy（148 source files）、non-Docker 920件が成功した。
+明示したrootless daemonでDocker全126件がskipなしで成功した（731.25秒）。
+全122問の参照解答・判定・DB保存と、実ブラウザ42提出のDB保存を含む。
+[実sandbox検査](../backend/tests/integration/test_fold_solutions.py)では参照解・awk別解、6誤答、
+短い行・8文字・9文字・空行の計16ケースを確認した。
+日英それぞれ320px・1,440pxの提出結果4画面を目視し、提出前後8枚を保存した。
+sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
+backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
+実機iOS/Androidは未確認。
