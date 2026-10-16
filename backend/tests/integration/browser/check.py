@@ -468,6 +468,61 @@ def check_sha256_problem(page: Page) -> list[int]:
     return ids
 
 
+def check_fold_problem(page: Page) -> list[int]:
+    """fold練習を日英・320/1440pxで選択・提出し、文字列保持と結果を画像付きで確認する。"""
+    problem_id = "PRACTICE-fold-01"
+    expected_output = "AB12CD34\nEF56GH78\nZ9\n00012345\nXY9\nQ7R8S9T0\n"
+    detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
+    assert detail["expected_output"] == expected_output
+    ids = []
+    for width in (320, 1440):
+        page.set_viewport_size({"width": width, "height": 1000})
+        for language in ("ja", "en"):
+            page.goto(
+                "https://frontend/?problem=STANDARD-00000001", wait_until="networkidle"
+            )
+            switch_language(page, language)
+            picker = page.locator("details.problem-picker")
+            picker.locator("summary").click()
+            picker.get_by_role(
+                "button", name="練習" if language == "ja" else "Practice", exact=True
+            ).click()
+            picker.get_by_role("button", name=re.compile(problem_id)).click()
+            expect(page).to_have_url(re.compile(rf"\?problem={problem_id}$"))
+            expect(page.locator("#problem-heading")).to_have_text(
+                detail[f"title_{language}"]
+            )
+            assert (
+                page.locator("#problem-text").text_content()
+                == detail[f"statement_{language}"]
+            )
+            assert page.locator("#input-text").text_content() == detail["input"]
+            assert page.locator("#output-text").text_content() == expected_output
+            expect(page.locator("#expected-image")).to_have_count(0)
+            assert_page_width(page)
+            page.screenshot(
+                path=f"/tmp/soj-ui/fold-before-{width}-{language}.png",
+                full_page=True,
+                animations="disabled",
+            )
+            ids.append(
+                submit(
+                    page,
+                    detail["answer"],
+                    "accepted",
+                    "正解" if language == "ja" else "Accepted",
+                )
+            )
+            assert page.locator("#user-output-text").text_content() == expected_output
+            assert_page_width(page)
+            page.screenshot(
+                path=f"/tmp/soj-ui/fold-submitted-{width}-{language}.png",
+                full_page=True,
+                animations="disabled",
+            )
+    return ids
+
+
 def check_paste_problem(page: Page) -> list[int]:
     """paste練習を日英・320/1440pxで選択・提出し、文字列保持と結果を画像付きで確認する。"""
     problem_id = "PRACTICE-paste-01"
@@ -685,7 +740,8 @@ def main() -> None:
         ids.extend(check_sha256_problem(page))
         ids.extend(check_service_changes_problem(page))
         ids.extend(check_paste_problem(page))
-        assert len(submissions) == 38
+        ids.extend(check_fold_problem(page))
+        assert len(submissions) == 42
         assert not errors
         browser.close()
         print(json.dumps({"submission_ids": ids}))
