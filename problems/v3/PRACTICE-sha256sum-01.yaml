@@ -2,8 +2,8 @@ schema_version: 3
 id: PRACTICE-sha256sum-01
 category: PRACTICE
 title:
-  ja: ファイルのSHA-256
-  en: SHA-256 of a File
+  ja: sha256sum 1
+  en: sha256sum 1
 statement:
   ja: |
     練習：sha256sum

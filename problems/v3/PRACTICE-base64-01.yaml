@@ -2,8 +2,8 @@ schema_version: 3
 id: PRACTICE-base64-01
 category: PRACTICE
 title:
-  ja: Base64のメッセージを復元する
-  en: Restoring a Base64 Message
+  ja: base64 1
+  en: base64 1
 statement:
   ja: |
     練習：base64

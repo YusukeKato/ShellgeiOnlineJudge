@@ -941,7 +941,7 @@ Compose統合6テストでは全114問の参照解答・判定・DB保存を確�
 新問2問を日英それぞれ1440px・320pxの実UIから提出した。
 8件の正解判定・DB保存と8画面の目視確認を完了した。実機iOS/Androidは未検証。
 
-## PRACTICE-od-01：文字列のバイト表示
+## PRACTICE-od-01：od 1
 
 - 問題データ：[PRACTICE-od-01.yaml](../problems/v3/PRACTICE-od-01.yaml)
 - 狙い・発見：文字として読める入力をUTF-8のバイト列として観察し、空白や改行も値を持つデータと捉える。
@@ -965,7 +965,7 @@ Compose統合6テストでは全115問の参照解答・判定・DB保存を確�
 4件の正解判定・DB保存、入力の2個のスペースとUTF-8 byte列の保持、4画面の目視確認を完了した。
 実機iOS/Androidは未検証。
 
-## PRACTICE-base64-01：Base64のメッセージを復元する
+## PRACTICE-base64-01：base64 1
 
 - 問題データ：[PRACTICE-base64-01.yaml](../problems/v3/PRACTICE-base64-01.yaml)
 - 狙い・発見：Base64の復号を学び、入力の折り返しと復号後の改行を別のものとして捉える。
@@ -1052,7 +1052,7 @@ sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
 
-## PRACTICE-sha256sum-01：ファイルのSHA-256
+## PRACTICE-sha256sum-01：sha256sum 1
 
 - 問題データ：[PRACTICE-sha256sum-01.yaml](../problems/v3/PRACTICE-sha256sum-01.yaml)
 - 狙い・発見：ファイル全体をバイト列としてハッシュ値へ変換し、内部のスペースと末尾LFも計算対象と捉える。
@@ -1097,7 +1097,7 @@ sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
 
-## PRACTICE-paste-01：空欄を保って1行にまとめる
+## PRACTICE-paste-01：paste 1
 
 - 問題データ：[PRACTICE-paste-01.yaml](../problems/v3/PRACTICE-paste-01.yaml)
 - 狙い・発見：空行も1項目と捉え、位置・順序・重複を保って縦の行を横の項目へ組み替える。
@@ -1119,7 +1119,7 @@ sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
 
-## PRACTICE-fold-01：8文字ずつに折り返す
+## PRACTICE-fold-01：fold 1
 
 - 問題データ：[PRACTICE-fold-01.yaml](../problems/v3/PRACTICE-fold-01.yaml)
 - 狙い・発見：各行を一定幅の部分文字列へ捉え直し、元の改行と最後の短い部分を保つ。
