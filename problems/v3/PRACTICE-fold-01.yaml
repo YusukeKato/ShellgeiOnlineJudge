@@ -2,8 +2,8 @@ schema_version: 3
 id: PRACTICE-fold-01
 category: PRACTICE
 title:
-  ja: 8文字ずつに折り返す
-  en: Wrapping Lines Every Eight Characters
+  ja: fold 1
+  en: fold 1
 statement:
   ja: |
     練習：fold

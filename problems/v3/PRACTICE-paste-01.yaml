@@ -2,8 +2,8 @@ schema_version: 3
 id: PRACTICE-paste-01
 category: PRACTICE
 title:
-  ja: 空欄を保って1行にまとめる
-  en: Combining Lines While Preserving Empty Fields
+  ja: paste 1
+  en: paste 1
 statement:
   ja: |
     練習：paste

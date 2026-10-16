@@ -2,8 +2,8 @@ schema_version: 3
 id: PRACTICE-od-01
 category: PRACTICE
 title:
-  ja: 文字列のバイト表示
-  en: Displaying Text as Bytes
+  ja: od 1
+  en: od 1
 statement:
   ja: |
     練習：od
