@@ -38,7 +38,7 @@ types-pyyaml = "^6.0.12.20260906"
 optional = true
 
 [tool.poetry.group.e2e.dependencies]
-playwright = "1.63.0"
+playwright = "1.64.0"
 
 # Ruff 0.16以降も従来の既定ruleを維持し、依存更新とlint方針の変更を分離する。
 [tool.ruff.lint]
