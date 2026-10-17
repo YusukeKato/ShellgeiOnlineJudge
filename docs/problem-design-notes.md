@@ -1169,3 +1169,20 @@ Ruff check・format、mypy（150 source files）、non-Docker 922件が成功し
 sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 Docker全127件の一括実行と実機iOS/Androidは未実施。
+
+## PRACTICE-rev-01：rev 1
+
+- 問題データ：[PRACTICE-rev-01.yaml](../problems/v3/PRACTICE-rev-01.yaml)
+- 狙い・発見：行の順序と行内の文字の順序を区別し、行ごとの文字反転を専用コマンドへ任せる。
+- 解法の核：revにファイルを渡す。別解はawkで各行の末尾から1文字ずつ出す方法。
+  文字位置を管理するループを自分で書かず、行単位の変換として表現できる。
+- 入力の意図：英数字・記号・内部の連続スペース・空行・回文・1文字を含む。
+  期待値は手確認した反転結果と、元の各文字が出力行の対称位置にあることから独立に確認する。
+  空ファイル・1文字・複数行・端のスペースも別の検証fixtureで確認し、非公開の採点入力とは扱わない。
+- 難易度・既存との差：初級。ファイル引数を前提とし、行内を文字列として見る1つの変換で、組み合わせは不要。
+  STANDARD-00000021はrevを回文判定の一部に使う。本問は文字反転自体を学ぶ基礎練習であり、
+  STANDARD-00000053のtacによる行順反転とも異なる。公開入力はASCIIで、構文は採点しない。
+
+検証は[非Docker検査](../backend/tests/test_rev_problem.py)で独立期待値・詳細API・正常終了policy・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_problem_rev_solutions.py)で参照解・別解・6誤答と4境界条件を扱う。
+全問回帰と画面検査は[問題作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
