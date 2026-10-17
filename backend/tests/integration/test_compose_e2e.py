@@ -13,6 +13,7 @@ import pytest
 
 from tests.compose_support import ComposeStack, ROOT
 from soj_shared.version import APP_VERSION
+from soj_tools.problem_review import select_problem_ids
 from soj_shared.problem_repository import build_problem_repository
 
 
@@ -223,7 +224,10 @@ def test_browser_submissions_and_display(stack: ComposeStack, tmp_path: Path) ->
         stack.browser_image,
         name=f"{stack.project}-browser",
         init=True,
-        environment={"SOJ_EXPECTED_VERSION": APP_VERSION},
+        environment={
+            "SOJ_EXPECTED_VERSION": APP_VERSION,
+            "SOJ_BROWSER_PROBLEM_IDS": os.getenv("SOJ_BROWSER_PROBLEM_IDS", "all"),
+        },
         network=f"{stack.project}_frontend_backend",
         shm_size="256m",
         cap_drop=["ALL"],
@@ -232,12 +236,20 @@ def test_browser_submissions_and_display(stack: ComposeStack, tmp_path: Path) ->
     )
     try:
         browser.start()
-        status = browser.wait(timeout=180)
+        status = browser.wait(timeout=900)
         output = browser.logs(tail=100).decode()
         assert status["StatusCode"] == 0, output
         ids = json.loads(output)["submission_ids"]
-        assert len(ids) == 46
-        assert len(db_rows(stack, ids)) == 46
+        selection = os.getenv("SOJ_BROWSER_PROBLEM_IDS", "all")
+        selected = select_problem_ids(list(REPOSITORY.records), selection)
+        full = selection == "all"
+        selected = [pid for pid in selected if not (full and pid.startswith("REGEX-"))]
+        regex_count = (
+            sum(pid.startswith("REGEX-") for pid in REPOSITORY.records) if full else 1
+        )
+        expected_count = 7 + regex_count + len(selected)
+        assert len(ids) == len(set(ids)) == expected_count
+        assert len(db_rows(stack, ids)) == expected_count
         # 実データはtest専用の提出だけとし、表示review用画像をcontainerの回収前に保存する。
         archive, _ = browser.get_archive("/tmp/soj-ui")
         with tarfile.open(fileobj=io.BytesIO(b"".join(archive))) as screenshots:

@@ -5,6 +5,8 @@ import os
 import re
 from pathlib import Path
 
+from soj_tools.problem_review import select_problem_ids
+
 # 任意group未導入でも通常の型検査を妨げず、導入時には実際の型情報で検査する。
 from playwright.sync_api import Page, expect, sync_playwright  # type: ignore[import-not-found]
 
@@ -179,11 +181,14 @@ def submit(page: Page, command: str, verdict: str, label: str) -> int:
     return int(result["submission_id"])
 
 
-def check_regex_problems(page: Page) -> list[int]:
-    """正規表現1〜10番を日英・PCとスマートフォン幅で表示し、実提出とスクリーンショットを確認する。"""
+def check_regex_problems(page: Page, full: bool) -> list[int]:
+    """通常は正規表現の代表1問、全件modeは全正規表現問題を日英・大小画面と実提出で確認する。"""
     ids = []
-    for number in range(1, 11):
-        problem_id = f"REGEX-{number:08}"
+    catalog = page.request.get("https://frontend/api/problems").json()
+    regex_ids = sorted(
+        item["id"] for item in catalog if item["id"].startswith("REGEX-")
+    )
+    for number, problem_id in enumerate(regex_ids if full else regex_ids[:1], 1):
         page.goto(f"https://frontend/?problem={problem_id}", wait_until="networkidle")
         detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
         expect(page.locator("#selected-text")).to_have_text(problem_id)
@@ -202,7 +207,7 @@ def check_regex_problems(page: Page) -> list[int]:
                         exact=True,
                     )
                 ).to_have_attribute("aria-pressed", "true")
-                expect(picker.locator(".problem-option")).to_have_count(10)
+                expect(picker.locator(".problem-option")).to_have_count(len(regex_ids))
                 expect(picker.locator("summary")).to_contain_text(
                     detail[f"title_{language}"]
                 )
@@ -227,35 +232,40 @@ def check_regex_problems(page: Page) -> list[int]:
     return ids
 
 
-def check_base64_problem(page: Page) -> list[int]:
-    """直接URL・練習カテゴリからBase64を開き、日英のLF・空白保持と実提出を画像付きで検証する。"""
-    problem_id = "PRACTICE-base64-01"
-    expected_input = "U0hFTExHRUkKC\nueMq+OBqOeKrA\nprZWVwICBzcGF\njZXMhCg==\n"
-    expected_output = "SHELLGEI\n\n猫と犬\nkeep  spaces!\n"
-    page.goto(f"https://frontend/?problem={problem_id}", wait_until="networkidle")
-    detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
-    assert detail["input"] == expected_input
-    assert detail["expected_output"] == expected_output
-    ids = []
-    for phase in ("direct", "submitted"):
+def check_problem(page: Page, problem_id: str) -> int:
+    """問題dataを基に選択・日英大小画面を検査し、1回の実提出結果を全表示で照合する。"""
+    response = page.request.get(f"https://frontend/api/problems/{problem_id}")
+    assert response.status == 200
+    detail = response.json()
+    page.goto("https://frontend/?problem=STANDARD-00000001", wait_until="networkidle")
+    switch_language(page, "ja")
+    picker = page.locator("details.problem-picker")
+    picker.locator("summary").click()
+    category = {
+        "STANDARD": "通常",
+        "PRACTICE": "練習",
+        "IMAGE": "画像",
+        "REGEX": "正規表現",
+    }[problem_id.split("-", 1)[0]]
+    picker.get_by_role("button", name=category, exact=True).click()
+    picker.get_by_role("button", name=re.compile(re.escape(problem_id))).click()
+    expect(page).to_have_url(re.compile(rf"\?problem={re.escape(problem_id)}$"))
+    image_problem = problem_id.startswith("IMAGE-")
+    submission_id = 0
+    actual_stdout = ""
+    for phase in ("before", "submitted"):
         if phase == "submitted":
-            page.goto(
-                "https://frontend/?problem=STANDARD-00000001",
-                wait_until="networkidle",
-            )
             switch_language(page, "ja")
-            picker = page.locator("details.problem-picker")
-            picker.locator("summary").click()
-            picker.get_by_role("button", name="練習", exact=True).click()
-            picker.get_by_role("button", name=re.compile(problem_id)).click()
-            expect(page).to_have_url(re.compile(rf"\?problem={problem_id}$"))
-            expect(page.locator("#problem-heading")).to_have_text(detail["title_ja"])
-            ids.append(submit(page, detail["answer"], "accepted", "正解"))
+            with page.expect_response(
+                lambda result: "/api/v3/submissions" in result.url
+            ) as pending:
+                submission_id = submit(page, detail["answer"], "accepted", "正解")
+            execution = pending.value.json()["execution"]
+            actual_stdout = execution["stdout"] + execution["stderr"]
         for width in (320, 1440):
             page.set_viewport_size({"width": width, "height": 1000})
             for language in ("ja", "en"):
                 switch_language(page, language)
-                expect(page.locator("#selected-text")).to_have_text(problem_id)
                 expect(page.locator("#problem-heading")).to_have_text(
                     detail[f"title_{language}"]
                 )
@@ -263,433 +273,34 @@ def check_base64_problem(page: Page) -> list[int]:
                     page.locator("#problem-text").text_content()
                     == detail[f"statement_{language}"]
                 )
-                # Playwrightの文字列比較は空白を正規化するため、DOMの生の文字列で照合する。
-                assert page.locator("#input-text").text_content() == expected_input
-                assert page.locator("#output-text").text_content() == expected_output
-                expect(page.locator("#expected-image")).to_have_count(0)
-                picker = page.locator("details.problem-picker")
-                picker.locator("summary").click()
-                expect(
-                    picker.get_by_role(
-                        "button",
-                        name="練習" if language == "ja" else "Practice",
-                        exact=True,
+                assert page.locator("#input-text").text_content() == (
+                    detail["input"] or "NULL"
+                )
+                if image_problem:
+                    expect(page.locator("#expected-image")).to_be_visible()
+                else:
+                    expect(page.locator("#expected-image")).to_have_count(0)
+                    assert page.locator("#output-text").text_content() == (
+                        detail["expected_output"] or "NULL"
                     )
-                ).to_have_attribute("aria-pressed", "true")
-                expect(
-                    picker.get_by_role("button", name=re.compile(problem_id))
-                ).to_contain_text(detail[f"title_{language}"])
-                picker.locator("summary").click()
                 if phase == "submitted":
-                    assert (
-                        page.locator("#user-output-text").text_content()
-                        == expected_output
-                    )
                     expect(page.locator("#result-text")).to_have_text(
                         "正解" if language == "ja" else "Accepted"
                     )
                     expect(page.locator("#cmdline")).to_have_value(detail["answer"])
+                    if image_problem:
+                        expect(page.locator("#result-image")).to_be_visible()
+                    else:
+                        assert page.locator("#user-output-text").text_content() == (
+                            actual_stdout
+                        )
                 assert_page_width(page)
                 page.screenshot(
-                    path=f"/tmp/soj-ui/base64-{phase}-{width}-{language}.png",
+                    path=f"/tmp/soj-ui/problem-{problem_id}-{phase}-{width}-{language}.png",
                     full_page=True,
                     animations="disabled",
                 )
-    return ids
-
-
-def check_unique_visitors_problem(page: Page) -> list[int]:
-    """通常68を日英・320/1440pxで選択・提出し、文字列保持と結果を画像付きで確認する。"""
-    problem_id = "STANDARD-00000068"
-    expected_output = "/tools 4\n/guide 3\n/news 3\n/status 1\n"
-    detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
-    assert detail["expected_output"] == expected_output
-    ids = []
-    for width in (320, 1440):
-        page.set_viewport_size({"width": width, "height": 1000})
-        for language in ("ja", "en"):
-            page.goto(
-                "https://frontend/?problem=STANDARD-00000001", wait_until="networkidle"
-            )
-            switch_language(page, language)
-            picker = page.locator("details.problem-picker")
-            picker.locator("summary").click()
-            picker.get_by_role(
-                "button", name="通常" if language == "ja" else "Standard", exact=True
-            ).click()
-            picker.get_by_role("button", name=re.compile(problem_id)).click()
-            expect(page).to_have_url(re.compile(rf"\?problem={problem_id}$"))
-            expect(page.locator("#problem-heading")).to_have_text(
-                detail[f"title_{language}"]
-            )
-            assert (
-                page.locator("#problem-text").text_content()
-                == detail[f"statement_{language}"]
-            )
-            assert page.locator("#input-text").text_content() == detail["input"]
-            assert page.locator("#output-text").text_content() == expected_output
-            expect(page.locator("#expected-image")).to_have_count(0)
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/visitors-before-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-            ids.append(
-                submit(
-                    page,
-                    detail["answer"],
-                    "accepted",
-                    "正解" if language == "ja" else "Accepted",
-                )
-            )
-            assert page.locator("#user-output-text").text_content() == expected_output
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/visitors-submitted-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-    return ids
-
-
-def check_sales_leaders_problem(page: Page) -> list[int]:
-    """通常69を日英・320/1440pxで選択・提出し、文字列保持と結果を画像付きで確認する。"""
-    problem_id = "STANDARD-00000069"
-    expected_output = (
-        "books atlas 12\nbooks guide 12\nfood tea 7\ngames cards 12\n"
-        "games chess 12\ngames word 12\ntools saw 100\n"
-    )
-    detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
-    assert detail["expected_output"] == expected_output
-    ids = []
-    for width in (320, 1440):
-        page.set_viewport_size({"width": width, "height": 1000})
-        for language in ("ja", "en"):
-            page.goto(
-                "https://frontend/?problem=STANDARD-00000001", wait_until="networkidle"
-            )
-            switch_language(page, language)
-            picker = page.locator("details.problem-picker")
-            picker.locator("summary").click()
-            picker.get_by_role(
-                "button", name="通常" if language == "ja" else "Standard", exact=True
-            ).click()
-            picker.get_by_role("button", name=re.compile(problem_id)).click()
-            expect(page).to_have_url(re.compile(rf"\?problem={problem_id}$"))
-            expect(page.locator("#problem-heading")).to_have_text(
-                detail[f"title_{language}"]
-            )
-            assert (
-                page.locator("#problem-text").text_content()
-                == detail[f"statement_{language}"]
-            )
-            assert page.locator("#input-text").text_content() == detail["input"]
-            assert page.locator("#output-text").text_content() == expected_output
-            expect(page.locator("#expected-image")).to_have_count(0)
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/sales-leaders-before-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-            ids.append(
-                submit(
-                    page,
-                    detail["answer"],
-                    "accepted",
-                    "正解" if language == "ja" else "Accepted",
-                )
-            )
-            assert page.locator("#user-output-text").text_content() == expected_output
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/sales-leaders-submitted-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-    return ids
-
-
-def check_sha256_problem(page: Page) -> list[int]:
-    """SHA-256練習を日英・320/1440pxで選択・提出し、文字列保持と結果を画像付きで確認する。"""
-    problem_id = "PRACTICE-sha256sum-01"
-    expected_output = (
-        "f5ebb56e393995ff3fb5095d0c3bd1977567838eb234531341e8a10080a08b73\n"
-    )
-    detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
-    assert detail["expected_output"] == expected_output
-    ids = []
-    for width in (320, 1440):
-        page.set_viewport_size({"width": width, "height": 1000})
-        for language in ("ja", "en"):
-            page.goto(
-                "https://frontend/?problem=STANDARD-00000001", wait_until="networkidle"
-            )
-            switch_language(page, language)
-            picker = page.locator("details.problem-picker")
-            picker.locator("summary").click()
-            picker.get_by_role(
-                "button", name="練習" if language == "ja" else "Practice", exact=True
-            ).click()
-            picker.get_by_role("button", name=re.compile(problem_id)).click()
-            expect(page).to_have_url(re.compile(rf"\?problem={problem_id}$"))
-            expect(page.locator("#problem-heading")).to_have_text(
-                detail[f"title_{language}"]
-            )
-            assert (
-                page.locator("#problem-text").text_content()
-                == detail[f"statement_{language}"]
-            )
-            assert page.locator("#input-text").text_content() == detail["input"]
-            assert page.locator("#output-text").text_content() == expected_output
-            expect(page.locator("#expected-image")).to_have_count(0)
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/sha256-before-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-            ids.append(
-                submit(
-                    page,
-                    detail["answer"],
-                    "accepted",
-                    "正解" if language == "ja" else "Accepted",
-                )
-            )
-            assert page.locator("#user-output-text").text_content() == expected_output
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/sha256-submitted-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-    return ids
-
-
-def check_pending_tasks_problem(page: Page) -> list[int]:
-    """通常74の作業リストを日英・320/1440pxで選択・提出し、文字列保持と結果を画像付きで確認する。"""
-    problem_id = "STANDARD-00000074"
-    expected_output = (
-        "01 update README\n02 run  unit tests\n03 update README\n04 check backups\n"
-    )
-    detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
-    assert detail["expected_output"] == expected_output
-    ids = []
-    for width in (320, 1440):
-        page.set_viewport_size({"width": width, "height": 1000})
-        for language in ("ja", "en"):
-            page.goto(
-                "https://frontend/?problem=STANDARD-00000001", wait_until="networkidle"
-            )
-            switch_language(page, language)
-            picker = page.locator("details.problem-picker")
-            picker.locator("summary").click()
-            picker.get_by_role(
-                "button", name="通常" if language == "ja" else "Standard", exact=True
-            ).click()
-            picker.get_by_role("button", name=re.compile(problem_id)).click()
-            expect(page).to_have_url(re.compile(rf"\?problem={problem_id}$"))
-            expect(page.locator("#problem-heading")).to_have_text(
-                detail[f"title_{language}"]
-            )
-            assert (
-                page.locator("#problem-text").text_content()
-                == detail[f"statement_{language}"]
-            )
-            assert page.locator("#input-text").text_content() == detail["input"]
-            assert page.locator("#output-text").text_content() == expected_output
-            expect(page.locator("#expected-image")).to_have_count(0)
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/pending-tasks-before-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-            ids.append(
-                submit(
-                    page,
-                    detail["answer"],
-                    "accepted",
-                    "正解" if language == "ja" else "Accepted",
-                )
-            )
-            assert page.locator("#user-output-text").text_content() == expected_output
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/pending-tasks-submitted-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-    return ids
-
-
-def check_fold_problem(page: Page) -> list[int]:
-    """fold練習を日英・320/1440pxで選択・提出し、文字列保持と結果を画像付きで確認する。"""
-    problem_id = "PRACTICE-fold-01"
-    expected_output = "AB12CD34\nEF56GH78\nZ9\n00012345\nXY9\nQ7R8S9T0\n"
-    detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
-    assert detail["expected_output"] == expected_output
-    ids = []
-    for width in (320, 1440):
-        page.set_viewport_size({"width": width, "height": 1000})
-        for language in ("ja", "en"):
-            page.goto(
-                "https://frontend/?problem=STANDARD-00000001", wait_until="networkidle"
-            )
-            switch_language(page, language)
-            picker = page.locator("details.problem-picker")
-            picker.locator("summary").click()
-            picker.get_by_role(
-                "button", name="練習" if language == "ja" else "Practice", exact=True
-            ).click()
-            picker.get_by_role("button", name=re.compile(problem_id)).click()
-            expect(page).to_have_url(re.compile(rf"\?problem={problem_id}$"))
-            expect(page.locator("#problem-heading")).to_have_text(
-                detail[f"title_{language}"]
-            )
-            assert (
-                page.locator("#problem-text").text_content()
-                == detail[f"statement_{language}"]
-            )
-            assert page.locator("#input-text").text_content() == detail["input"]
-            assert page.locator("#output-text").text_content() == expected_output
-            expect(page.locator("#expected-image")).to_have_count(0)
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/fold-before-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-            ids.append(
-                submit(
-                    page,
-                    detail["answer"],
-                    "accepted",
-                    "正解" if language == "ja" else "Accepted",
-                )
-            )
-            assert page.locator("#user-output-text").text_content() == expected_output
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/fold-submitted-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-    return ids
-
-
-def check_paste_problem(page: Page) -> list[int]:
-    """paste練習を日英・320/1440pxで選択・提出し、文字列保持と結果を画像付きで確認する。"""
-    problem_id = "PRACTICE-paste-01"
-    expected_output = "pear,,,apple,pear,,plum\n"
-    detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
-    assert detail["expected_output"] == expected_output
-    ids = []
-    for width in (320, 1440):
-        page.set_viewport_size({"width": width, "height": 1000})
-        for language in ("ja", "en"):
-            page.goto(
-                "https://frontend/?problem=STANDARD-00000001", wait_until="networkidle"
-            )
-            switch_language(page, language)
-            picker = page.locator("details.problem-picker")
-            picker.locator("summary").click()
-            picker.get_by_role(
-                "button", name="練習" if language == "ja" else "Practice", exact=True
-            ).click()
-            picker.get_by_role("button", name=re.compile(problem_id)).click()
-            expect(page).to_have_url(re.compile(rf"\?problem={problem_id}$"))
-            expect(page.locator("#problem-heading")).to_have_text(
-                detail[f"title_{language}"]
-            )
-            assert (
-                page.locator("#problem-text").text_content()
-                == detail[f"statement_{language}"]
-            )
-            assert page.locator("#input-text").text_content() == detail["input"]
-            assert page.locator("#output-text").text_content() == expected_output
-            expect(page.locator("#expected-image")).to_have_count(0)
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/paste-before-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-            ids.append(
-                submit(
-                    page,
-                    detail["answer"],
-                    "accepted",
-                    "正解" if language == "ja" else "Accepted",
-                )
-            )
-            assert page.locator("#user-output-text").text_content() == expected_output
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/paste-submitted-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-    return ids
-
-
-def check_service_changes_problem(page: Page) -> list[int]:
-    """サービス一覧の変更点を日英・320/1440pxで選択・提出し、文字列保持と結果を画像付きで確認する。"""
-    problem_id = "STANDARD-00000071"
-    expected_output = (
-        "REMOVE api\nADD api2\nREMOVE cron\nADD mail\nADD proxy\nREMOVE queue\n"
-    )
-    detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
-    assert detail["expected_output"] == expected_output
-    ids = []
-    for width in (320, 1440):
-        page.set_viewport_size({"width": width, "height": 1000})
-        for language in ("ja", "en"):
-            page.goto(
-                "https://frontend/?problem=STANDARD-00000001", wait_until="networkidle"
-            )
-            switch_language(page, language)
-            picker = page.locator("details.problem-picker")
-            picker.locator("summary").click()
-            picker.get_by_role(
-                "button", name="通常" if language == "ja" else "Standard", exact=True
-            ).click()
-            picker.get_by_role("button", name=re.compile(problem_id)).click()
-            expect(page).to_have_url(re.compile(rf"\?problem={problem_id}$"))
-            expect(page.locator("#problem-heading")).to_have_text(
-                detail[f"title_{language}"]
-            )
-            assert (
-                page.locator("#problem-text").text_content()
-                == detail[f"statement_{language}"]
-            )
-            assert page.locator("#input-text").text_content() == detail["input"]
-            assert page.locator("#output-text").text_content() == expected_output
-            expect(page.locator("#expected-image")).to_have_count(0)
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/service-changes-before-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-            ids.append(
-                submit(
-                    page,
-                    detail["answer"],
-                    "accepted",
-                    "正解" if language == "ja" else "Accepted",
-                )
-            )
-            assert page.locator("#user-output-text").text_content() == expected_output
-            assert_page_width(page)
-            page.screenshot(
-                path=f"/tmp/soj-ui/service-changes-submitted-{width}-{language}.png",
-                full_page=True,
-                animations="disabled",
-            )
-    return ids
+    return submission_id
 
 
 def main() -> None:
@@ -790,16 +401,21 @@ def main() -> None:
         )
         check_responsive_playground(page)
         check_about_page(page)
-        ids.extend(check_regex_problems(page))
-        ids.extend(check_base64_problem(page))
-        ids.extend(check_unique_visitors_problem(page))
-        ids.extend(check_sales_leaders_problem(page))
-        ids.extend(check_sha256_problem(page))
-        ids.extend(check_service_changes_problem(page))
-        ids.extend(check_paste_problem(page))
-        ids.extend(check_fold_problem(page))
-        ids.extend(check_pending_tasks_problem(page))
-        assert len(submissions) == 46
+        selection = os.environ.get("SOJ_BROWSER_PROBLEM_IDS", "all")
+        catalog = page.request.get("https://frontend/api/problems").json()
+        review_ids = select_problem_ids([item["id"] for item in catalog], selection)
+        full = selection == "all"
+        ids.extend(check_regex_problems(page, full))
+        # 共通UIの7提出と正規表現代表例を維持し、追加問題数を固定値へ書き込まない。
+        common_count = 7 + (
+            sum(item["id"].startswith("REGEX-") for item in catalog) if full else 1
+        )
+        assert len(ids) == common_count
+        review_ids = [
+            pid for pid in review_ids if not (full and pid.startswith("REGEX-"))
+        ]
+        ids.extend(check_problem(page, pid) for pid in review_ids)
+        assert len(submissions) == common_count + len(review_ids)
         assert not errors
         browser.close()
         print(json.dumps({"submission_ids": ids}))

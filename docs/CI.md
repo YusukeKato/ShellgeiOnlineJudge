@@ -8,12 +8,14 @@
 
 | Workflow | 検査 | 実行条件 |
 | --- | --- | --- |
-| FastAPI CI | 対応Python全versionでruff・format・mypy・非Docker test | push、PR、週次 |
-| React CI | Node.jsでformat・lint・typecheck・test・build | push、PR、週次 |
-| Supply Chain CI / source | workflow検証、Git履歴と作業treeのsecret scan、lock fileのSBOM・脆弱性scan、scanner fixture | push、PR、週次、手動 |
-| Supply Chain CI / runtime | sandbox・DBを含む本番5 imageのbuild・SBOM・scan、Compose全問題回帰・browser・image境界・DB更新互換test | push、PR、週次、手動 |
+| FastAPI CI | 対応Python全versionでruff・format・mypy・非Docker test | main push、PR、週次 |
+| React CI | Node.jsでformat・lint・typecheck・test・build | main push、PR、週次 |
+| Supply Chain CI / source | workflow検証、Git履歴と作業treeのsecret scan、lock fileのSBOM・脆弱性scan、scanner fixture | main push、PR、週次、手動 |
+| Supply Chain CI / runtime | sandbox・DBを含む本番5 imageのbuild・SBOM・scan、Compose全問題回帰・browser・image境界・DB更新互換test | main push、PR、週次、手動 |
 | Supply Chain CI / provenance | 同じrunで検査を通過した生成物の署名付きprovenance登録 | mainへのpushでsource・runtime両jobが成功した場合だけ |
 | Production deploy | 同じcommitの全CI成功待ち、署名検証、SSH配備・DB migration・起動確認 | main push、Repository variableで有効化した場合だけ |
+
+作業branchへのpushでは検査を重複起動せず、PR作成・更新で検査します。main pushの検査・署名・配備条件は維持します。
 
 全workflowは`contents: read`を既定とし、checkoutはcredentialを保持しません。
 Actionは公式repositoryのfull commit SHAに固定し、runner OS・job timeout・concurrencyを
@@ -263,3 +265,16 @@ poetry run python ci/supply_chain.py runtime \
 - [SyftのSBOM生成](https://oss.anchore.com/docs/guides/sbom/getting-started/)
 - [Grypeの結果filter](https://oss.anchore.com/docs/guides/vulnerability/filter-results/)
 - [Gitleaks](https://github.com/gitleaks/gitleaks)
+
+
+## 問題追加の検査範囲
+
+全問題の参照解答・判定・DB保存、共通UI・障害復旧・image境界の検査はPRとmainで維持します。
+問題ごとの詳細な画面検査だけを、`soj_tools.problem_review`で選択します。
+PRはbase SHAと検査対象merge SHA、main pushはeventのbefore SHAと対象SHAの差分を使います。
+問題data・個別問題test・文書だけなら代表例と変更問題、共通code変更・削除・未知file・差分取得不能・週次・手動実行なら全問題です。
+詳細な対象と手動指定は[Docker統合テスト](../backend/tests/integration/README.md#問題追加時の画面検査)を正本とします。
+画像は共通の`browser-ui-review` artifactへ14日保存します。新問ごとにartifact stepを増やしません。
+
+配備ログに転送時間・host更新時間を出します。
+短縮効果はこれらとjob時間で測定し、並列jobやCI待機時間を重複加算しません。

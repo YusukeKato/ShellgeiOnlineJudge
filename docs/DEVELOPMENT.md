@@ -309,6 +309,10 @@ pytestの収集時はtest専用のmemory SQLite URLを明示し、ホストのDB
 CIの権限・workflow検証・secret/依存/image scan・SBOM・provenanceは
 [CIとソフトウェア供給網の検査](./CI.md)を正本とします。
 
+問題追加のみの場合のローカル検証とCIの分担は、[問題作成ガイド](./problem-authoring.md#作成・検証の進め方)を参照してください。
+WSL検証のために作業treeの改行を一時変換する場合は、復元処理とDocker検査を並列実行しないでください。
+LFの検証用checkoutを使うか、変換・検査・復元を直列化し、既存差分を保護します。
+
 ### Docker統合テスト
 
 実行条件、必要なイメージ、コマンド、検証内容は、
