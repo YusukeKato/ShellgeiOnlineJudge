@@ -5,6 +5,10 @@
 `frontend` directoryには、ReactとTypeScriptによるブラウザ向けUIがあります。
 本番用buildは、同じserviceに含まれるnginxから配信します。
 
+runtime imageのbase digestとOS packageの固定値は[`Dockerfile`](./Dockerfile)を正本とします。
+固定packageが配布元から消えた場合は、同じAlpine branchで配布中の候補を確認し、
+[image更新の検証手順](../docs/PRODUCTION.md#image-digestの更新)を通して固定値を更新してください。
+
 ## 主な構成
 
 - `src/api/`: public APIの型、受信JSON検証、HTTP client
