@@ -1142,3 +1142,30 @@ Ruff check・format、mypy（148 source files）、non-Docker 920件が成功し
 sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
+
+## STANDARD-00000074：未完了の作業リスト
+
+- 問題データ：[STANDARD-00000074.yaml](../problems/v3/STANDARD-00000074.yaml)
+- 狙い・発見：元の行番号と抽出後の作業番号を区別し、抽出結果を次の道具へ渡す意味を学ぶ。
+- 解法の核：sedで行頭の完全な接頭辞を選び除去し、nlで2桁のゼロ埋め連番を付ける。
+  別解はawkで対象行だけカウンターを進め、substrで作業名を保つ方法。
+- 入力の意図：行途中のTODO・TODO2・離れた同一作業・連続スペースを含む。
+  期待値は手確認した入力2・4・6・8行目と、Pythonの接頭辞判定・列挙で独立に照合する。
+- 難易度・既存との差：初級の組み合わせ問題。行頭一致とパイプが前提で、行単位のまま抽出と整形を分担する。
+  PRACTICE-cat-02の全行への番号付け、PRACTICE-grep-04の抽出から、抽出後の連番へ進む。
+  既存の参照解答・検証済み別解にはnlの採用例がなく、番号の書式設定を専用コマンドへ任せる。
+  コマンドの構文は採点しない。
+
+検証は[非Docker検査](../backend/tests/test_pending_tasks_problem.py)で独立期待値・詳細API・正常終了policy・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_pending_tasks_solutions.py)で参照解・別解・6誤答と4境界条件を扱う。
+境界条件は解法の確認用であり、非公開の採点データではない。
+
+STANDARD-00000074の検証範囲（2026-10-17）：
+Ruff check・format、mypy（150 source files）、non-Docker 922件が成功した。
+明示したrootless daemonで関連するDocker統合16件が成功した（復旧検査2件は環境修正後に再実行）。
+全123問の参照解答・判定・DB保存と、実ブラウザ46提出のDB保存を含む。
+実sandbox検査では参照解・awk別解、6誤答、対象なし・1件・10件・空の作業名の計16ケースを確認した。
+日英それぞれ320px・1,440pxの提出結果4画面を目視し、提出前後8枚を保存した。
+sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
+backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
+Docker全127件の一括実行と実機iOS/Androidは未実施。

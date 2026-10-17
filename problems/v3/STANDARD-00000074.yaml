@@ -1,0 +1,42 @@
+schema_version: 3
+id: STANDARD-00000074
+category: STANDARD
+title:
+  ja: 未完了の作業リスト
+  en: Pending Task List
+statement:
+  ja: |
+    input.txtには、作業やメモが記録されています。
+    行頭が「TODO 」で始まる行を、未完了の作業として取り出してください。「TODO」の直後は半角スペース1個です。
+
+    取り出した行から先頭の「TODO 」を除き、01から始まる2桁の連番と半角スペース1個を付けて出力してください。
+    作業の順序、同じ内容の繰り返し、作業名の中のスペースはそのまま残してください。
+  en: |
+    input.txt contains tasks and notes.
+    Select pending tasks whose lines start with “TODO ”, including one space immediately after “TODO”.
+
+    Remove that prefix and prepend consecutive two-digit numbers starting at 01, followed by one space.
+    Preserve task order, repeated tasks, and spaces within task names.
+reference_solution: sed -n 's/^TODO //p' input.txt | nl -ba -w2 -nrz -s' '
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      DONE archive logs
+      TODO update README
+      NOTE TODO items are below
+      TODO run  unit tests
+      TODO2 check backup
+      TODO update README
+      DONE send report
+      TODO check backups
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    01 update README
+    02 run  unit tests
+    03 update README
+    04 check backups
