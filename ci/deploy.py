@@ -203,6 +203,7 @@ def transfer(reports: Path) -> None:
             check=True,
             timeout=60,
         )
+        transfer_started = time.monotonic()
         subprocess.run(
             [
                 "scp",
@@ -216,6 +217,10 @@ def transfer(reports: Path) -> None:
             ],
             check=True,
             timeout=900,
+        )
+        print(
+            f"Image transfer completed in {time.monotonic() - transfer_started:.2f}s",
+            flush=True,
         )
         command = [
             "systemd-run",
@@ -240,7 +245,12 @@ def transfer(reports: Path) -> None:
             "sh",
             *command,
         ]
+        update_started = time.monotonic()
         subprocess.run([*ssh, shlex.join(launch)], check=True, timeout=2550)
+        print(
+            f"Host update completed in {time.monotonic() - update_started:.2f}s",
+            flush=True,
+        )
 
 
 def main() -> None:

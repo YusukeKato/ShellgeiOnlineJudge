@@ -2,6 +2,7 @@ name: Supply Chain CI
 
 on:
   push:
+    branches: [main]
   pull_request:
   schedule:
     - cron: "15 11 * * 2"
@@ -75,6 +76,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.14"
@@ -128,6 +130,8 @@ jobs:
       - name: Pull verified infrastructure images
         run: |
           poetry run python -c 'import subprocess; from tests.postgres_support import upstream_postgres_image; refs = [upstream_postgres_image()]; [subprocess.run(["docker", "pull", ref], check=True) for ref in refs]'
+      - name: Select problem screen review scope
+        run: python backend/soj_tools/problem_review.py --github-env
       - name: Full Compose regression and image boundary checks
         id: regression
         env:
@@ -142,69 +146,15 @@ jobs:
           SOJ_COMPOSE_BROWSER_IMAGE: soj-browser:ci
           SOJ_BACKEND_RUNTIME_IMAGE: soj-backend:ci
           SOJ_RUNNER_RUNTIME_IMAGE: soj-runner:ci
-        run: poetry run pytest --basetemp "$RUNNER_TEMP/soj-compose-tests" backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_production_deploy.py backend/tests/integration/test_runtime_images.py backend/tests/integration/test_postgres_image.py backend/tests/integration/test_sandbox_tools.py backend/tests/integration/test_base64_solutions.py backend/tests/integration/test_unique_visitors_solutions.py backend/tests/integration/test_sales_leaders_solutions.py backend/tests/integration/test_sha256_solutions.py backend/tests/integration/test_service_changes_solutions.py backend/tests/integration/test_paste_solutions.py backend/tests/integration/test_fold_solutions.py backend/tests/integration/test_pending_tasks_solutions.py
-      - name: Retain Base64 browser review screenshots
+        run: |
+          shopt -s nullglob
+          poetry run pytest --basetemp "$RUNNER_TEMP/soj-compose-tests" backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_production_deploy.py backend/tests/integration/test_runtime_images.py backend/tests/integration/test_postgres_image.py backend/tests/integration/test_sandbox_tools.py backend/tests/integration/test_base64_solutions.py backend/tests/integration/test_unique_visitors_solutions.py backend/tests/integration/test_sales_leaders_solutions.py backend/tests/integration/test_sha256_solutions.py backend/tests/integration/test_service_changes_solutions.py backend/tests/integration/test_paste_solutions.py backend/tests/integration/test_fold_solutions.py backend/tests/integration/test_pending_tasks_solutions.py backend/tests/integration/test_problem_*_solutions.py
+      - name: Retain browser review screenshots
         if: ${{ always() && steps.regression.outcome != 'skipped' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: base64-ui-review
-          path: ${{ runner.temp }}/soj-compose-tests/**/soj-ui/base64-*.png
-          retention-days: 14
-          if-no-files-found: warn
-      - name: Retain unique visitors browser review screenshots
-        if: ${{ always() && steps.regression.outcome != 'skipped' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: unique-visitors-ui-review
-          path: ${{ runner.temp }}/soj-compose-tests/**/soj-ui/visitors-*.png
-          retention-days: 14
-          if-no-files-found: error
-      - name: Retain sales leaders browser review screenshots
-        if: ${{ always() && steps.regression.outcome != 'skipped' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: sales-leaders-ui-review
-          path: ${{ runner.temp }}/soj-compose-tests/**/soj-ui/sales-leaders-*.png
-          retention-days: 14
-          if-no-files-found: error
-      - name: Retain SHA-256 browser review screenshots
-        if: ${{ always() && steps.regression.outcome != 'skipped' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: sha256-ui-review
-          path: ${{ runner.temp }}/soj-compose-tests/**/soj-ui/sha256-*.png
-          retention-days: 14
-          if-no-files-found: error
-      - name: Retain service changes browser review screenshots
-        if: ${{ always() && steps.regression.outcome != 'skipped' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: service-changes-ui-review
-          path: ${{ runner.temp }}/soj-compose-tests/**/soj-ui/service-changes-*.png
-          retention-days: 14
-          if-no-files-found: error
-      - name: Retain paste browser review screenshots
-        if: ${{ always() && steps.regression.outcome != 'skipped' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: paste-ui-review
-          path: ${{ runner.temp }}/soj-compose-tests/**/soj-ui/paste-*.png
-          retention-days: 14
-          if-no-files-found: error
-      - name: Retain fold browser review screenshots
-        if: ${{ always() && steps.regression.outcome != 'skipped' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: fold-ui-review
-          path: ${{ runner.temp }}/soj-compose-tests/**/soj-ui/fold-*.png
-          retention-days: 14
-          if-no-files-found: error
-      - name: Retain pending tasks browser review screenshots
-        if: ${{ always() && steps.regression.outcome != 'skipped' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: pending-tasks-ui-review
-          path: ${{ runner.temp }}/soj-compose-tests/**/soj-ui/pending-tasks-*.png
+          name: browser-ui-review
+          path: ${{ runner.temp }}/soj-compose-tests/**/soj-ui/*.png
           retention-days: 14
           if-no-files-found: error
       - name: Retain runtime inventory and candidate for review

@@ -80,7 +80,7 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - コンテナ削除
 - 実行中コンテナからの上限付き画像取得
 - 元のGIF生成コマンドの全10frame・delay保持、固定回収path・symlink・FIFO・byte上限・timeout・出力上限・次の提出への非残存（`test_gif_display_docker.py`）
-- browser上のGIFアニメーションと、JPEGでの採点・GIF表示の両立。browserで正規表現10問・Base64練習・通常68・69・71・SHA-256・paste・fold練習・通常74を含む実提出46件とDB保存を照合
+- browser上のGIFアニメーションと、JPEGでの採点・GIF表示の両立。共通UIと選択した問題の実提出・DB保存を照合（対象は下記「問題追加時の画面検査」を参照）
 - workerの回復
 - 実nginxで、sandboxを開始しないrequestが
   正常requestと共有の実行開始枠を消費しないこと
@@ -109,33 +109,21 @@ legacy `yaml_data/`とのsemantic一致と意図した改訂の範囲は、
 行ごとの復号・空行削除・連続スペースの圧縮・未復号の誤答を実sandboxで区別します。
 `test_unique_visitors_solutions.py`は通常68の参照解答・配列別解と、アクセス回数の集計・失敗の混入・
 訪問者全体や時刻付き全行の重複除去・隣接する組だけの除去・同率逆順の誤答を実sandboxで区別します。
-通常68は日英・320/1,440pxの実UIでカテゴリから選択・提出し、入力・期待出力・結果の文字列とDB保存を照合します。
-提出前後の8画面をCIの`unique-visitors-ui-review` artifactへ14日間保存します。
 `test_sha256_solutions.py`はSHA-256練習の参照解・標準入力経由の別解と、末尾LF・全改行・内部スペースの削除、
 ファイル名付き出力・大文字16進数・MD5への取り違えの6誤答を、実sandboxで区別します。
-ブラウザでは練習カテゴリから選び、日英・320/1,440pxで入力・期待出力・実提出結果の完全一致とDB保存を確認します。
-提出前後の8画面をCIの`sha256-ui-review` artifactへ14日間保存します。
 
 `test_sales_leaders_solutions.py`は通常69の参照解・2回読みの別解と、売上の辞書順比較・同率首位の欠落・
 グループ整列の省略・全体最大値だけの抽出・商品名の逆順を実sandboxで区別します。
-通常69を日英・320/1,440pxで選択・提出し、文字列とDB保存を照合します。
-提出前後の8画面をCIの`sales-leaders-ui-review` artifactへ14日間保存します。
 `test_service_changes_solutions.py`は通常71のcomm参照解・配列別解と、片方向のみの抽出・
 多重集合としての比較・ラベル順の整列・追加と削除の逆転・部分一致による名前の欠落を実sandboxで区別します。
-通常71を日英・320/1,440pxで選択・提出し、入力・期待出力・結果の文字列とDB保存を照合します。
-提出前後の8画面をCIの`service-changes-ui-review` artifactへ14日間保存します。
 `test_paste_solutions.py`はpaste練習の参照解・awk別解と、直列結合の省略・空行削除や圧縮・
 余分な末尾カンマ・タブ区切り・整列と重複除去の6誤答を実sandboxで区別します。
-日英・320/1,440pxで練習カテゴリから選択・提出し、連続空行・期待出力・結果とDB保存を照合します。
-提出前後の8画面をCIの`paste-ui-review` artifactへ14日間保存します。
 `test_fold_solutions.py`はfold練習の参照解・awk別解と、幅の誤り・元の行の連結・
 切り捨て・整列の6誤答、短い行・幅ちょうど・1文字超過・空行の境界条件を検査します。
-日英それぞれ320px・1,440pxの選択・提出・表示一致をbrowserで確認し、
-提出前後の8画面をCIの`fold-ui-review` artifactへ14日間保存します。
 `test_pending_tasks_solutions.py`は通常74の参照解・awk別解、接頭辞・元の行番号・整列・空白・番号書式の6誤答と、
-該当なし・1件・10件・空の作業名を確認します。日英320/1440pxの提出前後8画面を
-CIの`pending-tasks-ui-review` artifactへ14日間保存します。
-Supply Chain CIは上記8問の検査を含む13ファイル・34項目を選択実行します。全Docker統合テストとは別です。
+該当なし・1件・10件・空の作業名を確認します。
+Supply Chain CIは既存の13ファイル・34項目に加え、`test_problem_*_solutions.py`に一致する新しい個別解法testを自動収集します。
+一致するfileがない場合は既存の検査をそのまま実行します。全Docker統合テストとは別です。
 現在登録されている全問題の参照解答は上記の全問題回帰で確認します。
 `test_new_standard_solutions.py`は通常53〜60の参照解答と別解、および初出優先、差の逆転、
 境界の部分一致、空欄を失う分割、大小文字の未統一、結合キーの重複除去、
@@ -172,6 +160,31 @@ SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_RUNTIME_IMAGE_TESTS=1 \
 Composeと同じ実行制限でtext/image判定とDB保存まで検証します。test ownerだけの
 sandbox・container・networkを終了時に回収し、本番volumeや公開portは使用しません。
 frontend/nginxとbrowserを含む検証は、次のCompose E2Eで行います。
+
+### 問題追加時の画面検査
+
+共通ブラウザ検査は、正解・不正解・timeout・出力上限・画像/GIF・言語切替・カテゴリ選択を毎回確認します。
+問題ごとの詳細表示は共通関数で検査し、独立した期待値は各問題のdata検査で確認します。
+新問ごとに表示関数、固定提出件数、画像保存stepを追加しません。
+
+- `SOJ_BROWSER_PROBLEM_IDS='["STANDARD-00000074"]'`のようにJSON配列を指定すると、指定問題と
+  空白・空行・日本語の代表例Base64、通常カテゴリの代表例68を検査します。正規表現代表例1も共通検査に含みます。
+- 未指定または`all`は全問題です。週次・手動CI・共通code変更・判定不能な差分ではこのmodeを使います。
+- CIは問題dataと個別test・文書だけの変更なら追加・変更したIDを自動選択します。
+  不明IDを手動指定した場合は失敗させ、指定漏れを成功として扱いません。
+- 各問題は1回だけ実提出し、結果を保持して日英320/1440pxの表示を確認します。
+  提出前後の画像は`problem-<ID>-<phase>-<width>-<language>.png`として共通artifactへ保存します。
+  正規表現・共通機能の画像も同じartifactへ保存します。
+- 提出件数は選択対象から独立に算出し、すべてのIDの一意性とtest DB保存を検査します。
+  全件modeにも対応するためbrowserの待機上限は900秒です。
+- 全問題回帰の対象はこの選択値で減らしません。新問の参照解・別解・誤答の実sandbox検査も別途実行します。
+
+ローカルで新問だけの画面を調べる例（下記のCompose imageとflagを準備した後）：
+
+```sh
+SOJ_BROWSER_PROBLEM_IDS='["STANDARD-00000074"]' poetry run pytest \
+  backend/tests/integration/test_compose_e2e.py::test_browser_submissions_and_display
+```
 
 ## ComposeとブラウザのE2E
 

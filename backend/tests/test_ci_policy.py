@@ -88,3 +88,27 @@ def test_deployment_requires_main_ci_and_verification_before_ssh() -> None:
     assert steps[4]["with"]["role-to-assume"] == "${{ vars.DEPLOY_AWS_ROLE_ARN }}"
     assert "secrets." not in str(steps[:5])
     assert "ci/deploy.py transfer" in steps[5]["run"]
+
+
+def test_ci_runs_on_pr_and_main_without_duplicate_branch_push() -> None:
+    # 作業branchはPRで検査し、配備を守るmain pushと定期検査は残す。
+    for workflow in workflows():
+        if workflow["name"] == "Production deploy":
+            continue
+        assert workflow["on"]["push"] == {"branches": ["main"]}
+        assert "pull_request" in workflow["on"]
+        assert "schedule" in workflow["on"]
+    workflow = next(w for w in workflows() if w["name"] == "Supply Chain CI")
+    steps = workflow["jobs"]["runtime"]["steps"]
+    assert steps[0]["with"]["fetch-depth"] == "0"
+    selection = next(
+        i for i, step in enumerate(steps) if "problem_review.py" in step.get("run", "")
+    )
+    regression = next(
+        i for i, step in enumerate(steps) if step.get("id") == "regression"
+    )
+    assert selection < regression
+    assert steps[regression]["env"]["SOJ_RUN_FULL_REGRESSION"] == "1"
+
+    assert "shopt -s nullglob" in steps[regression]["run"]
+    assert "test_problem_*_solutions.py" in steps[regression]["run"]

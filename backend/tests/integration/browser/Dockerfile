@@ -10,5 +10,6 @@ ENV PATH="/opt/venv/bin:$PATH" PLAYWRIGHT_BROWSERS_PATH=/ms-playwright HOME=/tmp
 COPY --from=dependencies /opt/venv /opt/venv
 RUN python -m playwright install --with-deps --only-shell chromium && rm -rf /var/lib/apt/lists/*
 COPY backend/tests/integration/browser/check.py /checks/check.py
+COPY backend/soj_tools/__init__.py backend/soj_tools/problem_review.py /checks/soj_tools/
 USER 10001:10001
 CMD ["python", "/checks/check.py"]

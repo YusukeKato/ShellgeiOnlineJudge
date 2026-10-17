@@ -1,6 +1,8 @@
 # main pushからの本番自動更新
 
 既存の本番サーバへGitHub ActionsからSSM経由でSSH接続し、CIで検証した5 imageを配備します。
+転送する`runtime.tar`自体の署名とhashを検証し、rootless Dockerが読み込みます。
+転送時間とhost更新時間は配備jobのログで確認できます。
 DB migrationとsandbox更新を含み、サービス停止から起動確認まで一時停止します。
 この運用ではDBの消失を許容し、DB・role・設定fileの自動バックアップは作りません。
 既存DB volumeは通常の更新で維持しますが、障害時に更新前のデータへ戻せる保証はありません。
