@@ -1,3 +1,4 @@
+import asyncio
 import os
 import socket
 import time
@@ -12,6 +13,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session, sessionmaker
 
 import soj_backend.database_migrations as migration_module
+import soj_backend.execution_log_repository as logs
 from soj_backend.migrations.versions import v0001_legacy_execution_logs
 from soj_shared.models.execution import ExecutionResult, ExecutionStatus
 from soj_backend.models.execution_log import ExecutionLogEntry
@@ -109,10 +111,92 @@ def _execution_log_entry(output: str) -> ExecutionLogEntry:
     )
 
 
+def _assert_async_save_admission(
+    database_engine: Engine, database_url: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """専用DBのlock下で4保存のcancel後も枠を保持し、解除後に再保存できることを確認する。"""
+    save_engine = create_engine(
+        database_url,
+        connect_args={"options": "-c lock_timeout=5000 -c statement_timeout=5000"},
+    )
+    worker = logs._ExecutionLogExecutor()
+    repository = ExecutionLogRepo(session_factory=sessionmaker(bind=save_engine))
+
+    async def scenario(lock_session: Session) -> None:
+        """実SQLの待機を確認してからawaitをcancelし、DB終了まで再受付を拒否する。"""
+        tasks = [
+            asyncio.create_task(
+                logs.save_execution_log_async(
+                    _execution_log_entry("bounded"), persist_entry=repository.save
+                )
+            )
+            for _ in range(4)
+        ]
+        try:
+            async with asyncio.timeout(3):
+                while (
+                    lock_session.scalar(
+                        text(
+                            "SELECT count(*) FROM pg_locks WHERE "
+                            "relation='execution_logs'::regclass AND NOT granted"
+                        )
+                    )
+                    != 4
+                ):
+                    await asyncio.sleep(0.01)
+            for task in tasks:
+                task.cancel()
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            assert all(isinstance(result, asyncio.CancelledError) for result in results)
+            with pytest.raises(ExecutionLogRepositoryError):
+                await logs.save_execution_log_async(
+                    _execution_log_entry("rejected"), persist_entry=repository.save
+                )
+        finally:
+            lock_session.rollback()
+            await asyncio.gather(*tasks, return_exceptions=True)
+        # DB完了とcallbackによる解放まで待ち、同じworkerで回復を確認する。
+        async with asyncio.timeout(5):
+            while True:
+                try:
+                    saved_id = await logs.save_execution_log_async(
+                        _execution_log_entry("admission-recovered"),
+                        persist_entry=repository.save,
+                    )
+                    assert saved_id > 0
+                    break
+                except ExecutionLogRepositoryError:
+                    await asyncio.sleep(0.01)
+
+    try:
+        with monkeypatch.context() as patch, Session(database_engine) as lock_session:
+            patch.setattr(logs, "_executor", worker)
+            lock_session.execute(
+                text("LOCK TABLE execution_logs IN ACCESS EXCLUSIVE MODE")
+            )
+            asyncio.run(scenario(lock_session))
+    finally:
+        worker.shutdown()
+        save_engine.dispose()
+    with Session(database_engine) as db:
+        assert (
+            db.scalar(select(ExecutionLog.id).where(ExecutionLog.stdout == "rejected"))
+            is None
+        )
+        assert (
+            db.scalar(
+                select(ExecutionLog.id).where(
+                    ExecutionLog.stdout == "admission-recovered"
+                )
+            )
+            is not None
+        )
+
+
 def test_postgres_migration_repository_retention_and_recovery(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # 実PostgreSQLでforward/rollback、repository保存、保持上限、lock失敗後の回復を確認する。
+    # 実PostgreSQLでmigration・retention・lock失敗と、保存受付上限・cancel後の回復を確認する。
     client = docker.from_env()
     container = None
     database_engine = None
@@ -308,6 +392,7 @@ def test_postgres_migration_repository_retention_and_recovery(
                 )
                 == "recovered"
             )
+        _assert_async_save_admission(database_engine, database_url, monkeypatch)
     finally:
         if timeout_engine is not None:
             timeout_engine.dispose()

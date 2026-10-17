@@ -62,6 +62,10 @@ HTTP 200で次の型付きresponseを返します。受付拒否やrunner応答�
 | `artifact` | object / `null` | 画像のMIMEとBase64 data |
 | `persistence` | `saved` / `unavailable` | 実行ログ保存状態 |
 
+DB障害または保存受付枠が満杯の場合も、実行・判定済みならHTTP 200で結果を返し、
+`submission_id: null`、`persistence: unavailable`とします。保存の自動再試行は行いません。
+受付上限と保証範囲は[実行ログの制約](../SECURITY.md#実行ログとdockerログ)を参照してください。
+
 `execution.status`は`completed`、`timed_out`、`output_limit`、`error`のいずれかです。
 内部Docker errorの文字列は公開しません。`stdout`と`stderr`の合計は1,000文字以下です。
 

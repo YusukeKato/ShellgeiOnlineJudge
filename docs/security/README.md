@@ -37,6 +37,14 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- DB遅延時の実行ログ滞留に対し、保存入口の非待機受付制限を実装しています
+  （2026-10-17検証）。保証範囲は
+  [実行ログの制約](../../SECURITY.md#実行ログとdockerログ)を参照してください。
+  rootlessの使い捨て環境で実proxy・Uvicorn・runner・PostgreSQLを使い、通常DBの16提出は
+  全件保存、25秒のDBロック中の18切断提出では未完了保存最大4件・観測待ちキュー0件・
+  満杯拒否3件、解除後の保存復帰を確認しました。DB遅延は管理側の故障注入であり、
+  外部利用者がDB遅延自体を作れるとの確認ではありません。専用資源は回収済みです。
+  継続回帰は`test_execution_log_admission.py`と`test_postgres_retention.py`で行います。
 - SOJ-022の限定更新と3問追加を統合した`e52b19b`は、GitHubのFastAPI・React・Supply Chain CIが成功しました。
   [統合候補の検証結果](#2026-10-07の統合候補とgithub-ci)を参照してください。
   sourceと全5製品の停止対象・例外・リスク受容は0ですが、runtimeの非ブロック指摘は残ります。

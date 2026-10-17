@@ -358,6 +358,15 @@ commandや出力には利用者が自ら入力した機密情報が含まれる�
 置き換えます。利用者へ返す実行結果は変更しません。
 実行ログの追加、retention、commit、rollback、closeはrequestのevent loop外の
 worker threadで処理し、commitを含む処理に失敗した場合はrollbackしてsessionを閉じます。
+未完了の保存はbackendプロセス当たり最大4件です。worker開始前の仕事も含めて
+submit前に非待機で受付枠を確保し、満杯なら仕事や待機taskを追加せず保存不能にします。
+requestの切断・cancelでは受け付けた保存をcancelせず、rollback・closeを含む実処理が
+終了するまで枠を保持します。終了時は新規受付を閉じてからworkerの終了を待ちます。
+executorへの投入自体が例外になった場合は、キュー投入後のthread生成失敗もあり得るため、
+そのプロセスの保存受付を閉じます。既存処理の終了・回収後、backendの再起動が必要です。
+満杯時の実行ログは保存せず、自動再試行もしません。worker・replicaを増やすと
+合計上限も増えます。この制限は保存の滞留件数を抑えるものであり、保存全体の
+終了期限やshutdownの終了時間、サービス全体の資源使用量を保証しません。
 保存に失敗しても実行・判定結果は返します。保存不能時のID・statusの表現は、
 v3とlegacyで異なるため[Public API](./docs/API.md)を参照してください。
 

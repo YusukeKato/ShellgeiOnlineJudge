@@ -427,6 +427,12 @@ dump以後の投稿は含まれません。別hostへ保護して転送し、復
 稼働中のDocker data directoryのコピーはDB backupになりません。
 保持期間・用途・logへ残せる情報は[実行ログとDockerログ](../SECURITY.md#実行ログとdockerログ)を正本とします。
 request IDは単一requestの障害調査にだけ使用します。
+DB保存の混雑時はHTTP 200でもログが保存されないため、HTTPの5xxだけでなく
+`execution_log_save_failed`と提出の`persistence_status: unavailable`も確認します。
+DB復旧後も保存不能が続く場合はworkerの投入障害を含めて調査します。executorの
+投入障害では保存受付を閉じるため、原因解消後にbackendを再起動してください。
+backendのworker・replicaを増やす場合は、上記正本に記載した保存受付上限が
+プロセスごとに適用されることをDBの接続・負荷予算へ織り込んでください。
 
 状態の確認は次を使用します。
 

@@ -1,7 +1,8 @@
 import logging
+import threading
 import time
 from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 
 from sqlalchemy.orm import Session
 
@@ -158,11 +159,55 @@ class AsyncExecutionLogRepo:
         )
 
 
+class _ExecutionLogExecutor:
+    """受付済み保存の寿命を管理し、切断後も未完了件数をworker数以下に保つ。"""
+
+    def __init__(self) -> None:
+        """プロセス共通の保存worker、非待機の受付枠、終了状態を用意する。"""
+        self._pool = ThreadPoolExecutor(
+            max_workers=EXECUTION_LOG_WORKER_CAPACITY,
+            thread_name_prefix="execution-log",
+        )
+        self._slots = threading.BoundedSemaphore(EXECUTION_LOG_WORKER_CAPACITY)
+        self._admission_lock = threading.Lock()
+        self._closing = False
+
+    def submit(
+        self, persistence: PersistEntry, entry: ExecutionLogEntry
+    ) -> Future[int]:
+        """待たずに保存を受け付け、満杯・終了中ならrepository例外を返す。
+
+        返すfutureをrequestのキャンセル時にcancelしないこと。実保存の終了まで
+        枠を保持し、キャンセル済みwork itemを内部queueへ蓄積させない。
+        """
+        with self._admission_lock:
+            if self._closing or not self._slots.acquire(blocking=False):
+                raise ExecutionLogRepositoryError("execution log worker unavailable")
+            try:
+                future = self._pool.submit(persistence, entry)
+            except BaseException:
+                # Thread.start失敗はqueue投入後にも起こる。投入有無が不明なため
+                # 再受付を閉じ、残ったwork itemを繰り返し積まない。
+                self._closing = True
+                self._slots.release()
+                raise
+            future.add_done_callback(self._release_slot)
+            return future
+
+    def _release_slot(self, _future: Future[int]) -> None:
+        """保存・rollback・closeまで終了したfutureの受付枠を一度だけ返す。"""
+        self._slots.release()
+
+    def shutdown(self) -> None:
+        """新規受付を閉じてから保存終了を待つ。繰り返しの終了要求も許容する。"""
+        with self._admission_lock:
+            self._closing = True
+        # callbackは受付lockを取らない。shutdown中のcancelによる解放も安全に行う。
+        self._pool.shutdown(wait=True, cancel_futures=True)
+
+
 execution_log_repo = ExecutionLogRepo()
-_executor = ThreadPoolExecutor(
-    max_workers=EXECUTION_LOG_WORKER_CAPACITY,
-    thread_name_prefix="execution-log",
-)
+_executor = _ExecutionLogExecutor()
 
 
 async def save_execution_log_async(
@@ -209,7 +254,7 @@ async def save_execution_log_async(
 
 def close_execution_log_repository() -> None:
     """実行ログworkerへの新規受付を止め、処理中futureの終了を待って資源を閉じる。"""
-    _executor.shutdown(wait=True, cancel_futures=True)
+    _executor.shutdown()
 
 
 async_execution_log_repo = AsyncExecutionLogRepo(execution_log_repo)

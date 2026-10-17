@@ -75,6 +75,11 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
   migration失敗時のtransactional DDL rollbackが機能すること
 - `ExecutionLogRepo`による期間・件数上限、NUL保存時の正規化、
   lock timeoutとrollback後の再保存が機能すること
+- `test_postgres_retention.py`では専用DBのlock中に非同期保存を満杯にし、
+  awaitのcancel後も追加保存を拒否し、lock解除後に同じworkerで保存が復帰すること
+  （受付上限の正本は[実行ログの制約](../../../SECURITY.md#実行ログとdockerログ)）。
+  開始前cancel・後始末の例外・shutdown競合・v3/legacy応答は
+  `backend/tests/test_execution_log_admission.py`の非Docker testで検査する
 - 無出力コマンドのタイムアウト
 - Docker execのstdout・stderr分離、非0終了code、所要時間の取得
 - コンテナ削除
