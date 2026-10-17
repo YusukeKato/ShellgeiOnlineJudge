@@ -1,0 +1,38 @@
+schema_version: 3
+id: PRACTICE-rev-01
+category: PRACTICE
+title:
+  ja: rev 1
+  en: rev 1
+statement:
+  ja: |
+    練習：rev
+
+    input.txtの各行について、文字の並びを逆順にして出力してください。
+    行の順序は変えず、空行もその位置に残してください。
+  en: |
+    Practice: rev
+
+    Reverse the characters in each line of input.txt.
+    Keep the lines in their original order, including blank lines.
+reference_solution: rev input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      A1-bC
+      red  blue
+
+      1221
+      Z
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    Cb-1A
+    eulb  der
+
+    1221
+    Z
