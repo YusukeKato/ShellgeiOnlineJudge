@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { prepareSubmission, submit, SubmissionState } from "../functions/submit";
 import { useLanguage } from "../language";
+import CurlInstructions from "./curl_instructions";
+import PythonInstructions from "./python_instructions";
 
 interface SojValuesInterface {
   shellgei_limit: number;
@@ -184,6 +186,8 @@ const SojRun: React.FC<SojValuesInterface> = ({
           <code>{`seq 0 9 | xargs -I@ bash -c 'textimg "$1" -F100 | convert - miff:-' _ @ | convert -delay 10 miff:- media/output.gif`}</code>
         </pre>
       </details>
+      <CurlInstructions sojUrl={soj_url} shellgei={inputShellgei} problemId={selectedProblem} />
+      <PythonInstructions sojUrl={soj_url} shellgei={inputShellgei} problemId={selectedProblem} />
     </section>
   );
 };

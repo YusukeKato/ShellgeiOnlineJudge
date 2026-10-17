@@ -171,6 +171,38 @@ describe("playground default problem", () => {
     vi.restoreAllMocks();
   });
 
+  test("shows a curl example below the editor for the current command and problem without submitting", async () => {
+    // 問題を開いて入力した内容が案内へ反映され、折りたたみを開くだけでは提出しない。
+    window.history.replaceState({}, "", `/?problem=${SECOND_PROBLEM_ID}`);
+    renderPlayground();
+    await screen.findByText(/日本語の問題文2/);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "cat input.txt" } });
+    const summary = screen.getByText("ターミナルから実行する（curl）");
+    expect(summary.closest(".editor-panel")).toContainElement(screen.getByRole("textbox"));
+    fireEvent.click(summary);
+    const command = summary.closest("details").querySelector("code").textContent;
+    expect(JSON.parse(command.split("\n")[3])).toEqual({
+      shellgei: "cat input.txt",
+      problem_id: SECOND_PROBLEM_ID,
+    });
+    expect(fetchMock.mock.calls.every(([, options]) => options?.method !== "POST")).toBe(true);
+  });
+
+  test("shows a Python example below curl using the selected problem without submitting", async () => {
+    // コマンド入力下でPython案内を開き、選択中の問題と入力が反映されてもAPI提出しない。
+    window.history.replaceState({}, "", `/?problem=${SECOND_PROBLEM_ID}`);
+    renderPlayground();
+    await screen.findByText(/日本語の問題文2/);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "cat input.txt" } });
+    const summary = screen.getByText("Pythonスクリプトから実行する");
+    expect(summary.closest(".editor-panel")).toContainElement(screen.getByRole("textbox"));
+    fireEvent.click(summary);
+    const displayed = summary.closest("details").querySelector("pre code").textContent;
+    expect(displayed).toContain('"shellgei": "cat input.txt",');
+    expect(displayed).toContain(`"problem_id": "${SECOND_PROBLEM_ID}",`);
+    expect(fetchMock.mock.calls.every(([, options]) => options?.method !== "POST")).toBe(true);
+  });
+
   test.each([SECOND_PROBLEM_ID, IMAGE_PROBLEM_ID, "PRACTICE-00000001", "REGEX-00000002"])(
     "opens the problem in a shared URL: %s",
     async (id) => {

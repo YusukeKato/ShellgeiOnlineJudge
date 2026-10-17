@@ -661,6 +661,28 @@ img {
   margin-top: 5px;
 }
 
+.code-copy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.copy-command-button {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 8px 12px;
+  background: var(--surface);
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.copy-command-button:hover {
+  background: #f7f9fc;
+}
+
 .result-heading {
   display: flex;
   flex-wrap: wrap;
