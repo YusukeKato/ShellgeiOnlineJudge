@@ -14,6 +14,7 @@
 - [ローカルでの検証](#ローカルでの検証)
 - [公式資料](#公式資料)
 - [問題追加の検査範囲](#問題追加の検査範囲)
+- [文書だけの変更](#文書だけの変更)
 
 ## Workflowと権限
 
@@ -22,9 +23,10 @@
 | FastAPI CI | 対応Python全versionでruff・format・mypy・非Docker test | main push、PR、週次 |
 | React CI | Node.jsでformat・lint・typecheck・test・build | main push、PR、週次 |
 | Supply Chain CI / source | workflow検証、Git履歴と作業treeのsecret scan、lock fileのSBOM・脆弱性scan、scanner fixture | main push、PR、週次、手動 |
-| Supply Chain CI / runtime | sandbox・DBを含む本番5 imageのbuild・SBOM・scan、Compose全問題回帰・browser・image境界・DB更新互換test | main push、PR、週次、手動 |
+| Supply Chain CI / changes | runtime jobの要否を判定（[文書だけの変更](#文書だけの変更)） | main push、PR、週次、手動 |
+| Supply Chain CI / runtime | sandbox・DBを含む本番5 imageのbuild・SBOM・scan、Compose全問題回帰・browser・image境界・DB更新互換test | main push、PR、週次、手動。文書だけの変更では省略 |
 | Supply Chain CI / provenance | 同じrunで検査を通過した生成物の署名付きprovenance登録 | mainへのpushでsource・runtime両jobが成功した場合だけ |
-| Production deploy | 同じcommitの全CI成功待ち、署名検証、SSH配備・DB migration・起動確認 | main push、Repository variableで有効化した場合だけ |
+| Production deploy | 同じcommitの全CI成功待ち、署名検証、SSH配備・DB migration・起動確認 | main push、Repository variableで有効化した場合だけ。配備済みcommitとの差分が文書だけなら省略 |
 
 作業branchへのpushでは検査を重複起動せず、PR作成・更新で検査します。main pushの検査・署名・配備条件は維持します。
 
@@ -297,3 +299,24 @@ PRはbase SHAと検査対象merge SHA、main pushはeventのbefore SHAと対象S
 
 配備ログに転送時間・host更新時間を出します。
 短縮効果はこれらとjob時間で測定し、並列jobやCI待機時間を重複加算しません。
+
+## 文書だけの変更
+
+本番imageへ入らないMarkdownだけの変更では、Supply Chainのruntime job（image build・scan・E2E・配備archive作成）と
+本番配備を省略します。判定は`ci/deploy.py`の`documentation_only`を正本とします。
+
+- 対象は拡張子`.md`のfileだけです。`problems/`、`frontend/src/`、`frontend/public/`、
+  `backend/soj_backend/`・`backend/soj_runner/`・`backend/soj_shared/`、`deploy/`配下はMarkdownでも対象外です。
+  `problems/`はfrontend imageから配信され、他もimageや配備処理へ入り得るためです。
+- 空の差分、差分取得の失敗、GitHub APIの障害は判定不能として、省略せず全検査・配備します。
+- PRはbase SHAと比べます。main pushは直前のpushではなく、**本番更新を確認できた最新commit**と比べます。
+  Supersededで配備されなかったコード変更の後に文書だけのcommitが来ても、未配備のコードを検査・配備するためです。
+- 本番更新の確認は、配備jobが本番の`.soj-deploy/current.json`を読み戻し、対象commitと一致した場合だけ
+  `Record completed production update` stepを実行して記録します。Deployments APIの成功はSuperseded時も
+  記録されるため根拠にしません。直近30回のdeploy runに記録がなければ省略しません。
+- Supply Chainの`changes` jobはdeploy runを読むため`actions: read`を持ちます。書き込み権限は持ちません。
+- Production deployの待機jobは、全CIの成功後に改めて配備済みcommitと比べます。concurrencyで他の配備が
+  終わった後の判定なので、Supply Chain開始時より新しい基準を使います。配備が必要なのにruntime jobが
+  省略されていた場合は、archiveがないため失敗します。同じcommitのSupply Chain CIを再実行してから、
+  Production deployを再実行してください。
+- 週次・手動実行では常にruntime jobを実行します。FastAPI CI・React CI・Supply Chainのsource jobは常に実行します。

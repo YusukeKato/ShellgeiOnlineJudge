@@ -3,6 +3,8 @@ from pathlib import Path
 
 import yaml
 
+from ci import deploy as ci_deploy
+
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -33,6 +35,9 @@ def test_workflows_pin_actions_and_limit_permissions_and_runtime() -> None:
                     expected["attestations"] = "read"
                     expected["id-token"] = "write"
                 assert job["permissions"] == expected
+            elif name == "changes":
+                # 配備済みcommitの判定にdeploy runを読むだけで、書き込み権限は持たない。
+                assert job["permissions"] == {"contents": "read", "actions": "read"}
             elif name != "provenance":
                 assert job.get("permissions", {"contents": "read"}) == {
                     "contents": "read"
@@ -88,6 +93,27 @@ def test_deployment_requires_main_ci_and_verification_before_ssh() -> None:
     assert steps[4]["with"]["role-to-assume"] == "${{ vars.DEPLOY_AWS_ROLE_ARN }}"
     assert "secrets." not in str(steps[:5])
     assert "ci/deploy.py transfer" in steps[5]["run"]
+    # 配備済みの記録は、本番の成功記録を読み戻したtransfer stepの結果だけで作る。
+    assert steps[5]["id"] == "transfer"
+    assert steps[6]["name"] == "Record completed production update"
+    assert steps[6]["if"] == "${{ steps.transfer.outputs.deployed == 'true' }}"
+    assert gate["steps"][0]["with"]["fetch-depth"] == "0"
+
+
+def test_documentation_only_changes_skip_runtime_only_by_scope_job() -> None:
+    # runtime jobの省略条件はscope jobの判定だけにし、名前もgateの照合と一致させる。
+    workflow = next(w for w in workflows() if w["name"] == "Supply Chain CI")
+    changes = workflow["jobs"]["changes"]
+    runtime = workflow["jobs"]["runtime"]
+    assert changes["steps"][0]["with"]["fetch-depth"] == "0"
+    assert changes["steps"][1]["run"] == "python3 ci/deploy.py scope"
+    assert changes["outputs"]["runtime"] == "${{ steps.scope.outputs.runtime }}"
+    assert runtime["needs"] == "changes"
+    assert runtime["if"] == "${{ needs.changes.outputs.runtime == 'true' }}"
+    assert runtime["name"] == ci_deploy.RUNTIME_JOB
+    deploy = next(w for w in workflows() if w["name"] == "Production deploy")
+    record = deploy["jobs"]["deploy"]["steps"][6]["name"]
+    assert record == ci_deploy.DEPLOY_RECORD_STEP
 
 
 def test_ci_runs_on_pr_and_main_without_duplicate_branch_push() -> None:

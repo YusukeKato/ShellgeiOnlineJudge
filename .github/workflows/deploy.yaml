@@ -23,9 +23,11 @@ jobs:
     outputs:
       run-id: ${{ steps.ci.outputs.run_id }}
     steps:
+      # 配備済みcommitとの差分を調べるため、全履歴を取得する。
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Wait for all CI on this main commit
         id: ci
         env:
@@ -68,6 +70,7 @@ jobs:
           role-duration-seconds: 3600
           unset-current-credentials: true
       - name: Transfer verified images and update production
+        id: transfer
         env:
           GH_TOKEN: ${{ github.token }}
           DEPLOY_INSTANCE_ID: ${{ vars.DEPLOY_INSTANCE_ID }}
@@ -78,3 +81,7 @@ jobs:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: python3 ci/deploy.py transfer "$RUNNER_TEMP/runtime-reports"
+      # 次回以降の文書だけの変更を判定する基準。本番の成功記録を読み戻せた場合だけ実行する。
+      - name: Record completed production update
+        if: ${{ steps.transfer.outputs.deployed == 'true' }}
+        run: echo "Production update confirmed for $GITHUB_SHA."

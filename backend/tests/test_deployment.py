@@ -91,6 +91,8 @@ def test_gate_waits_for_every_workflow_and_emits_runtime_run(
         }
 
     monkeypatch.setattr(ci, "api", api)
+    monkeypatch.setattr(ci, "deployment_unchanged", lambda *_: False)
+    monkeypatch.setattr(ci, "runtime_job_succeeded", lambda *_: True)
     output = tmp_path / "output"
     monkeypatch.setenv("GITHUB_OUTPUT", str(output))
     ci.wait_for_ci()
@@ -201,6 +203,7 @@ def test_transfer_uses_ssm_for_ssh_and_rsync_and_removes_keys(
         "GITHUB_RUN_ATTEMPT": "1",
         "DEPLOY_SSH_KEY": "test-private-key",
         "DEPLOY_KNOWN_HOSTS": "test-known-host",
+        "GITHUB_OUTPUT": str(tmp_path / "output"),
     }.items():
         monkeypatch.setenv(key, value)
     calls = []
@@ -212,7 +215,7 @@ def test_transfer_uses_ssm_for_ssh_and_rsync_and_removes_keys(
             return shlex.split(args[args.index("--rsh") + 1])
         return args
 
-    def run(args: list[str], **kwargs: Any) -> None:
+    def run(args: list[str], **kwargs: Any) -> subprocess.CompletedProcess:
         """外部接続を代替し、転送時だけ秘密鍵がmode 600で存在することを検証する。"""
         calls.append(args)
         ssh = ssh_args(args)
@@ -223,6 +226,10 @@ def test_transfer_uses_ssm_for_ssh_and_rsync_and_removes_keys(
         assert kwargs["check"] is True
         if connection_failure:
             raise subprocess.CalledProcessError(255, args)
+        # 本番の成功記録の読み戻しには、今回のcommitへ更新済みの記録を返す。
+        return subprocess.CompletedProcess(
+            args, 0, json.dumps({"source_commit": SHA}), ""
+        )
 
     monkeypatch.setattr(ci.subprocess, "run", run)
     if connection_failure:
@@ -231,8 +238,10 @@ def test_transfer_uses_ssm_for_ssh_and_rsync_and_removes_keys(
         assert len(calls) == 1
     else:
         ci.transfer(tmp_path)
-        assert [call[0] for call in calls] == ["ssh", "rsync", "ssh"]
-        assert "systemd-run" in calls[-1][-1]
+        assert [call[0] for call in calls] == ["ssh", "rsync", "ssh", "ssh"]
+        assert "systemd-run" in calls[2][-1]
+        assert calls[3][-1] == "cat -- /srv/judge/.soj-deploy/current.json"
+        assert (tmp_path / "output").read_text() == "deployed=true\n"
         # 同サイズ・同時刻の旧archiveを複製せず、前回成功分だけを差分の基準にする。
         assert "--ignore-times" in calls[1]
         assert "--copy-dest=/srv/judge/.soj-deploy/basis" in calls[1]
