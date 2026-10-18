@@ -65,8 +65,32 @@ jobs:
           retention-days: 14
           if-no-files-found: error
 
+  changes:
+    name: Select runtime verification scope
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # main pushでは本番更新を確認できたcommitを、deploy runの記録から読み取る。
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      runtime: ${{ steps.scope.outputs.runtime }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Compare with PR base or deployed commit
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 ci/deploy.py scope
+
   runtime:
     name: Rootless runtime E2E and image scan
+    needs: changes
+    # imageへ入らない文書だけの変更では、build・scan・E2Eと配備archiveの作成を省略する。
+    if: ${{ needs.changes.outputs.runtime == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:

@@ -115,6 +115,8 @@ backendの`SERVER_URL`は本番`.env`に設定した公開HTTPS originを使用�
 有効化後は、レビュー済み変更をmainへpushします。通常は追加操作不要です。
 
 1. Python・React・Supply Chainの**同じcommitのmain push run**がすべて成功するまで待つ。
+   本番更新を確認できた最新commitとの差分が文書だけなら、ここで配備を省略する
+   （条件は[CI文書](./CI.md#文書だけの変更)）。
 2. 成功したSupply Chain runのarchiveとbuild recordを取得し、署名者・source SHA・main refを検証する。
 3. OIDCでAWSの一時資格情報を取得し、SSM経由のSSHで転送し、本番のuser systemd serviceとして更新する。
 4. rootless、clean checkout、既存DB volume、image ID・version・architectureを検証する。
@@ -122,6 +124,8 @@ backendの`SERVER_URL`は本番`.env`に設定した公開HTTPS originを使用�
 5. checkoutをfast-forwardし、frontend/backendを停止する。
 6. DB imageを更新、接続待ち、migration、残りのserviceを起動する。
 7. 公開HTTPS APIで`printf smoke-ok`の実行とDB保存を確認する。
+8. 本番の`.soj-deploy/current.json`を読み戻し、対象commitへ更新されていれば
+   `Record completed production update` stepを実行する。次回以降の文書だけの変更の判定基準になる。
 
 Actionsの`Production deploy`が成功し、本番の`.soj-deploy/current.json`に対象commitとimage IDが
 記録されたことを確認します。スモークテストは実行ログを1件以上保存します。
