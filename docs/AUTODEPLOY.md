@@ -2,7 +2,8 @@
 
 既存の本番サーバへGitHub ActionsからSSM経由でSSH接続し、CIで検証した5 imageを配備します。
 転送する`runtime.tar`自体の署名とhashを検証し、rootless Dockerが読み込みます。
-転送時間とhost更新時間は配備jobのログで確認できます。
+転送はrsyncで、前回成功時に本番へ残した`runtime.tar`を基準に変更部分だけを送ります。
+転送時間とhost更新時間、rsyncの`--stats`（実際に送った`Literal data`と基準から再利用した`Matched data`）は配備jobのログで確認できます。
 DB migrationとsandbox更新を含み、サービス停止から起動確認まで一時停止します。
 この運用ではDBの消失を許容し、DB・role・設定fileの自動バックアップは作りません。
 既存DB volumeは通常の更新で維持しますが、障害時に更新前のデータへ戻せる保証はありません。
@@ -16,7 +17,8 @@ DB migrationとsandbox更新を含み、サービス停止から起動確認ま�
 本番が手動デプロイ済みで、公開URLの実行・保存テストが成功していることが前提です。
 専用のrootless Dockerユーザーで作業します。
 
-1. Git、Python **3.9以上**、OpenSSHのSFTP、user systemd、rootless Docker・Composeを用意する。
+1. Git、Python **3.9以上**、rsync、user systemd、rootless Docker・Composeを用意する。
+   rsyncは`command -v rsync`で確認する。Actionsは本番側のrsyncをSSH経由で起動して転送する。
    cgroup v2とuser lingerは[ホスト設定](./PRODUCTION_HOST.md)に従う。
    CI imageはLinux amd64用なので、本番も同じarchitectureを使う。
    `systemd-run --user --wait docker version`が専用ユーザーで成功することも確認する。
@@ -40,7 +42,7 @@ mkdir -m 700 .soj-deploy
 5. EC2に`AmazonSSMManagedInstanceCore`付きIAMロールを割り当て、SSM Agentを起動する。
    AWSコンソールのSession Managerで接続できることを確認する。
    EC2からSSMへのHTTPS通信が必要。Actions用にSSHのinbound許可を追加する必要はない。
-   SSHサーバは起動したままにする。Actionsは`AWS-StartSSHSession`でSSH/SCPを通す。
+   SSHサーバは起動したままにする。Actionsは`AWS-StartSSHSession`でSSHとrsyncを通す。
 6. ホスト鍵のfingerprintを本番コンソール等で照合し、`known_hosts`の行を用意する。
    hostname欄は接続先の**EC2 instance ID**にする。標準外portでは`[i-...]:port`形式。
    以前のドメイン名の行はそのままでは一致しない。公開鍵部分は同じ本番host鍵を使用する。
@@ -160,9 +162,13 @@ DB schemaとrole変更は途中まで反映され得るため、旧imageへ自�
 復旧と公開経路テストが成功し、実行中unitがないことを確認してから`FAILED`を作業記録へ移し、
 自動更新を再度有効化します。記録だけを消してmigrationを繰り返さないでください。
 
-成功した回の転送archiveだけを自動削除します。失敗時のarchiveと旧imageは
-自動削除しないため、復旧に必要な世代と容量を確認して運用者が保存期間を管理してください。
-本番に新旧imageと転送archiveを同時に保持できる空き容量が必要です。
+成功した回の転送archiveは`.soj-deploy/basis/runtime.tar`へ移し、次回の差分転送の基準として1世代だけ残します。
+前回の基準は置き換えます。失敗した回のarchiveは基準にせず、`incoming-*`に残します。
+基準を残せない場合（directoryの所有者・modeの不一致、symlink、disk障害等）は今回のarchiveを削除し、次回は全量転送になります。
+基準は転送量を減らすだけで、組み立てたarchiveも毎回署名済みrecordのSHA-256と照合します。
+基準を削除しても次回が全量転送になるだけで、配備の安全性は変わりません。
+失敗時のarchiveと旧imageは自動削除しないため、復旧に必要な世代と容量を確認して運用者が保存期間を管理してください。
+本番に新旧image、転送中のarchive、差分転送の基準archiveを同時に保持できる空き容量が必要です。
 
 ## 検証と保証範囲
 

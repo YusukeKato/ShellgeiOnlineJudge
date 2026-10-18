@@ -343,8 +343,25 @@ class Deployment:
         (self.state / "FAILED").unlink()
         self.stopped = False
         self.stage("success")
-        # 自分の今回のarchiveだけを削除する。旧imageは運用者が保存期間を管理する。
-        (self.incoming / "runtime.tar").unlink()
+        self.keep_transfer_basis()
+
+    def keep_transfer_basis(self) -> None:
+        """成功した今回のarchiveを次回の差分転送の基準として1世代だけ残す。
+
+        旧imageは運用者が保存期間を管理する。基準の更新に失敗しても配備自体は成功のまま、
+        今回のarchiveを削除して次回を全量転送にする。基準は転送を速めるだけで、
+        内容は毎回署名済みrecordのhashで照合されるため検証を省略する根拠にはしない。
+        """
+        archive = self.incoming / "runtime.tar"
+        basis = self.state / "basis"
+        try:
+            basis.mkdir(mode=0o700, exist_ok=True)
+            private_directory(basis)
+            # 同じfilesystem内のrenameで置き換え、読み取り中の転送には旧inodeを残す。
+            os.replace(archive, basis / "runtime.tar")
+        except (OSError, DeploymentError):
+            print("production deployment: transfer basis not kept", flush=True)
+            archive.unlink(missing_ok=True)
 
     def wait_database(self) -> None:
         """新DBの接続受付を最大60秒待ち、起動失敗時にはmigrationを行わない。"""

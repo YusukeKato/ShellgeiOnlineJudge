@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shlex
 import subprocess
 from typing import Any
 
@@ -184,10 +185,10 @@ def test_ssh_configuration_cannot_inject_shell_or_options(
 
 
 @pytest.mark.parametrize("connection_failure", [False, True])
-def test_transfer_uses_ssm_for_ssh_and_scp_and_removes_keys(
+def test_transfer_uses_ssm_for_ssh_and_rsync_and_removes_keys(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, connection_failure: bool
 ) -> None:
-    """SSH/SCPとも指定EC2へのSSM経由に固定し、接続失敗時も秘密鍵を回収する。"""
+    """SSH/rsyncとも指定EC2へのSSM経由に固定し、接続失敗時も秘密鍵を回収する。"""
     monkeypatch.setattr(ci, "context", lambda: (REPO, SHA))
     monkeypatch.setattr(ci, "latest_main", lambda *_: True)
     for key, value in {
@@ -205,10 +206,17 @@ def test_transfer_uses_ssm_for_ssh_and_scp_and_removes_keys(
     calls = []
     keys = []
 
+    def ssh_args(args: list[str]) -> list[str]:
+        """rsyncは1引数のssh commandを受けるため、分解してssh直接実行と同じ形で比べる。"""
+        if args[0] == "rsync":
+            return shlex.split(args[args.index("--rsh") + 1])
+        return args
+
     def run(args: list[str], **kwargs: Any) -> None:
         """外部接続を代替し、転送時だけ秘密鍵がmode 600で存在することを検証する。"""
         calls.append(args)
-        key = Path(args[args.index("-i") + 1])
+        ssh = ssh_args(args)
+        key = Path(ssh[ssh.index("-i") + 1])
         keys.append(key)
         assert key.read_text() == "test-private-key\n"
         assert key.stat().st_mode & 0o777 == 0o600
@@ -223,16 +231,26 @@ def test_transfer_uses_ssm_for_ssh_and_scp_and_removes_keys(
         assert len(calls) == 1
     else:
         ci.transfer(tmp_path)
-        assert [call[0] for call in calls] == ["ssh", "scp", "ssh"]
+        assert [call[0] for call in calls] == ["ssh", "rsync", "ssh"]
         assert "systemd-run" in calls[-1][-1]
+        # 同サイズ・同時刻の旧archiveを複製せず、前回成功分だけを差分の基準にする。
+        assert "--ignore-times" in calls[1]
+        assert "--copy-dest=/srv/judge/.soj-deploy/basis" in calls[1]
+        assert (
+            calls[1][-1]
+            == "soj@i-0123456789abcdef0:/srv/judge/.soj-deploy/incoming-123-1/"
+        )
+        assert not any(arg in calls[1] for arg in ("-z", "--compress", "--delete"))
     for call in calls:
-        assert "StrictHostKeyChecking=yes" in call
-        assert call[1:3] == ["-F", "/dev/null"]
+        ssh = ssh_args(call)
+        assert ssh[0] == "ssh"
+        assert "StrictHostKeyChecking=yes" in ssh
+        assert ssh[1:3] == ["-F", "/dev/null"]
         assert (
             "ProxyCommand=aws ssm start-session --region ap-northeast-1 "
             "--target i-0123456789abcdef0 --document-name AWS-StartSSHSession "
             "--parameters portNumber=22"
-        ) in call
+        ) in ssh
     assert all(not key.exists() for key in keys)
 
 
@@ -440,6 +458,49 @@ def test_deployment_promotes_exact_images_without_backup(deployment: tuple) -> N
     assert list(task.repository.rglob(".env")) == [task.repository / ".env"]
     assert not list(task.repository.rglob("database.dump"))
     assert not list(task.repository.rglob("roles.sql"))
+
+
+def test_success_keeps_only_current_archive_as_transfer_basis(
+    deployment: tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # 成功時は今回のarchiveで前回の基準を置き換え、非公開directoryに1世代だけ残す。
+    task, _, _ = deployment
+    monkeypatch.setattr(host.os, "getuid", lambda: task.repository.stat().st_uid)
+    basis = task.state / "basis"
+    basis.mkdir(mode=0o700)
+    (basis / "runtime.tar").write_bytes(b"previous archive")
+    current = (task.incoming / "runtime.tar").read_bytes()
+    task.execute()
+    assert [path.name for path in basis.iterdir()] == ["runtime.tar"]
+    assert (basis / "runtime.tar").read_bytes() == current
+    assert basis.stat().st_mode & 0o777 == 0o700
+    assert not (task.incoming / "runtime.tar").exists()
+
+
+def test_unsafe_transfer_basis_falls_back_to_full_transfer(
+    deployment: tuple, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # 基準dirがsymlinkなら書き込まず、archiveを削除して配備は成功のまま次回を全量転送にする。
+    task, _, _ = deployment
+    monkeypatch.setattr(host.os, "getuid", lambda: task.repository.stat().st_uid)
+    outside = tmp_path / "outside"
+    outside.mkdir(mode=0o700)
+    (task.state / "basis").symlink_to(outside)
+    task.execute()
+    assert (task.state / "current.json").is_file()
+    assert not (task.state / "FAILED").exists()
+    assert not (task.incoming / "runtime.tar").exists()
+    assert not list(outside.iterdir())
+
+
+def test_failed_deployment_does_not_replace_transfer_basis(deployment: tuple) -> None:
+    # 失敗した候補を次回の基準にせず、復旧調査用の転送archiveも残す。
+    task, _, controls = deployment
+    controls["fail"] = "smoke"
+    with pytest.raises(RuntimeError):
+        task.execute()
+    assert not (task.state / "basis").exists()
+    assert (task.incoming / "runtime.tar").exists()
 
 
 @pytest.mark.parametrize("failure", ["migration", "smoke"])
