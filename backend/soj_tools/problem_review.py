@@ -10,6 +10,9 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 REPRESENTATIVES = ("PRACTICE-base64-01", "STANDARD-00000068")
+# 全問題の画面検査を分けるCI job数。変更問題だけの検査は1 jobで行う。
+FULL_REVIEW_SHARDS = 3
+SHARD = re.compile(r"([0-9]+)/([1-9][0-9]*)")
 # bundleや静的配信へ入り得るため、Markdownでも画面へ影響する可能性がある場所。
 FRONTEND_ASSET_DIRS = ("frontend/src/", "frontend/public/")
 PROBLEM_FILE = re.compile(r"problems/(?:v3|image)/([A-Z]+-[A-Za-z0-9-]+)\.(?:yaml|jpg)")
@@ -29,6 +32,38 @@ def select_problem_ids(available: list[str], selection: str) -> list[str]:
     if not set(REPRESENTATIVES) <= set(available):
         raise ValueError("representative problems are missing")
     return sorted(set(requested) | set(REPRESENTATIVES))
+
+
+def shard_ids(ids: list[str], shard: str) -> list[str]:
+    """`k/n`形式で、ID順にn個へ均等に分けたk番目を返す。不正な指定は検査漏れを防ぐため失敗させる。"""
+    match = SHARD.fullmatch(shard)
+    if not match or int(match[1]) >= int(match[2]):
+        raise ValueError("browser shard must be k/n with 0 <= k < n")
+    return sorted(ids)[int(match[1]) :: int(match[2])]
+
+
+def browser_plan(
+    available: list[str], selection: str, shard: str = "0/1"
+) -> tuple[list[str], list[str]]:
+    """browser検査で開く(正規表現問題, 詳細検査問題)を返す。check.pyとtestの件数照合で共用する。
+
+    全件modeでは全REGEX問題を正規表現の専用経路で、その他を詳細検査で確認し、両方をshardで分ける。
+    変更問題だけのmodeは正規表現の代表1問と選択問題を1 jobで確認し、分割を受け付けない。
+    """
+    regex = sorted(pid for pid in available if pid.startswith("REGEX-"))
+    selected = select_problem_ids(available, selection)
+    if selection == "all":
+        detail = [pid for pid in selected if not pid.startswith("REGEX-")]
+        return shard_ids(regex, shard), shard_ids(detail, shard)
+    if shard != "0/1":
+        raise ValueError("only the full review is split into shards")
+    return regex[:1], selected
+
+
+def shards_for(selection: str) -> list[str]:
+    """選択に応じたCI matrixのshard一覧を返す。全件だけを複数jobへ分ける。"""
+    count = FULL_REVIEW_SHARDS if selection == "all" else 1
+    return [f"{index}/{count}" for index in range(count)]
 
 
 def selection_for_paths(paths: list[str], available: list[str]) -> str:
@@ -97,14 +132,16 @@ def github_selection() -> str:
 
 
 def main() -> None:
-    """GitHub jobへJSON一行の選択値を渡す。shellへevent本文やfile名を展開しない。"""
+    """選択値とshard一覧をJSON一行ずつjob outputへ渡す。shellへevent本文やfile名を展開しない。"""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--github-env", action="store_true", required=True)
+    parser.add_argument("--github-output", action="store_true", required=True)
     parser.parse_args()
     selection = github_selection()
-    with Path(os.environ["GITHUB_ENV"]).open("a") as output:
-        output.write("SOJ_BROWSER_PROBLEM_IDS=" + selection + "\n")
+    shards = json.dumps(shards_for(selection))
+    with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
+        output.write(f"browser_selection={selection}\nbrowser_shards={shards}\n")
     print("Browser problem selection: " + selection)
+    print("Browser review shards: " + shards)
 
 
 if __name__ == "__main__":

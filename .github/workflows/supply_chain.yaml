@@ -75,6 +75,8 @@ jobs:
       actions: read
     outputs:
       runtime: ${{ steps.scope.outputs.runtime }}
+      browser_selection: ${{ steps.review.outputs.browser_selection }}
+      browser_shards: ${{ steps.review.outputs.browser_shards }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -85,14 +87,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 ci/deploy.py scope
+      - name: Select problem screen review scope
+        id: review
+        run: python3 backend/soj_tools/problem_review.py --github-output
 
   runtime:
-    name: Rootless runtime E2E and image scan
+    name: Rootless runtime build and image scan
     needs: changes
     # imageへ入らない文書だけの変更では、build・scan・E2Eと配備archiveの作成を省略する。
     if: ${{ needs.changes.outputs.runtime == 'true' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 30
     env:
       PYTHONPATH: backend
       GRYPE_CHECK_FOR_APP_UPDATE: "false"
@@ -100,7 +105,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          fetch-depth: 0
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.14"
@@ -147,7 +151,6 @@ jobs:
             --build-arg VITE_GITHUB_AUTHOR_URL --build-arg VITE_BLOG_URL --build-arg VITE_MIXI2_URL \
             --tag soj-frontend:ci .
           docker build --file deploy/postgres/Dockerfile --tag soj-db:ci .
-          docker build --file backend/tests/integration/browser/Dockerfile --tag soj-browser:ci .
           grype_status=0
           wait "$grype_update" || grype_status=$?
           cat "$RUNNER_TEMP/grype-db-update.log"
@@ -156,36 +159,7 @@ jobs:
       - name: Scan runtime images and prepare candidate archive
         id: scan
         run: poetry run python ci/supply_chain.py runtime --tools "$RUNNER_TEMP/soj-tools" --reports "$RUNNER_TEMP/runtime-reports" --sandbox "$SANDBOX_IMAGE_ID"
-      - name: Pull verified infrastructure images
-        run: |
-          poetry run python -c 'import subprocess; from tests.postgres_support import upstream_postgres_image; refs = [upstream_postgres_image()]; [subprocess.run(["docker", "pull", ref], check=True) for ref in refs]'
-      - name: Select problem screen review scope
-        run: python backend/soj_tools/problem_review.py --github-env
-      - name: Full Compose regression and image boundary checks
-        id: regression
-        env:
-          SOJ_RUN_DOCKER_TESTS: "1"
-          SOJ_RUN_COMPOSE_E2E: "1"
-          SOJ_RUN_FULL_REGRESSION: "1"
-          SOJ_RUN_RUNTIME_IMAGE_TESTS: "1"
-          SOJ_DB_IMAGE: soj-db:ci
-          SOJ_COMPOSE_BACKEND_IMAGE: soj-backend:ci
-          SOJ_COMPOSE_RUNNER_IMAGE: soj-runner:ci
-          SOJ_COMPOSE_FRONTEND_IMAGE: soj-frontend:ci
-          SOJ_COMPOSE_BROWSER_IMAGE: soj-browser:ci
-          SOJ_BACKEND_RUNTIME_IMAGE: soj-backend:ci
-          SOJ_RUNNER_RUNTIME_IMAGE: soj-runner:ci
-        run: |
-          shopt -s nullglob
-          poetry run pytest --basetemp "$RUNNER_TEMP/soj-compose-tests" backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_production_deploy.py backend/tests/integration/test_runtime_images.py backend/tests/integration/test_postgres_image.py backend/tests/integration/test_sandbox_tools.py backend/tests/integration/test_base64_solutions.py backend/tests/integration/test_unique_visitors_solutions.py backend/tests/integration/test_sales_leaders_solutions.py backend/tests/integration/test_sha256_solutions.py backend/tests/integration/test_service_changes_solutions.py backend/tests/integration/test_paste_solutions.py backend/tests/integration/test_fold_solutions.py backend/tests/integration/test_pending_tasks_solutions.py backend/tests/integration/test_problem_*_solutions.py
-      - name: Retain browser review screenshots
-        if: ${{ always() && steps.regression.outcome != 'skipped' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: browser-ui-review
-          path: ${{ runner.temp }}/soj-compose-tests/**/soj-ui/*.png
-          retention-days: 14
-          if-no-files-found: error
+      # 後続のE2E jobと配備が同じarchiveを使う。検出で停止した場合もreview用に残す。
       - name: Retain runtime inventory and candidate for review
         if: ${{ always() && steps.scan.outcome != 'skipped' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -196,9 +170,158 @@ jobs:
           if-no-files-found: error
           compression-level: 0
 
+  regression:
+    name: Rootless Compose regression and image boundary checks
+    needs: runtime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PYTHONPATH: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+      - name: Install locked development dependencies
+        run: |
+          python -m pip install poetry==2.5.1
+          poetry check --lock
+          poetry install --no-interaction
+      - name: Prepare user systemd and D-Bus for rootless cgroups
+        run: bash ci/prepare_rootless.sh
+      - name: Set up isolated rootless Docker
+        uses: docker/setup-docker-action@2bf61fb9464cc67f0cbdeabed6aa0380accd1c70 # v5.5.0
+        with:
+          version: v29.8.1
+          rootless: true
+          set-host: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: runtime-reports
+          path: ${{ runner.temp }}/runtime-reports
+      # 再buildせず、同じrunでscan・署名対象にしたimageをIDで照合して読み込む。
+      - name: Load scanned runtime images
+        run: |
+          poetry run python -c 'import os; from pathlib import Path; from ci.supply_chain import load_candidate; load_candidate(Path(os.environ["RUNNER_TEMP"]) / "runtime-reports")'
+          printf 'SANDBOX_IMAGE_ID=%s\n' "$(docker image inspect soj-sandbox:ci --format '{{.Id}}')" >> "$GITHUB_ENV"
+      - name: Pull verified infrastructure images
+        run: |
+          poetry run python -c 'import subprocess; from tests.postgres_support import upstream_postgres_image; refs = [upstream_postgres_image()]; [subprocess.run(["docker", "pull", ref], check=True) for ref in refs]'
+      # browser検査は並列のbrowser jobで行い、ここでは他の全検査を行う。
+      - name: Full Compose regression and image boundary checks
+        id: regression
+        env:
+          SOJ_RUN_DOCKER_TESTS: "1"
+          SOJ_RUN_COMPOSE_E2E: "1"
+          SOJ_DB_IMAGE: soj-db:ci
+          SOJ_COMPOSE_BACKEND_IMAGE: soj-backend:ci
+          SOJ_COMPOSE_RUNNER_IMAGE: soj-runner:ci
+          SOJ_COMPOSE_FRONTEND_IMAGE: soj-frontend:ci
+          SOJ_RUN_FULL_REGRESSION: "1"
+          SOJ_RUN_RUNTIME_IMAGE_TESTS: "1"
+          SOJ_BACKEND_RUNTIME_IMAGE: soj-backend:ci
+          SOJ_RUNNER_RUNTIME_IMAGE: soj-runner:ci
+        run: |
+          shopt -s nullglob
+          poetry run pytest --basetemp "$RUNNER_TEMP/soj-compose-tests" --deselect backend/tests/integration/test_compose_e2e.py::test_browser_submissions_and_display backend/tests/integration/test_compose_e2e.py backend/tests/integration/test_production_deploy.py backend/tests/integration/test_runtime_images.py backend/tests/integration/test_postgres_image.py backend/tests/integration/test_sandbox_tools.py backend/tests/integration/test_base64_solutions.py backend/tests/integration/test_unique_visitors_solutions.py backend/tests/integration/test_sales_leaders_solutions.py backend/tests/integration/test_sha256_solutions.py backend/tests/integration/test_service_changes_solutions.py backend/tests/integration/test_paste_solutions.py backend/tests/integration/test_fold_solutions.py backend/tests/integration/test_pending_tasks_solutions.py backend/tests/integration/test_problem_*_solutions.py
+
+  browser:
+    name: Rootless browser review (${{ matrix.shard }})
+    needs: [changes, runtime]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # 全問題の画面検査だけを複数jobへ分ける。shardの一覧はchanges jobが選ぶ。
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.changes.outputs.browser_shards) }}
+    env:
+      PYTHONPATH: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+      - name: Install locked development dependencies
+        run: |
+          python -m pip install poetry==2.5.1
+          poetry check --lock
+          poetry install --no-interaction
+      - name: Prepare user systemd and D-Bus for rootless cgroups
+        run: bash ci/prepare_rootless.sh
+      - name: Set up isolated rootless Docker
+        uses: docker/setup-docker-action@2bf61fb9464cc67f0cbdeabed6aa0380accd1c70 # v5.5.0
+        with:
+          version: v29.8.1
+          rootless: true
+          set-host: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: runtime-reports
+          path: ${{ runner.temp }}/runtime-reports
+      # 再buildせず、同じrunでscan・署名対象にしたimageをIDで照合して読み込む。
+      - name: Load scanned runtime images
+        run: |
+          poetry run python -c 'import os; from pathlib import Path; from ci.supply_chain import load_candidate; load_candidate(Path(os.environ["RUNNER_TEMP"]) / "runtime-reports")'
+          printf 'SANDBOX_IMAGE_ID=%s\n' "$(docker image inspect soj-sandbox:ci --format '{{.Id}}')" >> "$GITHUB_ENV"
+      - name: Pull verified infrastructure images
+        run: |
+          poetry run python -c 'import subprocess; from tests.postgres_support import upstream_postgres_image; refs = [upstream_postgres_image()]; [subprocess.run(["docker", "pull", ref], check=True) for ref in refs]'
+      - name: Build browser test image
+        run: docker build --file backend/tests/integration/browser/Dockerfile --tag soj-browser:ci .
+      - name: Browser submissions and problem screen review
+        id: browser
+        env:
+          SOJ_RUN_DOCKER_TESTS: "1"
+          SOJ_RUN_COMPOSE_E2E: "1"
+          SOJ_DB_IMAGE: soj-db:ci
+          SOJ_COMPOSE_BACKEND_IMAGE: soj-backend:ci
+          SOJ_COMPOSE_RUNNER_IMAGE: soj-runner:ci
+          SOJ_COMPOSE_FRONTEND_IMAGE: soj-frontend:ci
+          SOJ_COMPOSE_BROWSER_IMAGE: soj-browser:ci
+          SOJ_BROWSER_PROBLEM_IDS: ${{ needs.changes.outputs.browser_selection }}
+          SOJ_BROWSER_SHARD: ${{ matrix.shard }}
+        run: poetry run pytest --basetemp "$RUNNER_TEMP/soj-compose-tests" backend/tests/integration/test_compose_e2e.py::test_browser_submissions_and_display
+      - name: Retain browser review screenshots
+        if: ${{ always() && steps.browser.outcome != 'skipped' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: browser-ui-review-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/soj-compose-tests/**/soj-ui/*.png
+          retention-days: 14
+          if-no-files-found: error
+
+  # branch保護のrequired checkに使う安定したjob名。shard数で名前が変わるbrowser jobも含め、
+  # 全runtime検査の成功、または文書だけの変更で全検査が省略されたことを1つの結果にまとめる。
+  runtime-result:
+    name: Rootless runtime E2E and image scan
+    needs: [changes, runtime, regression, browser]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require all runtime checks or a documentation-only skip
+        env:
+          SCOPE: ${{ needs.changes.result }}
+          REQUIRED: ${{ needs.changes.outputs.runtime }}
+          RESULTS: ${{ needs.runtime.result }} ${{ needs.regression.result }} ${{ needs.browser.result }}
+        run: |
+          echo "scope=$SCOPE runtime=$REQUIRED results=$RESULTS"
+          test "$SCOPE" = success
+          if [ "$REQUIRED" = false ]; then
+            test "$RESULTS" = "skipped skipped skipped"
+          else
+            test "$RESULTS" = "success success success"
+          fi
+
   provenance:
     name: Attest reviewed main artifacts
-    needs: [source, runtime]
+    # 署名はarchiveを使う全E2E・browser検査の成功後だけ行う。
+    needs: [source, runtime, regression, browser]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10

@@ -5,7 +5,7 @@ import os
 import re
 from pathlib import Path
 
-from soj_tools.problem_review import select_problem_ids
+from soj_tools.problem_review import browser_plan
 
 # 任意group未導入でも通常の型検査を妨げず、導入時には実際の型情報で検査する。
 from playwright.sync_api import Page, expect, sync_playwright  # type: ignore[import-not-found]
@@ -181,14 +181,19 @@ def submit(page: Page, command: str, verdict: str, label: str) -> int:
     return int(result["submission_id"])
 
 
-def check_regex_problems(page: Page, full: bool) -> list[int]:
-    """通常は正規表現の代表1問、全件modeは全正規表現問題を日英・大小画面と実提出で確認する。"""
+def check_regex_problems(page: Page, targets: list[str]) -> list[int]:
+    """指定された正規表現問題を日英・大小画面と実提出で確認する。
+
+    通常は代表1問、全件modeではshardに割り当てられた問題を受け取る。画像名と先頭問題だけの
+    解答表示検査には全REGEX問題での通し番号を使い、shardをまたいでも重複・欠落させない。
+    """
     ids = []
     catalog = page.request.get("https://frontend/api/problems").json()
     regex_ids = sorted(
         item["id"] for item in catalog if item["id"].startswith("REGEX-")
     )
-    for number, problem_id in enumerate(regex_ids if full else regex_ids[:1], 1):
+    for problem_id in targets:
+        number = regex_ids.index(problem_id) + 1
         page.goto(f"https://frontend/?problem={problem_id}", wait_until="networkidle")
         detail = page.request.get(f"https://frontend/api/problems/{problem_id}").json()
         expect(page.locator("#selected-text")).to_have_text(problem_id)
@@ -401,19 +406,17 @@ def main() -> None:
         )
         check_responsive_playground(page)
         check_about_page(page)
-        selection = os.environ.get("SOJ_BROWSER_PROBLEM_IDS", "all")
         catalog = page.request.get("https://frontend/api/problems").json()
-        review_ids = select_problem_ids([item["id"] for item in catalog], selection)
-        full = selection == "all"
-        ids.extend(check_regex_problems(page, full))
-        # 共通UIの7提出と正規表現代表例を維持し、追加問題数を固定値へ書き込まない。
-        common_count = 7 + (
-            sum(item["id"].startswith("REGEX-") for item in catalog) if full else 1
+        # 全件modeではCI jobごとのshardだけを開く。共通UIの検査は各shardで実施する。
+        regex_ids, review_ids = browser_plan(
+            [item["id"] for item in catalog],
+            os.environ.get("SOJ_BROWSER_PROBLEM_IDS", "all"),
+            os.environ.get("SOJ_BROWSER_SHARD", "0/1"),
         )
+        ids.extend(check_regex_problems(page, regex_ids))
+        # 共通UIの7提出と正規表現の対象を維持し、追加問題数を固定値へ書き込まない。
+        common_count = 7 + len(regex_ids)
         assert len(ids) == common_count
-        review_ids = [
-            pid for pid in review_ids if not (full and pid.startswith("REGEX-"))
-        ]
         ids.extend(check_problem(page, pid) for pid in review_ids)
         assert len(submissions) == common_count + len(review_ids)
         assert not errors

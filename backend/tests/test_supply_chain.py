@@ -145,3 +145,71 @@ def test_runtime_scan_rejects_missing_sandbox(tmp_path: Path) -> None:
     # 更新したsandboxをscan対象から落とした呼出しは、Docker操作より前に拒否する。
     with pytest.raises(ValueError, match="all five"):
         supply_chain.runtime_scan(tmp_path, tmp_path, {"backend": "test"})
+
+
+def candidate_reports(tmp_path: Path) -> dict[str, str]:
+    """5 imageのIDとarchive hashを持つ配備候補を作り、IDの対応を返す。"""
+    ids = {
+        name: "sha256:" + hashlib.sha256(name.encode()).hexdigest()
+        for name in ("backend", "runner", "frontend", "db", "sandbox")
+    }
+    payload = b"synthetic archive"
+    (tmp_path / "runtime.tar").write_bytes(payload)
+    (tmp_path / "build-record.json").write_text(
+        json.dumps(
+            {
+                "image_ids": ids,
+                "files": {"runtime.tar": hashlib.sha256(payload).hexdigest()},
+            }
+        )
+    )
+    return ids
+
+
+def test_load_candidate_tags_exactly_the_scanned_images(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # 同じrunのarchiveを読み込み、記録したIDの存在を確認してからCI用tagを付ける。
+    ids = candidate_reports(tmp_path)
+    commands: list[list[str]] = []
+    monkeypatch.setattr(supply_chain, "rootless", lambda: None)
+    monkeypatch.setattr(supply_chain, "run", lambda command: commands.append(command))
+    monkeypatch.setattr(
+        supply_chain.subprocess,
+        "run",
+        lambda command, **kwargs: SimpleNamespace(stdout=command[-1] + "\n"),
+    )
+    assert supply_chain.load_candidate(tmp_path) == ids
+    assert commands[0] == ["docker", "load", "--input", str(tmp_path / "runtime.tar")]
+    assert commands[1:] == [
+        ["docker", "tag", image, f"soj-{name}:ci"] for name, image in ids.items()
+    ]
+
+
+@pytest.mark.parametrize("corruption", ["archive", "missing", "tag", "loaded"])
+def test_load_candidate_rejects_unscanned_images(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, corruption: str
+) -> None:
+    # 破損archive、ID欠落、mutable tag、読込後のID不一致ではtagを付けずに失敗する。
+    ids = candidate_reports(tmp_path)
+    record = json.loads((tmp_path / "build-record.json").read_text())
+    if corruption == "archive":
+        (tmp_path / "runtime.tar").write_bytes(b"tampered")
+    elif corruption == "missing":
+        del record["image_ids"]["sandbox"]
+    elif corruption == "tag":
+        record["image_ids"]["db"] = "postgres:latest"
+    (tmp_path / "build-record.json").write_text(json.dumps(record))
+    commands: list[list[str]] = []
+    monkeypatch.setattr(supply_chain, "rootless", lambda: None)
+    monkeypatch.setattr(supply_chain, "run", lambda command: commands.append(command))
+    monkeypatch.setattr(
+        supply_chain.subprocess,
+        "run",
+        lambda command, **kwargs: SimpleNamespace(
+            stdout=ids["backend"] if corruption == "loaded" else command[-1]
+        ),
+    )
+    with pytest.raises(RuntimeError):
+        supply_chain.load_candidate(tmp_path)
+    assert not any(command[1] == "tag" for command in commands)

@@ -228,6 +228,8 @@ SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_COMPOSE_E2E=1 \
   poetry run pytest -m compose_e2e
 ```
 
+`SOJ_COMPOSE_BROWSER_IMAGE`はbrowser test（`test_browser_submissions_and_display`）だけが使います。
+未指定でも他のCompose testは実行でき、browser testは失敗します。
 `VITE_SOJ_URL`の空文字は同一originを使用するためのtest build設定です。
 frontendはloopbackの動的portだけへ公開し、DBのhost portは公開しません。
 testはimageをpull/buildせず、指定されたimage IDを使います。通常のDocker統合testでは
@@ -286,7 +288,7 @@ browser上のGIFアニメーションとJPEGでの採点・GIF表示の両立、
 ソフトウェアキーボードは別途確認してください。
 
 ブラウザ検査の画面画像はpytest一時ディレクトリの`soj-ui/`へ保存します。test専用の提出だけを含みます。
-CIでは共通機能・正規表現・各問題の画像をすべて`browser-ui-review` artifactへ14日間保存します。
+CIでは共通機能・正規表現・各問題の画像を、browser jobごとの`browser-ui-review-<job番号>` artifactへ14日間保存します。
 保存pathは[Supply Chain CI](../../../.github/workflows/supply_chain.yaml)を正本とします。
 
 問題ごとの詳細表示は共通関数で検査し、独立した期待値は各問題のdata検査で確認します。
@@ -295,6 +297,9 @@ CIでは共通機能・正規表現・各問題の画像をすべて`browser-ui-
 - `SOJ_BROWSER_PROBLEM_IDS='["STANDARD-00000074"]'`のようにJSON配列を指定すると、指定問題と
   空白・空行・日本語の代表例Base64、通常カテゴリの代表例68を検査します。正規表現代表例1も共通検査に含みます。
 - 未指定または`all`は全問題です。週次・手動CI・共通code変更・判定不能な差分ではこのmodeを使います。
+- 全件modeでは`SOJ_BROWSER_SHARD=k/n`（既定`0/1`）で、ID順にn個へ分けたk番目の問題だけを開きます。
+  CIはn=3の3 jobで並列に検査し、各問題をちょうど1回検査します。共通機能の検査は各jobで実施します。
+  指定問題だけのmodeは分割しません。分割と件数照合は`soj_tools.problem_review.browser_plan`を正本とします。
 - CIは問題dataと個別test・文書だけの変更なら追加・変更したIDを自動選択します。
   文書はMarkdown（`*.md`）で、frontendが取り込み得る`frontend/src/`・`frontend/public/`配下を除きます。
   文書だけの変更では代表例だけを検査します。
@@ -305,7 +310,7 @@ CIでは共通機能・正規表現・各問題の画像をすべて`browser-ui-
   提出前後×日英×320/1,440pxの8枚を`problem-<ID>-<phase>-<width>-<language>.png`として共通artifactへ保存します。
 - 正規表現の共通検査`check_regex_problems`は別経路です。代表1問、全件modeでは全REGEX問題を直接URLで開き、
   `to_have_text`で入力・実提出結果を照合します。提出前の日英×320/1,440pxの4枚を
-  `regex-<number>-<width>-<language>.png`として同じartifactへ保存します。
+  `regex-<number>-<width>-<language>.png`として同じartifactへ保存します。`<number>`は全REGEX問題での通し番号です。
   全件modeのREGEXは`check_problem`の対象から外し、共通機能の画像も同じartifactへ保存します。
 - 提出件数は選択対象から独立に算出し、すべてのIDの一意性とtest DB保存を検査します。
   全件modeにも対応するためbrowserの待機上限は900秒です。

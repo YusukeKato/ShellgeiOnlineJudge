@@ -369,6 +369,45 @@ def runtime_scan(tools: Path, reports: Path, products: dict[str, str]) -> bool:
     return ok
 
 
+def load_candidate(reports: Path) -> dict[str, str]:
+    """同じrunでscanした配備archiveを読み込み、記録したimage IDへCI用tagを付ける。
+
+    E2E jobでは再buildせず、scan・署名・配備の対象と同一のimageを検査する。
+    archive hash、記録の形式、読込後のIDのいずれかが一致しなければ例外で止める。
+    戻り値はservice名からimage IDへの対応で、tagは`soj-<service>:ci`になる。
+    """
+    rootless()
+    record = json.loads((reports / "build-record.json").read_text())
+    archive = reports / "runtime.tar"
+    with archive.open("rb") as stream:
+        if (
+            hashlib.file_digest(stream, "sha256").hexdigest()
+            != record["files"]["runtime.tar"]
+        ):
+            raise RuntimeError("runtime archive does not match its build record")
+    ids = record["image_ids"]
+    if set(ids) != {"backend", "runner", "frontend", "db", "sandbox"} or not all(
+        isinstance(value, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", value)
+        for value in ids.values()
+    ):
+        raise RuntimeError("build record must name all five immutable image IDs")
+    run(["docker", "load", "--input", str(archive)])
+    for name, image in ids.items():
+        loaded = subprocess.run(
+            ["docker", "image", "inspect", "--format", "{{.Id}}", image],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        ).stdout.strip()
+        if loaded != image:
+            raise RuntimeError(f"{name} image differs from the scanned image")
+    # 全IDの一致を確認してからtagを付け、一部だけ別imageを指す状態を残さない。
+    for name, image in ids.items():
+        run(["docker", "tag", image, f"soj-{name}:ci"])
+    return dict(ids)
+
+
 def write_record(
     reports: Path, image_ids: dict[str, str], external: dict[str, str] | None = None
 ) -> None:
