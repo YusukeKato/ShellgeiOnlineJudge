@@ -1186,3 +1186,24 @@ Docker全127件の一括実行と実機iOS/Androidは未実施。
 検証は[非Docker検査](../backend/tests/test_rev_problem.py)で独立期待値・詳細API・正常終了policy・白JPEG、
 [実sandbox検査](../backend/tests/integration/test_problem_rev_solutions.py)で参照解・別解・6誤答と4境界条件を扱う。
 全問回帰と画面検査は[問題作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+## STANDARD-00000076：レポート本文の取り出し
+
+- 問題データ：[STANDARD-00000076.yaml](../problems/v3/STANDARD-00000076.yaml)
+- 狙い・発見：本文の終了行を数えず、先頭・末尾からの位置で抽出範囲を表す。
+- 解法の核：tail -n +3で先頭2行を除き、head -n -2で末尾2行を除く。
+  別解はawkで全行数を先に調べ、2回目の読み込みで本文の範囲を選ぶ方法。
+  本文の長さが変わっても、見出しと付記を順に外す同じパイプで扱える。
+- 入力の意図：空行、api行の重複、連続スペースを含む8行のレポートを使う。
+  期待値は参照解答を実行せず、手確認した3〜6行目とPythonの行番号表で独立に照合する。
+  本文なし・1行・付記と同じ文字列・端と内部のスペースは別fixtureで確認する。
+  これらは解法の確認用であり、非公開の採点入力ではない。
+- 難易度・既存との差：初級の組み合わせ問題。ファイル引数とパイプを前提に、
+  GNU headの末尾除外とtailの開始行指定を学ぶ。通常55はBEGIN/ENDという内容で区間を選ぶが、
+  本問はファイル両端からの位置を使う。通常17の先頭3件・通常54の先頭1行除外から、
+  両端を除く前処理へ進み、集計・整列・内容に基づく検索とは異なる。
+  行順・空行・スペース・重複は保持し、使用コマンドの構文は採点しない。
+
+検証は[非Docker検査](../backend/tests/test_report_body_problem.py)で独立期待値・詳細API・正常終了policy・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_problem_report_body_solutions.py)で参照解・awk別解・6誤答と4境界条件を扱う。
+全問回帰と日英大小画面は[問題作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
