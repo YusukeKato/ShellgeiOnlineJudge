@@ -10,6 +10,8 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 REPRESENTATIVES = ("PRACTICE-base64-01", "STANDARD-00000068")
+# bundleや静的配信へ入り得るため、Markdownでも画面へ影響する可能性がある場所。
+FRONTEND_ASSET_DIRS = ("frontend/src/", "frontend/public/")
 PROBLEM_FILE = re.compile(r"problems/(?:v3|image)/([A-Z]+-[A-Za-z0-9-]+)\.(?:yaml|jpg)")
 
 
@@ -44,7 +46,8 @@ def selection_for_paths(paths: list[str], available: list[str]) -> str:
             "UPDATE_HISTORY.md",
         }:
             continue
-        elif path.startswith("docs/") and path.endswith(".md"):
+        elif path.endswith(".md") and not path.startswith(FRONTEND_ASSET_DIRS):
+            # README・AGENTS.md等の文書は画面に出ない。frontendが取り込み得るdirは除く。
             continue
         elif re.fullmatch(
             r"backend/tests/(?:test_[a-z0-9_]+_problem|integration/test_[a-z0-9_]+_solutions)\.py",

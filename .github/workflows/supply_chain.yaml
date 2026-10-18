@@ -93,7 +93,11 @@ jobs:
           version: v29.8.1
           rootless: true
           set-host: true
-      - name: Validate rootless daemon and build current targets
+      - name: Install verified inventory and vulnerability tools
+        run: |
+          python ci/install_tools.py "$RUNNER_TEMP/soj-tools" syft grype
+          printf 'GRYPE_DB_CACHE_DIR=%s/grype-db\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Validate rootless daemon, build current targets and update vulnerability database
         env:
           VITE_X_URL: ${{ vars.VITE_X_URL || 'https://x.com/yusukekato_main' }}
           VITE_GITHUB_REPO_URL: ${{ vars.VITE_GITHUB_REPO_URL || 'https://github.com/YusukeKato/ShellgeiOnlineJudge' }}
@@ -101,6 +105,9 @@ jobs:
           VITE_BLOG_URL: ${{ vars.VITE_BLOG_URL || 'https://yusukekato.jp' }}
           VITE_MIXI2_URL: ${{ vars.VITE_MIXI2_URL || 'https://mixi.social/communities/dcf8e9d8-a6c4-40a9-8e05-328b4424f886/about' }}
         run: |
+          # 脆弱性DBの取得はimage buildに依存しないため並行し、scan前に成否を確定する。
+          "$RUNNER_TEMP/soj-tools/grype" db update > "$RUNNER_TEMP/grype-db-update.log" 2>&1 &
+          grype_update=$!
           poetry run python -c 'from ci.supply_chain import rootless; rootless()'
           docker build --file deploy/sandbox/Dockerfile --tag soj-sandbox:ci .
           printf 'SANDBOX_IMAGE_ID=%s\n' "$(docker image inspect soj-sandbox:ci --format '{{.Id}}')" >> "$GITHUB_ENV"
@@ -117,13 +124,11 @@ jobs:
             --tag soj-frontend:ci .
           docker build --file deploy/postgres/Dockerfile --tag soj-db:ci .
           docker build --file backend/tests/integration/browser/Dockerfile --tag soj-browser:ci .
-      - name: Install verified inventory and vulnerability tools
-        run: |
-          python ci/install_tools.py "$RUNNER_TEMP/soj-tools" syft grype
-          printf 'GRYPE_DB_CACHE_DIR=%s/grype-db\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
-      - name: Update vulnerability database
-        run: |
-          "$RUNNER_TEMP/soj-tools/grype" db update
+          grype_status=0
+          wait "$grype_update" || grype_status=$?
+          cat "$RUNNER_TEMP/grype-db-update.log"
+          # DB更新の失敗時に古いDBや未取得DBでscanへ進まない。
+          test "$grype_status" -eq 0
       - name: Scan runtime images and prepare candidate archive
         id: scan
         run: poetry run python ci/supply_chain.py runtime --tools "$RUNNER_TEMP/soj-tools" --reports "$RUNNER_TEMP/runtime-reports" --sandbox "$SANDBOX_IMAGE_ID"

@@ -33,10 +33,31 @@ def test_data_only_changes_include_changed_problems_and_representatives() -> Non
     )
 
 
+def test_markdown_only_changes_check_only_representatives() -> None:
+    # repository直下やcomponent配下の文書だけの変更は、代表例だけの画面検査へ縮小する。
+    paths = [
+        "AGENTS.md",
+        "README.md",
+        "SECURITY.md",
+        "backend/README.md",
+        "backend/tests/integration/README.md",
+        "frontend/README.md",
+        "docs/CI.md",
+    ]
+    selection = review.selection_for_paths(paths, AVAILABLE)
+    assert json.loads(selection) == []
+    assert review.select_problem_ids(AVAILABLE, selection) == sorted(
+        review.REPRESENTATIVES
+    )
+
+
 @pytest.mark.parametrize(
     "path",
     [
         "frontend/src/tsx/problem.tsx",
+        "frontend/src/content/notes.md",
+        "frontend/public/notes.md",
+        "docs/diagram.svg",
         "backend/soj_shared/problem_repository.py",
         "backend/tests/integration/browser/check.py",
         "backend/tests/integration/test_compose_e2e.py",
@@ -47,7 +68,7 @@ def test_data_only_changes_include_changed_problems_and_representatives() -> Non
     ],
 )
 def test_common_changes_or_deleted_problem_require_all_screens(path: str) -> None:
-    # 共通実装・検査基盤・削除・未知fileを新問だけの検査へ縮小しない。
+    # 共通実装・検査基盤・frontend取り込み対象・削除・未知fileを新問だけの検査へ縮小しない。
     assert review.selection_for_paths([path], AVAILABLE) == "all"
     assert review.selection_for_paths([], AVAILABLE) == "all"
 
