@@ -39,14 +39,14 @@ build時の`VITE_*`はブラウザへ公開される値です。設定条件とs
 
 ## 変更箇所の案内
 
-| 変更したい内容 | 最初に読む実装 |
-| --- | --- |
-| 画面構成・スタイル | `src/tsx/`、`src/css/design.css` |
-| APIの型・受信検証・通信 | `src/api/types.ts`、`src/api/client.ts`。公開契約は[API仕様](../docs/API.md) |
-| 提出状態・結果表示 | `src/functions/submit.tsx`、`src/functions/judge_result.tsx`、`src/tsx/playground.tsx` |
-| 問題選択・共有URL・詳細取得 | `src/tsx/playground.tsx`、`src/functions/update_problem.tsx` |
-| 日英表示・外部リンク | `src/language.tsx`、`src/links.ts` |
-| 配信・API proxy・build設定 | `nginx/default.conf`、`Dockerfile`、`vite.config.ts` |
+| 変更したい内容              | 最初に読む実装                                                                         |
+| --------------------------- | -------------------------------------------------------------------------------------- |
+| 画面構成・スタイル          | `src/tsx/`、`src/css/design.css`                                                       |
+| APIの型・受信検証・通信     | `src/api/types.ts`、`src/api/client.ts`。公開契約は[API仕様](../docs/API.md)           |
+| 提出状態・結果表示          | `src/functions/submit.tsx`、`src/functions/judge_result.tsx`、`src/tsx/playground.tsx` |
+| 問題選択・共有URL・詳細取得 | `src/tsx/playground.tsx`、`src/functions/update_problem.tsx`                           |
+| 日英表示・外部リンク        | `src/language.tsx`、`src/links.ts`                                                     |
+| 配信・API proxy・build設定  | `nginx/default.conf`、`Dockerfile`、`vite.config.ts`                                   |
 
 ## 画面と通信の契約
 
