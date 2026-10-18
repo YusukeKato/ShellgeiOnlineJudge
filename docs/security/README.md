@@ -37,6 +37,14 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- backend用Pillowを13.0.0へ更新し、12.3.0までが対象となる画像decoderの公開指摘に対応します。
+  現在のversionは[依存定義](../../pyproject.toml)と[lock](../../poetry.lock)を正本とします。
+  [GIFコメント解析の指摘](https://github.com/python-pillow/Pillow/security/advisories/GHSA-74r2-7ff9-mjj2)は、
+  sandboxから返るGIFをbackendが開く処理へ到達します。byte上限は維持しますが、画素上限だけでは
+  コメント解析のCPU負荷を制御できません。750,000 bytes以内での実際の可用性影響は未計測です。
+  [13.0.0の互換性変更](https://pillow.readthedocs.io/en/stable/releasenotes/13.0.0.html)に対し、
+  画像判定・GIFの原本bytes、frame・delay・loop保持、破損入力・上限検査を回帰対象とします。
+  sandboxとrunnerの制限、判定方法、public APIの仕様は維持します。
 - DB遅延時の実行ログ滞留に対し、保存入口の非待機受付制限を実装しています
   （2026-10-17検証）。保証範囲は
   [実行ログの制約](../../SECURITY.md#実行ログとdockerログ)を参照してください。
