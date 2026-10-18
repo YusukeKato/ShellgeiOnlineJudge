@@ -16,6 +16,8 @@ from urllib.parse import urlencode
 
 
 WORKFLOWS = ("fastapi_ci.yaml", "react_ci.yaml", "supply_chain.yaml")
+# 本番側production.pyが前回成功時のarchiveを残す場所。repositoryからの相対path。
+TRANSFER_BASIS = ".soj-deploy/basis"
 
 
 def api(path: str) -> Any:
@@ -116,7 +118,7 @@ def verify(reports: Path) -> None:
 
 
 def transfer(reports: Path) -> None:
-    """SSM経由のSSHでhost鍵を照合して転送し、切断後もsystemdで更新を継続する。"""
+    """SSM経由のSSHでhost鍵を照合して差分転送し、切断後もsystemdで更新を継続する。"""
     repo, sha = context()
     if not latest_main(repo, sha):
         print("Superseded by a newer main commit; deployment skipped.")
@@ -204,12 +206,17 @@ def transfer(reports: Path) -> None:
             timeout=60,
         )
         transfer_started = time.monotonic()
+        # 前回成功時のarchiveを基準に差分だけを送る。基準がなければ全量を送る。
+        # 組み立て結果は本番側で署名済みrecordのSHA-256と照合される。
         subprocess.run(
             [
-                "scp",
-                *options,
-                "-P",
-                port,
+                "rsync",
+                "--rsh",
+                shlex.join(["ssh", *options, "-p", port]),
+                # 同じサイズ・更新時刻の基準fileを無検査で複製せず、常に内容を照合する。
+                "--ignore-times",
+                f"--copy-dest={repository}/{TRANSFER_BASIS}",
+                "--stats",
                 str(reports / "runtime.tar"),
                 str(reports / "build-record.json"),
                 "deploy/production.py",
