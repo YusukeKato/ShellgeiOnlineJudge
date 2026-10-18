@@ -81,6 +81,7 @@ Grype標準のmatcherによる除外は`ignoredMatches`へ残ります。例え�
 kernel header packageに対する間接matchの除外であり、ホストkernelの脆弱性評価を代替しません。
 
 DBは各jobで更新してから使用し、失敗時に古いDBへfallbackしません。
+runtime jobではimage buildと並行して更新し、同じstepの終了前に更新の成否を確認してからscanへ進みます。
 以降のscanでは自動更新を止め、同じjob内で同じDBを使います。Grype reportにDB metadataを残します。
 既存依存でも新たなadvisoryでCIが失敗するため、週次結果も確認してください。
 現在検出されている課題は[security tracker](./security/README.md)へ記録します。
@@ -290,7 +291,7 @@ poetry run python ci/supply_chain.py runtime \
 全問題の参照解答・判定・DB保存、共通UI・障害復旧・image境界の検査はPRとmainで維持します。
 問題ごとの詳細な画面検査だけを、`soj_tools.problem_review`で選択します。
 PRはbase SHAと検査対象merge SHA、main pushはeventのbefore SHAと対象SHAの差分を使います。
-問題data・個別問題test・文書だけなら代表例と変更問題、共通code変更・削除・未知file・差分取得不能・週次・手動実行なら全問題です。
+問題data・個別問題test・文書（Markdown）だけなら代表例と変更問題、共通code変更・削除・未知file・差分取得不能・週次・手動実行なら全問題です。
 詳細な対象と手動指定は[Docker統合テスト](../backend/tests/integration/README.md#問題追加時の画面検査)を正本とします。
 画像は共通の`browser-ui-review` artifactへ14日保存します。新問ごとにartifact stepを増やしません。
 

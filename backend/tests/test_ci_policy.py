@@ -112,3 +112,24 @@ def test_ci_runs_on_pr_and_main_without_duplicate_branch_push() -> None:
 
     assert "shopt -s nullglob" in steps[regression]["run"]
     assert "test_problem_*_solutions.py" in steps[regression]["run"]
+
+
+def test_runtime_vulnerability_db_update_finishes_before_scan() -> None:
+    # buildと並行するDB更新を同じstep内でwaitし、失敗時にscanへ進まないことを確認する。
+    workflow = next(w for w in workflows() if w["name"] == "Supply Chain CI")
+    steps = workflow["jobs"]["runtime"]["steps"]
+    update = next(
+        i for i, step in enumerate(steps) if "db update" in step.get("run", "")
+    )
+    scan = next(i for i, step in enumerate(steps) if step.get("id") == "scan")
+    install = next(
+        i for i, step in enumerate(steps) if "install_tools.py" in step.get("run", "")
+    )
+    script = steps[update]["run"]
+    # DB保存先はinstall stepがGITHUB_ENVへ設定するため、更新より前に置く。
+    assert install < update < scan
+    assert sum("db update" in step.get("run", "") for step in steps) == 1
+    assert "grype_update=$!" in script
+    assert 'wait "$grype_update" || grype_status=$?' in script
+    assert script.rstrip().endswith('test "$grype_status" -eq 0')
+    assert "continue-on-error" not in steps[update]
