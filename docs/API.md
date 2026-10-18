@@ -1,9 +1,17 @@
 # Public API
 
+この文書は、ShellgeiOnlineJudgeの外部公開HTTP API contractの正本です。
+起動・検査・変更の反映は[開発手順](./DEVELOPMENT.md)、内部runner protocolは
+[backend文書](../backend/README.md#内部runner-protocol)を参照してください。
+
+| clientの目的 | 使用するendpoint | 読む節 |
+| --- | --- | --- |
+| コマンドを提出し、実行・判定・保存状態を受け取る | `POST /api/v3/submissions` | [v3 submission API](#v3-submission-api)、[HTTP statusとerror](#http-statusとerror) |
+| 問題一覧・詳細を取得する | `GET /api/problems`、`GET /api/problems/{problem_id}` | [problem API](#problem-api) |
+| 既存clientを移行する | `POST /api/shellgei` | [legacy submission API](#legacy-submission-api) |
+
 OpenAPIの`info.version`は[製品versionの正本](./RELEASE.md#バージョンの正本)に従います。
 responseの`api_version: 3`はAPI互換性を表し、製品versionとは別です。
-
-この文書は、ShellgeiOnlineJudgeの外部公開HTTP API contractの正本です。
 request bodyや接続の制限は
 [セキュリティモデルと制約](../SECURITY.md#ネットワークとhttpの制約)、
 問題ID・判定規則は[問題データ](../problems/README.md)を参照してください。
@@ -99,6 +107,8 @@ legacy APIの`image`・`image_media_type`にも同じ選択規則を適用しま
 
 ## HTTP statusとerror
 
+この節はv3提出APIの規則です。問題取得時のstatusとcacheは[problem API](#problem-api)を参照してください。
+
 404・429・503は、内部例外やcommandを含まない固定のerrorを返します。
 422はFastAPIの標準validation error形式で、`detail`に拒否した入力値を含む場合があります。
 
@@ -158,6 +168,8 @@ legacy APIの200・404・422にも`Cache-Control: no-store`と
 カテゴリの値は[問題データ仕様](../problems/README.md#schema-v3)を参照してください。
 正規表現カテゴリ`REGEX`も同じ一覧・詳細・提出APIを使用します。カテゴリを固定列挙するclientは追加値への対応が必要です。
 
+### 一覧と詳細のresponse
+
 問題一覧`GET /api/problems`は、`id`、`category`、`title_ja`、`title_en`を持つ配列を
 返します。問題詳細`GET /api/problems/{problem_id}`は、`title_ja`、`statement_ja`、
 `title_en`、`statement_en`、`input`、`expected_output`、`answer`、`image`を返します。
@@ -167,3 +179,24 @@ legacy APIの200・404・422にも`Cache-Control: no-store`と
 これらは現在versionなしの互換endpointです。frontendのAPI clientは受信した全表示fieldを
 実行時に型検証します。将来versioningする場合は、既存endpointの互換性と移行期間を
 別途定義します。
+
+### HTTP statusとcache
+
+| Endpoint | Status | 応答 |
+| --- | --- | --- |
+| `GET /api/problems` | 200 | ID順の問題一覧配列。`Content-Type: application/json` |
+| `GET /api/problems` | 304 | `If-None-Match`が現在のETagと一致。本文なし |
+| `GET /api/problems/{problem_id}` | 200 | 問題詳細object |
+| `GET /api/problems/{problem_id}` | 404 | 形式は有効だが未登録のID。`{"detail":"Problem not found"}` |
+| `GET /api/problems/{problem_id}` | 422 | path parameterの形式・長さvalidation違反。FastAPI標準validation error |
+
+詳細APIの`problem_id`も、提出APIと同じ1〜64文字のASCII英数字をhyphenで区切った形式です。
+一覧の200と304には`Cache-Control: public, max-age=300`と`ETag`を付与します。
+ETagは一覧response本文のSHA-256を二重引用符で囲んだ値です。
+`If-None-Match`はカンマ区切りの各値の前後の空白を除去し、現在のETagとの完全一致で判定します。
+一致しない場合やheaderがない場合は200と一覧本文を返します。
+
+一覧本文とETagは起動時に検証済みの問題repositoryから生成します。
+問題dataを変更した場合の検査・反映は[問題データの更新手順](../problems/README.md)に従ってください。
+詳細APIには、この一覧用のETag・Cache-Controlを付与しません。
+提出APIの`no-store`やv3 typed errorの形式を問題API全体の規則として扱わないでください。

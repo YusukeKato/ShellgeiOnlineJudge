@@ -4,6 +4,17 @@
 ローカルの基本検査は[開発手順](./DEVELOPMENT.md#6-テスト)、実行基盤の制約は
 [Docker統合テスト](../backend/tests/integration/README.md)を参照してください。
 
+## 目次
+
+- [Workflowと権限](#workflowと権限)
+- [Scannerと停止条件](#scannerと停止条件)
+- [Rootless image検証](#rootless-image検証)
+- [生成物と検証・promotion](#生成物と検証promotion)
+- [更新方針](#更新方針)
+- [ローカルでの検証](#ローカルでの検証)
+- [公式資料](#公式資料)
+- [問題追加の検査範囲](#問題追加の検査範囲)
+
 ## Workflowと権限
 
 | Workflow | 検査 | 実行条件 |
@@ -79,6 +90,10 @@ DBは各jobで更新してから使用し、失敗時に古いDBへfallbackし�
 
 ### Python runtimeの期限付き例外
 
+同梱の旧policyは2026-10-05に失効しています。以下は残っている評価機構の契約であり、現在有効な例外を示しません。
+当時の根拠と確認結果は[過去の検証記録](./security/dependency-remediation-history.md#python判定と内蔵expatの検査)、
+撤去作業と現在の扱いは[セキュリティ課題](./security/README.md#soj-022の一時許容と撤去条件)を参照してください。
+
 Pythonの公式修正情報とNVDのversion範囲に不一致がある検出だけを、
 [`ci/python-runtime-exceptions.json`](../ci/python-runtime-exceptions.json)で管理します。
 対象CVE、根拠URL、package、実version、実装fileのhash、確認日・失効日はこのfileが正本です。
@@ -109,6 +124,9 @@ source・frontend・DB・sandboxにはこの例外を適用しません。
 日付だけの自動更新や、検出を消す目的での対象拡張は行いません。
 
 ### 未修正Python脆弱性の一時的なリスク受容
+
+同梱の旧policyは2026-10-04に失効しています。当時の承認は現在の許容を与えません。
+以下の評価機構とpolicyは未撤去のため、失効時を含む判定の契約を残しています。
 
 依頼者が承認した未修正脆弱性の一時許容は、修正済み誤検出と区別して
 [`ci/python-runtime-risk-acceptance.json`](../ci/python-runtime-risk-acceptance.json)で管理します。

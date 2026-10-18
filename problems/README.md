@@ -4,7 +4,21 @@
 作成前の設計方針は[問題作成ガイド](../docs/problem-authoring.md)、
 各問題の狙いは[設計記録](../docs/problem-design-notes.md)を参照してください。
 
+## この文書の読み方
+
+- [ディレクトリ](#ディレクトリ): 現行データと起動時検証
+- [Schema v3](#schema-v3): field・画像判定・text判定・入力上限
+- [問題の追加・改訂](#問題の追加・改訂): 新問と既存問題で変更するもの
+- [Problem data revision](#problem-data-revision): manifestの意味と再生成
+- [sandboxに収録する参照data](#sandboxに収録する参照data)
+- [検査](#検査)
+- [Legacy YAMLフィールド（移行baseline）](#legacy-yamlフィールド移行baseline): 旧データの参照と移行CLI
+
+環境構築と通常の検査コマンドは[開発手順](../docs/DEVELOPMENT.md)を参照してください。
+
 ## ディレクトリ
+
+現行の問題数とrevisionは[manifest.json](v3/manifest.json)を参照してください。
 
 - `v3/`: productionで使用するschema v3 YAMLと`manifest.json`
 - `image/`: 全問題の表示・判定用JPEG。GIF artifact問題では同じIDの判定用GIFも配置する
@@ -31,31 +45,6 @@ schema、ID集合、画像形式・上限、`manifest.json`のrevisionを検証�
 
 text問題にも表示用JPEGを配置する必要があります。現在は同一の白画像を使用していますが、
 repositoryのID集合検査と問題詳細APIが依存しているため、単独では削除できません。
-
-## Legacy YAMLフィールド（移行baseline）
-
-移行元の`yaml_data/`は、次の文字列フィールドを持ちます。
-
-| フィールド | 用途 |
-| --- | --- |
-| `id` | データ管理用のproblem ID。ファイル名のstemと一致させる |
-| `title_ja` / `title_en` | 日本語・英語の問題名 |
-| `statement_ja` / `statement_en` | 日本語・英語の問題文 |
-| `input` | 実行時にコマンドへ渡す入力データ |
-| `expected_output` | 正解とする標準出力 |
-| `answer` | 参照解答。v3の`reference_solution`へ移行する |
-
-画像を生成する問題では、コマンドから
-`media/output.jpg`または`media/output.gif`へ出力します。
-
-## sandboxに収録する参照data
-
-問題の一部は`input.txt`以外に`/ShellGeiData`の公開dataを参照します。
-収録範囲、取得元・build時の最新revisionの記録方法、利用条件は
-[sandbox文書](../deploy/sandbox/README.md#収録するもの)を正本とします。
-追加の固定textは`execution.fixtures`で配置できます。fixtureでは扱えないdataをimageへ
-収録する必要がある場合は、sandbox構成も更新してください。
-新規問題と公開data更新の互換性は、全問題回帰で確認してください。
 
 ## Schema v3
 
@@ -111,6 +100,8 @@ runner protocolはstdout、stderr、終了code、timeout、切り詰めを分離
 production判定にも上記policyを適用します。移行済みの全92問は、従来挙動を維持する
 `exit_code: ignore`、`stderr: merge`です。
 
+### 入力上限
+
 主な入力上限は次のとおりです。すべてUTF-8のbyte数で検証します。
 
 - schema YAML: 2,000,000 byte
@@ -125,7 +116,14 @@ fixtureとartifactのpathはabsolute path、`..`、`.`、空segment、backslash�
 NULを許可しません。同一fixture pathの重複と、提出command用に予約した
 `z.bash`も拒否します。
 
-`v3/`にはSTANDARD 68問、PRACTICE 42問、IMAGE 5問、REGEX 10問（例題1問を含む）の計125問があります。
+<a id="問題の追加・改訂"></a>
+
+## 問題の追加・改訂
+
+新規作成・修正とも、[問題作成ガイド](../docs/problem-authoring.md)に従って設計を先に提示します。
+次のデータ更新と[manifestの再生成](#problem-data-revision)を同じdiffへ含め、
+[検査](#検査)と設計記録の更新を終えてレビューに残してください。
+
 移行元92問のうち未改訂の問題は、legacyからの決定的な再生成結果との一致を検査します。
 意図した改訂は、[改訂登録](../backend/tests/fixtures/problem_revisions.json)の変更field一覧と
 定義hashで限定し、画像改訂は現行JPEGのhashも登録します。旧JPEGは`legacy_image/`へ保存し、
@@ -139,21 +137,6 @@ legacyのID集合がv3に含まれることと、現行の全YAML・JPEGのID集
 改訂hashは型付き定義のJSON（UTF-8、key昇順、ensure_ascii=False、区切りは`,`と`:`）のSHA-256です。
 変更fieldはlegacyのfield名で列挙し、移行元YAMLとsemantic manifestを改訂後の内容で上書きしません。
 
-legacy YAMLを1問移行する場合はbackend directoryから実行します。
-
-```sh
-cd backend
-migration_output_dir="$(mktemp -d)"
-poetry run python -m soj_tools.problem_migration \
-  ../problems/yaml_data/STANDARD-00000001.yaml \
-  "${migration_output_dir}/STANDARD-00000001.yaml"
-```
-
-出力先はproblem IDと同名の`.yaml`に限定し、既存fileは上書きしません。
-意図して置き換える場合だけ`--force`を指定します。
-自動移行は、legacyの`input`を`input.txt` fixtureへ変換し、現在の挙動を表す
-`exit_code: ignore`と`stderr: merge`を明示します。意味を失う可能性がある入力は
-推測で変換せずエラーにします。
 
 ## Problem data revision
 
@@ -179,6 +162,15 @@ checked-in manifestを再計算結果と照合します。実行requestとrespon
 相互検証し、不一致を拒否します。通信契約とreadinessは
 [内部runner protocol](../backend/README.md#内部runner-protocol)を参照してください。
 
+## sandboxに収録する参照data
+
+問題の一部は`input.txt`以外に`/ShellGeiData`の公開dataを参照します。
+収録範囲、取得元・build時の最新revisionの記録方法、利用条件は
+[sandbox文書](../deploy/sandbox/README.md#収録するもの)を正本とします。
+追加の固定textは`execution.fixtures`で配置できます。fixtureでは扱えないdataをimageへ
+収録する必要がある場合は、sandbox構成も更新してください。
+新規問題と公開data更新の互換性は、全問題回帰で確認してください。
+
 ## 検査
 
 legacyの必須field、problem IDに加え、schema v3の型、YAMLとJPEGの対応、
@@ -187,7 +179,39 @@ manifest revision、全92問の移行結果はDockerを使用しないbackendテ
 実際の正解コマンドをsandboxで実行する方法は、
 [Docker統合テスト](../backend/tests/integration/README.md)を参照してください。
 
+## Legacy YAMLフィールド（移行baseline）
+
+移行元の`yaml_data/`は、次の文字列フィールドを持ちます。
+
+| フィールド | 用途 |
+| --- | --- |
+| `id` | データ管理用のproblem ID。ファイル名のstemと一致させる |
+| `title_ja` / `title_en` | 日本語・英語の問題名 |
+| `statement_ja` / `statement_en` | 日本語・英語の問題文 |
+| `input` | 実行時にコマンドへ渡す入力データ |
+| `expected_output` | 正解とする標準出力 |
+| `answer` | 参照解答。v3の`reference_solution`へ移行する |
+
+画像を生成する問題では、コマンドから
+`media/output.jpg`または`media/output.gif`へ出力します。
+
 `semantic_manifest.json`は、YAMLをkey順でcanonical JSON化したSHA-256、
 正解画像のSHA-256、入力有無、期待出力種別を92問すべてについて保持します。
 問題データやschemaを移行する場合は、意図した変更を除いてこのbaselineと
 同じ意味が保たれることをbackend testで確認してください。
+
+legacy YAMLを1問移行する場合はbackend directoryから実行します。
+
+```sh
+cd backend
+migration_output_dir="$(mktemp -d)"
+poetry run python -m soj_tools.problem_migration \
+  ../problems/yaml_data/STANDARD-00000001.yaml \
+  "${migration_output_dir}/STANDARD-00000001.yaml"
+```
+
+出力先はproblem IDと同名の`.yaml`に限定し、既存fileは上書きしません。
+意図して置き換える場合だけ`--force`を指定します。
+自動移行は、legacyの`input`を`input.txt` fixtureへ変換し、現在の挙動を表す
+`exit_code: ignore`と`stderr: merge`を明示します。意味を失う可能性がある入力は
+推測で変換せずエラーにします。

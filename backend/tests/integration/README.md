@@ -7,18 +7,26 @@ Docker統合テストは実際のsandboxコンテナを生成・削除するた�
 隔離されたrootless Docker環境でのみ実行してください。
 本番ホストや共有CI runnerでは実行しないでください。
 
-`test_production_deploy.py`は下記のCompose E2Eと同じimage・有効化変数を使い、
-専用DBで自動配備scriptのDB保持、migration、HTTPS実行・保存確認、失敗時の受付停止を検査します。
-DB volumeと更新前のデータを保持し、PostgreSQLでdumpを読み取れることも確認します。
-Git取得とarchive loadは既存のlocal imageで代替し、SSH・systemd・GitHub署名検証は実行しません。
+## 実行対象を選ぶ
 
-初回HTTPSの起動待ちはCompose E2Eと共通の補助処理を使います。
-配備testは60秒、Compose E2Eは90秒の期限で、GETの通信失敗・HTTP非200を待ち直します。
-各requestのsocket timeoutは最大5秒か残り時間の短い方に制限し、証明書検証エラーは即座に失敗します。
-期限切れ時は直近のHTTP statusまたは例外の型と、専用serviceの状態・health・終了code・OOM状態を出力します。
-response本文、環境変数、credential、serviceの生ログは診断へ含めません。
-提出・配備処理そのものの失敗を、この起動待ちで再試行することはありません。
-待機・証明書エラー・期限切れ診断の回帰は[非Docker test](../test_compose_readiness.py)で検査します。
+Python依存の導入とDockerを使わない基本検査は[開発手順](../../../docs/DEVELOPMENT.md)を参照してください。
+以下の検査には、同じrootless daemon上のbuild済みimageと、検査ごとの明示flagが必要です。
+`docker` markerだけの指定では、追加flagが必要な検査も収集されますがskipされます。
+
+| 検査 | pytestの選択 | 有効化する環境変数 | 事前に用意するimage | flag不足時 |
+| --- | --- | --- | --- | --- |
+| [基本Dockerテスト](#共通準備と基本dockerテスト) | `-m docker` | `SOJ_RUN_DOCKER_TESTS=1` | sandbox、派生DB、互換性検査用の旧PostgreSQL、nginx | Docker全体をskip。追加flagなしでは下記のruntime・Compose・全問題回帰もskip |
+| [全問題のsandbox回帰](#全問題のsandbox回帰) | `-m full_regression` | 上記と`SOJ_RUN_FULL_REGRESSION=1` | sandbox | 全問題回帰をskip。Compose経路は別flagも必要 |
+| [本番runtime image](#本番runtime-imageの検証) | `test_runtime_images.py`。監視CLI検査は`test_sandbox_health_docker.py` | 上記のDocker flagと`SOJ_RUN_RUNTIME_IMAGE_TESTS=1` | sandbox、派生DB、backend、runner、frontend | runtime image・監視CLI検査をskip |
+| [Compose・browser・配備script](#composeとブラウザのe2e) | `-m compose_e2e` | 上記のDocker flagと`SOJ_RUN_COMPOSE_E2E=1` | sandboxと、backend・runner・frontend・browser・派生DBの5つのtest image | Compose・配備script検査をskip。全問題提出は追加flagが必要 |
+| Compose経路の全問題提出 | `-m compose_e2e` | Docker・Composeのflagに加え`SOJ_RUN_FULL_REGRESSION=1` | Compose・browserと同じ | 全問題提出だけをskip |
+
+image参照用の環境変数とbuildコマンドは各節にあります。test本体は不足imageを自動build・pullしません。
+flagの指定漏れやskipを成功の代わりに扱わず、pytestのsummaryで実行・skip範囲を確認してください。
+image不足は通常失敗になりますが、PostgreSQL retention testはDB image不足でskipし、
+nginx単体testはOpenSSLがない場合にskipします。
+
+## 共通準備と基本Dockerテスト
 
 次のイメージを、rootless daemonへ事前にbuild・取得してください。
 sandboxの指定・更新方針は[本番運用](../../../docs/PRODUCTION.md#sandbox専用image)を参照してください。
@@ -46,12 +54,12 @@ export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
 SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 ```
 
-テストでは下記を確認します。
+### 基本Dockerテストの検証範囲
 
-- 本番5 imageのOCI versionラベルと、ブラウザのversion表示が製品versionの正本と一致すること
-- 日英の表示切替・言語設定保存・入力と結果の維持、320〜1,440pxの7画面幅での問題選択・案内画面・コード枠の横スクロール。Chromiumのviewport検査であり、実機のiOS/Android・ソフトウェアキーボードは別途確認する
-- ブラウザ検査のPC日英・スマートフォン画面をpytest一時ディレクトリの`soj-ui/`へ保存する（test専用の提出だけを含む）
-- Base64練習は直接URLと練習カテゴリからの選択、日英・320/1,440pxで入力・想定出力・実提出結果の`text_content()`完全一致を検査する。空行、日本語、2個の連続スペース、末尾LFを保持し、8枚の専用画面画像をCIの`base64-ui-review` artifactへ14日間保存する
+`test_database_roles.py`は専用の一時PostgreSQLで旧行・所有者を維持したrole分離、保存・retention、
+DDL・migration表更新・採番変更・role昇格の拒否、権限の後付け検知とrollback/re-upgradeを検証します。
+
+テストでは下記を確認します。
 
 - 接続先daemonがrootlessであること
 - cgroup v2によるCPU・メモリ・PID制限が実際に反映されていること
@@ -63,8 +71,6 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - 動的sandboxのlogging driverが`none`であること
 - sandboxの待機PID 1のstdin、stdout、stderrが`/dev/null`であること
 - 同じownerの旧sandboxをrunner起動時に回収すること
-- ホスト監視CLIが別ownerを除外し、runner停止・削除後のsandbox残存を読み取りだけで検出すること
-  （`test_sandbox_health_docker.py`。runtime image検査の有効化とbuild済みbackend imageが必要）
 - root filesystemがread-onlyであること
 - 通常ファイルの書き込み先が、容量・inode制限付きの
   `/work`、`/tmp`、`/media`、`/dev`に限定されていること
@@ -85,7 +91,6 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
 - コンテナ削除
 - 実行中コンテナからの上限付き画像取得
 - 元のGIF生成コマンドの全10frame・delay保持、固定回収path・symlink・FIFO・byte上限・timeout・出力上限・次の提出への非残存（`test_gif_display_docker.py`）
-- browser上のGIFアニメーションと、JPEGでの採点・GIF表示の両立。共通UIと選択した問題の実提出・DB保存を照合（対象は下記「問題追加時の画面検査」を参照）
 - workerの回復
 - 実nginxで、sandboxを開始しないrequestが
   正常requestと共有の実行開始枠を消費しないこと
@@ -93,12 +98,26 @@ SOJ_RUN_DOCKER_TESTS=1 poetry run pytest -m docker
   [HTTPの制約](../../../SECURITY.md#ネットワークとhttpの制約)で指定したforwarded headerを
   backendへ転送しないこと
 
+## 全問題のsandbox回帰
+
 現在登録されている全問題の回帰テストには、追加の明示指定が必要です。
+
+```sh
+SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_FULL_REGRESSION=1 \
+  poetry run pytest -m full_regression
+```
+
 この回帰ではschema v3の全登録問題から`reference_solution`を読み、実sandboxで実行します。
 runnerとjudgeには起動時検証済みの同じ不変problem repositoryを注入し、fixture、
 期待出力、正解画像がrequestごとのfile再読込なしで利用される経路を検証します。
 legacy `yaml_data/`とのsemantic一致と意図した改訂の範囲は、
 [問題データ仕様](../../../problems/README.md)に従いnon-Docker testで別途検証します。
+
+### 個別の参照解・別解・誤答
+
+以下の個別testは基本Dockerテストでも実行します。`SOJ_RUN_FULL_REGRESSION`は不要です。
+全登録問題の参照解答をまとめて確認する上記の回帰と、個別の誤答・境界条件の検査を区別してください。
+
 `test_regex_solutions.py`は正規表現1〜10番の参照解答・別解と、部分一致・過剰な抽出・反復や境界の取り違えによる誤答を検査します。
 `test_reservation_problem.py`は未受付者を求める問題の参照解答と3つの別解を実行し、
 集合差の逆転・重複の残存・部分一致による除外・初出判定前の予約抽出を不正解として区別します。
@@ -139,25 +158,27 @@ Supply Chain CIは既存の13ファイル・34項目に加え、`test_problem_*_
 行列の向き、逐次置換、集合の取りこぼし、数値順・安定性、1の素数扱い、
 不等号の境界、最短周期との混同、素因数集計の重複除去等の誤答を区別します。
 
-```sh
-SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_FULL_REGRESSION=1 \
-  poetry run pytest -m full_regression
-```
-
 ## 本番runtime imageの検証
 
-`test_runtime_images.py`は追加の明示flagと、検証対象としてbuild済みの2つのimageを
-必要とします。上記のrootless環境を確認したうえで、リポジトリrootから実行します。
+`test_runtime_images.py`は追加の明示flagと、本番5種類のbuild済みimageを必要とします。
+[共通準備](#共通準備と基本dockerテスト)でsandbox・派生DBを用意し、rootless環境を確認したうえで、
+リポジトリrootからbackend・runner・frontendをbuildします。
 
 ```sh
 export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
 docker build --file backend/Dockerfile --target backend --tag soj-backend:runtime-test .
 docker build --file backend/Dockerfile --target runner --tag soj-runner:runtime-test .
+docker build --file frontend/Dockerfile --build-arg VITE_SOJ_URL= --tag soj-frontend:runtime-test .
 SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_RUNTIME_IMAGE_TESTS=1 \
   SOJ_BACKEND_RUNTIME_IMAGE=soj-backend:runtime-test \
   SOJ_RUNNER_RUNTIME_IMAGE=soj-runner:runtime-test \
-  poetry run pytest backend/tests/integration/test_runtime_images.py
+  SOJ_COMPOSE_FRONTEND_IMAGE=soj-frontend:runtime-test \
+  poetry run pytest backend/tests/integration/test_runtime_images.py \
+    backend/tests/integration/test_sandbox_health_docker.py
 ```
+
+backend・runner・frontend・DB・sandboxの本番5種類について、OCI versionラベルが製品versionの正本と一致することを確認します。
+ホスト監視CLIのtestは、別ownerを除外し、runner停止・削除後のsandbox残存を読み取りだけで検出することを確認します。
 
 実imageのPython・Expat修正版、非rootでの共有・専用package全moduleのimport、
 開発tool・逆側package・runner側Pillowの不在、問題data読込、socket補助groupの
@@ -166,41 +187,26 @@ Composeと同じ実行制限でtext/image判定とDB保存まで検証します�
 sandbox・container・networkを終了時に回収し、本番volumeや公開portは使用しません。
 frontend/nginxとbrowserを含む検証は、次のCompose E2Eで行います。
 
-### 問題追加時の画面検査
-
-共通ブラウザ検査は、正解・不正解・timeout・出力上限・画像/GIF・言語切替・カテゴリ選択を毎回確認します。
-問題ごとの詳細表示は共通関数で検査し、独立した期待値は各問題のdata検査で確認します。
-新問ごとに表示関数、固定提出件数、画像保存stepを追加しません。
-
-- `SOJ_BROWSER_PROBLEM_IDS='["STANDARD-00000074"]'`のようにJSON配列を指定すると、指定問題と
-  空白・空行・日本語の代表例Base64、通常カテゴリの代表例68を検査します。正規表現代表例1も共通検査に含みます。
-- 未指定または`all`は全問題です。週次・手動CI・共通code変更・判定不能な差分ではこのmodeを使います。
-- CIは問題dataと個別test・文書だけの変更なら追加・変更したIDを自動選択します。
-  不明IDを手動指定した場合は失敗させ、指定漏れを成功として扱いません。
-- 各問題は1回だけ実提出し、結果を保持して日英320/1440pxの表示を確認します。
-  提出前後の画像は`problem-<ID>-<phase>-<width>-<language>.png`として共通artifactへ保存します。
-  正規表現・共通機能の画像も同じartifactへ保存します。
-- 提出件数は選択対象から独立に算出し、すべてのIDの一意性とtest DB保存を検査します。
-  全件modeにも対応するためbrowserの待機上限は900秒です。
-- 全問題回帰の対象はこの選択値で減らしません。新問の参照解・別解・誤答の実sandbox検査も別途実行します。
-
-ローカルで新問だけの画面を調べる例（下記のCompose imageとflagを準備した後）：
-
-```sh
-SOJ_BROWSER_PROBLEM_IDS='["STANDARD-00000074"]' poetry run pytest \
-  backend/tests/integration/test_compose_e2e.py::test_browser_submissions_and_display
-```
-
 ## ComposeとブラウザのE2E
-
-`test_database_roles.py`は専用の一時PostgreSQLで旧行・所有者を維持したrole分離、保存・retention、
-DDL・migration表更新・採番変更・role昇格の拒否、権限の後付け検知とrollback/re-upgradeを検証します。
 
 `test_compose_e2e.py`は実際の`docker-compose.yml`を読み込み、rootless確認wrapperで
 frontend/nginx、backend、runner、PostgreSQLを起動します。DB起動後に同じbackend imageの
 一時`migrate` serviceでschemaと専用app roleを準備し、通常用credentialだけをbackendへ渡します。上記と同じ隔離環境でのみ
 実行してください。Docker Compose v2以降、`openssl`、DB・browserを含むbuild済みの5つのtest imageが必要です。
 ホストのbrowserやNode.jsは使用しません。
+
+`test_production_deploy.py`は下記のCompose E2Eと同じimage・有効化変数を使い、
+専用DBで自動配備scriptのDB保持、migration、HTTPS実行・保存確認、失敗時の受付停止を検査します。
+DB volumeと更新前のデータを保持し、PostgreSQLでdumpを読み取れることも確認します。
+Git取得とarchive loadは既存のlocal imageで代替し、SSH・systemd・GitHub署名検証は実行しません。
+
+初回HTTPSの起動待ちはCompose E2Eと共通の補助処理を使います。
+配備testは60秒、Compose E2Eは90秒の期限で、GETの通信失敗・HTTP非200を待ち直します。
+各requestのsocket timeoutは最大5秒か残り時間の短い方に制限し、証明書検証エラーは即座に失敗します。
+期限切れ時は直近のHTTP statusまたは例外の型と、専用serviceの状態・health・終了code・OOM状態を出力します。
+response本文、環境変数、credential、serviceの生ログは診断へ含めません。
+提出・配備処理そのものの失敗を、この起動待ちで再試行することはありません。
+待機・証明書エラー・期限切れ診断の回帰は[非Docker test](../test_compose_readiness.py)で検査します。
 
 リポジトリrootで、現在のコードから検証対象をbuildします。
 
@@ -269,6 +275,47 @@ finallyを実行できないため、残ったproject名を確認し、そのpro
 browser scriptも実際のPlaywright型情報で検査する場合は`poetry install --with e2e`を実行します。
 browser本体のホストへのinstallは不要です。構築方法の参考は
 [PlaywrightのDocker文書](https://playwright.dev/python/docs/docker)です。
+
+### 問題追加時の画面検査
+
+共通ブラウザ検査は、正解・不正解・timeout・出力上限・画像/GIF・言語切替・カテゴリ選択を毎回確認します。
+browser上のGIFアニメーションとJPEGでの採点・GIF表示の両立、共通UIと選択した問題の実提出・DB保存も照合します。
+ブラウザのversion表示が製品versionの正本と一致することも確認します。
+日英の表示切替・言語設定保存・入力と結果の維持、320〜1,440pxの7画面幅での問題選択・案内画面・
+コード枠の横スクロールを検査します。Chromiumのviewport検査であり、実機のiOS/Android・
+ソフトウェアキーボードは別途確認してください。
+
+ブラウザ検査の画面画像はpytest一時ディレクトリの`soj-ui/`へ保存します。test専用の提出だけを含みます。
+CIでは共通機能・正規表現・各問題の画像をすべて`browser-ui-review` artifactへ14日間保存します。
+保存pathは[Supply Chain CI](../../../.github/workflows/supply_chain.yaml)を正本とします。
+
+問題ごとの詳細表示は共通関数で検査し、独立した期待値は各問題のdata検査で確認します。
+新問ごとに表示関数、固定提出件数、画像保存stepを追加しません。
+
+- `SOJ_BROWSER_PROBLEM_IDS='["STANDARD-00000074"]'`のようにJSON配列を指定すると、指定問題と
+  空白・空行・日本語の代表例Base64、通常カテゴリの代表例68を検査します。正規表現代表例1も共通検査に含みます。
+- 未指定または`all`は全問題です。週次・手動CI・共通code変更・判定不能な差分ではこのmodeを使います。
+- CIは問題dataと個別test・文書だけの変更なら追加・変更したIDを自動選択します。
+  不明IDを手動指定した場合は失敗させ、指定漏れを成功として扱いません。
+- 共通関数`check_problem`で詳細を確認する各対象は1回だけ実提出し、結果を保持して日英320/1440pxの表示を確認します。
+  text問題では入力・想定出力・実提出結果を`text_content()`の完全一致で照合し、Base64練習を含む空行、日本語、連続スペース、末尾LFを保持します。
+  画像問題では正解画像と結果画像の表示を確認します。カテゴリから問題を選んだ際のURL更新も確認し、
+  提出前後×日英×320/1,440pxの8枚を`problem-<ID>-<phase>-<width>-<language>.png`として共通artifactへ保存します。
+- 正規表現の共通検査`check_regex_problems`は別経路です。代表1問、全件modeでは全REGEX問題を直接URLで開き、
+  `to_have_text`で入力・実提出結果を照合します。提出前の日英×320/1,440pxの4枚を
+  `regex-<number>-<width>-<language>.png`として同じartifactへ保存します。
+  全件modeのREGEXは`check_problem`の対象から外し、共通機能の画像も同じartifactへ保存します。
+- 提出件数は選択対象から独立に算出し、すべてのIDの一意性とtest DB保存を検査します。
+  全件modeにも対応するためbrowserの待機上限は900秒です。
+- 全問題回帰の対象はこの選択値で減らしません。新問の参照解・別解・誤答の実sandbox検査も別途実行します。
+
+ローカルで新問だけの画面を調べる例（上記のCompose imageとimage参照の環境変数を準備した後）：
+
+```sh
+SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_COMPOSE_E2E=1 \
+  SOJ_BROWSER_PROBLEM_IDS='["STANDARD-00000074"]' poetry run pytest \
+    backend/tests/integration/test_compose_e2e.py::test_browser_submissions_and_display
+```
 
 ## 対象外の耐性試験
 

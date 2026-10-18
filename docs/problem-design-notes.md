@@ -4,6 +4,149 @@
 [問題作成ガイド](problem-authoring.md)を参照してください。
 問題文・入出力・参照解答は、各問題のYAMLを正本とします。
 
+## ID索引
+
+記録のある問題をカテゴリ別・ID順に探すための索引です。本文は追加順を保っています。
+ここにない問題の学習意図は推測で補わず、必要な変更時に確認して記録します。
+索引の更新方法は[記録方法](problem-authoring.md#作成後に残す短い記録)に従います。
+
+### STANDARD
+
+| 問題ID | 記録 |
+| --- | --- |
+| [STANDARD-00000003](#note-standard-00000003) | 連番の生成 |
+| [STANDARD-00000005](#note-standard-00000005) | 入出庫と在庫 |
+| [STANDARD-00000006](#note-standard-00000006) | 円周率10桁 |
+| [STANDARD-00000007](#note-standard-00000007) | 長い計算結果の復元 |
+| [STANDARD-00000008](#note-standard-00000008) | 鶴亀算 |
+| [STANDARD-00000009](#note-standard-00000009) | 日記の並べ替え |
+| [STANDARD-00000010](#note-standard-00000010) | 日記テンプレートの復元 |
+| [STANDARD-00000011](#note-standard-00000011) | 行列の回転 |
+| [STANDARD-00000012](#note-standard-00000012) | ビットの反転 |
+| [STANDARD-00000013](#note-standard-00000013) | 使われていないアルファベット |
+| [STANDARD-00000014](#note-standard-00000014) | グループ分け |
+| [STANDARD-00000015](#note-standard-00000015) | 素数判定 |
+| [STANDARD-00000016](#note-standard-00000016) | HTMLのコードを掲載する |
+| [STANDARD-00000017](#note-standard-00000017) | 遅いリクエストを探す |
+| [STANDARD-00000018](#note-standard-00000018) | 条件を満たす整数 |
+| [STANDARD-00000019](#note-standard-00000019) | 元の文字列 |
+| [STANDARD-00000020](#note-standard-00000020) | 素因数の出現回数 |
+| [STANDARD-00000021](#note-standard-00000021) | 回文判定 |
+| [STANDARD-00000022](#note-standard-00000022) | 大きな整数の桁数 |
+| [STANDARD-00000023](#note-standard-00000023) | スコア計算 |
+| [STANDARD-00000024](#note-standard-00000024) | 在庫と注文の照合 |
+| [STANDARD-00000025](#note-standard-00000025) | 重複のない並べ方 |
+| [STANDARD-00000026](#note-standard-00000026) | 迷路の最短距離 |
+| [STANDARD-00000027](#note-standard-00000027) | 電車の乗り換え |
+| [STANDARD-00000028](#note-standard-00000028) | 同心の数字模様 |
+| [STANDARD-00000029](#note-standard-00000029) | 番号一覧を表にする |
+| [STANDARD-00000030](#note-standard-00000030) | シーザー暗号 |
+| [STANDARD-00000031](#note-standard-00000031) | 最大公約数 |
+| [STANDARD-00000032](#note-standard-00000032) | 最小公倍数 |
+| [STANDARD-00000033](#note-standard-00000033) | 同じ文字の行を数える |
+| [STANDARD-00000034](#note-standard-00000034) | 5乗する前の整数 |
+| [STANDARD-00000035](#note-standard-00000035) | 行の複製 |
+| [STANDARD-00000036](#note-standard-00000036) | NをN回出力 |
+| [STANDARD-00000037](#note-standard-00000037) | 数字のまとまりを抽出 |
+| [STANDARD-00000038](#note-standard-00000038) | 割り算判定 |
+| [STANDARD-00000039](#note-standard-00000039) | 一度だけ現れる文字 |
+| [STANDARD-00000040](#note-standard-00000040) | 文字の出現回数 |
+| [STANDARD-00000041](#note-standard-00000041) | 魔方陣の空欄 |
+| [STANDARD-00000042](#note-standard-00000042) | 桁を揃えた表 |
+| [STANDARD-00000043](#note-standard-00000043) | 拡張子を付けた名前 |
+| [STANDARD-00000044](#note-standard-00000044) | 文字列を含むファイル |
+| [STANDARD-00000045](#note-standard-00000045) | 模様を3倍に拡大 |
+| [STANDARD-00000046](#note-standard-00000046) | 単位行列の生成 |
+| [STANDARD-00000047](#note-standard-00000047) | IPアドレスの抽出 |
+| [STANDARD-00000048](#note-standard-00000048) | 連続する文字の圧縮 |
+| [STANDARD-00000049](#note-standard-00000049) | 最長の回文部分文字列 |
+| [STANDARD-00000050](#note-standard-00000050) | 数式の結果を添える |
+| [STANDARD-00000051](#note-standard-00000051) | 打率ランキング |
+| [STANDARD-00000052](#note-standard-00000052) | 未受付の予約者 |
+| [STANDARD-00000053](#note-standard-00000053) | 機器の最新状態 |
+| [STANDARD-00000054](#note-standard-00000054) | 測定値の変化 |
+| [STANDARD-00000055](#note-standard-00000055) | 公開区間の取り出し |
+| [STANDARD-00000056](#note-standard-00000056) | 空欄のある連絡先 |
+| [STANDARD-00000057](#note-standard-00000057) | 拡張子別のファイル数 |
+| [STANDARD-00000058](#note-standard-00000058) | 担当者への配布一覧 |
+| [STANDARD-00000059](#note-standard-00000059) | タブの可視化 |
+| [STANDARD-00000060](#note-standard-00000060) | 同時利用数の変化 |
+| [STANDARD-00000061](#note-standard-00000061) | エラーの前後を取り出す |
+| [STANDARD-00000062](#note-standard-00000062) | バージョン番号順に並べる |
+| [STANDARD-00000063](#note-standard-00000063) | 作業の実行順を復元する |
+| [STANDARD-00000068](#note-standard-00000068) | ページ別の訪問者数 |
+| [STANDARD-00000069](#note-standard-00000069) | カテゴリ別の売上首位 |
+| [STANDARD-00000071](#note-standard-00000071) | サービス一覧の変更点 |
+| [STANDARD-00000074](#note-standard-00000074) | 未完了の作業リスト |
+| [STANDARD-00000076](#note-standard-00000076) | レポート本文の取り出し |
+
+### PRACTICE
+
+| 問題ID | 記録 |
+| --- | --- |
+| [PRACTICE-awk-01](#note-practice-awk-01) | awk 1 |
+| [PRACTICE-awk-02](#note-practice-awk-02) | awk 2 |
+| [PRACTICE-awk-03](#note-practice-awk-03) | awk 3 |
+| [PRACTICE-awk-04](#note-practice-awk-04) | awk 4 |
+| [PRACTICE-awk-05](#note-practice-awk-05) | awk 5 |
+| [PRACTICE-awk-06](#note-practice-awk-06) | awk 6 |
+| [PRACTICE-awk-07](#note-practice-awk-07) | awk 7 |
+| [PRACTICE-awk-08](#note-practice-awk-08) | awk 8 |
+| [PRACTICE-base64-01](#note-practice-base64-01) | base64 1 |
+| [PRACTICE-cat-01](#note-practice-cat-01) | cat 1 |
+| [PRACTICE-cat-02](#note-practice-cat-02) | cat 2 |
+| [PRACTICE-cat-03](#note-practice-cat-03) | cat 3 |
+| [PRACTICE-cat-04](#note-practice-cat-04) | cat 4 |
+| [PRACTICE-echo-01](#note-practice-echo-01) | echo 1 |
+| [PRACTICE-echo-02](#note-practice-echo-02) | echo 2 |
+| [PRACTICE-echo-03](#note-practice-echo-03) | echo 3 |
+| [PRACTICE-find-01](#note-practice-find-01) | find 1 |
+| [PRACTICE-find-02](#note-practice-find-02) | find 2 |
+| [PRACTICE-find-03](#note-practice-find-03) | find 3 |
+| [PRACTICE-fold-01](#note-practice-fold-01) | fold 1 |
+| [PRACTICE-grep-01](#note-practice-grep-01) | grep 1 |
+| [PRACTICE-grep-02](#note-practice-grep-02) | grep 2 |
+| [PRACTICE-grep-03](#note-practice-grep-03) | grep 3 |
+| [PRACTICE-grep-04](#note-practice-grep-04) | grep 4 |
+| [PRACTICE-od-01](#note-practice-od-01) | od 1 |
+| [PRACTICE-paste-01](#note-practice-paste-01) | paste 1 |
+| [PRACTICE-rev-01](#note-practice-rev-01) | rev 1 |
+| [PRACTICE-sed-01](#note-practice-sed-01) | sed 1 |
+| [PRACTICE-sed-02](#note-practice-sed-02) | sed 2 |
+| [PRACTICE-sed-03](#note-practice-sed-03) | sed 3 |
+| [PRACTICE-sed-04](#note-practice-sed-04) | sed 4 |
+| [PRACTICE-sed-05](#note-practice-sed-05) | sed 5 |
+| [PRACTICE-sed-06](#note-practice-sed-06) | sed 6 |
+| [PRACTICE-sha256sum-01](#note-practice-sha256sum-01) | sha256sum 1 |
+| [PRACTICE-sort-01](#note-practice-sort-01) | sort 1 |
+| [PRACTICE-sort-02](#note-practice-sort-02) | sort 2 |
+| [PRACTICE-sort-03](#note-practice-sort-03) | sort 3 |
+| [PRACTICE-uniq-01](#note-practice-uniq-01) | uniq 1 |
+| [PRACTICE-uniq-02](#note-practice-uniq-02) | uniq 2 |
+| [PRACTICE-wc-01](#note-practice-wc-01) | wc 1 |
+| [PRACTICE-wc-02](#note-practice-wc-02) | wc 2 |
+| [PRACTICE-wc-03](#note-practice-wc-03) | wc 3 |
+
+### IMAGE
+
+| 問題ID | 記録 |
+| --- | --- |
+| [IMAGE-00000001](#note-image-00000001) | 画像テスト |
+| [IMAGE-00000002](#note-image-00000002) | 横線 |
+| [IMAGE-00000003](#note-image-00000003) | 円 |
+| [IMAGE-00000004](#note-image-00000004) | 市松模様 |
+| [IMAGE-00000005](#note-image-00000005) | 四角の並び |
+
+### REGEX
+
+| 問題ID | 記録 |
+| --- | --- |
+| [REGEX-00000001](#note-regex-00000001) | 例題：正規表現で行を選ぶ |
+| [REGEX-00000002〜04](#note-regex-00000002-04) | 正規表現パズル |
+| [REGEX-00000005〜10](#note-regex-00000005-10) | 境界・抽出・置換のパズル |
+
+<a id="note-standard-00000052"></a>
+
 ## STANDARD-00000052：未受付の予約者
 
 - 問題データ：[STANDARD-00000052.yaml](../problems/v3/STANDARD-00000052.yaml)
@@ -17,6 +160,8 @@
 - 難易度・既存との差：中級の入口。列の入れ替え・ソートを前提に、整列順と初出判定を組み合わせる。
   PRACTICE-sort-03・PRACTICE-uniq-01の重複除去、STANDARD-00000040の頻度集計から、2集合の差へ進む。
 
+<a id="note-standard-00000003"></a>
+
 ## STANDARD-00000003：連番の生成
 
 - 問題データ：[STANDARD-00000003.yaml](../problems/v3/STANDARD-00000003.yaml)
@@ -24,6 +169,8 @@
 - 解法の核：seqによる列生成。確認した別解はBashのbrace expansionとprintf。
 - 入力の意図：fixtureなしで1〜10を指定し、始点・終点と1行1個の出力を確認する。入出力と参照解答は維持し、題名と説明を明確化した。
 - 難易度・既存との差：入門。PRACTICE-awk-05と生成結果は重なるが、ループを書く前に専用コマンドを知る役割を持たせる。
+
+<a id="note-standard-00000005"></a>
 
 ## STANDARD-00000005：入出庫と在庫
 
@@ -34,6 +181,8 @@
 - 難易度・既存との差：初級。STANDARD-00000004の行ごとに独立した合計から、行をまたぐ状態保持へ進む。
   フィボナッチ数列から題材と入出力を変更し、今回この学習意図を設定した。
 
+<a id="note-standard-00000006"></a>
+
 ## STANDARD-00000006：円周率10桁
 
 - 問題データ：[STANDARD-00000006.yaml](../problems/v3/STANDARD-00000006.yaml)
@@ -41,6 +190,8 @@
 - 解法の核：bcで余分な桁まで計算し、cutで必要な範囲を取り出す。確認した別解はsedによる同じ桁数の抽出。
 - 入力の意図：fixtureは設けず、計算式をヒントとして示し、逆正接の公式の暗記を要求しない。四捨五入と切り捨ての結果が異なる桁数を維持する。
 - 難易度・既存との差：初級。STANDARD-00000050の数式処理に対し、計算結果の精度と表示形式を扱う。期待出力は維持した。
+
+<a id="note-standard-00000007"></a>
 
 ## STANDARD-00000007：長い計算結果の復元
 
@@ -52,6 +203,8 @@
 - 難易度・既存との差：初級〜中級。STANDARD-00000006の桁数違いから、データの継続を読む問題へ変更した。
   STANDARD-00000009の空行区切りの記録とは異なり、行末の継続記号で境界が決まる。
 
+<a id="note-standard-00000008"></a>
+
 ## STANDARD-00000008：鶴亀算
 
 - 問題データ：[STANDARD-00000008.yaml](../problems/v3/STANDARD-00000008.yaml)
@@ -59,6 +212,8 @@
 - 解法の核：すべて鶴とした場合からの足の差を2で割り、亀の匹数を求めるawkの計算。確認した別解は入力の合計匹数まで探索する総当たり。
 - 入力の意図：既存4例を残し、鶴だけ・亀だけ・両方10匹以上を追加する。合計匹数から計算する解答にし、0〜9匹という旧解答の暗黙の制限を取り除く。
 - 難易度・既存との差：初級。算数の発想を含む問題として残す。STANDARD-00000004の可変個数の集計とは異なり、固定2列から別の2列を導く。
+
+<a id="note-standard-00000009"></a>
 
 ## STANDARD-00000009：日記の並べ替え
 
@@ -71,6 +226,8 @@
 - 難易度・既存との差：中級。STANDARD-00000014の行単位のグループ分けから、sortへ渡すレコード自体を作る発想へ進む。
   本文を壊さず並べ替えることを、今回の改訂で明確な学習意図とした。
 
+<a id="note-standard-00000010"></a>
+
 ## STANDARD-00000010：日記テンプレートの復元
 
 - 問題データ：[STANDARD-00000010.yaml](../problems/v3/STANDARD-00000010.yaml)
@@ -82,6 +239,8 @@
 - 難易度・既存との差：中級の入口。PRACTICE-sedの固定置換から、規則をデータとして渡す処理へ進む。
   虫食い日記の固定箇所の置換から、題名・入力・出力を変更してこの意図を設定した。
 
+<a id="note-standard-00000011"></a>
+
 ## STANDARD-00000011：行列の回転
 
 - 問題データ：[STANDARD-00000011.yaml](../problems/v3/STANDARD-00000011.yaml)
@@ -92,6 +251,8 @@
 - 難易度・既存との差：中級の入口。STANDARD-00000009のレコードの並べ替えとは異なり、行と列の役割を交換する。
   元の回転という題材を維持し、今回の改訂で分解の学びを明確化した。
 
+<a id="note-standard-00000012"></a>
+
 ## STANDARD-00000012：ビットの反転
 
 - 問題データ：[STANDARD-00000012.yaml](../problems/v3/STANDARD-00000012.yaml)
@@ -100,6 +261,8 @@
 - 入力の意図：短い複数行と0だけ・1だけの行を含め、改行保持、順序反転、逐次置換との違いを確認する。
 - 難易度・既存との差：初級。PRACTICE-sed-02の独立した文字列置換に対し、変換元と変換先が重なる文字の交換を学ぶ。
   変換内容は維持し、入力を読みやすくして英題を順序反転と混同しない表現にした。
+
+<a id="note-standard-00000013"></a>
 
 ## STANDARD-00000013：使われていないアルファベット
 
@@ -110,6 +273,8 @@
 - 入力の意図：欠けた文字を3つにし、入力に複数行・重複・アルファベット順でない並びを含める。
 - 難易度・既存との差：初級〜中級。STANDARD-00000052の名前どうしの集合差に対し、文字集合と文字・行の変換を扱う。
   旧解答の「欠落は1文字」という暗黙の前提を取り除いた。
+
+<a id="note-standard-00000014"></a>
 
 ## STANDARD-00000014：グループ分け
 
@@ -122,6 +287,8 @@
 - 難易度・既存との差：中級。PRACTICE-sortの並べ替えから、安定性とキーごとの出力整形へ進む。
   題材を維持し、今回の改訂で番号順とチーム内の順序を日英とも明記した。
 
+<a id="note-standard-00000015"></a>
+
 ## STANDARD-00000015：素数判定
 
 - 問題データ：[STANDARD-00000015.yaml](../problems/v3/STANDARD-00000015.yaml)
@@ -132,6 +299,8 @@
   素数の定義を説明し、小さな値の入力で巨大な値の計算速度を難しさにしない。
 - 難易度・既存との差：初級。STANDARD-00000038の単一の割り算判定とは異なり、専用コマンドの構造化された出力を利用する。
   旧問題の題材とfactorを使う構成を維持した。
+
+<a id="note-standard-00000016"></a>
 
 ## STANDARD-00000016：HTMLのコードを掲載する
 
@@ -144,6 +313,8 @@
 - 難易度・既存との差：初級〜中級。STANDARD-00000002と重なるcatだけの問題から再設計した。
   STANDARD-00000012の文字交換に対し、複数文字への展開と置換順序を扱う。任意HTMLの解析や安全化の問題ではない。
 
+<a id="note-standard-00000017"></a>
+
 ## STANDARD-00000017：遅いリクエストを探す
 
 - 問題データ：[STANDARD-00000017.yaml](../problems/v3/STANDARD-00000017.yaml)
@@ -154,6 +325,8 @@
   リクエストIDの文字列順は入力順と異なり、安定性を省略した誤答を区別する。
 - 難易度・既存との差：初級〜中級。sort禁止を撤廃して題材を変更した。
   STANDARD-00000051の計算・丸め・名前による同率処理に対し、既存の数値キー、入力順、上位件数を扱う。
+
+<a id="note-standard-00000018"></a>
 
 ## STANDARD-00000018：条件を満たす整数
 
@@ -166,6 +339,8 @@
 - 難易度・既存との差：初級〜中級。STANDARD-00000003の固定した連番から、入力で生成範囲を決める処理へ進む。
   対話的な探索を行わない実際の課題に合わせ、「二分探索」という題名と説明を変更した。
 
+<a id="note-standard-00000019"></a>
+
 ## STANDARD-00000019：元の文字列
 
 - 問題データ：[STANDARD-00000019.yaml](../problems/v3/STANDARD-00000019.yaml)
@@ -175,6 +350,8 @@
   文字数とbyte数の違いが核を曖昧にしないよう、対象を大文字英字と明記した。
 - 難易度・既存との差：初級。STANDARD-00000021の回文判定に対し、連結の構造から元の部分を取り出す。
   今回の改訂は、元の処理の意図を明確にする説明と参照解答の整理に限定した。
+
+<a id="note-standard-00000020"></a>
 
 ## STANDARD-00000020：素因数の出現回数
 
@@ -195,12 +372,16 @@
 画像問題は同じ描画条件での画素完全一致を維持します。描画方式やJPEG品質が異なる任意の別解を
 許容する問題にはしていません。途中のJPEG再圧縮をなくし、MIFF中間画像の別解が正解になることを検証しています。
 
+<a id="note-standard-00000021"></a>
+
 ## STANDARD-00000021：回文判定
 
 - 問題データ：[STANDARD-00000021.yaml](../problems/v3/STANDARD-00000021.yaml)
 - 狙い・入力・既存との差：revで反転した結果と元の行をpasteで対応付ける。奇数長・偶数長・1文字を含める。19番の部分抽出とは異なり、2つの列を比較する。
 - 解法の核：revとpasteによる元の行と逆順の行の比較。
 - 難易度：初級。
+
+<a id="note-standard-00000022"></a>
 
 ## STANDARD-00000022：大きな整数の桁数
 
@@ -209,12 +390,16 @@
 - 解法の核：bcの大整数をtrで整え、wcへ流す。
 - 難易度：初級〜中級。
 
+<a id="note-standard-00000023"></a>
+
 ## STANDARD-00000023：スコア計算
 
 - 問題データ：[STANDARD-00000023.yaml](../problems/v3/STANDARD-00000023.yaml)
 - 狙い・入力・既存との差：trで文字を点数に変換し、数式に組み立ててbcへ渡す。12番の文字変換と4番の合計を接続する。1文字・反復・異なる点数の混在を維持する。
 - 解法の核：trで点数へ写像し、sedで式にしてbcで合計する。
 - 難易度：初級〜中級。
+
+<a id="note-standard-00000024"></a>
 
 ## STANDARD-00000024：在庫と注文の照合
 
@@ -223,12 +408,16 @@
 - 解法の核：抽出・整列した在庫と注文をjoinし、不足数を計算する。
 - 難易度：中級。
 
+<a id="note-standard-00000025"></a>
+
 ## STANDARD-00000025：重複のない並べ方
 
 - 問題データ：[STANDARD-00000025.yaml](../problems/v3/STANDARD-00000025.yaml)
 - 狙い・入力・既存との差：展開で候補を作り、重複を含む候補を除く。3番の単一の連番から複数集合の候補生成へ進む。辞書順を明示した。
 - 解法の核：brace expansionで候補を生成し、grepの後方参照で重複文字を除く。
 - 難易度：初級〜中級。
+
+<a id="note-standard-00000026"></a>
 
 ## STANDARD-00000026：迷路の最短距離
 
@@ -237,12 +426,16 @@
 - 解法の核：awkの配列をFIFOとして使い、4方向の幅優先探索を行う。
 - 難易度：中級（アルゴリズム枠）。
 
+<a id="note-standard-00000027"></a>
+
 ## STANDARD-00000027：電車の乗り換え
 
 - 問題データ：[STANDARD-00000027.yaml](../problems/v3/STANDARD-00000027.yaml)
 - 狙い・入力・既存との差：時刻を分へ変換して出発順にsortし、到達時刻を更新する。順不同・乗れない便・到着と同時刻の乗り換えを含む。17番の順位抽出と異なり、整列が後段の計算を成立させる。
 - 解法の核：時刻を数値化してsortし、到着可能時刻を更新する。
 - 難易度：中級。
+
+<a id="note-standard-00000028"></a>
 
 ## STANDARD-00000028：同心の数字模様
 
@@ -251,12 +444,16 @@
 - 解法の核：中心からの距離に基づく数字の生成。
 - 難易度：初級〜中級。
 
+<a id="note-standard-00000029"></a>
+
 ## STANDARD-00000029：番号一覧を表にする
 
 - 問題データ：[STANDARD-00000029.yaml](../problems/v3/STANDARD-00000029.yaml)
 - 狙い・入力・既存との差：pasteの複数の標準入力を使い、連続する行を列へ組み替える。11番の転置と異なり、1本の列を一定幅で折り返す。渦巻き生成から再設計した。
 - 解法の核：pasteの複数の標準入力による行から列への変換。
 - 難易度：初級。
+
+<a id="note-standard-00000030"></a>
 
 ## STANDARD-00000030：シーザー暗号
 
@@ -265,12 +462,16 @@
 - 解法の核：trの2つの文字集合で循環する文字対応を表す。
 - 難易度：初級。
 
+<a id="note-standard-00000031"></a>
+
 ## STANDARD-00000031：最大公約数
 
 - 問題データ：[STANDARD-00000031.yaml](../problems/v3/STANDARD-00000031.yaml)
 - 狙い・入力・既存との差：ユークリッドの互除法を各行へ畳み込む。入力の最小値が答えにならない組を使い、固定3個・探索上限を除去。5番の状態保持を数値計算へ広げる。
 - 解法の核：awkで最大公約数を各行へ畳み込む。
 - 難易度：初級〜中級（数値処理枠）。
+
+<a id="note-standard-00000032"></a>
 
 ## STANDARD-00000032：最小公倍数
 
@@ -279,12 +480,16 @@
 - 解法の核：最大公約数を利用し、最小公倍数を順次計算する。別解ではfactorの素因数ごとの最大指数を使う。
 - 難易度：初級〜中級（数値処理枠）。
 
+<a id="note-standard-00000033"></a>
+
 ## STANDARD-00000033：同じ文字の行を数える
 
 - 問題データ：[STANDARD-00000033.yaml](../problems/v3/STANDARD-00000033.yaml)
 - 狙い・入力・既存との差：行ごとの文字列長を調べる。40番の全体頻度や48番の行内の連続区間と違い、行が集計単位。出力の文字と個数を明記した。
 - 解法の核：行の先頭文字と文字列長を取り出す。
 - 難易度：初級。
+
+<a id="note-standard-00000034"></a>
 
 ## STANDARD-00000034：5乗する前の整数
 
@@ -293,12 +498,16 @@
 - 解法の核：factorによる素因数分解と指数からの整数復元。
 - 難易度：中級。
 
+<a id="note-standard-00000035"></a>
+
 ## STANDARD-00000035：行の複製
 
 - 問題データ：[STANDARD-00000035.yaml](../problems/v3/STANDARD-00000035.yaml)
 - 狙い・入力・既存との差：sedの標準出力とpを使う行単位の複製。空白を含む行を追加し、単語単位の処理と区別する。43番の接尾辞による派生名生成とは役割が異なる。
 - 解法の核：sedの明示出力と自動出力を使った行の複製。
 - 難易度：初級。
+
+<a id="note-standard-00000036"></a>
 
 ## STANDARD-00000036：NをN回出力
 
@@ -307,12 +516,16 @@
 - 解法の核：read・seq・sed、またはawkで整数を単位として反復する。
 - 難易度：初級。
 
+<a id="note-standard-00000037"></a>
+
 ## STANDARD-00000037：数字のまとまりを抽出
 
 - 問題データ：[STANDARD-00000037.yaml](../problems/v3/STANDARD-00000037.yaml)
 - 狙い・入力・既存との差：grep -oで一致部分だけを取り出す。練習grepの行抽出から部分抽出へ進み、桁ごとに分割しないことを明示する。
 - 解法の核：grep -oによる数字の連続区間の抽出。
 - 難易度：初級。
+
+<a id="note-standard-00000038"></a>
 
 ## STANDARD-00000038：割り算判定
 
@@ -321,12 +534,16 @@
 - 解法の核：awkの剰余と条件式。
 - 難易度：初級。
 
+<a id="note-standard-00000039"></a>
+
 ## STANDARD-00000039：一度だけ現れる文字
 
 - 問題データ：[STANDARD-00000039.yaml](../problems/v3/STANDARD-00000039.yaml)
 - 狙い・入力・既存との差：全体の頻度を調べてから元の順序で抽出する。離れた重複と辞書順でない一意文字を含み、48番の連続区間と区別する。
 - 解法の核：全体の文字頻度を求め、元の登場順を保持して抽出する。
 - 難易度：初級〜中級。
+
+<a id="note-standard-00000040"></a>
 
 ## STANDARD-00000040：文字の出現回数
 
@@ -335,12 +552,16 @@
 - 解法の核：文字を行へ変換し、sortとuniq -cで集計する。
 - 難易度：初級〜中級。
 
+<a id="note-standard-00000041"></a>
+
 ## STANDARD-00000041：魔方陣の空欄
 
 - 問題データ：[STANDARD-00000041.yaml](../problems/v3/STANDARD-00000041.yaml)
 - 狙い・入力・既存との差：完全な行の合計を他の行の復元に使う。固定位置を外し、規則を問題文内で説明する。8番の数値関係を表の処理へ広げる。
 - 解法の核：欠損のない行の合計から空欄を復元する。
 - 難易度：初級〜中級。
+
+<a id="note-standard-00000042"></a>
 
 ## STANDARD-00000042：桁を揃えた表
 
@@ -349,12 +570,16 @@
 - 解法の核：printfの書式指定による左右揃え。
 - 難易度：初級。
 
+<a id="note-standard-00000043"></a>
+
 ## STANDARD-00000043：拡張子を付けた名前
 
 - 問題データ：[STANDARD-00000043.yaml](../problems/v3/STANDARD-00000043.yaml)
 - 狙い・入力・既存との差：1つの入力から接尾辞の違う2つの名前を作る。35番の行複製と違い、置換の一致部分を再利用する。
 - 解法の核：sedの一致部分を接尾辞を変えて再利用する。
 - 難易度：初級。
+
+<a id="note-standard-00000044"></a>
 
 ## STANDARD-00000044：文字列を含むファイル
 
@@ -363,12 +588,16 @@
 - 解法の核：findからgrepへファイルを渡し、内容に一致する名前を得る。
 - 難易度：初級〜中級。
 
+<a id="note-standard-00000045"></a>
+
 ## STANDARD-00000045：模様を3倍に拡大
 
 - 問題データ：[STANDARD-00000045.yaml](../problems/v3/STANDARD-00000045.yaml)
 - 狙い・入力・既存との差：文字の複製と行の複製を組み合わせて2次元の拡大を表す。35番を発展させ、28番の座標からの生成と区別する。元の期待模様は維持した。
 - 解法の核：sedで文字と行をそれぞれ複製する。
 - 難易度：初級。
+
+<a id="note-standard-00000046"></a>
 
 ## STANDARD-00000046：単位行列の生成
 
@@ -377,12 +606,16 @@
 - 解法の核：行と列の座標が等しいかを数字へ変換する。
 - 難易度：初級。
 
+<a id="note-standard-00000047"></a>
+
 ## STANDARD-00000047：IPアドレスの抽出
 
 - 問題データ：[STANDARD-00000047.yaml](../problems/v3/STANDARD-00000047.yaml)
 - 狙い・入力・既存との差：項目全体の形式一致を使う。37番の部分抽出とは違い、接頭辞・接尾辞を含む項目を除外する。公開入力には数値範囲だけが不正なアドレスを含めず、巨大な正規表現を要求しない。
 - 解法の核：trで空白区切りの項目を行にし、grepで項目全体を判定する。
 - 難易度：初級〜中級。
+
+<a id="note-standard-00000048"></a>
 
 ## STANDARD-00000048：連続する文字の圧縮
 
@@ -391,12 +624,16 @@
 - 解法の核：文字を行へ変換し、sortせずにuniq -cで連続区間を数える。
 - 難易度：初級〜中級。
 
+<a id="note-standard-00000049"></a>
+
 ## STANDARD-00000049：最長の回文部分文字列
 
 - 問題データ：[STANDARD-00000049.yaml](../problems/v3/STANDARD-00000049.yaml)
 - 狙い・入力・既存との差：中心から広げる探索を奇数長・偶数長の両方へ適用する。21番の文字列全体の判定とは異なる。末尾・同長・1文字を含む短い入力にした。
 - 解法の核：awkによる奇数・偶数両方の回文の中心探索。
 - 難易度：中級（アルゴリズム枠）。
+
+<a id="note-standard-00000050"></a>
 
 ## STANDARD-00000050：数式の結果を添える
 
@@ -405,12 +642,16 @@
 - 解法の核：bcへ数式を渡し、pasteで元の式に結果を添える。
 - 難易度：初級〜中級。
 
+<a id="note-standard-00000051"></a>
+
 ## STANDARD-00000051：打率ランキング
 
 - 問題データ：[STANDARD-00000051.yaml](../problems/v3/STANDARD-00000051.yaml)
 - 狙い・入力・既存との差：計算・丸めを済ませてから数値順と名前順でsortする。丸めて初めて同率になる組と、ちょうど0.0625となる組を追加。17番の入力順による同率処理との違いを明確にした。
 - 解法の核：整数演算で丸め、数値降順・名前昇順のsortへ渡す。
 - 難易度：中級の入口。
+
+<a id="note-practice-awk-01"></a>
 
 ## PRACTICE-awk-01：awk 1
 
@@ -419,12 +660,16 @@
 - 解法の核：awkの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-awk-02"></a>
+
 ## PRACTICE-awk-02：awk 2
 
 - 問題データ：[PRACTICE-awk-02.yaml](../problems/v3/PRACTICE-awk-02.yaml)
 - 狙い・入力・既存との差：行によって列数が違ってもフィールド番号で取り出せる。
 - 解法の核：awkの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-awk-03"></a>
 
 ## PRACTICE-awk-03：awk 3
 
@@ -433,12 +678,16 @@
 - 解法の核：awkの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-awk-04"></a>
+
 ## PRACTICE-awk-04：awk 4
 
 - 問題データ：[PRACTICE-awk-04.yaml](../problems/v3/PRACTICE-awk-04.yaml)
 - 狙い・入力・既存との差：NRとENDで入力全体を数える。wcとの別解比較に適する。
 - 解法の核：awkの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-awk-05"></a>
 
 ## PRACTICE-awk-05：awk 5
 
@@ -447,12 +696,16 @@
 - 解法の核：awkの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-awk-06"></a>
+
 ## PRACTICE-awk-06：awk 6
 
 - 問題データ：[PRACTICE-awk-06.yaml](../problems/v3/PRACTICE-awk-06.yaml)
 - 狙い・入力・既存との差：剰余と条件分岐。0も含め、出力語を明示する。
 - 解法の核：awkの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-awk-07"></a>
 
 ## PRACTICE-awk-07：awk 7
 
@@ -461,12 +714,16 @@
 - 解法の核：awkの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：初級。
 
+<a id="note-practice-awk-08"></a>
+
 ## PRACTICE-awk-08：awk 8
 
 - 問題データ：[PRACTICE-awk-08.yaml](../problems/v3/PRACTICE-awk-08.yaml)
 - 狙い・入力・既存との差：値の偶奇ではなく行番号の偶奇を条件に使う。
 - 解法の核：awkの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-cat-01"></a>
 
 ## PRACTICE-cat-01：cat 1
 
@@ -475,12 +732,16 @@
 - 解法の核：catの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-cat-02"></a>
+
 ## PRACTICE-cat-02：cat 2
 
 - 問題データ：[PRACTICE-cat-02.yaml](../problems/v3/PRACTICE-cat-02.yaml)
 - 狙い・入力・既存との差：空行も数える-nと空行を数えない-bの違いを入力で確かめる。
 - 解法の核：catの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-cat-03"></a>
 
 ## PRACTICE-cat-03：cat 3
 
@@ -489,12 +750,16 @@
 - 解法の核：catの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-cat-04"></a>
+
 ## PRACTICE-cat-04：cat 4
 
 - 問題データ：[PRACTICE-cat-04.yaml](../problems/v3/PRACTICE-cat-04.yaml)
 - 狙い・入力・既存との差：複数ファイルを1つのストリームにする。連結順を明示する。
 - 解法の核：catの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-echo-01"></a>
 
 ## PRACTICE-echo-01：echo 1
 
@@ -503,12 +768,16 @@
 - 解法の核：echoの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-echo-02"></a>
+
 ## PRACTICE-echo-02：echo 2
 
 - 問題データ：[PRACTICE-echo-02.yaml](../problems/v3/PRACTICE-echo-02.yaml)
 - 狙い・入力・既存との差：Bashのechoによる改行の表現。1番の1行出力と区別する。
 - 解法の核：echoの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-echo-03"></a>
 
 ## PRACTICE-echo-03：echo 3
 
@@ -517,12 +786,16 @@
 - 解法の核：echoの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-find-01"></a>
+
 ## PRACTICE-find-01：find 1
 
 - 問題データ：[PRACTICE-find-01.yaml](../problems/v3/PRACTICE-find-01.yaml)
 - 狙い・入力・既存との差：再帰探索と探索開始点自身も出力される性質。
 - 解法の核：findの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-find-02"></a>
 
 ## PRACTICE-find-02：find 2
 
@@ -531,12 +804,16 @@
 - 解法の核：findの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-find-03"></a>
+
 ## PRACTICE-find-03：find 3
 
 - 問題データ：[PRACTICE-find-03.yaml](../problems/v3/PRACTICE-find-03.yaml)
 - 狙い・入力・既存との差：種類と名前の条件を組み合わせる。名前は完全一致ではなく前方一致。
 - 解法の核：findの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：初級。
+
+<a id="note-practice-grep-01"></a>
 
 ## PRACTICE-grep-01：grep 1
 
@@ -545,12 +822,16 @@
 - 解法の核：grepの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-grep-02"></a>
+
 ## PRACTICE-grep-02：grep 2
 
 - 問題データ：[PRACTICE-grep-02.yaml](../problems/v3/PRACTICE-grep-02.yaml)
 - 狙い・入力・既存との差：選択と行末一致。似た拡張子とバックアップ名を除外する。
 - 解法の核：grepの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：初級。
+
+<a id="note-practice-grep-03"></a>
 
 ## PRACTICE-grep-03：grep 3
 
@@ -559,12 +840,16 @@
 - 解法の核：grepの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-grep-04"></a>
+
 ## PRACTICE-grep-04：grep 4
 
 - 問題データ：[PRACTICE-grep-04.yaml](../problems/v3/PRACTICE-grep-04.yaml)
 - 狙い・入力・既存との差：1番の部分一致へ行末条件を加える。ドットのエスケープも必要なデータ。
 - 解法の核：grepの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：初級。
+
+<a id="note-practice-sed-01"></a>
 
 ## PRACTICE-sed-01：sed 1
 
@@ -573,12 +858,16 @@
 - 解法の核：sedの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-sed-02"></a>
+
 ## PRACTICE-sed-02：sed 2
 
 - 問題データ：[PRACTICE-sed-02.yaml](../problems/v3/PRACTICE-sed-02.yaml)
 - 狙い・入力・既存との差：複数の置換を組み合わせる。各規則が全一致へ適用される入力にする。
 - 解法の核：sedの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-sed-03"></a>
 
 ## PRACTICE-sed-03：sed 3
 
@@ -587,12 +876,16 @@
 - 解法の核：sedの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-sed-04"></a>
+
 ## PRACTICE-sed-04：sed 4
 
 - 問題データ：[PRACTICE-sed-04.yaml](../problems/v3/PRACTICE-sed-04.yaml)
 - 狙い・入力・既存との差：行全体の条件とd。数字を含むだけのfile2を残し、5番と区別する。
 - 解法の核：sedの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：初級。
+
+<a id="note-practice-sed-05"></a>
 
 ## PRACTICE-sed-05：sed 5
 
@@ -601,12 +894,16 @@
 - 解法の核：sedの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-sed-06"></a>
+
 ## PRACTICE-sed-06：sed 6
 
 - 問題データ：[PRACTICE-sed-06.yaml](../problems/v3/PRACTICE-sed-06.yaml)
 - 狙い・入力・既存との差：入力の名前の形を再記述せず、行末という位置へ追加する。複数桁と数字なしを含める。
 - 解法の核：sedの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-sort-01"></a>
 
 ## PRACTICE-sort-01：sort 1
 
@@ -615,12 +912,16 @@
 - 解法の核：sortの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-sort-02"></a>
+
 ## PRACTICE-sort-02：sort 2
 
 - 問題データ：[PRACTICE-sort-02.yaml](../problems/v3/PRACTICE-sort-02.yaml)
 - 狙い・入力・既存との差：複数桁を含めて数値順と辞書順を区別する。昇順と降順の対になる練習。
 - 解法の核：sortの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-sort-03"></a>
 
 ## PRACTICE-sort-03：sort 3
 
@@ -629,12 +930,16 @@
 - 解法の核：sortの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-uniq-01"></a>
+
 ## PRACTICE-uniq-01：uniq 1
 
 - 問題データ：[PRACTICE-uniq-01.yaml](../problems/v3/PRACTICE-uniq-01.yaml)
 - 狙い・入力・既存との差：離れた重複をsortで隣接させてからuniqを使う。
 - 解法の核：uniqの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-uniq-02"></a>
 
 ## PRACTICE-uniq-02：uniq 2
 
@@ -643,12 +948,16 @@
 - 解法の核：uniqの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：初級。
 
+<a id="note-practice-wc-01"></a>
+
 ## PRACTICE-wc-01：wc 1
 
 - 問題データ：[PRACTICE-wc-01.yaml](../problems/v3/PRACTICE-wc-01.yaml)
 - 狙い・入力・既存との差：ファイル名を付けず数だけ出すための標準入力。
 - 解法の核：wcの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-wc-02"></a>
 
 ## PRACTICE-wc-02：wc 2
 
@@ -657,12 +966,16 @@
 - 解法の核：wcの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
 
+<a id="note-practice-wc-03"></a>
+
 ## PRACTICE-wc-03：wc 3
 
 - 問題データ：[PRACTICE-wc-03.yaml](../problems/v3/PRACTICE-wc-03.yaml)
 - 狙い・入力・既存との差：日本語を含む入力でbyte数と文字数を区別する。
 - 解法の核：wcの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-image-00000001"></a>
 
 ## IMAGE-00000001：画像テスト
 
@@ -671,12 +984,16 @@
 - 解法の核：convertで描画条件をまとめて指定し、JPEGへ最後に1回だけ保存する。
 - 難易度：初級。
 
+<a id="note-image-00000002"></a>
+
 ## IMAGE-00000002：横線
 
 - 問題データ：[IMAGE-00000002.yaml](../problems/v3/IMAGE-00000002.yaml)
 - 狙い・入力・既存との差：横帯の位置と高さを端点から定める。
 - 解法の核：convertで描画条件をまとめて指定し、JPEGへ最後に1回だけ保存する。
 - 難易度：初級。
+
+<a id="note-image-00000003"></a>
 
 ## IMAGE-00000003：円
 
@@ -685,6 +1002,8 @@
 - 解法の核：convertで描画条件をまとめて指定し、JPEGへ最後に1回だけ保存する。
 - 難易度：初級。
 
+<a id="note-image-00000004"></a>
+
 ## IMAGE-00000004：市松模様
 
 - 問題データ：[IMAGE-00000004.yaml](../problems/v3/IMAGE-00000004.yaml)
@@ -692,12 +1011,16 @@
 - 解法の核：convertで描画条件をまとめて指定し、JPEGへ最後に1回だけ保存する。
 - 難易度：初級。
 
+<a id="note-image-00000005"></a>
+
 ## IMAGE-00000005：四角の並び
 
 - 問題データ：[IMAGE-00000005.yaml](../problems/v3/IMAGE-00000005.yaml)
 - 狙い・入力・既存との差：規則的な座標列を生成して描画命令に変える。何度もJPEGに保存せず1回の描画にまとめる。
 - 解法の核：convertで描画条件をまとめて指定し、JPEGへ最後に1回だけ保存する。
 - 難易度：中級。
+
+<a id="note-standard-00000053"></a>
 
 ## STANDARD-00000053：機器の最新状態
 
@@ -707,6 +1030,8 @@
 - 入力の意図：機器の交互出現、状態の再登場、記録数の違いを含む。最初の記録を残す誤答はsensorで区別する。
 - 難易度・既存との差：初級〜中級。行の反転・キーの保持・出力順の3段階を考える。
   STANDARD-00000005の単一の累積状態と異なり、複数キーの最新値を選ぶ。
+
+<a id="note-standard-00000054"></a>
 
 ## STANDARD-00000054：測定値の変化
 
@@ -718,6 +1043,8 @@
 - 難易度・既存との差：中級の入口。プロセス置換と列の対応を前提とする。
   STANDARD-00000050の元データと計算結果の併記に対し、同じ入力の隣接行を対応させる。
 
+<a id="note-standard-00000055"></a>
+
 ## STANDARD-00000055：公開区間の取り出し
 
 - 問題データ：[STANDARD-00000055.yaml](../problems/v3/STANDARD-00000055.yaml)
@@ -728,6 +1055,8 @@
 - 難易度・既存との差：初級。正規表現の行頭・行末と範囲指定を学ぶ。
   STANDARD-00000009の空行で区切ったレコードの整列に対し、空行を含む本文をマーカーで抽出する。
 
+<a id="note-standard-00000056"></a>
+
 ## STANDARD-00000056：空欄のある連絡先
 
 - 問題データ：[STANDARD-00000056.yaml](../problems/v3/STANDARD-00000056.yaml)
@@ -737,6 +1066,8 @@
   通常のawkの空白分割では列位置が崩れる。メール空欄の出力もタブを保持し、現行judgeでも区別する。
 - 難易度・既存との差：初級。PRACTICE-awk-02の空白区切りの列選択から、空欄を持つTSVへ進む。
   タブは画面上で空白として見えるため、列の意味と空欄の扱いを日英とも説明する。
+
+<a id="note-standard-00000057"></a>
 
 ## STANDARD-00000057：拡張子別のファイル数
 
@@ -749,6 +1080,8 @@
 - 難易度・既存との差：初級〜中級。抽出・正規化・集計の順序を理解する。
   STANDARD-00000043の接尾辞追加、STANDARD-00000040の文字単位の頻度集計と異なり、名前から分類キーを作る。
 
+<a id="note-standard-00000058"></a>
+
 ## STANDARD-00000058：担当者への配布一覧
 
 - 問題データ：[STANDARD-00000058.yaml](../problems/v3/STANDARD-00000058.yaml)
@@ -759,6 +1092,8 @@
   チームキーで重複除去すると配布先が欠落する。期待値は同じチームの直積から独立に確認する。
 - 難易度・既存との差：中級。プロセス置換、結合前の整列、多対多の意味を考える。
   STANDARD-00000024の在庫・注文数量の照合に対し、キーの反復を保持することが解法の核になる。
+
+<a id="note-standard-00000059"></a>
 
 ## STANDARD-00000059：タブの可視化
 
@@ -772,6 +1107,8 @@
 - 難易度・既存との差：初級〜中級。文字列位置、剰余、前の置換結果が次の位置に及ぼす影響を考える。
   STANDARD-00000042のフィールドごとのprintf整形と異なり、元のスペースを保持しながらタブの幅を可視化する。
 
+<a id="note-standard-00000060"></a>
+
 ## STANDARD-00000060：同時利用数の変化
 
 - 問題データ：[STANDARD-00000060.yaml](../problems/v3/STANDARD-00000060.yaml)
@@ -783,6 +1120,8 @@
   終了時刻を含める誤答を区別する。開始・終了記録がない時刻も含めて出力し、11:00の終端も検査する。
 - 難易度・既存との差：中級。時刻の数値化、区間からイベントへの変換、同時刻の集約、半開区間を考える。
   STANDARD-00000005の入力済み増減の累積から、増減そのものを元データから作る処理へ進む。
+
+<a id="note-regex-00000002-04"></a>
 
 ## REGEX-00000002〜04：正規表現パズル
 
@@ -816,6 +1155,8 @@ rootless sandboxでの参照解答・別解・誤答、および全問題回帰�
 
 
 
+<a id="note-regex-00000001"></a>
+
 ## REGEX-00000001：例題：正規表現で行を選ぶ
 
 - 配置：ID順のカテゴリ一覧で既存3問の前に置く。例題を1番、パズルを2〜4番とする。
@@ -840,6 +1181,8 @@ REGEX1〜4番追加時の検証済み範囲：non-Docker 783テスト、ruff、m
 専用ComposeのAPI・browser 2テストで、日英・320/1440pxの4問表示、例題の先頭配置と解答例の表示、
 実提出・DB保存を確認した。既存カテゴリを含む7画面幅の選択検査も実施。実機iOS/Androidは未検証。
 カテゴリ追加時のfrontend 68テストとformat・lint・typecheck・buildも成功済み。
+
+<a id="note-regex-00000005-10"></a>
 
 ## REGEX-00000005〜10：境界・抽出・置換のパズル
 
@@ -884,6 +1227,8 @@ REGEX1〜4番追加時の検証済み範囲：non-Docker 783テスト、ruff、m
 専用ComposeのAPI・browser 2テストも成功し、日英・320/1440pxの全10問表示と実提出、
 17件の提出のDB保存を確認した。新問のPC・スマートフォン画像を目視確認した。実機iOS/Androidは未検証。
 
+<a id="note-standard-00000061"></a>
+
 ## STANDARD-00000061：エラーの前後を取り出す
 
 - 問題データ：[STANDARD-00000061.yaml](../problems/v3/STANDARD-00000061.yaml)
@@ -905,6 +1250,8 @@ REGEX1〜4番追加時の検証済み範囲：non-Docker 783テスト、ruff、m
   新問の日英それぞれを1440px・320pxで実UIから提出し、4件の正解判定・DB保存と4画面の目視確認を完了した。
   実機iOS/Androidは未検証。
 
+<a id="note-standard-00000062"></a>
+
 ## STANDARD-00000062：バージョン番号順に並べる
 
 - 問題データ：[STANDARD-00000062.yaml](../problems/v3/STANDARD-00000062.yaml)
@@ -916,6 +1263,8 @@ REGEX1〜4番追加時の検証済み範囲：non-Docker 783テスト、ruff、m
 - 難易度・既存との差：初級。行のソートが前提で、複数の整数を含む表記の比較という1つの見方を加える。
   PRACTICE-sort-01の単一整数順、STANDARD-00000014のグループ単位の安定ソートとは異なり、
   元の表記を保持しながら整数の組を比較する。PRACTICE-findのversion_sort配下の探索とも目的が異なる。
+
+<a id="note-standard-00000063"></a>
 
 ## STANDARD-00000063：作業の実行順を復元する
 
@@ -941,6 +1290,8 @@ Compose統合6テストでは全114問の参照解答・判定・DB保存を確�
 新問2問を日英それぞれ1440px・320pxの実UIから提出した。
 8件の正解判定・DB保存と8画面の目視確認を完了した。実機iOS/Androidは未検証。
 
+<a id="note-practice-od-01"></a>
+
 ## PRACTICE-od-01：od 1
 
 - 問題データ：[PRACTICE-od-01.yaml](../problems/v3/PRACTICE-od-01.yaml)
@@ -964,6 +1315,8 @@ Compose統合6テストでは全115問の参照解答・判定・DB保存を確�
 同じbuild済みimageで新問を日英それぞれ1440px・320pxの実UIから提出し、
 4件の正解判定・DB保存、入力の2個のスペースとUTF-8 byte列の保持、4画面の目視確認を完了した。
 実機iOS/Androidは未検証。
+
+<a id="note-practice-base64-01"></a>
 
 ## PRACTICE-base64-01：base64 1
 
@@ -997,6 +1350,8 @@ Base64を日英それぞれ1440px・320pxで提出した4画面を目視し、�
 HTTPS切断自体の原因は未確定。起動待ちの例外処理と期限・診断は
 [Docker統合テスト文書](../backend/tests/integration/README.md)を参照。
 
+<a id="note-standard-00000068"></a>
+
 ## STANDARD-00000068：ページ別の訪問者数
 
 - 問題データ：[STANDARD-00000068.yaml](../problems/v3/STANDARD-00000068.yaml)
@@ -1027,6 +1382,8 @@ CIのGo標準library指摘に対応し、Go 1.26.9でgosu・textimgを再build�
 再検証のsandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`。
 初回の全121件一括検査と、この更新後の38件を区別する。
 
+<a id="note-standard-00000069"></a>
+
 ## STANDARD-00000069：カテゴリ別の売上首位
 
 - 問題データ：[STANDARD-00000069.yaml](../problems/v3/STANDARD-00000069.yaml)
@@ -1052,6 +1409,8 @@ sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
 
+<a id="note-practice-sha256sum-01"></a>
+
 ## PRACTICE-sha256sum-01：sha256sum 1
 
 - 問題データ：[PRACTICE-sha256sum-01.yaml](../problems/v3/PRACTICE-sha256sum-01.yaml)
@@ -1073,6 +1432,8 @@ Ruff check・format、mypy、non-Docker 907件が成功した。
 sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
+
+<a id="note-standard-00000071"></a>
 
 ## STANDARD-00000071：サービス一覧の変更点
 
@@ -1097,6 +1458,8 @@ sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
 
+<a id="note-practice-paste-01"></a>
+
 ## PRACTICE-paste-01：paste 1
 
 - 問題データ：[PRACTICE-paste-01.yaml](../problems/v3/PRACTICE-paste-01.yaml)
@@ -1118,6 +1481,8 @@ Ruff check・format、mypy（146 source files）、non-Docker 918件が成功し
 sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
+
+<a id="note-practice-fold-01"></a>
 
 ## PRACTICE-fold-01：fold 1
 
@@ -1142,6 +1507,8 @@ Ruff check・format、mypy（148 source files）、non-Docker 920件が成功し
 sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6d58ccbdb`を使用した。
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
+
+<a id="note-standard-00000074"></a>
 
 ## STANDARD-00000074：未完了の作業リスト
 
@@ -1170,6 +1537,8 @@ sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 Docker全127件の一括実行と実機iOS/Androidは未実施。
 
+<a id="note-practice-rev-01"></a>
+
 ## PRACTICE-rev-01：rev 1
 
 - 問題データ：[PRACTICE-rev-01.yaml](../problems/v3/PRACTICE-rev-01.yaml)
@@ -1186,6 +1555,8 @@ Docker全127件の一括実行と実機iOS/Androidは未実施。
 検証は[非Docker検査](../backend/tests/test_rev_problem.py)で独立期待値・詳細API・正常終了policy・白JPEG、
 [実sandbox検査](../backend/tests/integration/test_problem_rev_solutions.py)で参照解・別解・6誤答と4境界条件を扱う。
 全問回帰と画面検査は[問題作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+<a id="note-standard-00000076"></a>
 
 ## STANDARD-00000076：レポート本文の取り出し
 

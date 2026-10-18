@@ -10,6 +10,23 @@ sandboxコンテナ内で実行するサービスです。
 環境構築やテストは[開発環境](./docs/DEVELOPMENT.md)、
 本番環境で必要な設定と運用確認は[本番運用](./docs/PRODUCTION.md)を参照してください。
 
+## 目次
+
+- [実行経路](#実行経路)
+- [sandboxコンテナの設定](#sandboxコンテナの設定)
+- [実行時間と同時実行数](#実行時間と同時実行数)
+- [stdout、stderr、画像](#stdoutstderr画像)
+- [リクエストごとのデータ分離](#リクエストごとのデータ分離)
+- [コンテナの終了処理](#コンテナの終了処理)
+- [実行ログとDockerログ](#実行ログとdockerログ)
+- [rootless Dockerの強制](#rootless-dockerの強制)
+- [frontendのbrowser境界](#frontendのbrowser境界)
+- [backend・runnerの実行権限とDB role](#backendrunnerの実行権限)
+- [runnerとDocker socketの権限](#runnerとdocker-socketの権限)
+- [ネットワークとHTTPの制約](#ネットワークとhttpの制約)
+- [依存関係とイメージの制約](#依存関係とイメージの制約)
+- [必要な追加対策](#必要な追加対策)
+
 基本方針は次のとおりです。
 
 - 利用者の意図にかかわらず、外部入力には同じセキュリティ制御を適用する

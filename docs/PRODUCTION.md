@@ -12,6 +12,11 @@
 | OS・公開経路・証明書を設定する | [ホスト設定](./PRODUCTION_HOST.md) |
 | 製品リリースを準備する | [リリース準備](./RELEASE.md) |
 
+更新前に[ロールバック](#ロールバック)と[バックアップ方針](#バックアップと監視)も確認してください。
+起動後の継続運用は[日常の確認](#日常の確認)、
+[runnerとは独立したsandbox監視](#runnerとは独立したsandbox監視)、
+imageの保守は[imageの更新と検証](#imageの更新と検証)を参照してください。
+
 ## 初回準備
 
 1. [ホスト設定](./PRODUCTION_HOST.md)で専用VM・専用ユーザー、rootless Docker、cgroup、TLS、外側proxy・firewallを準備する。
@@ -167,8 +172,10 @@ CIのarchiveを使う場合は[署名とbuild recordを照合](./CI.md#生成物
 )
 ```
 
-`db`・`migrate`・`runner`・`backend`・`frontend`の5 imageが成功したら次へ進みます。
-sandboxはComposeのbuild対象外です。上の専用手順で用意してください。
+`db`・`migrate`・`runner`・`backend`・`frontend`の5サービスのbuildが成功したら次へ進みます。
+`migrate`はbackendと同じDockerfile targetを使います。sandboxはComposeのbuild対象外なので、上の専用手順で用意してください。
+CIの「本番5 image」はbackend・runner・frontend・db・sandboxの5種類を指します。
+CIで検証済みの生成物を使う場合は[生成物の検証](./CI.md#生成物と検証promotion)へ進んでください。
 
 ## DB更新とサービス起動
 
@@ -428,7 +435,8 @@ dump以後の投稿は含まれません。別hostへ保護して転送し、復
 保持期間・用途・logへ残せる情報は[実行ログとDockerログ](../SECURITY.md#実行ログとdockerログ)を正本とします。
 request IDは単一requestの障害調査にだけ使用します。
 DB保存の混雑時はHTTP 200でもログが保存されないため、HTTPの5xxだけでなく
-`execution_log_save_failed`と提出の`persistence_status: unavailable`も確認します。
+`execution_log_save_failed`と、v3提出API応答の`persistence: unavailable`も確認します。
+service logでは提出完了eventの`persistence_status`に保存状態が記録されます。
 DB復旧後も保存不能が続く場合はworkerの投入障害を含めて調査します。executorの
 投入障害では保存受付を閉じるため、原因解消後にbackendを再起動してください。
 backendのworker・replicaを増やす場合は、上記正本に記載した保存受付上限が
@@ -454,7 +462,8 @@ runnerの障害原因を解消して再初期化する場合だけ、次を実�
 
 ### runnerとは独立したsandbox監視
 
-専用ユーザーのホスト監視から、rootless接続と[開発用Poetry環境](./DEVELOPMENT.md)を用意して実行します。
+このCLIをホストから実行する場合は、Composeの起動とは別に[Poetry開発環境と依存関係](./DEVELOPMENT.md#ホストでの検査)が必要です。
+専用ユーザーのホスト監視から、rootless接続とその環境を用意して実行します。
 `SANDBOX_OWNER_ID`はComposeと同じ値を設定してください。CLIは`.env`を自動読込しません。
 
 ```sh

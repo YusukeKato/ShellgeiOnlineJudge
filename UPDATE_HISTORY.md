@@ -49,8 +49,21 @@ SQLAlchemy更新後のDB URL互換性と、配備テストのHTTPS起動待ち�
 
 ## 3.0.0（本番反映済み）
 
-実行・判定の分離、private runner、問題schema v3、DB権限分離、独自sandboxとCI検査を導入しました。
-変更概要と移行・公開手順は[リリース手順](./docs/RELEASE.md)を参照してください。
+v3系の主な変更は[次の概要](#v3系の変更概要)、移行・公開手順は[リリース手順](./docs/RELEASE.md)を参照してください。
+
+## v3系の変更概要
+
+- public backendと認証付きprivate runnerを分離し、Docker操作をrunnerへ集約。
+- 実行状態と判定を分離し、正解・不正解・実行失敗・判定エラーをAPIと画面で区別。
+- 問題schema v3と問題revision検証、画像の画素比較、非0終了・stderrの判定規則を導入。
+- 提出の二重送信・キャンセル・古い応答の表示を制御。
+- 表示用GIFを採点用画像と分けて回収し、アニメーションを維持して表示。
+- PC・スマートフォン向けの画面構成と日英の表示切替を整備。エラー説明は英語で表示。
+- DB migrationを専用処理へ分離し、通常接続の最小権限と実行ログの保持制限を導入。
+- rootless Dockerの隔離・資源制限、独自Ubuntu sandbox、供給網検査とCompose/browser E2Eを整備。
+
+APIの移行契約は[API仕様](./docs/API.md)、問題データの移行は[問題データ文書](./problems/README.md)、
+sandboxの収録コマンドは[sandbox README](./deploy/sandbox/README.md)を参照してください。
 
 ## 2026
 ### 10

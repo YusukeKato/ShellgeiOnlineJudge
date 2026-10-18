@@ -1,9 +1,29 @@
 # SHELLGEI ONLINE JUDGE: backend
 
-製品version・v3移行の概要は[リリース準備](../docs/RELEASE.md)を参照してください。
-
 `backend` directoryには、FastAPIによる公開Web API、内部runner API、
 問題の判定、実行ログの保存、sandboxコンテナの管理を行うPythonコードがあります。
+この文書では、変更するpackageを選んでから、内部protocol・DB・runtime imageの詳細を確認できます。
+
+- [開発とテスト](#開発とテスト)
+- [主な構成](#主な構成) / [変更箇所の案内](#変更箇所の案内)
+- [提出use case](#提出use-case)
+- [内部runner protocol](#内部runner-protocol)
+- [実行ログとDB migration](#実行ログとdb-migration)
+- [本番runtime image](#本番runtime-image)
+
+## 開発とテスト
+
+環境構築、Pythonの静的検査、単体テストは、
+[開発環境の構築・テスト・起動](../docs/DEVELOPMENT.md)を参照してください。
+
+実際のsandboxコンテナを使用するテストは、
+[Docker統合テスト](./tests/integration/README.md)を参照してください。
+
+problem schema、manifest revision、移行・更新手順は、
+[問題データ](../problems/README.md)を参照してください。
+
+ホスト監視CLI `python -m soj_tools.sandbox_health`の使用方法は、
+[本番運用の監視手順](../docs/PRODUCTION.md#runnerとは独立したsandbox監視)を参照してください。
 
 ## 主な構成
 
@@ -26,44 +46,36 @@ public DTO・内部protocolのfieldとschema名は維持しています。
 DB管理CLIは`soj_backend.database_admin`、問題整備CLIは
 `soj_tools.problem_migration`・`soj_tools.problem_manifest`です。
 
-## 開発とテスト
+## 変更箇所の案内
 
-環境構築、Pythonの静的検査、単体テストは、
-[開発環境の構築・テスト・起動](../docs/DEVELOPMENT.md)を参照してください。
-
-実際のsandboxコンテナを使用するテストは、
-[Docker統合テスト](./tests/integration/README.md)を参照してください。
-
-problem schema、manifest revision、移行・更新手順は、
-[問題データ](../problems/README.md)を参照してください。
-
-ホスト監視CLI `python -m soj_tools.sandbox_health`の使用方法は、
-[本番運用の監視手順](../docs/PRODUCTION.md#runnerとは独立したsandbox監視)を参照してください。
-
-## 本番runtime image
-
-`backend/Dockerfile`は`backend`と`runner`の独立した最終targetを持ち、Composeが
-serviceごとに選択します。target未指定の場合は`backend`をbuildします。
-共有packageと各targetの専用packageをdirectory単位でCOPYします。
-moduleの追加時は責務に対応するpackageへ配置し、反対側の実装を共有packageへ持ち込まないでください。
-import方向は静的test、本番imageの全module importと収録境界はDocker統合testで検証します。
-
-| 対象 | 収録するもの | 収録しないもの |
+| 変更したい内容 | 最初に読む実装 | 合わせて確認する契約 |
 | --- | --- | --- |
-| 共通 | API framework依存、`soj_shared`、schema v3と画像data | Poetry、pytest、ruff、mypy、型stub、test、開発CLI、legacy問題data・script |
-| backend | `soj_backend`、Pillowによる画像判定、runner HTTP client、DB driver・repository・migration | Docker SDK、sandbox実行・管理module、runner endpoint |
-| runner | `soj_runner`、内部API、Docker SDK、sandbox実行・管理module | 公開API、画像判定・Pillow、DB driver・repository・migration |
+| HTTP入力・DTO・status | `soj_backend/api/api_shellgei.py`、`soj_backend/models/public_api.py`、`soj_shared/submission_request.py` | [Public API](../docs/API.md) |
+| 提出から判定・保存までの順序 | `soj_backend/submit_solution.py` | [提出use case](#提出use-case) |
+| 正誤判定・画像検証 | `soj_backend/judge.py`、`soj_backend/image_validation.py` | [問題データ](../problems/README.md) |
+| runnerへの通信・内部model | `soj_backend/runner_client.py`、`soj_shared/runner_protocol.py` | [内部runner protocol](#内部runner-protocol) |
+| sandbox実行・回収・制限 | `soj_runner/run_shellgei.py`、`soj_runner/sandbox_executor.py`、`soj_runner/container_manager.py` | [SECURITY.md](../SECURITY.md)、[Docker統合テスト](./tests/integration/README.md) |
+| DB保存・migration・権限 | `soj_backend/execution_log_repository.py`、`soj_backend/database_admin.py`、`soj_backend/migrations/` | [実行ログとDB migration](#実行ログとdb-migration) |
+| 問題の読込・revision | `soj_shared/problem_repository.py`、`soj_shared/problem_schema.py` | [問題データ](../problems/README.md) |
 
-共有の構造化logは提出結果modelへ依存しません。Pillowは判定を行うbackend groupだけに導入します。
-Poetryは固定versionでbuild stageにだけ導入し、`poetry.lock`から`main,backend`または
-`main,runner`の依存を専用venvへinstallします。
-ホストの通常の`poetry install`は開発用groupも導入します。
+変更後の基本検査とComposeへの反映は[開発手順](../docs/DEVELOPMENT.md)に従います。
+隔離方式・制限値を変える場合は、実装前にSECURITY.mdの保証と制約を確認してください。
 
-実行UID、read-only filesystem、socket権限は
-[SECURITY.md](../SECURITY.md#backendrunnerの実行権限)、socket GIDの設定方法は
-[開発手順](../docs/DEVELOPMENT.md#runner用socket-groupの設定)を正本とします。
-本番container内にはPoetryがないため、運用commandは`python -m soj_backend.database_admin`
-のように実行します。imageの検証方法は[Docker統合テスト](./tests/integration/README.md#本番runtime-imageの検証)を参照してください。
+## 提出use case
+
+`SubmitSolutionService`は、検証済みcommandとproblem IDを受け取り、problem存在確認、
+runner実行、判定、実行ログ保存の順に処理します。結果は
+`soj_backend/models/submission.py`の`SubmissionResult`として返し、HTTP statusや既存response形式への
+変換は`soj_backend/api/api_shellgei.py`だけが担当します。
+
+problem未登録、runner混雑、runner停止は判定結果と別のstatusです。runnerが返した
+timeoutや出力上限到達は実行・判定結果として保存します。DB保存だけが失敗した場合は、
+実行・判定結果を失わず、保存IDなしの結果を返します。judgeの予期しない例外は
+wrong answerへ変換しません。
+
+text判定は`ExecutionResult`から`TextJudgeInput`へ必要項目だけを渡し、
+file I/Oを行わないpure functionへ分離しています。判定規則の正本は
+[問題データのText判定](../problems/README.md#text判定)を参照してください。
 
 ## 内部runner protocol
 
@@ -92,18 +104,6 @@ sandbox poolのreadinessを返します。認証、body上限、readinessのsecu
 legacy submission APIとDBの互換列には結合済み出力・数字判定codeをmappingします。
 v3 submission APIとDBの構造化列は分離した実行・判定情報を保持します。
 公開field・HTTP status・legacy互換性の正本は[Public API](../docs/API.md)です。
-
-## 提出use case
-
-`SubmitSolutionService`は、検証済みcommandとproblem IDを受け取り、problem存在確認、
-runner実行、判定、実行ログ保存の順に処理します。結果は
-`soj_backend/models/submission.py`の`SubmissionResult`として返し、HTTP statusや既存response形式への
-変換は`soj_backend/api/api_shellgei.py`だけが担当します。
-
-problem未登録、runner混雑、runner停止は判定結果と別のstatusです。runnerが返した
-timeoutや出力上限到達は実行・判定結果として保存します。DB保存だけが失敗した場合は、
-実行・判定結果を失わず、保存IDなしの結果を返します。judgeの予期しない例外は
-wrong answerへ変換しません。
 
 ## 実行ログとDB migration
 
@@ -147,9 +147,32 @@ DBのPUBLIC CREATE/TEMP、public schemaのPUBLIC CREATE、管理対象表・sequ
 [本番の更新・既存環境移行](../docs/PRODUCTION.md#更新デプロイ)と
 [ロールバック](../docs/PRODUCTION.md#ロールバック)を参照してください。
 
-text判定は`ExecutionResult`から`TextJudgeInput`へ必要項目だけを渡し、
-file I/Oを行わないpure functionへ分離しています。判定規則の正本は
-[問題データのText判定](../problems/README.md#text判定)を参照してください。
+## 本番runtime image
+
+`backend/Dockerfile`は`backend`と`runner`の独立した最終targetを持ち、Composeが
+serviceごとに選択します。target未指定の場合は`backend`をbuildします。
+共有packageと各targetの専用packageをdirectory単位でCOPYします。
+moduleの追加時は責務に対応するpackageへ配置し、反対側の実装を共有packageへ持ち込まないでください。
+import方向は静的test、本番imageの全module importと収録境界はDocker統合testで検証します。
+
+| 対象 | 収録するもの | 収録しないもの |
+| --- | --- | --- |
+| 共通 | API framework依存、`soj_shared`、schema v3と画像data | Poetry、pytest、ruff、mypy、型stub、test、開発CLI、legacy問題data・script |
+| backend | `soj_backend`、Pillowによる画像判定、runner HTTP client、DB driver・repository・migration | Docker SDK、sandbox実行・管理module、runner endpoint |
+| runner | `soj_runner`、内部API、Docker SDK、sandbox実行・管理module | 公開API、画像判定・Pillow、DB driver・repository・migration |
+
+共有の構造化logは提出結果modelへ依存しません。Pillowは判定を行うbackend groupだけに導入します。
+Poetryは固定versionでbuild stageにだけ導入し、`poetry.lock`から`main,backend`または
+`main,runner`の依存を専用venvへinstallします。
+ホストの通常の`poetry install`は開発用groupも導入します。
+
+実行UID、read-only filesystem、socket権限は
+[SECURITY.md](../SECURITY.md#backendrunnerの実行権限)、socket GIDの設定方法は
+[開発手順](../docs/DEVELOPMENT.md#runner用socket-groupの設定)を正本とします。
+本番container内にはPoetryがないため、運用commandは`python -m soj_backend.database_admin`
+のように実行します。imageの検証方法は[Docker統合テスト](./tests/integration/README.md#本番runtime-imageの検証)を参照してください。
+
+製品versionの管理とv3移行の概要は[リリース手順](../docs/RELEASE.md)を参照してください。
 
 ## 参考
 
