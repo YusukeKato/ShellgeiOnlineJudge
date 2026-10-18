@@ -91,6 +91,45 @@ def test_generated_gif_reaches_public_response_without_changing_judgment(
         client.close()
 
 
+@pytest.mark.parametrize("comment_blocks", [1, 64])
+def test_gif_comment_extensions_preserve_animation_and_public_bytes(
+    comment_blocks: int,
+) -> None:
+    """小さい正当な複数コメントを検証しても、2frameのGIFと公開する原本bytesを保つ。"""
+    payload = gif_bytes()
+    notes = [f"note-{index}".encode("ascii") for index in range(comment_blocks)]
+    # logical screenとglobal color tableの直後へ、通常サイズのcomment extensionを配置する。
+    packed = payload[10]
+    offset = 13 + (3 * (1 << ((packed & 7) + 1)) if packed & 0x80 else 0)
+    comments = b"".join(
+        b"\x21\xfe" + bytes([len(note)]) + note + b"\x00" for note in notes
+    )
+    payload = payload[:offset] + comments + payload[offset:]
+    with Image.open(BytesIO(payload)) as image:
+        assert image.info["comment"] == b"\n".join(notes)
+        assert getattr(image, "n_frames", 1) == 2
+        assert image.info["loop"] == 0
+        for index in range(2):
+            image.seek(index)
+            assert image.info["duration"] == 100
+
+    execution = _completed_submission().execution
+    assert execution is not None
+    artifact = ExecutionArtifact(
+        path="media/output.gif",
+        media_type="image/gif",
+        data=base64.b64encode(payload).decode("ascii"),
+    )
+    response = SubmitSolutionResponseV3.from_submission(
+        _completed_submission(
+            execution=execution.model_copy(update={"display_artifact": artifact})
+        )
+    )
+    assert response.artifact is not None
+    assert response.artifact.media_type == "image/gif"
+    assert response.artifact.data == artifact.data
+
+
 @pytest.mark.parametrize(
     "payload",
     [b"", b"not an image", b"GIF89a;", b"x" * 750_001, gif_bytes((1500, 1500))],
