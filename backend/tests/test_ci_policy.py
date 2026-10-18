@@ -124,20 +124,75 @@ def test_ci_runs_on_pr_and_main_without_duplicate_branch_push() -> None:
         assert workflow["on"]["push"] == {"branches": ["main"]}
         assert "pull_request" in workflow["on"]
         assert "schedule" in workflow["on"]
-    workflow = next(w for w in workflows() if w["name"] == "Supply Chain CI")
-    steps = workflow["jobs"]["runtime"]["steps"]
-    assert steps[0]["with"]["fetch-depth"] == "0"
-    selection = next(
-        i for i, step in enumerate(steps) if "problem_review.py" in step.get("run", "")
-    )
-    regression = next(
-        i for i, step in enumerate(steps) if step.get("id") == "regression"
-    )
-    assert selection < regression
-    assert steps[regression]["env"]["SOJ_RUN_FULL_REGRESSION"] == "1"
 
-    assert "shopt -s nullglob" in steps[regression]["run"]
-    assert "test_problem_*_solutions.py" in steps[regression]["run"]
+
+def test_runtime_checks_reuse_scanned_archive_in_parallel_jobs() -> None:
+    # build・scanは1回だけ行い、E2Eとbrowser検査は同じarchiveのimageを並列に検査する。
+    workflow = next(w for w in workflows() if w["name"] == "Supply Chain CI")
+    jobs = workflow["jobs"]
+    runtime = jobs["runtime"]["steps"]
+    assert "soj-browser" not in str(runtime)
+    upload = next(
+        step
+        for step in runtime
+        if step.get("with", {}).get("name") == "runtime-reports"
+    )
+    assert upload["if"] == "${{ always() && steps.scan.outcome != 'skipped' }}"
+    assert jobs["regression"]["needs"] == "runtime"
+    assert set(jobs["browser"]["needs"]) == {"changes", "runtime"}
+    for name in ("regression", "browser"):
+        steps = jobs[name]["steps"]
+        assert "docker build --file backend/Dockerfile" not in str(steps)
+        download = next(
+            i
+            for i, step in enumerate(steps)
+            if step.get("uses", "").startswith("actions/download-artifact@")
+        )
+        assert steps[download]["with"]["name"] == "runtime-reports"
+        load = next(
+            i for i, step in enumerate(steps) if "load_candidate" in step.get("run", "")
+        )
+        test = next(
+            i for i, step in enumerate(steps) if "pytest" in step.get("run", "")
+        )
+        assert download < load < test
+
+    regression = next(
+        step for step in jobs["regression"]["steps"] if step.get("id") == "regression"
+    )
+    browser_test = "test_compose_e2e.py::test_browser_submissions_and_display"
+    assert regression["env"]["SOJ_RUN_FULL_REGRESSION"] == "1"
+    assert "SOJ_COMPOSE_BROWSER_IMAGE" not in regression["env"]
+    assert "shopt -s nullglob" in regression["run"]
+    assert "test_problem_*_solutions.py" in regression["run"]
+    assert f"--deselect backend/tests/integration/{browser_test}" in regression["run"]
+
+    # browser検査は省略せず、changes jobが選んだ範囲とshardだけで実行する。
+    browser = jobs["browser"]
+    assert browser["strategy"]["fail-fast"] == "false"
+    assert browser["strategy"]["matrix"]["shard"] == (
+        "${{ fromJSON(needs.changes.outputs.browser_shards) }}"
+    )
+    step = next(step for step in browser["steps"] if step.get("id") == "browser")
+    assert step["run"].endswith(f"backend/tests/integration/{browser_test}")
+    assert step["env"]["SOJ_BROWSER_SHARD"] == "${{ matrix.shard }}"
+    assert step["env"]["SOJ_BROWSER_PROBLEM_IDS"] == (
+        "${{ needs.changes.outputs.browser_selection }}"
+    )
+    changes = jobs["changes"]
+    assert "problem_review.py --github-output" in str(changes["steps"])
+
+    # required checkの名前を維持し、失敗・cancelを含む全結果を1つのjobで判定する。
+    result = jobs["runtime-result"]
+    assert result["name"] == "Rootless runtime E2E and image scan"
+    assert result["if"] == "${{ always() }}"
+    assert set(result["needs"]) == {"changes", "runtime", "regression", "browser"}
+    script = result["steps"][0]["run"]
+    assert 'test "$SCOPE" = success' in script
+    assert 'test "$RESULTS" = "success success success"' in script
+    assert {"source", "runtime", "regression", "browser"} == set(
+        jobs["provenance"]["needs"]
+    )
 
 
 def test_runtime_vulnerability_db_update_finishes_before_scan() -> None:

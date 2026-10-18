@@ -24,8 +24,11 @@
 | React CI | Node.jsでformat・lint・typecheck・test・build | main push、PR、週次 |
 | Supply Chain CI / source | workflow検証、Git履歴と作業treeのsecret scan、lock fileのSBOM・脆弱性scan、scanner fixture | main push、PR、週次、手動 |
 | Supply Chain CI / changes | runtime jobの要否を判定（[文書だけの変更](#文書だけの変更)） | main push、PR、週次、手動 |
-| Supply Chain CI / runtime | sandbox・DBを含む本番5 imageのbuild・SBOM・scan、Compose全問題回帰・browser・image境界・DB更新互換test | main push、PR、週次、手動。文書だけの変更では省略 |
-| Supply Chain CI / provenance | 同じrunで検査を通過した生成物の署名付きprovenance登録 | mainへのpushでsource・runtime両jobが成功した場合だけ |
+| Supply Chain CI / runtime | sandbox・DBを含む本番5 imageのbuild・SBOM・scanと配備archive（`runtime-reports`）の作成 | main push、PR、週次、手動。文書だけの変更では省略 |
+| Supply Chain CI / regression | runtimeのarchiveをimage IDで照合して読み込み、Compose E2E・全問題回帰・image境界・DB更新互換test | runtime jobの成功後 |
+| Supply Chain CI / browser | 同じarchiveのimageで実ブラウザの提出・表示検査。全問題の画面検査は3 jobへ分割 | runtime jobの成功後 |
+| Supply Chain CI / runtime-result | runtime・regression・browserの全成功、または文書だけの変更による全省略を1つの結果にまとめる | 常に実行 |
+| Supply Chain CI / provenance | 同じrunで検査を通過した生成物の署名付きprovenance登録 | mainへのpushでsource・runtime・regression・browserがすべて成功した場合だけ |
 | Production deploy | 同じcommitの全CI成功待ち、署名検証、SSH配備・DB migration・起動確認 | main push、Repository variableで有効化した場合だけ。配備済みcommitとの差分が文書だけなら省略 |
 
 作業branchへのpushでは検査を重複起動せず、PR作成・更新で検査します。main pushの検査・署名・配備条件は維持します。
@@ -173,6 +176,9 @@ Dockerの固定versionは[Supply Chain CI](../.github/workflows/supply_chain.yam
 RC版の存在から正式版の公開を推測せず、`latest`ではなく確認した安定版の番号を指定します。
 
 DBを含む本番5 imageは当該checkoutからbuildし、scanしたimmutable image IDでarchiveへ保存します。
+E2E・browser検査のjobは再buildせず、同じrunのarchiveを読み込みます。build recordのarchive hashと
+5 imageのIDが一致することを`ci/supply_chain.py`の`load_candidate`で確認してから、`soj-<service>:ci`のtagを付けます。
+browser検査用imageは本番imageではないため、browser jobで個別にbuildします。
 派生DBのbuild仕様は[本番運用](./PRODUCTION.md#postgresql派生image)を参照してください。
 sandboxも`deploy/sandbox/Dockerfile`からbuildし、同じimmutable IDでscan・archive・
 統合testを行います。runnerへそのIDを`SANDBOX_IMAGE_ID`で渡します。
@@ -214,6 +220,8 @@ GitHub上のworkflow実行、OIDC署名、branch protection、required checksと
 repositoryへ反映後に確認してください。workflowの追加だけでは自動更新は有効になりません。
 required checksには既存のPython matrix各job、`React Build and Test`に加え、
 `Workflow, secrets and dependencies`と`Rootless runtime E2E and image scan`を指定します。
+後者は`runtime-result` jobの名前で、build・regression・browserの全jobの結果をまとめます。
+browser jobはshard数によって名前が変わるため、個別にはrequired checkへ指定しません。
 PRでskipされるprovenance jobを必須にはしません。mainへの直接push・review bypassの禁止、
 workflowやpin変更のreview保護もGitHub側で設定してください。
 
@@ -295,15 +303,15 @@ poetry run python ci/supply_chain.py runtime \
 PRはbase SHAと検査対象merge SHA、main pushはeventのbefore SHAと対象SHAの差分を使います。
 問題data・個別問題test・文書（Markdown）だけなら代表例と変更問題、共通code変更・削除・未知file・差分取得不能・週次・手動実行なら全問題です。
 詳細な対象と手動指定は[Docker統合テスト](../backend/tests/integration/README.md#問題追加時の画面検査)を正本とします。
-画像は共通の`browser-ui-review` artifactへ14日保存します。新問ごとにartifact stepを増やしません。
+画像はbrowser jobごとの`browser-ui-review-<job番号>` artifactへ14日保存します。新問ごとにartifact stepを増やしません。
 
 配備ログに転送時間・host更新時間を出します。
 短縮効果はこれらとjob時間で測定し、並列jobやCI待機時間を重複加算しません。
 
 ## 文書だけの変更
 
-本番imageへ入らないMarkdownだけの変更では、Supply Chainのruntime job（image build・scan・E2E・配備archive作成）と
-本番配備を省略します。判定は`ci/deploy.py`の`documentation_only`を正本とします。
+本番imageへ入らないMarkdownだけの変更では、Supply Chainのruntime・regression・browser job（image build・scan・E2E・配備archive作成）と
+本番配備を省略します。`Rootless runtime E2E and image scan`（runtime-result）はこの省略を成功として報告します。判定は`ci/deploy.py`の`documentation_only`を正本とします。
 
 - 対象は拡張子`.md`のfileだけです。`problems/`、`frontend/src/`、`frontend/public/`、
   `backend/soj_backend/`・`backend/soj_runner/`・`backend/soj_shared/`、`deploy/`配下はMarkdownでも対象外です。

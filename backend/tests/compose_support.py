@@ -89,15 +89,20 @@ class ComposeStack:
     """専用env file・projectと、検証済みrootless clientを保持する一時Compose環境。"""
 
     def __init__(self, client: Any, directory: Path, project: str) -> None:
-        """起動前に設定を隔離する。実行用image未指定・未buildの場合は失敗する。"""
+        """起動前に設定を隔離する。実行用image未指定・未buildの場合は失敗する。
+
+        browser imageはbrowser testだけが使うため任意とし、未指定ならNoneを保持する。
+        browser testは未指定時に失敗し、検査を省略しない。
+        """
         self.client = client
         self.directory = directory
         self.project = project
         images = {
             name: client.images.get(os.environ[f"SOJ_COMPOSE_{name.upper()}_IMAGE"]).id
-            for name in ("backend", "runner", "frontend", "browser")
+            for name in ("backend", "runner", "frontend")
         }
-        self.browser_image = images.pop("browser")
+        browser = os.environ.get("SOJ_COMPOSE_BROWSER_IMAGE")
+        self.browser_image = client.images.get(browser).id if browser else None
         images["db"] = client.images.get(database_image()).id
         base = yaml.safe_load((ROOT / "docker-compose.yml").read_text())
         config = isolated_config(base, project, images)

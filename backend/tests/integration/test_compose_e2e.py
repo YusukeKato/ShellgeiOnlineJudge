@@ -13,7 +13,7 @@ import pytest
 
 from tests.compose_support import ComposeStack, ROOT
 from soj_shared.version import APP_VERSION
-from soj_tools.problem_review import select_problem_ids
+from soj_tools.problem_review import browser_plan
 from soj_shared.problem_repository import build_problem_repository
 
 
@@ -220,13 +220,19 @@ def test_runner_outage_and_crash_recovery(stack: ComposeStack) -> None:
 
 def test_browser_submissions_and_display(stack: ComposeStack, tmp_path: Path) -> None:
     # socket・DB secretを持たないChromiumから実UIを操作し、表示とDBの保存を照合する。
+    # CIは全件modeの問題を複数jobへ分け、SOJ_BROWSER_SHARDで担当分だけを開く。
+    assert stack.browser_image, "SOJ_COMPOSE_BROWSER_IMAGE is required"
+    selection = os.getenv("SOJ_BROWSER_PROBLEM_IDS", "all")
+    shard = os.getenv("SOJ_BROWSER_SHARD", "0/1")
+    regex_ids, review_ids = browser_plan(list(REPOSITORY.records), selection, shard)
     browser = stack.client.containers.create(
         stack.browser_image,
         name=f"{stack.project}-browser",
         init=True,
         environment={
             "SOJ_EXPECTED_VERSION": APP_VERSION,
-            "SOJ_BROWSER_PROBLEM_IDS": os.getenv("SOJ_BROWSER_PROBLEM_IDS", "all"),
+            "SOJ_BROWSER_PROBLEM_IDS": selection,
+            "SOJ_BROWSER_SHARD": shard,
         },
         network=f"{stack.project}_frontend_backend",
         shm_size="256m",
@@ -240,14 +246,7 @@ def test_browser_submissions_and_display(stack: ComposeStack, tmp_path: Path) ->
         output = browser.logs(tail=100).decode()
         assert status["StatusCode"] == 0, output
         ids = json.loads(output)["submission_ids"]
-        selection = os.getenv("SOJ_BROWSER_PROBLEM_IDS", "all")
-        selected = select_problem_ids(list(REPOSITORY.records), selection)
-        full = selection == "all"
-        selected = [pid for pid in selected if not (full and pid.startswith("REGEX-"))]
-        regex_count = (
-            sum(pid.startswith("REGEX-") for pid in REPOSITORY.records) if full else 1
-        )
-        expected_count = 7 + regex_count + len(selected)
+        expected_count = 7 + len(regex_ids) + len(review_ids)
         assert len(ids) == len(set(ids)) == expected_count
         assert len(db_rows(stack, ids)) == expected_count
         # 実データはtest専用の提出だけとし、表示review用画像をcontainerの回収前に保存する。

@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 import subprocess
+import sys
 
 import pytest
 
@@ -133,3 +134,54 @@ def test_event_sha_range_and_unavailable_history(
     assert review.github_selection() == "all"
     event.write_text(json.dumps({"before": "0" * 40}))
     assert review.github_selection() == "all"
+
+
+def test_full_review_shards_cover_every_problem_once() -> None:
+    # 全件modeの正規表現・詳細検査を分割しても、各問題をちょうど1つのshardで検査する。
+    available = [
+        *AVAILABLE,
+        "REGEX-00000002",
+        "REGEX-00000003",
+        "STANDARD-00000075",
+        "STANDARD-00000076",
+    ]
+    shards = review.shards_for("all")
+    assert shards == [f"{i}/{review.FULL_REVIEW_SHARDS}" for i in range(3)]
+    plans = [review.browser_plan(available, "all", shard) for shard in shards]
+    regex = [pid for plan in plans for pid in plan[0]]
+    detail = [pid for plan in plans for pid in plan[1]]
+    assert sorted(regex) == sorted(p for p in available if p.startswith("REGEX-"))
+    assert sorted(detail) == sorted(p for p in available if not p.startswith("REGEX-"))
+    assert len(regex) == len(set(regex)) and len(detail) == len(set(detail))
+
+
+def test_selected_review_runs_in_one_unsplit_job() -> None:
+    # 変更問題だけの検査は1 jobで代表例と正規表現代表1問を含め、分割指定を拒否する。
+    selection = '["STANDARD-00000074"]'
+    assert review.shards_for(selection) == ["0/1"]
+    regex, detail = review.browser_plan(AVAILABLE, selection)
+    assert regex == ["REGEX-00000001"]
+    assert detail == sorted([*review.REPRESENTATIVES, "STANDARD-00000074"])
+    with pytest.raises(ValueError):
+        review.browser_plan(AVAILABLE, selection, "1/3")
+
+
+@pytest.mark.parametrize("shard", ["", "1", "3/3", "-1/3", "0/0", "a/b", "0/3 "])
+def test_invalid_shard_is_rejected(shard: str) -> None:
+    # 担当外の問題を黙って検査しないよう、範囲外や不正形式のshardは失敗させる。
+    with pytest.raises(ValueError):
+        review.shard_ids(["REGEX-00000001"], shard)
+
+
+def test_main_writes_selection_and_shards_to_job_output(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # job outputへ選択とmatrix用shard一覧をJSON一行ずつ書く。
+    output = tmp_path / "output"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output))
+    monkeypatch.setattr(review, "github_selection", lambda: "all")
+    monkeypatch.setattr(sys, "argv", ["problem_review.py", "--github-output"])
+    review.main()
+    assert output.read_text() == (
+        'browser_selection=all\nbrowser_shards=["0/3", "1/3", "2/3"]\n'
+    )

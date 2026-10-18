@@ -19,7 +19,7 @@ WORKFLOWS = ("fastapi_ci.yaml", "react_ci.yaml", "supply_chain.yaml")
 # 本番側production.pyが前回成功時のarchiveを残す場所。repositoryからの相対path。
 TRANSFER_BASIS = ".soj-deploy/basis"
 # runtime imageと配備archiveを作るSupply Chainのjob名。
-RUNTIME_JOB = "Rootless runtime E2E and image scan"
+RUNTIME_JOB = "Rootless runtime build and image scan"
 # 本番のcurrent.jsonが対象commitへ更新されたことを確認した場合だけ実行するstep名。
 # Deployments APIの成功はSuperseded時も記録されるため、配備済みcommitの根拠にしない。
 DEPLOY_RECORD_STEP = "Record completed production update"
