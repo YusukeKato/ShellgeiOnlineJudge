@@ -25,10 +25,23 @@ pytestmark = [
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 FRONTEND_NGINX_CONFIG = REPOSITORY_ROOT / "frontend" / "nginx" / "default.conf"
-NGINX_IMAGE = (
-    "nginx:alpine@"
-    "sha256:72ba65eb42c10344912a84ff42408db7d34f2feb642204570ab8fc5ffd29f1d3"
-)
+
+
+def _upstream_nginx_image() -> str:
+    """本番Dockerfileの固定nginx baseを読み、単体testだけが古い版に残ることを防ぐ。"""
+    references = [
+        line.split()[1]
+        for line in (REPOSITORY_ROOT / "frontend/Dockerfile")
+        .read_text(encoding="utf-8")
+        .splitlines()
+        if line.startswith("FROM nginx:")
+    ]
+    if len(references) != 1 or "@sha256:" not in references[0]:
+        raise ValueError("one pinned nginx base is required")
+    return references[0]
+
+
+NGINX_IMAGE = _upstream_nginx_image()
 
 
 def _available_loopback_port() -> int:

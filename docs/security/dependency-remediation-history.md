@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-10-19: frontend nginx・X11/XPM更新](#2026-10-19のfrontend-nginxx11xpm更新)
 - [2026-10-11: Go標準library更新](#2026-10-11のgo標準library更新)
 - [2026-10-07: 統合候補とGitHub CI](#2026-10-07の統合候補とgithub-ci)
 - [2026-10-07: 統合前候補](#2026-10-07の統合前候補の検証結果)
@@ -18,6 +19,40 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-10-19のfrontend nginx・X11/XPM更新
+
+`6fd8ffcfbd867524f5ea29e37bde2a971fefebf2`の配備済みfrontend SBOMを、
+2026-10-19 06:39:15 UTC作成のGrype DBで再照合し、libx11の修正可能なHighを1件確認した。
+[X.Orgの公開情報](https://www.x.org/Development/Security/)とvendor情報に従い、
+libx11を1.8.14-r0、libxpmを3.5.20-r0へ固定更新した。
+対象はCVE-2026-88806、94283、94284、94285、94287。
+通常のHTTP処理からX server応答・XPM解析へ到達する経路は未確認であり、
+packageの収録と直接悪用の成立を同一視しない。
+sandbox側のlibx11-6は`2:1.8.7-1ubuntu0.1`で、
+[Ubuntu USN-8913-1](https://ubuntu.com/security/notices/USN-8913-1)の4 CVEの修正済みversionに一致する。
+上流version番号だけで未修正と判断せず、vendorのbackportと区別した。libxpmは他の4 imageのSBOMでは確認されなかった。
+
+[nginx公式advisory](https://nginx.org/en/security_advisories.html)の
+CVE-2026-15176、93479、95101、97629、97205に対し、公式nginx 1.31.7 Alpine imageへdigest固定で更新した。
+共有TLS session cacheを使う本構成は97629の条件に該当する。一方、mTLS、HTTP/3、
+alias/rewrite・map regex・SSI/AIOの利用はリポジトリ設定では確認していない。
+既存の明示的なOS library修正、TLS検証、proxy・API・sandbox制限は維持する。
+固定値の正本は`frontend/Dockerfile`とし、nginx単体testも同じbaseを読み取る。
+
+Grype v0.119.0とSyft v1.52.0は`ci/tools.json`のarchive SHA-256を検証して使用した。
+同じDBによる更新後のローカルfrontend scanは72 packages / findings 3、
+`blocking_before_exceptions`・`exceptions`・`risk_acceptances`・`blocking`はいずれも0。
+対象X11/XPMの5 CVEは再検出されず、実imageのnginx・libx11・libxpmが上記修正版であることを確認した。
+nginxはscannerで検出されなかったため、scannerだけを更新要否・修正完了の根拠にせず、
+実binary/packageのversion下限をruntime回帰testへ追加した。
+残る3件はBusyBox系packageのCVE-2025-60876（Medium、vendor修正版未提示）であり、
+停止対象0を全脆弱性0とは扱わない。PoC・攻撃試験は行っていない。
+ローカルではlock一致の専用Linux環境でRuff・mypy・非Docker 1,013件、frontendの基本検査と81件、
+明示したrootless daemonでnginx受付・runtime・全125問の日英画面と提出保存を含む12件が成功した。
+Windows作業コピーの改行差や検証用コピーのGit/import情報不足による初期の検査失敗は、
+LF形式・Git情報を持つ専用cloneと明示したimport経路で解消した。製品側の制限は緩和していない。
+CI・配備完了は、この記録だけで判断せず対象head/mainの実行結果と照合する。
 
 ### 2026-10-11のGo標準library更新
 

@@ -37,8 +37,7 @@ docker build --file deploy/sandbox/Dockerfile --tag soj-sandbox:local .
 export SANDBOX_IMAGE_ID="$(docker image inspect soj-sandbox:local --format '{{.Id}}')"
 docker pull \
   postgres:15-alpine@sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b
-docker pull \
-  nginx:alpine@sha256:72ba65eb42c10344912a84ff42408db7d34f2feb642204570ab8fc5ffd29f1d3
+docker pull "$(sed -n 's/^FROM \(nginx:[^ ]*\).*$/\1/p' frontend/Dockerfile)"
 docker build --file deploy/postgres/Dockerfile --tag soj-db:local .
 ```
 
@@ -178,6 +177,8 @@ SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_RUNTIME_IMAGE_TESTS=1 \
 ```
 
 backend・runner・frontend・DB・sandboxの本番5種類について、OCI versionラベルが製品versionの正本と一致することを確認します。
+frontendでは、実際のnginx binaryとX11/XPM packageが公開修正版以降であることも確認します。
+nginx単体testのbaseは`frontend/Dockerfile`から読み取り、本番baseの更新に追従します。
 ホスト監視CLIのtestは、別ownerを除外し、runner停止・削除後のsandbox残存を読み取りだけで検出することを確認します。
 
 実imageのPython・Expat修正版、非rootでの共有・専用package全moduleのimport、

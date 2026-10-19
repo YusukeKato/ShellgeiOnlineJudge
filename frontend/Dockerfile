@@ -29,12 +29,12 @@ RUN yarn typecheck
 RUN yarn build
 
 # --- Serve Stage ---
-FROM nginx:alpine@sha256:62ff2089abf5a9ed33bd232895bef5e22f7bb4b200675cec49a5ebc48e3d4ac8
+FROM nginx:1.31.7-alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d
 LABEL org.opencontainers.image.version="3.0.3"
 
-# baseを維持し、util-linux・Expat由来の検出に対応するlibraryだけを固定更新する。
-# PCRE2/zlibも公開済み修正版へ限定更新し、既存baseと他の固定値は維持する。
-RUN apk add --no-cache --upgrade libuuid=2.42.3-r1 libexpat=2.9.0-r0 pcre2=10.49-r0 zlib=1.3.2-r1 tiff=4.7.2-r0
+# nginxの公開修正を含むbaseへ更新し、既存libraryの修正版も維持する。
+# X11/XPMの応答・画像解析の指摘に対し、収録libraryをvendor修正版へ固定更新する。
+RUN apk add --no-cache --upgrade libuuid=2.42.3-r1 libexpat=2.9.0-r0 pcre2=10.49-r0 zlib=1.3.2-r1 tiff=4.7.2-r0 libx11=1.8.14-r0 libxpm=3.5.20-r0
 
 # ビルド成果物をNginxの公開ディレクトリにコピー
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html

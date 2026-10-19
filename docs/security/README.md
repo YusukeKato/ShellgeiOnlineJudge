@@ -56,6 +56,13 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- frontendのnginx baseとX11/XPM libraryをvendor修正版へ更新しています。
+  共有TLS session cacheを使うため、nginxのTLS session ticketの指摘も対象です。
+  X11/XPMはimageへ収録されていますが、通常のHTTP処理からの到達経路は確認していません。
+  固定versionは[frontend Dockerfile](../../frontend/Dockerfile)を正本とし、実imageのversion検査と
+  最新DBによるscanを併用します。対象・検証時点・残存指摘は
+  [2026-10-19の是正記録](./dependency-remediation-history.md#2026-10-19のfrontend-nginxx11xpm更新)を参照してください。
+  TLS検証、API・sandbox制限、scanの停止条件は維持します。
 - backend用Pillowを13.0.0へ更新し、12.3.0までが対象となる画像decoderの公開指摘に対応します。
   現在のversionは[依存定義](../../pyproject.toml)と[lock](../../poetry.lock)を正本とします。
   [GIFコメント解析の指摘](https://github.com/python-pillow/Pillow/security/advisories/GHSA-74r2-7ff9-mjj2)は、

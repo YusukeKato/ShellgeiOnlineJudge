@@ -3,6 +3,12 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-10-19 保守
+
+frontendのnginxとlibx11・libxpmを公開修正版へ更新しました。
+本番imageの実version検査を追加し、nginx単体testも本番の固定baseへ追従させました。
+対象と検証範囲は[依存是正記録](./docs/security/dependency-remediation-history.md)を参照してください。
+
 ## 3.0.3（2026-10-18）
 
 通常問題と練習問題を9問追加し、公開問題は125問になりました。

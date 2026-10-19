@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import time
 import uuid
 from collections.abc import Iterator
@@ -365,3 +366,25 @@ def test_runtime_image_product_version(runtime_client: Any, service: str) -> Non
         image.attrs["Config"]["Labels"]["org.opencontainers.image.version"]
         == APP_VERSION
     )
+
+
+def test_frontend_runtime_contains_fixed_nginx_and_x11_libraries(
+    runtime_client: Any,
+) -> None:
+    """実frontendのnginxとX11/XPMが修正版であり、scanner未検出でも旧版へ戻らないことを確認する。"""
+    output = runtime_client.containers.run(
+        os.environ["SOJ_COMPOSE_FRONTEND_IMAGE"],
+        [
+            "-ec",
+            "nginx -v 2>&1; apk info --exists 'libx11>=1.8.14-r0' 'libxpm>=3.5.20-r0'",
+        ],
+        entrypoint="/bin/sh",
+        network_mode="none",
+        read_only=True,
+        cap_drop=["ALL"],
+        security_opt=["no-new-privileges:true"],
+        remove=True,
+    )
+    version = re.search(rb"nginx/(\d+)\.(\d+)\.(\d+)", output)
+    assert version is not None, output
+    assert tuple(int(part) for part in version.groups()) >= (1, 31, 7), output
