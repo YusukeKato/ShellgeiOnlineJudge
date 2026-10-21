@@ -14,7 +14,8 @@ def test_runtime_dependency_groups_separate_docker_database_and_development() ->
     }
 
     assert groups["backend"] == {"sqlalchemy", "psycopg2-binary", "pillow"}
-    assert groups["runner"] == {"docker"}
+    # requestsのCA下限はrunnerに閉じ、backendへDocker依存を広げない。
+    assert groups["runner"] == {"docker", "certifi"}
     assert {"pytest", "ruff", "mypy"} <= groups["dev"]
     assert "legacy" not in groups
     assert {"gunicorn", "pytz", "types-pytz"}.isdisjoint(common.union(*groups.values()))

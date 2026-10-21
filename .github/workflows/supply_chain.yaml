@@ -33,7 +33,10 @@ jobs:
           python-version: "3.14"
       - name: Install locked development dependencies
         run: |
-          python -m pip install poetry==2.5.1
+          sudo apt-get update
+          sudo apt-get install -y --only-upgrade ca-certificates
+          python ci/bootstrap_pip.py
+          python -m pip install poetry==2.5.1 certifi==2026.10.19
           poetry check --lock
           poetry install --no-interaction
       - name: Install verified scanners
@@ -110,7 +113,10 @@ jobs:
           python-version: "3.14"
       - name: Install locked development dependencies
         run: |
-          python -m pip install poetry==2.5.1
+          sudo apt-get update
+          sudo apt-get install -y --only-upgrade ca-certificates
+          python ci/bootstrap_pip.py
+          python -m pip install poetry==2.5.1 certifi==2026.10.19
           poetry check --lock
           poetry install --no-interaction
       - name: Prepare user systemd and D-Bus for rootless cgroups
@@ -118,7 +124,7 @@ jobs:
       - name: Set up isolated rootless Docker
         uses: docker/setup-docker-action@2bf61fb9464cc67f0cbdeabed6aa0380accd1c70 # v5.5.0
         with:
-          version: v29.8.1
+          version: v29.9.2
           rootless: true
           set-host: true
       - name: Install verified inventory and vulnerability tools
@@ -156,6 +162,13 @@ jobs:
           cat "$RUNNER_TEMP/grype-db-update.log"
           # DB更新の失敗時に古いDBや未取得DBでscanへ進まない。
           test "$grype_status" -eq 0
+      - name: Reject compromised CA chains in runtime stores
+        run: |
+          docker build --file backend/Dockerfile --target build-tools --tag soj-python-build:ci .
+          docker build --file deploy/sandbox/Dockerfile --target textimg-build --tag soj-go-build:ci .
+          docker build --file deploy/sandbox/Dockerfile --target problem-data --tag soj-data-build:ci .
+          docker build --file frontend/Dockerfile --target builder --tag soj-node-build:ci .
+          poetry run python ci/check_ca_trust.py soj-backend:ci soj-runner:ci soj-frontend:ci soj-db:ci soj-python-build:ci soj-go-build:ci soj-data-build:ci soj-node-build:ci
       - name: Scan runtime images and prepare candidate archive
         id: scan
         run: poetry run python ci/supply_chain.py runtime --tools "$RUNNER_TEMP/soj-tools" --reports "$RUNNER_TEMP/runtime-reports" --sandbox "$SANDBOX_IMAGE_ID"
@@ -186,7 +199,10 @@ jobs:
           python-version: "3.14"
       - name: Install locked development dependencies
         run: |
-          python -m pip install poetry==2.5.1
+          sudo apt-get update
+          sudo apt-get install -y --only-upgrade ca-certificates
+          python ci/bootstrap_pip.py
+          python -m pip install poetry==2.5.1 certifi==2026.10.19
           poetry check --lock
           poetry install --no-interaction
       - name: Prepare user systemd and D-Bus for rootless cgroups
@@ -194,7 +210,7 @@ jobs:
       - name: Set up isolated rootless Docker
         uses: docker/setup-docker-action@2bf61fb9464cc67f0cbdeabed6aa0380accd1c70 # v5.5.0
         with:
-          version: v29.8.1
+          version: v29.9.2
           rootless: true
           set-host: true
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -248,7 +264,10 @@ jobs:
           python-version: "3.14"
       - name: Install locked development dependencies
         run: |
-          python -m pip install poetry==2.5.1
+          sudo apt-get update
+          sudo apt-get install -y --only-upgrade ca-certificates
+          python ci/bootstrap_pip.py
+          python -m pip install poetry==2.5.1 certifi==2026.10.19
           poetry check --lock
           poetry install --no-interaction
       - name: Prepare user systemd and D-Bus for rootless cgroups
@@ -256,7 +275,7 @@ jobs:
       - name: Set up isolated rootless Docker
         uses: docker/setup-docker-action@2bf61fb9464cc67f0cbdeabed6aa0380accd1c70 # v5.5.0
         with:
-          version: v29.8.1
+          version: v29.9.2
           rootless: true
           set-host: true
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -272,7 +291,9 @@ jobs:
         run: |
           poetry run python -c 'import subprocess; from tests.postgres_support import upstream_postgres_image; refs = [upstream_postgres_image()]; [subprocess.run(["docker", "pull", ref], check=True) for ref in refs]'
       - name: Build browser test image
-        run: docker build --file backend/tests/integration/browser/Dockerfile --tag soj-browser:ci .
+        run: |
+          docker build --file backend/tests/integration/browser/Dockerfile --tag soj-browser:ci .
+          poetry run python ci/check_ca_trust.py soj-browser:ci
       - name: Browser submissions and problem screen review
         id: browser
         env:

@@ -1,5 +1,5 @@
 # --- Build Stage ---
-FROM node:22@sha256:dd5847a04b0deee391fa145f1f4c6d214196668b6bcc7988ebed67249f226844 AS builder
+FROM node:22.23.4@sha256:2bd396628eceb5c999a6e43731fab69d5fb98b94ba9d9d90b5f64575c5178765 AS builder
 
 WORKDIR /app/frontend
 
@@ -32,9 +32,8 @@ RUN yarn build
 FROM nginx:1.31.7-alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d
 LABEL org.opencontainers.image.version="3.0.3"
 
-# nginxの公開修正を含むbaseへ更新し、既存libraryの修正版も維持する。
-# X11/XPMの応答・画像解析の指摘に対し、収録libraryをvendor修正版へ固定更新する。
-RUN apk add --no-cache --upgrade libuuid=2.42.3-r1 libexpat=2.9.0-r0 pcre2=10.49-r0 zlib=1.3.2-r1 tiff=4.7.2-r0 libx11=1.8.14-r0 libxpm=3.5.20-r0
+# nginx・X11/XPM等のvendor修正版を維持し、CAの不信頼化も適用する。
+RUN apk add --no-cache --upgrade ca-certificates=20261020-r0 ca-certificates-bundle=20261020-r0 libuuid=2.42.3-r1 libexpat=2.9.0-r0 pcre2=10.49-r0 zlib=1.3.2-r1 tiff=4.7.2-r0 libx11=1.8.14-r0 libxpm=3.5.20-r0
 
 # ビルド成果物をNginxの公開ディレクトリにコピー
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html

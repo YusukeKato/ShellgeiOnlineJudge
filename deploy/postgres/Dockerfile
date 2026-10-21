@@ -1,4 +1,6 @@
-FROM golang:1.26.9-alpine@sha256:3082400e369fa24d5fc60bca20edab3f6d604e0c5a690ec66b295eff4dd87ade AS gosu-build
+FROM golang:1.26.10-alpine@sha256:9ce231b28998b32e116927c61aa5c406183061d4f3f2d61b292c88e7f6bdf7ca AS gosu-build
+# Go verifierとOS storeの両方を更新し、module取得前に旧rootを除く。
+RUN apk add --no-cache --upgrade ca-certificates=20261020-r0 ca-certificates-bundle=20261020-r0
 
 # gosuの権限切替実装は維持し、修正版Goで再buildする。sourceとmodule checksumを検証する。
 ADD --checksum=sha256:cd9719b775dbfedae53923c9b0dc792b66d42c51e0b36652ed6f747fbadc0164 \
@@ -13,7 +15,7 @@ LABEL org.opencontainers.image.version="3.0.3"
 
 # PostgreSQL・entrypoint・PGDATAは継承し、検出のあるOpenSSL・libuuidだけを固定versionへ更新する。
 # zlibのCVE-2026-85091修正版も限定更新し、既存のOpenSSL/libuuid固定値を維持する。
-RUN apk add --no-cache --upgrade libcrypto3=3.5.8-r0 libssl3=3.5.8-r0 libuuid=2.42.3-r1 zlib=1.3.2-r1
+RUN apk add --no-cache --upgrade ca-certificates-bundle=20261020-r0 libcrypto3=3.5.8-r0 libssl3=3.5.8-r0 libuuid=2.42.3-r1 zlib=1.3.2-r1
 COPY --from=gosu-build /out/gosu /usr/local/bin/gosu
 COPY --from=gosu-build /build/gosu-1.19/LICENSE /usr/local/share/licenses/gosu/LICENSE
 RUN gosu nobody true

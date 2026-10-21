@@ -24,6 +24,8 @@ psycopg2-binary = "^2.9.13"
 
 [tool.poetry.group.runner.dependencies]
 docker = "^7.2.0"
+# Docker SDKのrequestsが使うCAを、eMudhra対策版以降へ制限する。
+certifi = ">=2026.10.19"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.1.1"

@@ -29,7 +29,7 @@ Compose・rootlessの手順はLinuxのshellで実行します。
 | --- | --- |
 | 共通 | Git |
 | ホストでPythonを検査 | Python 3.12・3.13・3.14のいずれか、Poetry |
-| ホストでfrontendを検査 | Node.js 22系（22.22.2以上）、Yarn 1.22.22 |
+| ホストでfrontendを検査 | Node.js 22系（22.23.4以上）、Yarn 1.22.22 |
 | Compose起動・Docker統合検査 | Linux（systemd・cgroup v2）、Docker Engine・Compose plugin・rootless Docker、OpenSSL |
 
 Composeでbuildするだけなら、ホストへのPython開発環境・Poetry・Node.js・Yarnの導入は不要です。
@@ -39,7 +39,7 @@ Ubuntu系で必要な基本ツールを導入する例です。検査だけな�
 
 ```sh
 sudo apt-get update
-sudo apt-get install -y git curl python3 python3-venv pipx openssl uidmap
+sudo apt-get install -y ca-certificates git curl python3 python3-venv pipx openssl uidmap
 pipx ensurepath
 pipx install poetry
 ```
@@ -76,6 +76,14 @@ Docker・起動用.env・DB・TLSの準備は不要です。
 <a id="3-リポジトリとpython依存関係"></a>
 
 ### Python環境の準備
+
+依存取得前に[OS CAとPython同梱CAの更新](./PRODUCTION_HOST.md#外部tls接続のca更新)を済ませます。
+OSの更新だけでは、既存venvやpipx内のpip・certifiは更新されません。
+利用するPython環境のpipを初期更新する場合は、repository rootで
+`python ci/bootstrap_pip.py`を実行できます。公式hashを確認したwheelだけをoffline installし、
+不一致や取得失敗では停止します。その後に同じ環境のcertifiとPoetry側のCAも更新してください。
+初期更新の詳細と推奨版は[Python公式案内](https://discuss.python.org/t/information-for-python-users-regarding-emudhra-emsign-ca-certificate-security-incident/109576)
+を参照します。system Pythonへ強制installせず、自分のvenvまたは管理しているpipx環境を対象にします。
 
 対応するPythonを明示して依存を導入します。次はPython 3.12の例です。
 3.13・3.14を使う場合は実際の実行file名へ読み替えてください。
@@ -125,7 +133,7 @@ LFの検証用checkoutを使うか、変換・検査・復元を直列化し、�
 
 ### frontendをホストで検査する場合
 
-Node.js 22系（22.22.2以上）とYarn 1.22.22が利用できる環境で実行します。
+Node.js 22系（22.23.4以上）とYarn 1.22.22が利用できる環境で実行します。
 Corepackが利用できる環境では、CIと同じ方法でYarnを固定できます。
 Corepackが見つからない場合は、利用中のNode.js環境の導入方法を確認してから進め、version確認を省略しないでください。
 

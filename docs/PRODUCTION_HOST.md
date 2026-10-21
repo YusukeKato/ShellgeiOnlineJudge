@@ -8,6 +8,7 @@
 - [専用ホストとrootless Docker](#専用ホストとrootless-docker)
 - [Amazon Linux 2023の設定例](#amazon-linux-2023の設定例)
 - [公開経路とTLS](#公開経路とtls)
+- [外部TLS接続のCA更新](#外部tls接続のca更新)
 - [証明書の配置と更新](#証明書の配置と更新)
 - [再起動と移行後の確認](#再起動と移行後の確認)
 
@@ -158,6 +159,36 @@ sudo setsebool -P httpd_can_network_connect 1
 rootless Dockerから直接443を公開する構成は、外側に同等の受付制御がある場合に限ります。
 [Docker公式手順](https://docs.docker.com/engine/security/rootless/tips/#exposing-privileged-ports)で
 追加権限の影響を確認してから、`.env`を`HTTPS_BIND_ADDRESS=0.0.0.0`、`HTTPS_PORT=443`へ変更してください。
+
+## 外部TLS接続のCA更新
+
+アプリのserver証明書とは別に、hostのOS CAと、Docker daemon・BuildKit・Python/pip等の
+HTTPS clientが使うCAを更新してください。eMudhra中間CAの鍵漏えいについては
+[Ubuntu公式通知](https://ubuntu.com/security/notices/USN-8944-1)と
+[Python公式案内](https://discuss.python.org/t/information-for-python-users-regarding-emudhra-emsign-ca-certificate-security-incident/109576)
+を参照します。対象rootを再追加したりTLS検証を無効化して接続を復旧したりしません。
+
+Ubuntu hostでは管理者が次を実行し、distributionの修正版がinstall済みであることを
+通知のversionと照合します。repositoryやDBを操作するcommandではありません。
+
+```sh
+(
+  set -eu
+  sudo apt-get update
+  sudo apt-get install -y --only-upgrade ca-certificates
+  dpkg-query -W ca-certificates
+)
+```
+
+失敗した場合は後続の取得・配備を止め、package repositoryの状態を確認して同じ手順を再実行します。
+長時間稼働するclientがCAをcacheしている場合、更新後に対象processの再起動が必要です。
+Docker daemonを更新・再起動する場合は、専用ユーザーのrootless user serviceを対象にし、
+停止時間を確保してservice・sandboxの復帰を確認してください。rootful daemonへ切り替えません。
+`docker version`でclientだけでなくserverのversion・Go versionも照合します。
+
+アプリimage内のOS・Python vendor CAはhost更新だけでは変わりません。
+[CA検査](./CI.md#ca信頼ストアの検査)を通したimageを再配備してください。
+host更新は運用者が担当し、アプリの自動配備だけでhost更新完了とは扱いません。
 
 ## 証明書の配置と更新
 

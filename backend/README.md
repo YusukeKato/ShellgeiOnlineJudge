@@ -162,6 +162,8 @@ import方向は静的test、本番imageの全module importと収録境界はDock
 | runner | `soj_runner`、内部API、Docker SDK、sandbox実行・管理module | 公開API、画像判定・Pillow、DB driver・repository・migration |
 
 共有の構造化logは提出結果modelへ依存しません。Pillowは判定を行うbackend groupだけに導入します。
+OSのCAを更新した共通baseでpipとensurepipのseedをhash検証付きで更新します。
+初期更新の正本は[`ci/bootstrap_pip.py`](../ci/bootstrap_pip.py)です。
 Poetryは固定versionでbuild stageにだけ導入し、`poetry.lock`から`main,backend`または
 `main,runner`の依存を専用venvへinstallします。
 ホストの通常の`poetry install`は開発用groupも導入します。

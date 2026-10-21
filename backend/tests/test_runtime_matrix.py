@@ -29,7 +29,7 @@ def test_python_support_policy_matches_ci_and_production_image() -> None:
         == SUPPORTED_PYTHON_VERSIONS
     )
     production_base = re.fullmatch(
-        r"FROM python:3\.12\.(\d+)-slim-trixie@sha256:[0-9a-f]{64} AS build-tools",
+        r"FROM python:3\.12\.(\d+)-slim-trixie@sha256:[0-9a-f]{64} AS python-base",
         backend_dockerfile.splitlines()[0],
     )
     assert production_base is not None

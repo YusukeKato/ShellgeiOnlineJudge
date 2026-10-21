@@ -491,6 +491,8 @@ runner名を変えた場合は`--runner-container`も指定します。例とし
 ### image digestの更新
 
 外部imageのdigest・package pinの正本は各Dockerfileです。通常の`--pull`では固定digestは変わりません。
+CA更新時は[host側の更新](./PRODUCTION_HOST.md#外部tls接続のca更新)と
+[実imageのCA検査](./CI.md#ca信頼ストアの検査)も必要です。OS CAとPython/Nodeの同梱CAを別々に確認します。
 
 1. 候補のdigest・package versionを調べ、Dockerfileと影響するfixtureを同じ変更で更新する。
 2. stagingまたは専用CIで[基本検査](./DEVELOPMENT.md#6-テスト)、[Docker・全問題・Compose/browser回帰](../backend/tests/integration/README.md)、[SBOM・脆弱性検査](./CI.md)を実行する。

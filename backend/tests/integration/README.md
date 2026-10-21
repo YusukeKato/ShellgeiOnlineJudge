@@ -157,6 +157,14 @@ Supply Chain CIは既存の13ファイル・34項目に加え、`test_problem_*_
 行列の向き、逐次置換、集合の取りこぼし、数値順・安定性、1の素数扱い、
 不等号の境界、最短周期との混同、素因数集計の重複除去等の誤答を区別します。
 
+## CA信頼ストアの回帰
+
+本番runtimeのscan前とbrowser image作成後には、
+[CA信頼ストア検査](../../../docs/CI.md#ca信頼ストアの検査)も行います。
+networkを使わず実imageのOS・Python・Node CAを公開証明書fixtureと照合し、
+漏えいCAの拒否だけでなく正常TLSの許可も確認します。
+このCLIはpytestのmarkerとは別の明示commandで、通常の非Docker unit testでは起動しません。
+
 ## 本番runtime imageの検証
 
 `test_runtime_images.py`は追加の明示flagと、本番5種類のbuild済みimageを必要とします。

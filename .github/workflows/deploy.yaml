@@ -32,7 +32,10 @@ jobs:
         id: ci
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 ci/deploy.py wait
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --only-upgrade ca-certificates
+          python3 ci/deploy.py wait
 
   deploy:
     needs: gate
@@ -58,7 +61,10 @@ jobs:
       - name: Verify signed archive and build record
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 ci/deploy.py verify "$RUNNER_TEMP/runtime-reports"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --only-upgrade ca-certificates
+          python3 ci/deploy.py verify "$RUNNER_TEMP/runtime-reports"
       - name: Install verified Session Manager plugin
         run: bash ci/install_session_manager.sh
       - name: Authenticate to AWS using production OIDC role

@@ -1,7 +1,14 @@
-FROM python:3.12.15-slim-trixie@sha256:e2e1e343308c173790faed72f2b2592fb201619fcde30af505883ded3f474ea5 AS build-tools
+FROM python:3.12.15-slim-trixie@sha256:cb33f7f771ecec2ef1225cf39b159591a040391bd73e4c01f00fdfc4c47611d2 AS python-base
+
+# OS CA修正版を含むbaseから、pipと新規venvのseedもhash検証付きで更新する。
+COPY ci/bootstrap_pip.py /tmp/soj-bootstrap-pip.py
+RUN python /tmp/soj-bootstrap-pip.py --update-ensurepip \
+    && rm /tmp/soj-bootstrap-pip.py
+
+FROM python-base AS build-tools
 
 # Poetryはbuild stageだけに置き、lock済み依存をruntime専用venvへ導入する。
-RUN pip install --no-cache-dir poetry==2.5.1 \
+RUN pip install --no-cache-dir poetry==2.5.1 certifi==2026.10.19 \
     && python -m venv /opt/venv
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="/opt/venv/bin:${PATH}"
@@ -14,7 +21,7 @@ RUN poetry install --only main,backend --no-root --no-interaction --no-ansi
 FROM build-tools AS runner-dependencies
 RUN poetry install --only main,runner --no-root --no-interaction --no-ansi
 
-FROM python:3.12.15-slim-trixie@sha256:e2e1e343308c173790faed72f2b2592fb201619fcde30af505883ded3f474ea5 AS runtime-common
+FROM python-base AS runtime-common
 LABEL org.opencontainers.image.version="3.0.3"
 
 # Python baseを維持し、CVE-2026-103111の修正済みPCRE2だけを限定更新する。

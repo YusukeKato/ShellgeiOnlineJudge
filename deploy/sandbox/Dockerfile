@@ -3,7 +3,7 @@ FROM ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffb
 
 # Gitは取得revisionの記録にだけ使用し、実行用imageへ持ち込まない。
 RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git ca-certificates \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git ca-certificates=20260816ubuntu0.24.04.1 \
     && rm -rf /var/lib/apt/lists/*
 
 # refを固定しないGit ADDはbuildごとにdefault branchのHEADを解決する。
@@ -13,7 +13,9 @@ RUN git -C /ShellGeiData rev-parse HEAD > /shellgeidata-revision \
     && rm -rf /ShellGeiData/.git
 
 # textimgだけを修正版Go・固定moduleでbuildし、Go環境は実行用imageへ持ち込まない。
-FROM golang:1.26.9-alpine@sha256:3082400e369fa24d5fc60bca20edab3f6d604e0c5a690ec66b295eff4dd87ade AS textimg-build
+FROM golang:1.26.10-alpine@sha256:9ce231b28998b32e116927c61aa5c406183061d4f3f2d61b292c88e7f6bdf7ca AS textimg-build
+# Go verifierとOS storeの両方を更新し、module取得前に旧rootを除く。
+RUN apk add --no-cache --upgrade ca-certificates=20261020-r0 ca-certificates-bundle=20261020-r0
 WORKDIR /build
 COPY deploy/sandbox/textimg/go.mod deploy/sandbox/textimg/go.sum ./
 ENV CGO_ENABLED=0 GOTOOLCHAIN=local

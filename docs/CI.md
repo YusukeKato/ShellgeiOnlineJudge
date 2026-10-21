@@ -328,3 +328,37 @@ PRはbase SHAと検査対象merge SHA、main pushはeventのbefore SHAと対象S
   省略されていた場合は、archiveがないため失敗します。同じcommitのSupply Chain CIを再実行してから、
   Production deployを再実行してください。
 - 週次・手動実行では常にruntime jobを実行します。FastAPI CI・React CI・Supply Chainのsource jobは常に実行します。
+
+## CA信頼ストアの検査
+
+Pythonの依存取得前にCI runnerのOS CAを更新し、
+[`ci/bootstrap_pip.py`](../ci/bootstrap_pip.py)で公式SHA-256を照合したpip wheelをoffline installします。
+単に`PIP_CERT`を指定するだけでは、pipの同梱certifiが残る構成を保護できません。
+Dockerfileの共通Python stageではensurepipのseedも更新し、新しいvenvへの旧pip再導入を防ぎます。
+Node.js・Goの固定値は各Dockerfileを正本とします。browser内のPlaywright driverは
+`NODE_OPTIONS=--use-openssl-ca`で更新済みOS CAだけを使用します。
+
+runtimeとPython・Node・Go・問題dataのbuild stageのscan前、およびbrowser image作成後に、
+[`ci/check_ca_trust.py`](../ci/check_ca_trust.py)を実行します。
+検査はrootless Docker上の通信不可・read-onlyの一時containerから、OS bundle、
+存在するhashed directory、Pythonのcertifi・pip・ensurepip、Poetryが使用するPython向けの
+virtualenv seed、Nodeの内蔵bundleを読み取ります。Playwright専用NodeのOS CA選択も必須とします。
+[固定の公開証明書fixture](../backend/tests/fixtures/emudhra/README.md)で、漏えいCA経由の
+12 chainがissuer不信頼で拒否され、正常なSOJ chainが許可されることを同時に確認します。
+時刻を採取日に固定するため、将来の証明書期限切れを是正成功とは扱いません。
+sandboxのruntimeにはCAを追加せず、既存のnetwork隔離検査を維持します。
+
+localでの実行には、Python開発依存・OpenSSL CLI・明示したrootless socket・build済みimageが必要です。
+稼働serviceや本番volumeは操作しません。失敗時は以降のscan・配備へ進まず、
+失敗したstoreとDockerfile・lockを修正して再buildし、同じ検査を再実行します。
+
+```sh
+# repository root。image名は今回buildした専用tagへ置き換える。
+export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
+poetry run python ci/check_ca_trust.py \
+  soj-backend:ca-check soj-runner:ca-check soj-frontend:ca-check soj-db:ca-check
+```
+
+各storeに`12 distrusted, legitimate control accepted`が表示され、終了code 0なら合格です。
+base digest・依存lock・CA packageの更新が必要であり、containerの再起動や`--pull`だけでの
+固定digestの再取得を、CAの是正として扱いません。

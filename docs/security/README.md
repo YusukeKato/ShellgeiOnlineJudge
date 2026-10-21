@@ -56,10 +56,14 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
-- runnerの間接依存certifiを、侵害された中間CA鍵に関する信頼ストアの指摘へ対応するため更新しています。
+- eMudhra中間CA鍵漏えいへの対応として、OS CA、runnerのcertifi、Pythonのpip/ensurepip、
+  Node.js・Goのbuild環境を更新します。
   現行version・取得hashは[lock](../../poetry.lock)を正本とします。
   [2026-10-21の限定是正記録](./dependency-remediation-history.md#2026-10-21のcertifi信頼ストア更新)に
   公式情報・到達条件・検証範囲を記載しています。TLS検証とscan停止条件は維持します。
+  [CA検査](../CI.md#ca信頼ストアの検査)で漏えいCA経由の12 chainの拒否と正常chainの許可を必須にします。
+  その他の固定値は各Dockerfile・`ci/bootstrap_pip.py`を正本とします。
+  本番hostの更新は運用者の担当であり、アプリimageの配備とは別に確認します。
 - frontendのnginx baseとX11/XPM libraryをvendor修正版へ更新しています。
   共有TLS session cacheを使うため、nginxのTLS session ticketの指摘も対象です。
   X11/XPMはimageへ収録されていますが、通常のHTTP処理からの到達経路は確認していません。
