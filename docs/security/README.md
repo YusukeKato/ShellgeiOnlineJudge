@@ -56,6 +56,10 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- runnerの間接依存certifiを、侵害された中間CA鍵に関する信頼ストアの指摘へ対応するため更新しています。
+  現行version・取得hashは[lock](../../poetry.lock)を正本とします。
+  [2026-10-21の限定是正記録](./dependency-remediation-history.md#2026-10-21のcertifi信頼ストア更新)に
+  公式情報・到達条件・検証範囲を記載しています。TLS検証とscan停止条件は維持します。
 - frontendのnginx baseとX11/XPM libraryをvendor修正版へ更新しています。
   共有TLS session cacheを使うため、nginxのTLS session ticketの指摘も対象です。
   X11/XPMはimageへ収録されていますが、通常のHTTP処理からの到達経路は確認していません。
