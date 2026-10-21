@@ -1,0 +1,49 @@
+schema_version: 3
+id: STANDARD-00000077
+category: STANDARD
+title:
+  ja: ログを3行ずつに分割する
+  en: Splitting a Log into Three-Line Parts
+statement:
+  ja: |
+    input.txtのログを、先頭から3行ずつのまとまりに分けて出力してください。
+    最後に3行未満が残った場合も出力してください。
+
+    各まとまりの前に、0から始まる2桁の番号を使った見出しを、[part_00]、[part_01]、…の形式で1行出力してください。
+    空行も1行として数え、元の行順・重複・行内のスペースを保ってください。
+  en: |
+    Output the log in input.txt in groups of three lines, starting from the first line.
+    Also output the final group if it contains fewer than three lines.
+
+    Before each group, output a heading on its own line in the form [part_00], [part_01], and so on, using two-digit numbers starting at 00.
+    Count blank lines as lines, and preserve the original line order, duplicates, and spaces within lines.
+reference_solution: split -l 3 -d -a 2 input.txt part_; for f in part_*; do [ -f "$f" ] || continue; printf '[%s]\n' "$f"; cat "$f"; done
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      INFO boot
+      WARN cache miss
+
+      INFO ready
+      WARN cache miss
+      INFO accept  job
+      INFO done
+      INFO stop
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    [part_00]
+    INFO boot
+    WARN cache miss
+
+    [part_01]
+    INFO ready
+    WARN cache miss
+    INFO accept  job
+    [part_02]
+    INFO done
+    INFO stop

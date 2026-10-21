@@ -79,6 +79,7 @@
 | [STANDARD-00000071](#note-standard-00000071) | サービス一覧の変更点 |
 | [STANDARD-00000074](#note-standard-00000074) | 未完了の作業リスト |
 | [STANDARD-00000076](#note-standard-00000076) | レポート本文の取り出し |
+| [STANDARD-00000077](#note-standard-00000077) | ログを3行ずつに分割する |
 
 ### PRACTICE
 
@@ -93,10 +94,12 @@
 | [PRACTICE-awk-07](#note-practice-awk-07) | awk 7 |
 | [PRACTICE-awk-08](#note-practice-awk-08) | awk 8 |
 | [PRACTICE-base64-01](#note-practice-base64-01) | base64 1 |
+| [PRACTICE-basename-01](#note-practice-basename-01) | basename 1 |
 | [PRACTICE-cat-01](#note-practice-cat-01) | cat 1 |
 | [PRACTICE-cat-02](#note-practice-cat-02) | cat 2 |
 | [PRACTICE-cat-03](#note-practice-cat-03) | cat 3 |
 | [PRACTICE-cat-04](#note-practice-cat-04) | cat 4 |
+| [PRACTICE-cut-01](#note-practice-cut-01) | cut 1 |
 | [PRACTICE-echo-01](#note-practice-echo-01) | echo 1 |
 | [PRACTICE-echo-02](#note-practice-echo-02) | echo 2 |
 | [PRACTICE-echo-03](#note-practice-echo-03) | echo 3 |
@@ -1578,3 +1581,57 @@ Docker全127件の一括実行と実機iOS/Androidは未実施。
 検証は[非Docker検査](../backend/tests/test_report_body_problem.py)で独立期待値・詳細API・正常終了policy・白JPEG、
 [実sandbox検査](../backend/tests/integration/test_problem_report_body_solutions.py)で参照解・awk別解・6誤答と4境界条件を扱う。
 全問回帰と日英大小画面は[問題作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+<a id="note-practice-basename-01"></a>
+
+## PRACTICE-basename-01：basename 1
+
+- 問題データ：[PRACTICE-basename-01.yaml](../problems/v3/PRACTICE-basename-01.yaml)
+- 狙い・発見：パスをディレクトリとファイル名へ分け、末尾の接尾辞だけを専用コマンドで取り除く。
+- 解法の核：read -rで1行を1つのパスとして渡し、basename -s .logで名前と接尾辞を処理する。
+  別解はsedによるディレクトリ部分と末尾.logの除去。入力のスペースを引数分割しない点も学ぶ。
+- 入力の意図：スペース、複数のピリオド、.log.bak、.log.log、大文字の.LOG、離れた同名を含む。
+  期待値は8件の手確認表とPurePosixPathによる名前の抽出から独立に照合する。
+  空入力・接尾辞なし・最終改行なし・先頭ハイフンは解法検証用fixtureで確認する。
+  名前そのものが.logのパスや末尾スラッシュは公開入力に含まず、検証した一般性の範囲外とする。
+- 難易度・既存との差：初級。ファイル引数と行の読み込み・引用を前提とし、名前の構造を捉える練習。
+  STANDARD-00000043は名前へ拡張子を付け、STANDARD-00000057は拡張子別に集計するが、
+  本問はディレクトリと最後の接尾辞を除き、順序と重複を保つ。構文の使用は採点しない。
+
+<a id="note-practice-cut-01"></a>
+
+## PRACTICE-cut-01：cut 1
+
+- 問題データ：[PRACTICE-cut-01.yaml](../problems/v3/PRACTICE-cut-01.yaml)
+- 狙い・発見：固定位置の文字列を数値へ変換せず、離れた範囲を選んでつなげる。
+- 解法の核：cut -cで1〜2文字目と4〜7文字目をまとめて指定する。
+  別解はawkのsubstr。自前の分割・数値変換をせず受付番号の先頭の0を保持できる。
+- 入力の意図：先頭0を含む受付番号、異なる区分で同じコード・番号になる2行、未整列の地域を使う。
+  期待値は文字位置指定とは独立にハイフン区切りの意味上のfieldから確認する。
+  空入力・全桁0・最大桁・重複・最終改行なしは解法検証用fixtureで確認する。
+- 難易度・既存との差：初級。文字位置が1から始まることとファイル引数が前提。
+  STANDARD-00000037の数のまとまりの抽出は内容のパターンを使い、
+  本問は固定位置と不連続な範囲選択を扱う。単なる区切り文字の削除や数値化とは区別する。
+  公開入力はASCIIで、使用コマンドの構文は採点しない。
+
+<a id="note-standard-00000077"></a>
+
+## STANDARD-00000077：ログを3行ずつに分割する
+
+- 問題データ：[STANDARD-00000077.yaml](../problems/v3/STANDARD-00000077.yaml)
+- 狙い・発見：ログを内容によらない行数でファイルへ分割し、名前を見出しにして再び1つの出力へ組み立てる。
+- 解法の核：splitの行数指定・数字suffix・桁数指定でpart_00等を作り、順に見出しとcatを出す。
+  別解はawkで行番号からグループ番号を求める方法。ファイル分割と表示の役割を分ける。
+- 入力の意図：空行を3行目に置き、離れた同内容、連続スペース、最後の2行を含む8行を使う。
+  期待値は手確認した行番号の3群から独立に構成する。空入力・1行・3行ちょうど・4行・
+  空行とスペースは解法検証用fixtureで確認し、非公開の採点入力とは扱わない。
+- 難易度・既存との差：初級の組み合わせ。ファイル引数・ループ・引用・printfが前提。
+  PRACTICE-fold-01は1行を文字幅で折り返し、STANDARD-00000029は行を列へ並べる。
+  本問は空行も含めて行数でファイルを分割し、番号と見出しを付けて順に出す。
+  2桁番号は公開入力の3群に十分で、100群以上の仕様は扱わない。
+
+3問の独立期待値・公開DTO・正常終了policy・白JPEGは
+[非Docker検査](../backend/tests/test_new_command_problems.py)、
+参照解・自然な別解・19誤答・13境界条件は
+[実sandbox検査](../backend/tests/integration/test_problem_basename_cut_split_solutions.py)で確認する。
+全問題回帰と日英大小画面は[問題作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。

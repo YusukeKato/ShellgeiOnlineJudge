@@ -1,0 +1,50 @@
+schema_version: 3
+id: PRACTICE-basename-01
+category: PRACTICE
+title:
+  ja: basename 1
+  en: basename 1
+statement:
+  ja: |
+    練習：basename
+
+    input.txtにはファイルのパスが1行ずつ書かれています。
+    各パスからディレクトリ部分を取り除き、ファイル名を1行ずつ出力してください。
+
+    ファイル名が.logで終わる場合は、末尾の.logを1つだけ取り除いてください。
+    入力の行順と、ファイル名に含まれるスペースは保ってください。
+  en: |
+    Practice: basename
+
+    input.txt contains one file path per line.
+    Remove the directory portion of each path and output one file name per line.
+
+    If a file name ends in .log, remove exactly one trailing .log.
+    Preserve the input order and any spaces in file names.
+reference_solution: while IFS= read -r p || [ -n "$p" ]; do basename -s .log -- "$p"; done < input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      /var/log/app/api.log
+      ./log files/batch 02.log
+      /archive.log/notes.log.bak
+      reports/api.v2.log
+      ./archive/service.log.log
+      standalone.log
+      error.LOG
+      /srv/logs/api.log
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    api
+    batch 02
+    notes.log.bak
+    api.v2
+    service.log
+    standalone
+    error.LOG
+    api

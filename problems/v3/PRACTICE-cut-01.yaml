@@ -1,0 +1,40 @@
+schema_version: 3
+id: PRACTICE-cut-01
+category: PRACTICE
+title:
+  ja: cut 1
+  en: cut 1
+statement:
+  ja: |
+    練習：cut
+
+    input.txtの各行は「地域コード-受付番号-区分」の形式です。
+    cutを使い、各行の先頭2文字の地域コードと、4〜7文字目の受付番号をつなげて出力してください。
+    受付番号の先頭の0を残し、行の順序と重複もそのまま保ってください。
+  en: |
+    Practice: cut
+
+    Each line of input.txt has the format region-registration-category.
+    Use cut to concatenate the two-character region code at positions 1–2 with the registration number at positions 4–7, and output the result for each line.
+    Keep leading zeros in registration numbers, and preserve the order and duplicates of the input lines.
+reference_solution: cut -c1-2,4-7 input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      JP-0042-A
+      US-0100-B
+      EU-0007-A
+      JP-0042-C
+      NZ-9001-B
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    JP0042
+    US0100
+    EU0007
+    JP0042
+    NZ9001
