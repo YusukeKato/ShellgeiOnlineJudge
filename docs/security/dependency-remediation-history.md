@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-10-21: certifi信頼ストア更新](#2026-10-21のcertifi信頼ストア更新)
 - [2026-10-19: frontend nginx・X11/XPM更新](#2026-10-19のfrontend-nginxx11xpm更新)
 - [2026-10-11: Go標準library更新](#2026-10-11のgo標準library更新)
 - [2026-10-07: 統合候補とGitHub CI](#2026-10-07の統合候補とgithub-ci)
@@ -19,6 +20,33 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-10-21のcertifi信頼ストア更新
+
+3問題追加PR #173のhead `b181579a2f8ec9291de39678f3bd87569a8efd84`に対する
+[Supply Chain CI 39597198476](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/39597198476)で、
+sourceのcertifi 2026.7.22にCriticalのGHSA-6q48-6c7w-9gw2を1件検出し、公開を停止した。
+DBは2026-10-21 06:31:02 UTC作成、Grype v0.119.0。
+同runではrunnerも停止対象1件、他4 imageは停止対象0件だったが、非停止の検出は残る。
+問題追加による依存変更はなく、新しいDBで既存のlockを照合した結果である。
+
+[公式advisory](https://github.com/advisories/GHSA-6q48-6c7w-9gw2)と
+[公式release](https://github.com/certifi/python-certifi/releases/tag/2026.10.19)に従い、
+certifiだけを修正版へ更新した。取得hashとversionは[lock](../../poetry.lock)を正本とする。
+Poetry 2.5.1で再生成し、他packageの定義・lock metadataが不変であることと、
+PyPI公開hashとの一致、実際に読み込むCA bundleからemSign ECC Root CA - G3が除かれたことを確認した。
+
+指摘は、侵害された中間CA鍵を持つ攻撃者が通信経路にも介在し、旧certifi bundleを信頼する
+TLS clientへ偽の証明書を提示する場合のもの。lockではDocker SDK→requests経由のrunner依存である。
+既定のdaemon接続は明示したrootless Unix socketで、提出sandboxはnetwork=noneのまま。
+通常の提出から外向きHTTPS検証へ到達する経路や実際の侵害は確認していない。
+package収録と悪用の成立を同一視せず、信頼ストアの更新とrunner imageの再buildで是正する。
+host OS・外側proxy・他の信頼ストアまで更新済みとは扱わない。
+
+TLS検証・sandbox制限・scanの停止条件を緩めず、例外登録も追加しない。
+基本検査、新問のrootless検証、対象headのsource/runtime scan・全問題回帰・ブラウザ・配備確認を
+完了条件とし、CIまたは本番確認が失敗した場合は公開を止める。
+最終head・CI・本番結果は[PR #173](https://github.com/YusukeKato/ShellgeiOnlineJudge/pull/173)を参照する。
 
 ### 2026-10-19のfrontend nginx・X11/XPM更新
 
