@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-10-22: frontend curl/libcurl削除](#2026-10-22のfrontend-curllibcurl削除)
 - [2026-10-21: certifi信頼ストア更新](#2026-10-21のcertifi信頼ストア更新)
 - [2026-10-19: frontend nginx・X11/XPM更新](#2026-10-19のfrontend-nginxx11xpm更新)
 - [2026-10-11: Go標準library更新](#2026-10-11のgo標準library更新)
@@ -20,6 +21,51 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-10-22のfrontend curl/libcurl削除
+
+基準commitは`fc781be7b32df11eecb6dae9832d1e1a2d0fe667`。
+同commitの配備済みfrontend SBOMでcurl/libcurl 8.22.0-r0、Alpine 3.24.2を確認した。
+[curl公式advisory](https://curl.se/docs/CVE-2026-92392.html)のCVE-2026-92392は、
+HTTP/2のupload中に悪意ある接続先が返すRST_STREAMによりuse-after-freeが発生する問題で、
+上流8.23.0等に修正がある。同系列の[Alpine package](https://pkgs.alpinelinux.org/package/v3.24/main/x86_64/curl)は
+確認時点で8.22.0-r0のため、edgeへの切替や独自curl buildを追加せず、SOJで不要なclient/libraryを削除する。
+
+ブラウザはfetch、nginxはnative proxyで通信し、frontendの起動scriptとComposeにcurl呼出しはない。
+APIへ受け取った提出commandは別のsandboxで実行されるため、今回のfrontend package削除の影響を受けない。
+画面に表示するcurl例は利用者の端末で実行するため、その表示も維持する。
+公開requestから該当HTTP/2 upload処理へ到達する経路や、実際の悪用は確認していない。
+
+固定baseの通常の依存解決でcurlを削除するとlibcurlと、curl/libcurlだけが必要としていた5 libraryも削除される。
+nginxの依存を強制削除せず、libcurlが残ればbuildを失敗させる。
+修正候補ではnginx binary・全14 module・entrypointと4 scriptのhashが旧imageと一致し、
+libcurlへのELF依存がなく、CA bundleのhashと両CA packageも維持されることを確認した。
+実imageの回帰testはpackageのほかcurl/wcurlの別名・標準pathの共有libraryの再収録も拒否する。
+scannerの停止条件・例外、TLS検証、API・sandboxの隔離・制限は変更しない。
+
+ローカル検証:
+
+- 追加した不在testは旧imageでcurlを検出して失敗し、候補imageのfrontend検査3件は成功。
+- Ruff lint・format、mypy（163 files）、非Docker 1,024件が成功。
+- frontendのformat・lint・typecheck・test 81件・production buildが成功。
+- 実imageのCA 2 storeは漏えいchain各12件を拒否し、正常controlを許可。
+- HTTPS/API・browser E2Eの2件が成功。正解・誤答・timeout・出力上限・画像判定・DB保存、
+  日英画面と代表問題の実ブラウザ操作を確認。端末向けcurl例はfrontendの6 testで確認。
+- Grype v0.119.0・Syft v1.52.0の配布hashを検証し、確認時の最新DB
+  （2026-10-21 06:31:02 UTC作成）で候補の不変image IDをscan。
+  65 packages / findings 3、停止対象・例外・リスク受容0。
+  curl/libcurl packageと対象CVEは検出されず、残る3件はBusyBox系のCVE-2025-60876（Medium）。
+  停止対象0は全脆弱性0を意味しない。候補image IDは
+  `sha256:bcc974c07894cb93a391aeceaa25e76b875eac2e2980362afdd4b1d9e5e92c1c`。
+- 文書4件の相対リンク・見出し119件とgit diffの空白検査が成功。
+
+E2Eの初回はsandboxにtagを指定したため、既存の不変ID検証で収集時に停止した。
+実測したsha256 IDへ修正して再実行し、製品の制限は緩和していない。
+全問題回帰・全Docker検査は未実施。sandbox・judge・問題dataは不変のため、
+今回のローカル検証はfrontendと代表的な提出・画像・保存の経路に限定した。
+
+commit・GitHub CI・本番反映は未実施。これはローカル修正候補の限定検証記録であり、
+他の既知指摘やhost全体の更新完了を意味しない。PoC・攻撃試験・公開サイトへの提出は行っていない。
 
 ### 2026-10-21のcertifi信頼ストア更新
 

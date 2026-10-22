@@ -113,6 +113,7 @@
 | [PRACTICE-grep-04](#note-practice-grep-04) | grep 4 |
 | [PRACTICE-od-01](#note-practice-od-01) | od 1 |
 | [PRACTICE-paste-01](#note-practice-paste-01) | paste 1 |
+| [PRACTICE-printf-01](#note-practice-printf-01) | printf 1 |
 | [PRACTICE-rev-01](#note-practice-rev-01) | rev 1 |
 | [PRACTICE-sed-01](#note-practice-sed-01) | sed 1 |
 | [PRACTICE-sed-02](#note-practice-sed-02) | sed 2 |
@@ -1635,3 +1636,22 @@ Docker全127件の一括実行と実機iOS/Androidは未実施。
 参照解・自然な別解・19誤答・13境界条件は
 [実sandbox検査](../backend/tests/integration/test_problem_basename_cut_split_solutions.py)で確認する。
 全問題回帰と日英大小画面は[問題作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+<a id="note-practice-printf-01"></a>
+
+## PRACTICE-printf-01：printf 1
+
+- 問題データ：[PRACTICE-printf-01.yaml](../problems/v3/PRACTICE-printf-01.yaml)
+- 狙い・発見：文字で書かれた改行・タブ・バックスラッシュを1回だけ復元し、printfの書式とデータを分ける。
+- 解法の核：引用したinput.txtの内容を固定書式%bへ渡す。別解はBashのecho -neで、公開入力では一致するが
+  -nだけの入力はoptionと誤認するため一般解として扱わない。複数段の置換による二重解釈を避ける。
+- 入力の意図：%とWindows形式のpath、復元後も文字として残す\nを含む4行分の表を1行の表記にする。
+  期待値は手確認した表とJSON decoderで独立照合。空入力・%・連続改行・文字の\n・最終改行なし・
+  先頭ハイフンは解法検証用fixtureであり、非公開の採点入力ではない。
+- 難易度・既存との差：初級〜中級。引用符とファイル読込みが前提で、入力表記を実際の文字へ捉え直す。
+  PRACTICE-echo-02は固定文字列の改行だが、本問はファイルdataの解釈と書式文字列の分離を学ぶ。
+  printf自体は既出でも%bの機能は未出題で、使用コマンドの構文は採点しない。
+
+[非Docker検査](../backend/tests/test_printf_problem.py)で独立期待値・公開DTO・policy・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_problem_printf_solutions.py)で参照解・別解・5誤答・6境界条件と
+echo別解の適用限界を確認する。全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。

@@ -33,7 +33,11 @@ FROM nginx:1.31.7-alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d9
 LABEL org.opencontainers.image.version="3.0.3"
 
 # nginx・X11/XPM等のvendor修正版を維持し、CAの不信頼化も適用する。
-RUN apk add --no-cache --upgrade ca-certificates=20261020-r0 ca-certificates-bundle=20261020-r0 libuuid=2.42.3-r1 libexpat=2.9.0-r0 pcre2=10.49-r0 zlib=1.3.2-r1 tiff=4.7.2-r0 libx11=1.8.14-r0 libxpm=3.5.20-r0
+# SOJでは使わないcurlを削除し、CVE-2026-92392対象のlibcurlも残さない。
+# 通常の依存解決で削除し、将来ほかのpackageがlibcurlを要求したらbuildを停止する。
+RUN apk add --no-cache --upgrade ca-certificates=20261020-r0 ca-certificates-bundle=20261020-r0 libuuid=2.42.3-r1 libexpat=2.9.0-r0 pcre2=10.49-r0 zlib=1.3.2-r1 tiff=4.7.2-r0 libx11=1.8.14-r0 libxpm=3.5.20-r0 \
+    && apk --no-network del curl \
+    && ! apk --no-network info --exists libcurl
 
 # ビルド成果物をNginxの公開ディレクトリにコピー
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
