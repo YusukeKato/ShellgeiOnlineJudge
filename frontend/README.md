@@ -129,6 +129,7 @@ Vitest 5では、`setupTests.js`でjest-domの公開matcherを`expect.extend`へ
 jest-domの連携方法を更新するときも、型検査を省略せずこの契約を維持してください。
 
 runtime imageのbase digestとOS packageの固定値は[`Dockerfile`](./Dockerfile)を正本とします。
+本番imageでは使わないcurl/libcurlを削除しています。利用者の端末向けcurl例は引き続き表示します。
 固定packageが配布元から消えた場合は、同じAlpine branchで配布中の候補を確認し、
 [image更新の検証手順](../docs/PRODUCTION.md#image-digestの更新)を通して固定値を更新してください。
 

@@ -1,0 +1,39 @@
+schema_version: 3
+id: PRACTICE-printf-01
+category: PRACTICE
+title:
+  ja: printf 1
+  en: printf 1
+statement:
+  ja: |
+    練習：printf
+
+    input.txtには、改行やタブをバックスラッシュ付きの表記に置き換えたテキストが入っています。
+    printfを使い、次の表記を元の文字に戻して出力してください。
+
+    \n → 改行
+    \t → タブ1文字
+    \\ → バックスラッシュ1文字
+
+    例えば、\\n は「\n」という2文字に戻します。改行にはしません。
+    %を含むその他の文字は、そのまま出力してください。
+  en: |
+    Practice: printf
+
+    input.txt contains text with newlines, tabs and backslashes written as escape sequences.
+    Use printf to decode \n into a newline, \t into one tab, and \\ into one backslash.
+
+    Decode only once: \\n must become the two literal characters \n, not a newline.
+    Preserve all other characters, including %.
+reference_solution: printf '%b' "$(cat input.txt)"
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      name\tvalue\nrate\t100%\npath\tC:\\logs\\app\nliteral\t\\n\n
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: "name\tvalue\nrate\t100%\npath\tC:\\logs\\app\nliteral\t\\n\n"

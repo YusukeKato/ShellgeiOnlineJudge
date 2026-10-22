@@ -56,6 +56,12 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- frontendの不要なcurl/libcurlを通常のpackage依存解決で削除し、
+  CVE-2026-92392の対象client/libraryを実行用imageへ残さない構成にしています。
+  nginx本体・module・起動script、CA、外部端末向けcurl例は維持します。
+  対象と検証範囲は[2026-10-22の限定是正記録](./dependency-remediation-history.md#2026-10-22のfrontend-curllibcurl削除)を参照してください。
+  ローカル候補の検証と本番反映の完了を区別し、CI・配備は対象commitで別途確認します。
+
 - eMudhra中間CA鍵漏えいへの対応として、OS CA、runnerのcertifi、Pythonのpip/ensurepip、
   Node.js・Goのbuild環境を更新します。
   現行version・取得hashは[lock](../../poetry.lock)を正本とします。

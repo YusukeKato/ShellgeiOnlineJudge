@@ -388,3 +388,33 @@ def test_frontend_runtime_contains_fixed_nginx_and_x11_libraries(
     version = re.search(rb"nginx/(\d+)\.(\d+)\.(\d+)", output)
     assert version is not None, output
     assert tuple(int(part) for part in version.groups()) >= (1, 31, 7), output
+
+
+def test_frontend_runtime_has_no_curl_client_or_library(runtime_client: Any) -> None:
+    """不要なcurl本体・別名・共有libraryが実frontendへ再収録されないことを確認する。"""
+    runtime_client.containers.run(
+        os.environ["SOJ_COMPOSE_FRONTEND_IMAGE"],
+        [
+            "-ec",
+            """
+for package in curl libcurl; do
+    if apk --no-network info --exists "$package"; then
+        echo "unexpected package: $package" >&2
+        exit 1
+    fi
+done
+for command in curl wcurl; do
+    if command -v "$command"; then exit 1; fi
+done
+for library in /lib/libcurl.so* /usr/lib/libcurl.so* /usr/local/lib/libcurl.so*; do
+    if test -e "$library" || test -L "$library"; then exit 1; fi
+done
+""",
+        ],
+        entrypoint="/bin/sh",
+        network_mode="none",
+        read_only=True,
+        cap_drop=["ALL"],
+        security_opt=["no-new-privileges:true"],
+        remove=True,
+    )

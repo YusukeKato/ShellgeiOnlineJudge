@@ -145,6 +145,8 @@ legacy `yaml_data/`とのsemantic一致と意図した改訂の範囲は、
 切り捨て・整列の6誤答、短い行・幅ちょうど・1文字超過・空行の境界条件を検査します。
 `test_pending_tasks_solutions.py`は通常74の参照解・awk別解、接頭辞・元の行番号・整列・空白・番号書式の6誤答と、
 該当なし・1件・10件・空の作業名を確認します。
+`test_problem_printf_solutions.py`はprintf練習の参照解・echo別解、未復元・書式との混同・
+タブ破壊・二重解釈の5誤答、6境界条件とecho別解のoption解釈の限界を実sandboxで確認します。
 Supply Chain CIは既存の13ファイル・34項目に加え、`test_problem_*_solutions.py`に一致する新しい個別解法testを自動収集します。
 一致するfileがない場合は既存の検査をそのまま実行します。全Docker統合テストとは別です。
 現在登録されている全問題の参照解答は上記の全問題回帰で確認します。
@@ -185,7 +187,7 @@ SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_RUNTIME_IMAGE_TESTS=1 \
 ```
 
 backend・runner・frontend・DB・sandboxの本番5種類について、OCI versionラベルが製品versionの正本と一致することを確認します。
-frontendでは、実際のnginx binaryとX11/XPM packageが公開修正版以降であることも確認します。
+frontendでは、実際のnginx binaryとX11/XPM packageが公開修正版以降であること、不要なcurl/wcurl・libcurl packageと共有libraryが存在しないことも確認します。
 nginx単体testのbaseは`frontend/Dockerfile`から読み取り、本番baseの更新に追従します。
 ホスト監視CLIのtestは、別ownerを除外し、runner停止・削除後のsandbox残存を読み取りだけで検出することを確認します。
 
