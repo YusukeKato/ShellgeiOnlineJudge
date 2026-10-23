@@ -125,6 +125,7 @@
 | [PRACTICE-sort-01](#note-practice-sort-01) | sort 1 |
 | [PRACTICE-sort-02](#note-practice-sort-02) | sort 2 |
 | [PRACTICE-sort-03](#note-practice-sort-03) | sort 3 |
+| [PRACTICE-tac-01](#note-practice-tac-01) | tac 1 |
 | [PRACTICE-uniq-01](#note-practice-uniq-01) | uniq 1 |
 | [PRACTICE-uniq-02](#note-practice-uniq-02) | uniq 2 |
 | [PRACTICE-wc-01](#note-practice-wc-01) | wc 1 |
@@ -1655,3 +1656,24 @@ Docker全127件の一括実行と実機iOS/Androidは未実施。
 [非Docker検査](../backend/tests/test_printf_problem.py)で独立期待値・公開DTO・policy・白JPEG、
 [実sandbox検査](../backend/tests/integration/test_problem_printf_solutions.py)で参照解・別解・5誤答・6境界条件と
 echo別解の適用限界を確認する。全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+<a id="note-practice-tac-01"></a>
+
+## PRACTICE-tac-01：tac 1
+
+- 問題データ：[PRACTICE-tac-01.yaml](../problems/v3/PRACTICE-tac-01.yaml)
+- 狙い・発見：逆順にする単位を1行から複数行の記録へ変え、記録内の行順を維持する。
+- 解法の核：tac -sへ改行・END・改行を区切りとして渡し、終了行を直前の記録と一緒に動かす。
+  別解はawkでENDまでの本文を記録の配列へ蓄積し、逆順に出す方法。
+- 入力の意図：3・2・4行の記録を使い、単純な行反転や固定長の分割と区別する。
+  期待値は手確認したgamma・beta・alphaの3ブロックと、行単位のEND検出から独立に照合する。
+  空入力・1記録・2記録・本文の空行とスペース・ENDの部分文字列・重複は解法検証用fixture。
+  途切れた記録、ENDだけの空記録、最終ENDの改行欠落は検証した一般性の範囲外とする。
+- 難易度・既存との差：初級〜中級。ファイル引数とBashのANSI-C引用を前提とし、境界から処理単位を捉える。
+  STANDARD-00000053は最新状態の選別のための行反転、STANDARD-00000077は固定3行の分割、
+  PRACTICE-rev-01は文字順の反転。本問は可変長の記録順だけを逆にし、集計・選別・整列を行わない。
+  tacの区切り機能を学ぶ練習で、使用コマンドの構文は採点しない。
+
+[非Docker検査](../backend/tests/test_tac_problem.py)で独立期待値・公開DTO・policy・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_problem_tac_solutions.py)で参照解・別解・5誤答・6境界条件を確認する。
+全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
