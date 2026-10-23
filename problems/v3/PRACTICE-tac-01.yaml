@@ -1,0 +1,48 @@
+schema_version: 3
+id: PRACTICE-tac-01
+category: PRACTICE
+title:
+  ja: tac 1
+  en: tac 1
+statement:
+  ja: |
+    練習：tac
+
+    input.txtには、jobで始まる行からENDだけの行までを1件とする処理記録が並んでいます。
+    tacを使い、記録の並びを最後の記録から逆順にして出力してください。
+    各記録の中の行順は変えず、ENDの行も残してください。
+  en: |
+    Practice: tac
+
+    In input.txt, each job record starts with a line beginning with job and ends with a line containing only END.
+    Use tac to output the records in reverse order.
+    Preserve the order of lines within each record, including its END line.
+reference_solution: tac -s $'\nEND\n' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      job alpha
+      status ready
+      END
+      job beta
+      END
+      job gamma
+      status running
+      note retry later
+      END
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    job gamma
+    status running
+    note retry later
+    END
+    job beta
+    END
+    job alpha
+    status ready
+    END
