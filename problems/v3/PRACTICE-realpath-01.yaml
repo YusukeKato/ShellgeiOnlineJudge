@@ -1,0 +1,57 @@
+schema_version: 3
+id: PRACTICE-realpath-01
+category: PRACTICE
+title:
+  ja: realpath 1
+  en: realpath 1
+statement:
+  ja: |
+    練習：realpath
+
+    input.txtには、絶対パスが1行に1つずつ書かれています。
+    realpathを使い、各パスを次の規則で整理して出力してください。
+
+    「.」は今いるディレクトリ、「..」は1つ上のディレクトリを表します。
+    最上位の「/」より上へは進みません。
+    連続する「/」は1つにまとめ、末尾の「/」も取り除いてください。ただし、最上位の「/」は残します。
+
+    パスは文字列として扱い、ファイルの実在確認やシンボリックリンクの展開は行いません。
+    入力の順序、同じパスの繰り返し、名前の中のスペースはそのまま残してください。
+  en: |
+    Practice: realpath
+
+    input.txt contains one absolute path per line.
+    Use realpath to normalize each path according to these rules.
+
+    A "." component means the current directory, and a ".." component means its parent.
+    Do not go above the root "/".
+    Collapse repeated "/" characters into one and remove trailing "/", except for the root "/" itself.
+
+    Treat the paths as text: do not check whether files exist or resolve symbolic links.
+    Preserve input order, repeated paths, and spaces within names.
+reference_solution: >-
+  while IFS= read -r p || [ -n "$p" ]; do realpath -ms -- "$p"; done < input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      /srv/app/./logs/../reports/daily.txt
+      /srv//app/reports/./weekly.txt
+      /srv/app/cache/../../shared/./index
+      /srv/app/reports/daily.txt
+      /srv/team notes/../release notes/./todo.txt
+      /../../etc//./hosts
+      /var/tmp/../..
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    /srv/app/reports/daily.txt
+    /srv/app/reports/weekly.txt
+    /srv/shared/index
+    /srv/app/reports/daily.txt
+    /srv/release notes/todo.txt
+    /etc/hosts
+    /
