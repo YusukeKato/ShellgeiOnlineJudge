@@ -114,6 +114,7 @@
 | [PRACTICE-od-01](#note-practice-od-01) | od 1 |
 | [PRACTICE-paste-01](#note-practice-paste-01) | paste 1 |
 | [PRACTICE-printf-01](#note-practice-printf-01) | printf 1 |
+| [PRACTICE-realpath-01](#note-practice-realpath-01) | realpath 1 |
 | [PRACTICE-rev-01](#note-practice-rev-01) | rev 1 |
 | [PRACTICE-sed-01](#note-practice-sed-01) | sed 1 |
 | [PRACTICE-sed-02](#note-practice-sed-02) | sed 2 |
@@ -1677,3 +1678,26 @@ echo別解の適用限界を確認する。全問題回帰と日英大小画面�
 [非Docker検査](../backend/tests/test_tac_problem.py)で独立期待値・公開DTO・policy・白JPEG、
 [実sandbox検査](../backend/tests/integration/test_problem_tac_solutions.py)で参照解・別解・5誤答・6境界条件を確認する。
 全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+
+<a id="note-practice-realpath-01"></a>
+
+## PRACTICE-realpath-01：realpath 1
+
+- 問題データ：[PRACTICE-realpath-01.yaml](../problems/v3/PRACTICE-realpath-01.yaml)
+- 狙い・発見：パスを成分の列として捉え、ファイルの実体を調べずに表記を整理する。
+- 解法の核：引用した1行をrealpath -msへ渡し、存在確認とsymlink展開を避けて正規化する。
+  別解はawkの配列で通常の名前を積み、..で1つ戻す方法。
+- 入力の意図：.・..・連続/・ルート超過と、保持する順序・重複・名前のスペースを組み合わせる。
+  期待値は7パスを成分ごとに手で辿り、独立したposixpath.normpathでも照合する。
+  空入力・ルート・末尾LFなし・末尾/・名前に含む点・重複・ハイフンは解法検証用fixture。
+  sandbox内の専用symlinkで-mだけの実体解決と-msの字句処理を区別する。
+  相対パス・改行入りの名前・空行・先頭//の特別な意味は検証した一般性の範囲外とする。
+- 難易度・既存との差：初級〜中級。ファイル読込みと引用を前提とする。
+  PRACTICE-basename-01はファイル名と接尾辞の切り分け、本問は絶対パス全体の成分の整理を学ぶ。
+  STANDARD-00000043の接尾辞追加、STANDARD-00000057の拡張子別集計とも異なり、整列・集計しない。
+  realpathの機能を学ぶ練習で、使用コマンドの構文は採点しない。
+
+[非Docker検査](../backend/tests/test_realpath_problem.py)で独立期待値・公開DTO・policy・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_problem_realpath_solutions.py)で参照解・別解・7誤答・7境界条件と
+symlinkを展開しない挙動を確認する。全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
