@@ -3,6 +3,13 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-10-25 保守
+
+GitHub Actions、FastAPI・SQLAlchemy・Ruff、Reactとfrontendの検査用依存を更新しました。
+FastAPIのJSON nullに関する変更に対し、body全体と必須fieldのnullを422で拒否し、
+実行処理へ渡さない既存契約の回帰検査を追加しました。
+直前のBrotli・Zod・Undiciの修正、TLS検証、API・保存・sandboxの制限を維持します。
+
 ## 2026-10-19 保守
 
 frontendのnginxとlibx11・libxpmを公開修正版へ更新しました。
