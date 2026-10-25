@@ -113,6 +113,7 @@
 | [PRACTICE-grep-04](#note-practice-grep-04) | grep 4 |
 | [PRACTICE-od-01](#note-practice-od-01) | od 1 |
 | [PRACTICE-paste-01](#note-practice-paste-01) | paste 1 |
+| [PRACTICE-pr-01](#note-practice-pr-01) | pr 1 |
 | [PRACTICE-printf-01](#note-practice-printf-01) | printf 1 |
 | [PRACTICE-realpath-01](#note-practice-realpath-01) | realpath 1 |
 | [PRACTICE-rev-01](#note-practice-rev-01) | rev 1 |
@@ -1701,3 +1702,26 @@ echo別解の適用限界を確認する。全問題回帰と日英大小画面�
 [非Docker検査](../backend/tests/test_realpath_problem.py)で独立期待値・公開DTO・policy・白JPEG、
 [実sandbox検査](../backend/tests/integration/test_problem_realpath_solutions.py)で参照解・別解・7誤答・7境界条件と
 symlinkを展開しない挙動を確認する。全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+
+<a id="note-practice-pr-01"></a>
+
+## PRACTICE-pr-01：pr 1
+
+- 問題データ：[PRACTICE-pr-01.yaml](../problems/v3/PRACTICE-pr-01.yaml)
+- 狙い・発見：行の一覧を上から下へ読む2列へ捉え直し、横に隣接行を並べる操作と区別する。
+- 解法の核：prの段組みから見出し・切り詰め・列位置揃えを外し、区切り文字列だけを指定する。
+  別解はawkで前半・後半の行番号を対応付ける方法。
+- 入力の意図：9項目で左列に余りを置く規則を必要にし、項目内のスペースと離れた重複を残す。
+  期待値は左右の行番号の対応を手確認し、独立した配列計算でも照合する。
+  空・1項目・2項目・奇数・偶数・空行・末尾LFなし・長い項目・132行は解法検証用fixture。
+  prは連続spaceの再タブ化・末尾spaceの省略と既定ページごとの段組みを行うため、
+  空白列や140行全体をそのまま保持する汎用解とは扱わない。これらの適用限界も実sandboxで区別する。
+- 難易度・既存との差：初級〜中級。ファイル引数と区切りの引用を前提とする。
+  STANDARD-00000029はpasteで横へ4個ずつ、本問は列ごとに縦へ読む順序を学ぶ。
+  PRACTICE-paste-01の1行化、STANDARD-00000042の幅を揃える整形とも異なる。
+  prの機能を学ぶ固定入力の練習で、使用コマンドの構文は採点しない。
+
+[非Docker検査](../backend/tests/test_pr_problem.py)で独立期待値・公開DTO・policy・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_problem_pr_solutions.py)で参照解・別解・8誤答・9境界条件と
+空白整形・ページ長の適用限界を確認する。全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。

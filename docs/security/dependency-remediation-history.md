@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-10-25: Brotli・Zod・Undici更新](#2026-10-25のbrotlizodundici更新)
 - [2026-10-22: frontend curl/libcurl削除](#2026-10-22のfrontend-curllibcurl削除)
 - [2026-10-21: certifi信頼ストア更新](#2026-10-21のcertifi信頼ストア更新)
 - [2026-10-19: frontend nginx・X11/XPM更新](#2026-10-19のfrontend-nginxx11xpm更新)
@@ -21,6 +22,57 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-10-25のBrotli・Zod・Undici更新
+
+基準commitは旧本番と同じ`0d6b20f29ba7e744180c22e9b2e3c7d664606b47`。
+同commitの配備済みSBOMを2026-10-24 17:45:29 UTC作成のDBで再照合し、
+frontendのBrotliにCritical、source lockのZod・UndiciにHighの修正可能な指摘を確認した。
+監視通知後、利用者が3件の限定更新と検査後の本番反映を承認した。
+
+- Brotli: [公式release](https://github.com/google/brotli/releases/tag/v1.2.1)と
+  [Alpine secfix](https://gitlab.alpinelinux.org/alpine/aports/-/blob/3.24-stable/main/brotli/APKBUILD)に従い、
+  frontendへ収録されたdecoder libraryを同じstable系列の修正版へ更新する。
+  nginx image-filter moduleからlibgd・FreeTypeを経由するpackage依存があるが、
+  SOJ設定は静的配信とAPI proxyで、公開入力から脆弱なdecode処理へ至る経路は未確認。
+- Zod: [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)の修正版へlockを更新する。
+  eslint関連の開発依存であり、公開APIのJSON検査はZodを使用しない。
+  上流修正は上限を指定したcollectionの要素検査前のサイズ判定であり、
+  上限のないcollection全般の資源消費を防ぐ保証とは扱わない。
+- Undici: [GHSA-xjj6-f33q-929c](https://github.com/advisories/GHSA-xjj6-f33q-929c)と
+  [8.12.2 release](https://github.com/nodejs/undici/releases/tag/v8.12.2)に従いlockを更新する。
+  jsdom経由の開発依存で、利用者のブラウザfetchとは別の実装。
+  Node内蔵版とnpm packageも別のcopyとして確認する。
+  過剰なcontent-encodingと早期切断による異常終了の攻撃試験は実施しない。
+
+変更はfrontend Dockerfileのpackage固定、lockの対象2 entry、既存実image検査のBrotli確認と関連文書。
+package.json・依存元・公開API・nginx設定・CA・curl不在・sandbox制限は維持し、
+scan例外やリスク受容を追加しない。修正版とhashはDockerfile・lockを正本とする。
+
+検証では少量のarray/setをinterpreter・compiled両設定で旧版と比較し、
+上限超過時の要素callbackが旧版3回から候補0回となり、通常2項目は両版とも受理された。
+Undiciはloopbackの短い応答で小文字・大文字・混合大小文字のSRIを比較し、
+候補では不一致hashを全て拒否し、一致hashは全て受理した。
+これは修正版に含まれるSRI修正の検証であり、上記Highの異常終了自体の再現試験ではない。
+
+ローカル候補の検証:
+
+- Ruff lint・format、mypy（171 files）、非Docker 1,032件、frontendのformat・lint・typecheck・81 test・buildが成功。
+  Windows checkout由来の既存改行差は検証用コピー／stdinだけでLF化し、作業treeの無関係な内容は保持した。
+- 新問の非Docker 2件と、32 sandbox実行を含むrootless個別検査が成功。
+- frontendの実image検査3件が成功。CA 2 storeは漏えいchain各12件を拒否し、正常chainを許可した。
+- 固定hashを検証したSyft v1.52.0・Grype v0.119.0と上記DBを使用。更新確認は新DBなし。
+  sourceは319 packages / findings 1、frontendは65 packages / findings 4、いずれも停止対象・例外・リスク受容0。
+  対象Brotli・Zod・Undiciの指摘は残らず、OpenTelemetryのMediumとBusyBoxのMedium 3件、
+  musl-utilsのUnknownは残る。停止対象0は脆弱性0を意味しない。
+  frontend候補の不変IDは`sha256:cd45db60d35b6502777dd0b98da93e12b6a504cbd64cecf8f019aa2e92cd675d`。
+- 独立した読み取り専用の差分レビューで、具体的な残存bypass・回帰は指摘されなかった。
+
+全5 image・全問題回帰・共通ブラウザ・配備検査はCIで必須とし、同じ全件をローカルで重複実行しない。
+
+本番host、他imageの非停止指摘、DB OpenSSL・OpenTelemetry・musl-utils等の別候補は更新対象外。
+本記録は候補の限定検証であり、全脆弱性0やhost更新完了を意味しない。
+最終headのCI・署名・配備・公開確認は当該PRに残す。
 
 ### 2026-10-22のfrontend curl/libcurl削除
 
