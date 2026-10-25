@@ -187,7 +187,7 @@ SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_RUNTIME_IMAGE_TESTS=1 \
 ```
 
 backend・runner・frontend・DB・sandboxの本番5種類について、OCI versionラベルが製品versionの正本と一致することを確認します。
-frontendでは、実際のnginx binaryとX11/XPM packageが公開修正版以降であること、不要なcurl/wcurl・libcurl packageと共有libraryが存在しないことも確認します。
+frontendでは、実際のnginx binaryとX11/XPM・Brotli packageが公開修正版以降であること、不要なcurl/wcurl・libcurl packageと共有libraryが存在しないことも確認します。
 nginx単体testのbaseは`frontend/Dockerfile`から読み取り、本番baseの更新に追従します。
 ホスト監視CLIのtestは、別ownerを除外し、runner停止・削除後のsandbox残存を読み取りだけで検出することを確認します。
 

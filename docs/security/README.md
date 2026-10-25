@@ -56,6 +56,13 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- frontendのBrotli runtime libraryと、開発検査用のZod・Undiciをvendor修正版へ限定更新しています。
+  固定値は[frontend Dockerfile](../../frontend/Dockerfile)と[lock](../../frontend/yarn.lock)を正本とします。
+  収録packageから公開request経由の悪用成立までは確認していません。
+  対象経路・検証範囲・残存事項は
+  [2026-10-25の限定是正記録](./dependency-remediation-history.md#2026-10-25のbrotlizodundici更新)を参照してください。
+  TLS・CA、API・sandbox制限、scan停止条件は維持します。
+
 - frontendの不要なcurl/libcurlを通常のpackage依存解決で削除し、
   CVE-2026-92392の対象client/libraryを実行用imageへ残さない構成にしています。
   nginx本体・module・起動script、CA、外部端末向けcurl例は維持します。

@@ -1,0 +1,54 @@
+schema_version: 3
+id: PRACTICE-pr-01
+category: PRACTICE
+title:
+  ja: pr 1
+  en: pr 1
+statement:
+  ja: |
+    練習：pr
+
+    input.txtの一覧を、prを使って2列に並べてください。
+    左列を上から下へ読み、続いて右列を上から下へ読むと、元の並び順になるようにしてください。
+
+    左右の行数をできるだけそろえ、奇数行の場合は左列を1行多くします。
+    同じ行の左右を「 | 」（半角スペース、縦棒、半角スペース）で区切ってください。
+    右側の項目がない行は、左側だけを出力してください。
+
+    項目の文字列と重複を保ち、日付・見出し・ページ番号や、列幅をそろえるための空白は加えないでください。
+  en: |
+    Practice: pr
+
+    Use pr to arrange the list in input.txt into two columns.
+    Reading down the left column and then down the right column must reproduce the original order.
+
+    Make the columns as equal in length as possible. If the number of items is odd, put one extra item in the left column.
+    Separate the left and right items on each output line with " | " (an ASCII space, a vertical bar, and an ASCII space).
+    If there is no right-hand item, output only the left-hand item.
+
+    Preserve the item text and duplicates. Do not add dates, headers, page numbers, or padding to align the columns.
+reference_solution: pr -2 -t -J -S' | ' input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      oak
+      maple tree
+      elm
+      cedar
+      pine
+      ash
+      birch
+      oak
+      willow
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    oak | ash
+    maple tree | birch
+    elm | oak
+    cedar | willow
+    pine
