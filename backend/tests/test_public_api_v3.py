@@ -66,7 +66,7 @@ def _rejected_submission(status: SubmissionStatus) -> SubmissionResult:
 
 def _post_json(
     path: str,
-    payload: dict[str, object],
+    payload: dict[str, object] | None,
     extra_headers: list[tuple[bytes, bytes]] | None = None,
 ) -> tuple[int, dict[str, str], bytes]:
     """入力path・JSON・任意headerでASGI POSTし、status・header・結合済みbodyを返す。"""
@@ -320,15 +320,18 @@ def test_v3_submission_maps_application_failures_to_http_status(
     "payload",
     [
         {"problem_id": PROBLEM_ID},
+        None,
+        {"shellgei": None, "problem_id": PROBLEM_ID},
+        {"shellgei": "true", "problem_id": None},
         {"shellgei": "", "problem_id": PROBLEM_ID},
         {"shellgei": "true", "problem_id": PROBLEM_ID, "unknown": "value"},
     ],
 )
 def test_v3_submission_rejects_invalid_requests_before_use_case(
     monkeypatch: pytest.MonkeyPatch,
-    payload: dict[str, object],
+    payload: dict[str, object] | None,
 ) -> None:
-    # command欠落・空文字・追加fieldをHTTP 422とし、use caseを呼ばないことを確認する。
+    # body・必須fieldのnull、command欠落・空文字・追加fieldを422とし、use caseを呼ばない。
     async def unused(_shellgei: str, _problem_id: str) -> SubmissionResult:
         """validationを通過して呼ばれた場合にtestを失敗させる。"""
         raise AssertionError("invalid request must not reach the use case")
