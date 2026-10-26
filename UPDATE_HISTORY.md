@@ -3,6 +3,11 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-10-26 保守
+
+FastAPIを0.159.1、SQLAlchemyを2.1.6へ更新しました。
+公開JSON API・内部runner API・DB保存と保持処理の互換性を維持します。
+
 ## 2026-10-25 保守
 
 GitHub Actions、FastAPI・SQLAlchemy・Ruff、Reactとfrontendの検査用依存を更新しました。
