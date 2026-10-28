@@ -22,7 +22,7 @@ pytestmark = [
     ),
 ]
 PROBLEMS = Path(__file__).resolve().parents[3] / "problems"
-PROBLEM_ID = "STANDARD-00000071"
+PROBLEM_ID = "STANDARD-00000064"
 
 
 def test_service_changes_solutions_and_common_mistakes_in_real_sandboxes() -> None:

@@ -74,12 +74,12 @@
 | [STANDARD-00000061](#note-standard-00000061) | エラーの前後を取り出す |
 | [STANDARD-00000062](#note-standard-00000062) | バージョン番号順に並べる |
 | [STANDARD-00000063](#note-standard-00000063) | 作業の実行順を復元する |
+| [STANDARD-00000064](#note-standard-00000064) | サービス一覧の変更点 |
+| [STANDARD-00000065](#note-standard-00000065) | 未完了の作業リスト |
+| [STANDARD-00000066](#note-standard-00000066) | レポート本文の取り出し |
+| [STANDARD-00000067](#note-standard-00000067) | ログを3行ずつに分割する |
 | [STANDARD-00000068](#note-standard-00000068) | ページ別の訪問者数 |
 | [STANDARD-00000069](#note-standard-00000069) | カテゴリ別の売上首位 |
-| [STANDARD-00000071](#note-standard-00000071) | サービス一覧の変更点 |
-| [STANDARD-00000074](#note-standard-00000074) | 未完了の作業リスト |
-| [STANDARD-00000076](#note-standard-00000076) | レポート本文の取り出し |
-| [STANDARD-00000077](#note-standard-00000077) | ログを3行ずつに分割する |
 
 ### PRACTICE
 
@@ -1440,11 +1440,11 @@ sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
 
-<a id="note-standard-00000071"></a>
+<a id="note-standard-00000064"></a>
 
-## STANDARD-00000071：サービス一覧の変更点
+## STANDARD-00000064：サービス一覧の変更点
 
-- 問題データ：[STANDARD-00000071.yaml](../problems/v3/STANDARD-00000071.yaml)
+- 問題データ：[STANDARD-00000064.yaml](../problems/v3/STANDARD-00000064.yaml)
 - 狙い・発見：一覧の変更を件数ではなく所属で捉え、追加と削除の両方向を一度に求める。
 - 解法の核：sedで変更前後を抽出し、sort -uで集合へ変換する。comm -3の2列で出自を区別し、
   awkでADD/REMOVEを付ける。commの併合順がサービス名順になる。別解はawkの2配列と名前キーのsort。
@@ -1454,7 +1454,7 @@ backend・runner・browserは現行ソースでbuildし、frontendはソース�
   最も近いSTANDARD-00000052は片方向の集合差であり、本問は両方向の差をラベル付きでまとめる。
   commは既存の通常13・52で検証済み別解に登場するが、参照解答への採用は初めて。コマンドの構文は採点しない。
 
-STANDARD-00000071の検証範囲（2026-10-14）：
+旧ID STANDARD-00000071での検証範囲（2026-10-14）：
 [非Docker検査](../backend/tests/test_service_changes_problem.py)で所属から独立に求めた期待値・重複の意図・詳細API・白JPEG・出力順を検査した。
 Ruff check・format、mypy（144 source files）、non-Docker 916件が成功した。
 明示したrootless daemonでDocker全124件がskipなしで成功した（715.64秒）。
@@ -1515,11 +1515,11 @@ sandbox imageは`sha256:d80f7c90933952d0c32ed21e1398db0caad486febcfc6ac7573690f6
 backend・runner・browserは現行ソースでbuildし、frontendはソース同一の検証済みimageへ問題dataを同期した。
 実機iOS/Androidは未確認。
 
-<a id="note-standard-00000074"></a>
+<a id="note-standard-00000065"></a>
 
-## STANDARD-00000074：未完了の作業リスト
+## STANDARD-00000065：未完了の作業リスト
 
-- 問題データ：[STANDARD-00000074.yaml](../problems/v3/STANDARD-00000074.yaml)
+- 問題データ：[STANDARD-00000065.yaml](../problems/v3/STANDARD-00000065.yaml)
 - 狙い・発見：元の行番号と抽出後の作業番号を区別し、抽出結果を次の道具へ渡す意味を学ぶ。
 - 解法の核：sedで行頭の完全な接頭辞を選び除去し、nlで2桁のゼロ埋め連番を付ける。
   別解はawkで対象行だけカウンターを進め、substrで作業名を保つ方法。
@@ -1534,7 +1534,7 @@ backend・runner・browserは現行ソースでbuildし、frontendはソース�
 [実sandbox検査](../backend/tests/integration/test_pending_tasks_solutions.py)で参照解・別解・6誤答と4境界条件を扱う。
 境界条件は解法の確認用であり、非公開の採点データではない。
 
-STANDARD-00000074の検証範囲（2026-10-17）：
+旧ID STANDARD-00000074での検証範囲（2026-10-17）：
 Ruff check・format、mypy（150 source files）、non-Docker 922件が成功した。
 明示したrootless daemonで関連するDocker統合16件が成功した（復旧検査2件は環境修正後に再実行）。
 全123問の参照解答・判定・DB保存と、実ブラウザ46提出のDB保存を含む。
@@ -1563,11 +1563,11 @@ Docker全127件の一括実行と実機iOS/Androidは未実施。
 [実sandbox検査](../backend/tests/integration/test_problem_rev_solutions.py)で参照解・別解・6誤答と4境界条件を扱う。
 全問回帰と画面検査は[問題作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
 
-<a id="note-standard-00000076"></a>
+<a id="note-standard-00000066"></a>
 
-## STANDARD-00000076：レポート本文の取り出し
+## STANDARD-00000066：レポート本文の取り出し
 
-- 問題データ：[STANDARD-00000076.yaml](../problems/v3/STANDARD-00000076.yaml)
+- 問題データ：[STANDARD-00000066.yaml](../problems/v3/STANDARD-00000066.yaml)
 - 狙い・発見：本文の終了行を数えず、先頭・末尾からの位置で抽出範囲を表す。
 - 解法の核：tail -n +3で先頭2行を除き、head -n -2で末尾2行を除く。
   別解はawkで全行数を先に調べ、2回目の読み込みで本文の範囲を選ぶ方法。
@@ -1618,11 +1618,11 @@ Docker全127件の一括実行と実機iOS/Androidは未実施。
   本問は固定位置と不連続な範囲選択を扱う。単なる区切り文字の削除や数値化とは区別する。
   公開入力はASCIIで、使用コマンドの構文は採点しない。
 
-<a id="note-standard-00000077"></a>
+<a id="note-standard-00000067"></a>
 
-## STANDARD-00000077：ログを3行ずつに分割する
+## STANDARD-00000067：ログを3行ずつに分割する
 
-- 問題データ：[STANDARD-00000077.yaml](../problems/v3/STANDARD-00000077.yaml)
+- 問題データ：[STANDARD-00000067.yaml](../problems/v3/STANDARD-00000067.yaml)
 - 狙い・発見：ログを内容によらない行数でファイルへ分割し、名前を見出しにして再び1つの出力へ組み立てる。
 - 解法の核：splitの行数指定・数字suffix・桁数指定でpart_00等を作り、順に見出しとcatを出す。
   別解はawkで行番号からグループ番号を求める方法。ファイル分割と表示の役割を分ける。
@@ -1672,7 +1672,7 @@ echo別解の適用限界を確認する。全問題回帰と日英大小画面�
   空入力・1記録・2記録・本文の空行とスペース・ENDの部分文字列・重複は解法検証用fixture。
   途切れた記録、ENDだけの空記録、最終ENDの改行欠落は検証した一般性の範囲外とする。
 - 難易度・既存との差：初級〜中級。ファイル引数とBashのANSI-C引用を前提とし、境界から処理単位を捉える。
-  STANDARD-00000053は最新状態の選別のための行反転、STANDARD-00000077は固定3行の分割、
+  STANDARD-00000053は最新状態の選別のための行反転、STANDARD-00000067は固定3行の分割、
   PRACTICE-rev-01は文字順の反転。本問は可変長の記録順だけを逆にし、集計・選別・整列を行わない。
   tacの区切り機能を学ぶ練習で、使用コマンドの構文は採点しない。
 

@@ -11,7 +11,7 @@ from soj_shared.problem_schema import load_problem_definition
 
 
 PROBLEMS = Path(__file__).resolve().parents[2] / "problems"
-PROBLEM_ID = "STANDARD-00000071"
+PROBLEM_ID = "STANDARD-00000064"
 EXPECTED = "REMOVE api\nADD api2\nREMOVE cron\nADD mail\nADD proxy\nREMOVE queue\n"
 
 

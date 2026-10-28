@@ -26,7 +26,7 @@ PROBLEMS = Path(__file__).resolve().parents[3] / "problems"
 ALTERNATIVES = {
     "PRACTICE-basename-01": r"sed 's|.*/||; s/\.log$//' input.txt",
     "PRACTICE-cut-01": """awk '{print substr($0,1,2) substr($0,4,4)}' input.txt""",
-    "STANDARD-00000077": (
+    "STANDARD-00000067": (
         """awk '(NR-1)%3==0{printf "[part_%02d]\\n",int((NR-1)/3)}{print}' input.txt"""
     ),
 }
@@ -48,7 +48,7 @@ MISTAKES = {
         "cut -c1-2,4-7 input.txt | sort -u",
         "cut -c1-2,4-7 input.txt | tac",
     ],
-    "STANDARD-00000077": [
+    "STANDARD-00000067": [
         """awk '(NR-1)%2==0{printf "[part_%02d]\\n",int((NR-1)/2)}{print}' input.txt""",
         """awk '(NR-1)%3==0{printf "[part_%02d]\\n",int((NR-1)/3)+1}{print}' input.txt""",
         """awk '(NR-1)%3==0{printf "[part_%d]\\n",int((NR-1)/3)}{print}' input.txt""",
@@ -70,7 +70,7 @@ BOUNDARIES = {
         ("ZZ-9999-X\nAA-0001-Y\nZZ-9999-Z\n", "ZZ9999\nAA0001\nZZ9999\n"),
         ("AB-0010-Q", "AB0010\n"),
     ],
-    "STANDARD-00000077": [
+    "STANDARD-00000067": [
         ("", ""),
         ("one\n", "[part_00]\none\n"),
         ("a\nb\nc\n", "[part_00]\na\nb\nc\n"),
