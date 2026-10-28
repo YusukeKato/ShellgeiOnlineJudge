@@ -34,6 +34,8 @@
 作業branchへのpushでは検査を重複起動せず、PR作成・更新で検査します。main pushの検査・署名・配備条件は維持します。
 
 全workflowは`contents: read`を既定とし、checkoutはcredentialを保持しません。
+Pythonのsetupは全経路でcheck-latestを有効にし、対応minor版の最新patchを取得します。
+取得された実versionはjob logで確認し、本番の固定Python imageとは区別します。
 Actionは公式repositoryのfull commit SHAに固定し、runner OS・job timeout・concurrencyを
 明示しています。検査workflowとrefが同じ古い実行は、新しい実行でキャンセルされます。
 Production deployはmigrationの中断を避けるため直列実行し、進行中runを自動キャンセルしません。

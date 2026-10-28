@@ -1,4 +1,4 @@
-FROM python:3.12.15-slim-trixie@sha256:cb33f7f771ecec2ef1225cf39b159591a040391bd73e4c01f00fdfc4c47611d2 AS python-base
+FROM python:3.12.16-slim-trixie@sha256:962f801b08c870ac2a51b72bf02dae38c9a4162319e5e882ec244e198188d54e AS python-base
 
 # OS CA修正版を含むbaseから、pipと新規venvのseedもhash検証付きで更新する。
 COPY ci/bootstrap_pip.py /tmp/soj-bootstrap-pip.py

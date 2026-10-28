@@ -64,6 +64,25 @@ def test_existing_database_survives_image_upgrade_and_rollback() -> None:
         assert "name=rootless" in client.info()["SecurityOptions"]
         old = client.images.get(upstream_postgres_image())
         new = client.images.get(database_image())
+        # DBのABIと既存volumeを変えず、OpenSSLとmusl-utilsの旧copyを拒否する。
+        client.containers.run(
+            new,
+            [
+                "--no-network",
+                "info",
+                "--exists",
+                "libcrypto3>=3.5.9-r0",
+                "libssl3>=3.5.9-r0",
+                "musl>=1.2.6-r3",
+                "musl-utils>=1.2.6-r3",
+            ],
+            entrypoint="/sbin/apk",
+            network_mode="none",
+            read_only=True,
+            cap_drop=["ALL"],
+            security_opt=["no-new-privileges:true"],
+            remove=True,
+        )
         for field in ("Entrypoint", "Cmd", "Volumes"):
             assert new.attrs["Config"][field] == old.attrs["Config"][field]
         assert "PGDATA=/var/lib/postgresql/data" in new.attrs["Config"]["Env"]

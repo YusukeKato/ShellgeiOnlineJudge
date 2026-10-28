@@ -61,6 +61,8 @@ DDL・migration表更新・採番変更・role昇格の拒否、権限の後付�
 テストでは下記を確認します。
 
 - 接続先daemonがrootlessであること
+- sandbox・frontend・DBの対象libraryと、両Python runtimeの修正版・tracestateの正常・不正headerの互換性
+  （固定値はDockerfile・lock、実収録下限は各image testを参照）
 - cgroup v2によるCPU・メモリ・PID制限が実際に反映されていること
 - 独自Ubuntu imageの必要コマンド、sudo・Go等の不在、setuid/setgidの除去、loopbackのみのnetwork、
   ImageMagickの許可形式・寸法制限、textimgの日本語・ANSI色・画像出力、

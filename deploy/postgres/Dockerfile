@@ -15,7 +15,7 @@ LABEL org.opencontainers.image.version="3.0.3"
 
 # PostgreSQL・entrypoint・PGDATAは継承し、検出のあるOpenSSL・libuuidだけを固定versionへ更新する。
 # zlibのCVE-2026-85091修正版も限定更新し、既存のOpenSSL/libuuid固定値を維持する。
-RUN apk add --no-cache --upgrade ca-certificates-bundle=20261020-r0 libcrypto3=3.5.8-r0 libssl3=3.5.8-r0 libuuid=2.42.3-r1 zlib=1.3.2-r1
+RUN apk add --no-cache --upgrade ca-certificates-bundle=20261020-r0 libcrypto3=3.5.9-r0 libssl3=3.5.9-r0 musl-utils=1.2.6-r3 libuuid=2.42.3-r1 zlib=1.3.2-r1
 COPY --from=gosu-build /out/gosu /usr/local/bin/gosu
 COPY --from=gosu-build /build/gosu-1.19/LICENSE /usr/local/share/licenses/gosu/LICENSE
 RUN gosu nobody true

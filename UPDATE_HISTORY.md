@@ -3,6 +3,13 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-10-28 保守
+
+Python・内蔵Expat、sandboxのBrotli、DBのOpenSSL、frontend/DBのmusl-utilsと、
+共有依存のOpenTelemetry APIを修正版へ限定更新しました。
+CIの全Python setupで対応minor版の最新patchを取得し、古いcacheの優先利用を防ぎます。
+API、DB schema・既存data、問題data、TLS/CA検証とsandboxの制限は維持します。
+
 ## 2026-10-26 保守
 
 FastAPIを0.159.1、SQLAlchemyを2.1.6へ更新しました。

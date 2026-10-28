@@ -78,8 +78,15 @@ from soj_shared.problem_repository import load_problem_repository
 
 service = os.environ['SOJ_TEST_SERVICE']
 # tarfile修正済みPythonと内蔵Expatの修正版を要求し、scannerの取りこぼしによる後退も拒否する。
-assert sys.version_info[:3] >= (3, 12, 15)
-assert pyexpat.version_info >= (2, 8, 5)
+assert sys.version_info[:3] >= (3, 12, 16)
+assert pyexpat.version_info >= (2, 9, 0)
+# 二乗時間parseの修正版を要求し、通常header・任意空白・重複key拒否の互換性を確認する。
+from opentelemetry.trace import TraceState
+assert tuple(map(int, importlib.metadata.version("opentelemetry-api").split("."))) >= (1, 45, 1)
+assert dict(TraceState.from_header(["a=b"]).items()) == {"a": "b"}
+assert dict(TraceState.from_header(["a=b,  c=d"]).items()) == {"a": "b", "c": "d"}
+assert len(TraceState.from_header(["a=b,a=c"])) == 0
+assert len(TraceState.from_header([" " * 1024])) == 0
 package = importlib.import_module('soj_backend' if service == 'backend' else 'soj_runner')
 shared = importlib.import_module('soj_shared')
 for base in (shared, package):
@@ -371,12 +378,12 @@ def test_runtime_image_product_version(runtime_client: Any, service: str) -> Non
 def test_frontend_runtime_contains_fixed_nginx_and_x11_libraries(
     runtime_client: Any,
 ) -> None:
-    """実frontendのnginx・X11/XPM・Brotliが修正版であり、scanner未検出でも旧版へ戻らないことを確認する。"""
+    """実frontendのnginx・X11/XPM・Brotli・musl関連packageが修正版から後退しないことを確認する。"""
     output = runtime_client.containers.run(
         os.environ["SOJ_COMPOSE_FRONTEND_IMAGE"],
         [
             "-ec",
-            "nginx -v 2>&1; apk info --exists 'libx11>=1.8.14-r0' 'libxpm>=3.5.20-r0' 'brotli-libs>=1.2.1-r0'",
+            "nginx -v 2>&1; apk info --exists 'libx11>=1.8.14-r0' 'libxpm>=3.5.20-r0' 'brotli-libs>=1.2.1-r0' 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3'",
         ],
         entrypoint="/bin/sh",
         network_mode="none",
