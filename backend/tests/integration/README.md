@@ -307,7 +307,7 @@ CIでは共通機能・正規表現・各問題の画像を、browser jobごと�
 問題ごとの詳細表示は共通関数で検査し、独立した期待値は各問題のdata検査で確認します。
 新問ごとに表示関数、固定提出件数、画像保存stepを追加しません。
 
-- `SOJ_BROWSER_PROBLEM_IDS='["STANDARD-00000074"]'`のようにJSON配列を指定すると、指定問題と
+- `SOJ_BROWSER_PROBLEM_IDS='["STANDARD-00000065"]'`のようにJSON配列を指定すると、指定問題と
   空白・空行・日本語の代表例Base64、通常カテゴリの代表例68を検査します。正規表現代表例1も共通検査に含みます。
 - 未指定または`all`は全問題です。週次・手動CI・共通code変更・判定不能な差分ではこのmodeを使います。
 - 全件modeでは`SOJ_BROWSER_SHARD=k/n`（既定`0/1`）で、ID順にn個へ分けたk番目の問題だけを開きます。
@@ -333,7 +333,7 @@ CIでは共通機能・正規表現・各問題の画像を、browser jobごと�
 
 ```sh
 SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_COMPOSE_E2E=1 \
-  SOJ_BROWSER_PROBLEM_IDS='["STANDARD-00000074"]' poetry run pytest \
+  SOJ_BROWSER_PROBLEM_IDS='["STANDARD-00000065"]' poetry run pytest \
     backend/tests/integration/test_compose_e2e.py::test_browser_submissions_and_display
 ```
 

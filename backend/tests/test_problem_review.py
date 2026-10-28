@@ -11,7 +11,7 @@ from soj_tools import problem_review as review
 
 AVAILABLE = [
     *review.REPRESENTATIVES,
-    "STANDARD-00000074",
+    "STANDARD-00000065",
     "IMAGE-00000001",
     "REGEX-00000001",
 ]
@@ -20,17 +20,17 @@ AVAILABLE = [
 def test_data_only_changes_include_changed_problems_and_representatives() -> None:
     # YAMLと画像の同一IDを重複させず、新問と共通の空白・カテゴリ検査を選ぶ。
     paths = [
-        "problems/v3/STANDARD-00000074.yaml",
-        "problems/image/STANDARD-00000074.jpg",
+        "problems/v3/STANDARD-00000065.yaml",
+        "problems/image/STANDARD-00000065.jpg",
         "problems/v3/manifest.json",
         "docs/problem-design-notes.md",
         "backend/tests/test_pending_tasks_problem.py",
         "backend/tests/integration/test_pending_tasks_solutions.py",
     ]
     selection = review.selection_for_paths(paths, AVAILABLE)
-    assert json.loads(selection) == ["STANDARD-00000074"]
+    assert json.loads(selection) == ["STANDARD-00000065"]
     assert review.select_problem_ids(AVAILABLE, selection) == sorted(
-        [*review.REPRESENTATIVES, "STANDARD-00000074"]
+        [*review.REPRESENTATIVES, "STANDARD-00000065"]
     )
 
 
@@ -76,7 +76,7 @@ def test_common_changes_or_deleted_problem_require_all_screens(path: str) -> Non
 
 @pytest.mark.parametrize(
     "selection",
-    ["null", "{}", "[3]", '["missing"]', '["STANDARD-00000074", "STANDARD-00000074"]'],
+    ["null", "{}", "[3]", '["missing"]', '["STANDARD-00000065", "STANDARD-00000065"]'],
 )
 def test_invalid_explicit_selection_is_not_silently_ignored(selection: str) -> None:
     # 手動指定の誤りで意図した問題を検査し忘れない。
@@ -120,11 +120,11 @@ def test_event_sha_range_and_unavailable_history(
             "--",
         ]
         return subprocess.CompletedProcess(
-            args, 0, "problems/v3/STANDARD-00000074.yaml\0"
+            args, 0, "problems/v3/STANDARD-00000065.yaml\0"
         )
 
     monkeypatch.setattr(review.subprocess, "run", run)
-    assert review.github_selection() == '["STANDARD-00000074"]'
+    assert review.github_selection() == '["STANDARD-00000065"]'
 
     def unavailable(*args: object, **kwargs: object) -> None:
         # shallow履歴などの取得不能を成功扱いで省略しない。
@@ -143,7 +143,7 @@ def test_full_review_shards_cover_every_problem_once() -> None:
         "REGEX-00000002",
         "REGEX-00000003",
         "STANDARD-00000075",
-        "STANDARD-00000076",
+        "STANDARD-00000066",
     ]
     shards = review.shards_for("all")
     assert shards == [f"{i}/{review.FULL_REVIEW_SHARDS}" for i in range(3)]
@@ -157,11 +157,11 @@ def test_full_review_shards_cover_every_problem_once() -> None:
 
 def test_selected_review_runs_in_one_unsplit_job() -> None:
     # 変更問題だけの検査は1 jobで代表例と正規表現代表1問を含め、分割指定を拒否する。
-    selection = '["STANDARD-00000074"]'
+    selection = '["STANDARD-00000065"]'
     assert review.shards_for(selection) == ["0/1"]
     regex, detail = review.browser_plan(AVAILABLE, selection)
     assert regex == ["REGEX-00000001"]
-    assert detail == sorted([*review.REPRESENTATIVES, "STANDARD-00000074"])
+    assert detail == sorted([*review.REPRESENTATIVES, "STANDARD-00000065"])
     with pytest.raises(ValueError):
         review.browser_plan(AVAILABLE, selection, "1/3")
 

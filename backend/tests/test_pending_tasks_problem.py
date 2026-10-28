@@ -9,7 +9,7 @@ from soj_shared.problem_schema import load_problem_definition
 
 
 PROBLEMS = Path(__file__).resolve().parents[2] / "problems"
-PROBLEM_ID = "STANDARD-00000074"
+PROBLEM_ID = "STANDARD-00000065"
 INPUT = (
     "DONE archive logs\nTODO update README\nNOTE TODO items are below\n"
     "TODO run  unit tests\nTODO2 check backup\nTODO update README\n"

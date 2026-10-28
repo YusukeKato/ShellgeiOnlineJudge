@@ -168,6 +168,9 @@ legacy APIの200・404・422にも`Cache-Control: no-store`と
 カテゴリの値は[問題データ仕様](../problems/README.md#schema-v3)を参照してください。
 正規表現カテゴリ`REGEX`も同じ一覧・詳細・提出APIを使用します。カテゴリを固定列挙するclientは追加値への対応が必要です。
 
+通常問題のID改番と旧ID・保存済みログの扱いは[問題データの対応表](../problems/README.md#通常問題のid)を参照してください。
+API clientや保存した問題URLは新IDへ更新してください。
+
 ### 一覧と詳細のresponse
 
 問題一覧`GET /api/problems`は、`id`、`category`、`title_ja`、`title_en`を持つ配列を

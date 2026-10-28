@@ -1,0 +1,30 @@
+{
+  "baseline_commit": "c4e0933f6566f9bcb7e6b6c31a9228f686526555",
+  "renumbered_on": "2026-10-28",
+  "problems": [
+    {
+      "old_id": "STANDARD-00000071",
+      "new_id": "STANDARD-00000064",
+      "definition_without_id_sha256": "d015fddfffb2107cffed550ae9fddd827c4c9100c16c6e2f139065c56b38cf47",
+      "image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "old_id": "STANDARD-00000074",
+      "new_id": "STANDARD-00000065",
+      "definition_without_id_sha256": "03bda056668ab52ecd0cc62d5c33b29276da00b0547546ee6244ae64d2842b6f",
+      "image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "old_id": "STANDARD-00000076",
+      "new_id": "STANDARD-00000066",
+      "definition_without_id_sha256": "3d46f82b03c2dce49d8f86f8572eeab7409d8c4aab469fe6cca39a155d33ed86",
+      "image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    },
+    {
+      "old_id": "STANDARD-00000077",
+      "new_id": "STANDARD-00000067",
+      "definition_without_id_sha256": "bb8813509c79fc0cba00f40e633aa316122c7d47f8a4a007fb96a1b4aec4da65",
+      "image_sha256": "09e52e7828168b7b468b82488f0809eb53aa9311a14b3ce75d7a355b0e58e0a6"
+    }
+  ]
+}

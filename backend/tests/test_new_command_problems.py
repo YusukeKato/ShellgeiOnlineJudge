@@ -10,7 +10,7 @@ from soj_shared.problem_schema import load_problem_definition
 
 
 PROBLEMS = Path(__file__).resolve().parents[2] / "problems"
-IDS = ("PRACTICE-basename-01", "PRACTICE-cut-01", "STANDARD-00000077")
+IDS = ("PRACTICE-basename-01", "PRACTICE-cut-01", "STANDARD-00000067")
 
 
 @pytest.mark.parametrize("problem_id", IDS)
