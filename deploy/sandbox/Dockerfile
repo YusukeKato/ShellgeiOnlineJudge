@@ -45,7 +45,7 @@ LABEL org.opencontainers.image.version="3.0.3"
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --no-install-recommends \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-       bash coreutils gawk grep sed findutils bc rs tar locales imagemagick-6.q16 fonts-noto-cjk \
+       bash coreutils gawk grep sed findutils bc rs tar locales imagemagick-6.q16 fonts-noto-cjk libbrotli1=1.1.0-2ubuntu0.1 \
     && localedef -i ja_JP -f UTF-8 ja_JP.UTF-8 \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* \
     && find / -xdev -type f -perm /6000 -exec chmod a-s {} +

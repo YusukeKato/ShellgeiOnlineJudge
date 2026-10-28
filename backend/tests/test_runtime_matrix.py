@@ -33,4 +33,28 @@ def test_python_support_policy_matches_ci_and_production_image() -> None:
         backend_dockerfile.splitlines()[0],
     )
     assert production_base is not None
-    assert int(production_base.group(1)) >= 15
+    assert int(production_base.group(1)) >= 16
+    browser_base = (
+        (REPOSITORY_ROOT / "backend/tests/integration/browser/Dockerfile")
+        .read_text(encoding="utf-8")
+        .splitlines()[0]
+    )
+    assert browser_base == backend_dockerfile.splitlines()[0]
+
+
+def test_all_ci_python_installations_check_the_latest_supported_patch() -> None:
+    # 全setup-python経路が古いcacheを優先せず対応minorの最新修正版を取得する。
+    for filename in ("fastapi_ci.yaml", "supply_chain.yaml"):
+        workflow = yaml.safe_load(
+            (REPOSITORY_ROOT / ".github/workflows" / filename).read_text(
+                encoding="utf-8"
+            )
+        )
+        installations = [
+            step
+            for job in workflow["jobs"].values()
+            for step in job.get("steps", [])
+            if step.get("uses", "").startswith("actions/setup-python@")
+        ]
+        assert installations
+        assert all(step["with"]["check-latest"] is True for step in installations)

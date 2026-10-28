@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-10-28: runtime修正更新](#2026-10-28のruntime修正更新)
 - [2026-10-25: Brotli・Zod・Undici更新](#2026-10-25のbrotlizodundici更新)
 - [2026-10-22: frontend curl/libcurl削除](#2026-10-22のfrontend-curllibcurl削除)
 - [2026-10-21: certifi信頼ストア更新](#2026-10-21のcertifi信頼ストア更新)
@@ -22,6 +23,56 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-10-28のruntime修正更新
+
+基準commitはa69b6a44a734deee2bcede20c6785d2696d0fa49。10/28の利用者承認で、
+問題追加より先に保守修正を検証し、本番反映まで進めます。
+
+- 共通Python baseと独立したbrowser baseを同じ3.12.16の公式tag/digestへ更新します。
+  [公式release](https://www.python.org/downloads/release/python-31216/)には
+  eMudhra中間CA鍵の拒否、Expat 2.9.0等が含まれます。公開入力からExpatの脆弱処理への到達は未確認です。
+  build時のHTTPS取得で使うPython sslを更新し、既存のCA・pip bootstrap対策も維持します。
+  全setup-pythonは固定Action SHAと対応minor範囲を維持し、最新patchを取得します。
+- Ubuntu sandboxのlibbrotli1を[USN-8956-1](https://ubuntu.com/security/notices/USN-8956-1)の修正版へ固定します。
+  [CISA KEV](https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json)へ
+  CVE-2026-111497が10/27追加されましたが、SOJの侵害やsandbox外への悪用を確認したものではありません。
+  frontendのBrotliは既に修正済みで、別の配布packageとして扱います。
+- PostgreSQL15の同じbase・server・entrypoint・PGDATAを維持し、libcrypto3/libssl3を同版の
+  [Alpine stable package](https://github.com/alpinelinux/aports/blob/3.24-stable/main/openssl/APKBUILD)へ限定更新します。
+  NVD分類の全CVEやQUIC/DTLSをSOJで悪用可能と一般化しません。
+- frontend/DBのmusl-utilsを、既に修正済みのmusl本体と同じAlpine revisionへ揃えます。
+  [公式secfix](https://github.com/alpinelinux/aports/blob/3.24-stable/main/musl/APKBUILD)は
+  CVE-2026-107891のregcomp整数overflow修正を含みます。新規toolやlibc系列を追加しません。
+- 両runtimeのFastAPIからの推移依存OpenTelemetry APIを1.45.1へ、lock entryと配布hashだけで更新します。
+  [GHSA-xcq7-p3pf-p88h](https://github.com/advisories/GHSA-xcq7-p3pf-p88h)はtracestateの二乗時間parseの修正です。
+  SDK/exporterや直接依存を追加しません。SOJでの明示的instrumentationと公開経路のDoS成立は未確認です。
+
+更新前の小さな確認では、OpenTelemetry1.45.0は通常形式32 entryからなる8,245文字のheaderと、
+通常のa=bを受理しました。候補1.45.1の実wheelでは、正規表現の分割が通常の文字列分割と
+各memberの検査へ置き換わっています。一方、release/advisoryに記載された8,192文字超の拒否は
+同wheelで確認できず、上記8,245文字も受理します。この上限保証は主張せず、修正版の実収録と
+正常header、任意空白、重複key拒否の互換性を実imageで検査します。
+既存nginx・HTTPのheader制限は維持し、独自のparserや依存patchを追加しません。
+大量空白によるCPU負荷試験は実施しません。Python/Expatの実収録下限、browserとのbase一致、
+全setup-python経路とsandbox・frontend・DBの修正版を既存testで要求し、metadata遅延による後退を拒否します。
+
+基本検査、rootlessのCA・image境界・対象library、専用volumeでのDB旧→新→旧互換性を確認し、
+全5image/source scan・全問題回帰・共通browser・配備検査は対象headのCIでも必須とします。
+skipや未実施は成功として数えません。検証結果、最終head、CI・署名・本番確認はPRへ記録します。
+本番hostのkernel・Docker/containerd/runc/RootlessKit・CA、外部Actionのbundled Undiciは別管理です。
+API・DB schema、132問、sandbox・TLS制限、scan停止条件・例外policyは変更しません。
+アプリ更新完了をhost是正や全脆弱性0と表現しません。
+
+ローカル候補の検証ではRuff・format・mypy（171 files）と非Docker1,036件が成功しました。
+rootlessの23件（全132問の参照解・DB更新と復帰・日英画面の提出保存を含む）と、
+上記の誤ったheader上限期待を訂正した両runtime境界2件が成功し、skipはありません。
+browserのPython/Expat実測、5imageのCA storeで各12漏えいchain拒否と正常chain許可も確認しました。
+CAを持たないnetwork分離sandboxをCA検査へ誤指定した実行は失敗として記録し、既存CIの対象へ合わせました。
+候補sourceと5製品は同じ最新確認済みDBで停止対象・例外・リスク受容0でしたが、
+非停止matchはbackend166、runner166、frontend3、DB5、sandbox957件が残ります。
+source matchは0です。修正版のBrotliにも古いvendor metadata由来のmatchが残るため、実収録版と公式USNを併用します。
+独立した差分reviewの文書上限表記は訂正済みで、具体的なruntime bypass・互換性回帰は指摘されませんでした。
 
 ### 2026-10-25のBrotli・Zod・Undici更新
 

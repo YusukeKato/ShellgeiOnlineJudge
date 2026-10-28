@@ -56,6 +56,12 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- Python・内蔵Expat、sandboxのBrotli、DBのOpenSSL、frontend/DBのmusl-utilsと
+  共有依存OpenTelemetry APIを限定更新します。固定値は各Dockerfile・lockを正本とします。
+  根拠・到達条件と検査範囲は
+  [2026-10-28の限定是正記録](./dependency-remediation-history.md#2026-10-28のruntime修正更新)を参照してください。
+  対象headのCI・署名・本番確認はPRで照合し、API・DB契約とsandbox・TLS制限は維持します。
+
 - frontendのBrotli runtime libraryと、開発検査用のZod・Undiciをvendor修正版へ限定更新しています。
   固定値は[frontend Dockerfile](../../frontend/Dockerfile)と[lock](../../frontend/yarn.lock)を正本とします。
   収録packageから公開request経由の悪用成立までは確認していません。
@@ -152,7 +158,7 @@ Statusは次の意味で使用します。
   - 次: 対象main SHAのCIとOIDC署名、required checks・workflow変更のreview保護を確認する。設定変更は別途レビューする。
     bootstrapの間接依存・第三者imageの供給元検証を整備し、[SSH自動更新](../AUTODEPLOY.md)の実接続と復旧を確認する
 - `SOJ-022` — High/Critical（scanner分類） / P1 / Partially resolved
-  - 概要: Python 3.12.15 / Expat 2.8.5と対象OS libraryへ更新し、統合候補のCIで例外・受容なしの停止対象0を確認。非ブロック指摘は残る
+  - 概要: Python・Expatと対象OS libraryを修正版へ更新し、統合候補のCIで例外・受容なしの停止対象0を確認。非ブロック指摘は残る
   - 関連: `pyproject.toml`、`poetry.lock`、`frontend/yarn.lock`、`frontend/Dockerfile`、`deploy/postgres/Dockerfile`、`ci/python-runtime-exceptions.json`、`deploy/sandbox/`、runtime image
   - 確認: [是正記録](#soj-022依存imageの是正記録)に変更範囲、検出比較、未解決範囲を記載
   - 次: [現在の検出と検証結果](#soj-022の現在の停止対象)を基に残存指摘と公式修正版を再評価し、mainの同一SHAのCI・署名・本番反映を確認する。

@@ -24,6 +24,8 @@ pytestmark = [
 @pytest.mark.parametrize(
     "command",
     [
+        # KEV対象Brotliでも、scanner metadataに左右されず実sandboxの修正版を要求する。
+        "dpkg --compare-versions \"$(dpkg-query -W -f='${Version}' libbrotli1)\" ge '1.1.0-2ubuntu0.1'",
         # 全問題のコマンドとrunnerの固定準備・取得コマンドが存在する。
         "for tool in bash cat seq awk bc cut tr sed sort factor rs find grep uniq wc "
         'xargs convert textimg base64 sha256sum comm paste fold nl tar head sleep mkdir ln; do command -v "$tool" >/dev/null '
