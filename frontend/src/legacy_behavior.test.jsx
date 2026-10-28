@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { submitSolution } from "./api/client";
+import { getProblem, getProblems, submitSolution } from "./api/client";
 import { judgeResult } from "./functions/judge_result";
 import { imageDataUrl, prepareSubmission, submissionDisplay, submit } from "./functions/submit";
 import { updateProblem } from "./functions/update_problem";
@@ -223,6 +223,63 @@ describe("typed frontend API and display behavior", () => {
         message: "Runner capacity is temporarily exhausted",
       },
     });
+  });
+
+  test.each([
+    ["list", "headers", (options) => getProblems(SOJ_URL, options)],
+    ["detail", "headers", (options) => getProblem(SOJ_URL, "STANDARD-00000001", options)],
+    ["list", "body", (options) => getProblems(SOJ_URL, options)],
+    ["detail", "body", (options) => getProblem(SOJ_URL, "STANDARD-00000001", options)],
+  ])(
+    "applies the requested timeout to %s retrieval while awaiting %s",
+    async (_name, phase, retrieve) => {
+      // 一覧・詳細のheader待ちとJSON body待ちの両方が、指定期限でabortとtimeoutエラーになる。
+      let fetchSignal;
+      fetchMock.mockImplementation((_url, options) => {
+        fetchSignal = options.signal;
+        return phase === "headers"
+          ? new Promise(() => undefined)
+          : Promise.resolve({ ok: true, json: () => new Promise(() => undefined) });
+      });
+      const result = retrieve({ timeoutMs: 100 }).catch((error) => error);
+      await vi.advanceTimersByTimeAsync(99);
+      expect(fetchSignal.aborted).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(fetchSignal.aborted).toBe(true);
+      await expect(result).resolves.toMatchObject({ name: "ApiClientError", kind: "timeout" });
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
+
+  test("clears the problem list timeout after a successful response", async () => {
+    // 期限前に正常な一覧を返したらtimerを回収し、後から成功済み通信をabortしない。
+    let fetchSignal;
+    fetchMock.mockImplementation((_url, options) => {
+      fetchSignal = options.signal;
+      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+    });
+    await expect(getProblems(SOJ_URL, { timeoutMs: 100 })).resolves.toEqual([]);
+    expect(vi.getTimerCount()).toBe(0);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(fetchSignal.aborted).toBe(false);
+  });
+
+  test.each([
+    ["list", (options) => getProblems(SOJ_URL, options)],
+    ["detail", (options) => getProblem(SOJ_URL, "STANDARD-00000001", options)],
+  ])("preserves caller cancellation for %s retrieval with a timeout", async (_name, retrieve) => {
+    // timeout指定と併用しても選択変更等の中断をabortedとして区別し、timerを回収する。
+    const controller = new AbortController();
+    let fetchSignal;
+    fetchMock.mockImplementation((_url, options) => {
+      fetchSignal = options.signal;
+      return new Promise(() => undefined);
+    });
+    const result = retrieve({ timeoutMs: 100, signal: controller.signal }).catch((error) => error);
+    controller.abort();
+    await expect(result).resolves.toMatchObject({ name: "ApiClientError", kind: "aborted" });
+    expect(fetchSignal.aborted).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   test("returns a typed timeout error after 20 seconds", async () => {

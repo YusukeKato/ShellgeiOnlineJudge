@@ -172,6 +172,7 @@ export const getProblems = async (
   // base URLから問題一覧を取得し、全要素を検証したtyped summary配列を返す。
   const value = await fetchJson(`${baseUrl}/api/problems`, undefined, {
     signal: options.signal,
+    timeoutMs: options.timeoutMs,
   });
   try {
     return parseProblemSummaries(value);
@@ -191,6 +192,7 @@ export const getProblem = async (
   // base URLと選択済みIDから問題詳細を取得し、検証済みDTOを返す。
   const value = await fetchJson(`${baseUrl}/api/problems/${problemId}`, undefined, {
     signal: options.signal,
+    timeoutMs: options.timeoutMs,
   });
   try {
     return parseProblemDetail(value);

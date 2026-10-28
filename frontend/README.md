@@ -83,6 +83,10 @@ Python 3は追加依存なしの`urllib.request`で提出し、`json.load`で応
 受け取り、verdict、execution、artifact MIME等を実行時に検証してから画面表示用の値へ
 変換します。public API contractの正本は[API仕様](../docs/API.md)です。
 
+問題一覧・詳細の取得も、API clientのtimeoutMs指定時はheader待ちからJSON解析までを期限対象にします。
+指定しない場合の既存動作は維持し、呼出側signalによる中断とtimeoutを別のエラーとして扱います。
+成功・失敗・中断のいずれでもtimerと中断listenerを回収します。
+
 判定欄は`verdict`に従って正解・不正解・実行失敗・判定エラーを区別します。
 正解・不正解のラベルは選択言語に従い、実行失敗・判定エラーのラベルと詳細は固定英文です。
 実行失敗では、安全な`reason` enumに応じてtimeout、出力上限、非0終了code、
