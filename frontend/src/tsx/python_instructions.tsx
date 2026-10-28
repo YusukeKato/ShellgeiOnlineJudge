@@ -1,13 +1,17 @@
-import { buildPythonScript, type SubmissionExampleProps } from "../functions/submission_examples";
+import {
+  buildPythonScript,
+  buildPythonProblemScript,
+  type SubmissionExampleProps,
+} from "../functions/submission_examples";
 import { useLanguage } from "../language";
+import HelpDetails from "./help_details";
 import CopyableCode from "./copyable_code";
 
 export default function PythonInstructions(props: SubmissionExampleProps) {
   // 現在の入力・問題を送信し、応答JSONを読むPython 3の例を表示する。
   const { text } = useLanguage();
   return (
-    <details className="help-details">
-      <summary>{text("Pythonスクリプトから実行する", "Run from a Python script")}</summary>
+    <HelpDetails summary={text("Pythonスクリプトから実行する", "Run from a Python script")}>
       <p>
         {text("下のスクリプト全体をコピーして、", "Copy the entire script below into ")}
         <code>submit.py</code>
@@ -28,6 +32,29 @@ export default function PythonInstructions(props: SubmissionExampleProps) {
         value={buildPythonScript(props)}
         copyLabel={text("Pythonスクリプトをコピー", "Copy Python script")}
       />
-    </details>
+      <h3>{text("問題データを取得する", "Get problem data")}</h3>
+      <p>
+        {text("次のスクリプトを ", "Save the following script as ")}
+        <code>problems.py</code>
+        {text(" として保存し、", " and run ")}
+        <code>python3 problems.py</code>
+        {text(
+          " で実行してください。追加ライブラリなしで問題一覧と選択中の問題の詳細を取得します。一覧にはIDと日英のタイトル、詳細には日英の問題文・入力・想定出力・回答例が含まれます。",
+          ". No additional libraries are needed. It fetches the problem list (IDs and Japanese/English titles) and the selected problem (statements in both languages, input, expected output and an example answer).",
+        )}
+      </p>
+      <p>
+        <code>detail["input"]</code>
+        {text(" が input.txt の内容、", " is the content of input.txt, ")}
+        <code>detail["expected_output"]</code>
+        {text(" が想定出力、", " is the expected output, and ")}
+        <code>detail["answer"]</code>
+        {text(" が回答例です。", " is the example answer.")}
+      </p>
+      <CopyableCode
+        value={buildPythonProblemScript(props)}
+        copyLabel={text("Pythonスクリプトをコピー", "Copy Python script")}
+      />
+    </HelpDetails>
   );
 }

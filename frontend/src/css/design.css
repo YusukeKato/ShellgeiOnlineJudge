@@ -683,6 +683,24 @@ img {
   background: #f7f9fc;
 }
 
+.details-close-button {
+  display: block;
+  min-height: 44px;
+  margin: 4px 0 12px auto;
+  border: 0;
+  border-radius: 4px;
+  padding: 6px 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.details-close-button:hover {
+  color: var(--blue);
+}
+
 .result-heading {
   display: flex;
   flex-wrap: wrap;

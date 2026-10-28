@@ -34,9 +34,9 @@ const renderPlayground = () => {
 };
 
 const runButton = () => {
-  // 待機中と実行中のどちらでも、文言だけが変わった同じ提出操作を利用する。
+  // 案内を閉じるボタンと区別し、待機中・実行中の提出ボタンを文言の先頭から特定する。
   return screen.getByRole("button", {
-    name: /実行する|実行中…|Run command|Running…/,
+    name: /^(実行する|実行中…|Run command|Running…)/,
   });
 };
 

@@ -46,10 +46,10 @@ test("copies a standard-library Python script that parses the response JSON", as
   expect(script).toContain('repr(result["execution"]["stderr"])');
   expect(screen.getByText("python3 submit.py")).toBeVisible();
   await act(async () =>
-    fireEvent.click(screen.getByRole("button", { name: "Pythonスクリプトをコピー" })),
+    fireEvent.click(screen.getAllByRole("button", { name: "Pythonスクリプトをコピー" })[0]),
   );
   expect(navigator.clipboard.writeText).toHaveBeenCalledWith(script);
-  expect(screen.getByRole("status")).toHaveTextContent("コピーしました");
+  expect(screen.getAllByRole("status")[0]).toHaveTextContent("コピーしました");
 });
 
 test("updates Python string literals for edited commands, problem selection and API URL", async () => {
@@ -57,7 +57,7 @@ test("updates Python string literals for edited commands, problem selection and 
   const view = render(instructions());
   fireEvent.click(screen.getByText("Pythonスクリプトから実行する"));
   await act(async () =>
-    fireEvent.click(screen.getByRole("button", { name: "Pythonスクリプトをコピー" })),
+    fireEvent.click(screen.getAllByRole("button", { name: "Pythonスクリプトをコピー" })[0]),
   );
   const shellgei = 'printf \'%s\\n\' "$(echo 日本語)"\n"""\n';
   view.rerender(
@@ -67,9 +67,9 @@ test("updates Python string literals for edited commands, problem selection and 
   expect(script).toContain('url = "https://soj.example/api/v3/submissions"');
   expect(script).toContain(`"shellgei": ${JSON.stringify(shellgei)},`);
   expect(script).toContain('"problem_id": "IMAGE-00000001",');
-  expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  expect(screen.getAllByRole("status")[0]).toBeEmptyDOMElement();
   await act(async () =>
-    fireEvent.click(screen.getByRole("button", { name: "Pythonスクリプトをコピー" })),
+    fireEvent.click(screen.getAllByRole("button", { name: "Pythonスクリプトをコピー" })[0]),
   );
   expect(navigator.clipboard.writeText).toHaveBeenLastCalledWith(script);
 });
@@ -79,6 +79,49 @@ test("shows English Python instructions without translating the script", () => {
   localStorage.setItem("soj-language", "en");
   render(instructions());
   fireEvent.click(screen.getByText("Run from a Python script"));
-  expect(screen.getByRole("button", { name: "Copy Python script" })).toBeVisible();
+  expect(screen.getAllByRole("button", { name: "Copy Python script" })[0]).toBeVisible();
   expect(displayedScript()).toContain("result = json.load(response)");
+});
+
+test.each(["ja", "en"])("copies a standalone problem-fetching script in %s", async (language) => {
+  // 標準libraryのGET例は現在originから一覧・選択中の詳細を取得し、提出scriptとは独立してコピーする。
+  localStorage.setItem("soj-language", language);
+  const view = render(instructions());
+  fireEvent.click(
+    screen.getByText(
+      language === "ja" ? "Pythonスクリプトから実行する" : "Run from a Python script",
+    ),
+  );
+  expect(document.querySelectorAll("pre code")[1].textContent).toContain(
+    `url = "${window.location.origin}/api/problems"`,
+  );
+  view.rerender(
+    instructions({
+      ...defaultProps,
+      sojUrl: "https://soj.example/prefix/",
+      problemId: "PRACTICE-rs-01",
+    }),
+  );
+  const script = document.querySelectorAll("pre code")[1].textContent;
+  expect(script).toContain('url = "https://soj.example/prefix/api/problems"');
+  expect(script).toContain('problem_id = "PRACTICE-rs-01"');
+  expect(script).toContain('quote(problem_id, safe="")');
+  expect(script).toContain("problems = json.load(response)");
+  expect(script).toContain("detail = json.load(response)");
+  expect(script).not.toContain("Request(");
+  expect(script).not.toContain("/submissions");
+  expect(screen.getByText('detail["input"]')).toBeVisible();
+  expect(screen.getByText("python3 problems.py")).toBeVisible();
+  await act(async () =>
+    fireEvent.click(
+      screen.getAllByRole("button", {
+        name: language === "ja" ? "Pythonスクリプトをコピー" : "Copy Python script",
+      })[1],
+    ),
+  );
+  expect(navigator.clipboard.writeText).toHaveBeenLastCalledWith(script);
+  expect(screen.getAllByRole("status")[0]).toBeEmptyDOMElement();
+  expect(screen.getAllByRole("status")[1]).toHaveTextContent(
+    language === "ja" ? "コピーしました" : "Copied",
+  );
 });
