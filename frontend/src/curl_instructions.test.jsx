@@ -52,10 +52,10 @@ JSON
 `,
   );
   await act(async () =>
-    fireEvent.click(screen.getByRole("button", { name: "curlコマンドをコピー" })),
+    fireEvent.click(screen.getAllByRole("button", { name: "curlコマンドをコピー" })[0]),
   );
   expect(navigator.clipboard.writeText).toHaveBeenCalledWith(command);
-  expect(screen.getByRole("status")).toHaveTextContent("コピーしました");
+  expect(screen.getAllByRole("status")[0]).toHaveTextContent("コピーしました");
 });
 
 test("preserves quotes, substitutions and heredoc-like lines as JSON while updating the selected problem", async () => {
@@ -63,7 +63,7 @@ test("preserves quotes, substitutions and heredoc-like lines as JSON while updat
   const view = render(instructions());
   fireEvent.click(screen.getByText("ターミナルから実行する（curl）"));
   await act(async () =>
-    fireEvent.click(screen.getByRole("button", { name: "curlコマンドをコピー" })),
+    fireEvent.click(screen.getAllByRole("button", { name: "curlコマンドをコピー" })[0]),
   );
   const shellgei = "printf '%s\\n' \"$(printf local)\"\nJSON\n`printf literal`\n";
   view.rerender(
@@ -78,9 +78,9 @@ test("preserves quotes, substitutions and heredoc-like lines as JSON while updat
   expect(command).toContain("curl 'https://soj.example/api/v3/submissions'");
   expect(command.split("\n").filter((line) => line === "JSON")).toHaveLength(1);
   expect(JSON.parse(command.split("\n")[3])).toEqual({ shellgei, problem_id: "IMAGE-00000001" });
-  expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  expect(screen.getAllByRole("status")[0]).toBeEmptyDOMElement();
   await act(async () =>
-    fireEvent.click(screen.getByRole("button", { name: "curlコマンドをコピー" })),
+    fireEvent.click(screen.getAllByRole("button", { name: "curlコマンドをコピー" })[0]),
   );
   expect(navigator.clipboard.writeText).toHaveBeenLastCalledWith(command);
 });
@@ -97,9 +97,9 @@ test.each(["denied", "unavailable"])(
     render(instructions());
     fireEvent.click(screen.getByText("ターミナルから実行する（curl）"));
     await act(async () =>
-      fireEvent.click(screen.getByRole("button", { name: "curlコマンドをコピー" })),
+      fireEvent.click(screen.getAllByRole("button", { name: "curlコマンドをコピー" })[0]),
     );
-    expect(screen.getByRole("status")).toHaveTextContent("自動コピーできませんでした");
+    expect(screen.getAllByRole("status")[0]).toHaveTextContent("自動コピーできませんでした");
     expect(window.getSelection().toString()).toBe(displayedCommand());
     expect(document.activeElement).toBe(document.querySelector("pre"));
   },
@@ -111,10 +111,10 @@ test("does not label new input as copied when an earlier Clipboard request finis
   navigator.clipboard.writeText.mockReturnValue(new Promise((resolve) => (finishCopy = resolve)));
   const view = render(instructions());
   fireEvent.click(screen.getByText("ターミナルから実行する（curl）"));
-  fireEvent.click(screen.getByRole("button", { name: "curlコマンドをコピー" }));
+  fireEvent.click(screen.getAllByRole("button", { name: "curlコマンドをコピー" })[0]);
   view.rerender(instructions({ ...defaultProps, shellgei: "cat input.txt" }));
   await act(async () => finishCopy());
-  expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  expect(screen.getAllByRole("status")[0]).toBeEmptyDOMElement();
 });
 
 test("shows English guidance with the same command payload", () => {
@@ -122,6 +122,56 @@ test("shows English guidance with the same command payload", () => {
   localStorage.setItem("soj-language", "en");
   render(instructions());
   fireEvent.click(screen.getByText("Run from your terminal (curl)"));
-  expect(screen.getByRole("button", { name: "Copy curl command" })).toBeVisible();
+  expect(screen.getAllByRole("button", { name: "Copy curl command" })[0]).toBeVisible();
   expect(JSON.parse(displayedCommand().split("\n")[3]).shellgei).toBe("printf '%s\\n' 'test'");
+});
+
+test.each(["ja", "en"])("copies GET examples for the selected problem in %s", async (language) => {
+  // 一覧・詳細の取得例は日英で同じURLを使い、問題変更とAPI prefixを反映して提出例とは別にコピーする。
+  localStorage.setItem("soj-language", language);
+  const view = render(instructions());
+  fireEvent.click(
+    screen.getByText(
+      language === "ja" ? "ターミナルから実行する（curl）" : "Run from your terminal (curl)",
+    ),
+  );
+  const props = {
+    ...defaultProps,
+    sojUrl: "https://soj.example/prefix/",
+    problemId: "PRACTICE-rs-01",
+  };
+  view.rerender(instructions(props));
+  const command = document.querySelectorAll("pre code")[1].textContent;
+  expect(command).toContain("'https://soj.example/prefix/api/problems'");
+  expect(command).toContain("'https://soj.example/prefix/api/problems/PRACTICE-rs-01'");
+  expect(command).not.toContain("--data");
+  expect(command).not.toContain("/submissions");
+  expect(command).not.toContain("-k ");
+  expect(screen.getByText("expected_output")).toBeVisible();
+  await act(async () =>
+    fireEvent.click(
+      screen.getAllByRole("button", {
+        name: language === "ja" ? "curlコマンドをコピー" : "Copy curl command",
+      })[1],
+    ),
+  );
+  expect(navigator.clipboard.writeText).toHaveBeenLastCalledWith(command);
+  expect(screen.getAllByRole("status")[0]).toBeEmptyDOMElement();
+  expect(screen.getAllByRole("status")[1]).toHaveTextContent(
+    language === "ja" ? "コピーしました" : "Copied",
+  );
+});
+
+test("quotes API URLs and encodes the detail path without injecting shell syntax", () => {
+  // 設定URLの引用符や展開文字、問題IDのpath区切りを端末のコードとして解釈させない。
+  render(
+    instructions({
+      ...defaultProps,
+      sojUrl: "https://soj.example/a'b$(echo local)",
+      problemId: "x/y?z",
+    }),
+  );
+  const command = document.querySelectorAll("pre code")[1].textContent;
+  expect(command).toContain("'https://soj.example/a'\\''b$(echo local)/api/problems'");
+  expect(command).toContain("/api/problems/x%2Fy%3Fz'");
 });

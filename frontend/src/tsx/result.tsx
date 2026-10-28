@@ -2,6 +2,7 @@ import React from "react";
 import { submissionDisplay, SubmissionState } from "../functions/submit";
 import { JudgeVerdict } from "../api/types";
 import { useLanguage } from "../language";
+import HelpDetails from "./help_details";
 
 interface ResultProps {
   submissionState: SubmissionState;
@@ -94,12 +95,11 @@ const SojResult: React.FC<ResultProps> = ({ submissionState }) => {
               />
             </div>
           )}
-          <details className="help-details">
-            <summary>{text("実行したコマンドと提出情報", "Submitted command & details")}</summary>
+          <HelpDetails summary={text("実行したコマンドと提出情報", "Submitted command & details")}>
             <pre className="code-output" tabIndex={0}>
               <code id="shellgei-text">{display.commandStatus}</code>
             </pre>
-          </details>
+          </HelpDetails>
         </>
       )}
     </section>

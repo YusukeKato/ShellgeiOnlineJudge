@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { prepareSubmission, submit, SubmissionState } from "../functions/submit";
 import { useLanguage } from "../language";
+import HelpDetails from "./help_details";
 import CurlInstructions from "./curl_instructions";
 import PythonInstructions from "./python_instructions";
 
@@ -131,8 +132,7 @@ const SojRun: React.FC<SojValuesInterface> = ({
         </button>
       </div>
       <p className="run-help">{text("Ctrl + Enter で実行", "Run with Ctrl + Enter")}</p>
-      <details className="help-details">
-        <summary>{text("使い方と実行条件", "Instructions & limits")}</summary>
+      <HelpDetails summary={text("使い方と実行条件", "Instructions & limits")}>
         <ul>
           <li>
             {text("入力ファイル：", "Input file: ")}
@@ -170,9 +170,8 @@ const SojRun: React.FC<SojValuesInterface> = ({
           {text("環境の確認：", "Inspect the environment: ")}
           <code>cat /etc/os-release</code> / <code>bash --version</code>
         </p>
-      </details>
-      <details className="help-details">
-        <summary>{text("コマンドの例", "Command examples")}</summary>
+      </HelpDetails>
+      <HelpDetails summary={text("コマンドの例", "Command examples")}>
         <p>{text("1から10までの合計を求める", "Sum the numbers from 1 to 10")}</p>
         <pre className="code-output" tabIndex={0}>
           <code>seq 10 | paste -s -d+ | bc</code>
@@ -185,7 +184,7 @@ const SojRun: React.FC<SojValuesInterface> = ({
         <pre className="code-output" tabIndex={0}>
           <code>{`seq 0 9 | xargs -I@ bash -c 'textimg "$1" -F100 | convert - miff:-' _ @ | convert -delay 10 miff:- media/output.gif`}</code>
         </pre>
-      </details>
+      </HelpDetails>
       <CurlInstructions sojUrl={soj_url} shellgei={inputShellgei} problemId={selectedProblem} />
       <PythonInstructions sojUrl={soj_url} shellgei={inputShellgei} problemId={selectedProblem} />
     </section>
