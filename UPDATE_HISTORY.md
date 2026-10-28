@@ -9,6 +9,7 @@ Python・内蔵Expat、sandboxのBrotli、DBのOpenSSL、frontend/DBのmusl-util
 共有依存のOpenTelemetry APIを修正版へ限定更新しました。
 CIの全Python setupで対応minor版の最新patchを取得し、古いcacheの優先利用を防ぎます。
 API、DB schema・既存data、問題data、TLS/CA検証とsandboxの制限は維持します。
+問題一覧・詳細取得にも呼出側のtimeout指定を反映し、成功時と中断時の既存動作を維持します。
 
 ## 2026-10-26 保守
 
