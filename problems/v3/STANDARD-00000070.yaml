@@ -1,0 +1,33 @@
+schema_version: 3
+id: STANDARD-00000070
+category: STANDARD
+title:
+  ja: バイト数で本文を取り出す
+  en: Extracting a Length-Prefixed Message
+statement:
+  ja: |-
+    input.txtの先頭行には、本文の長さがUTF-8のバイト数で書かれています。
+    先頭行とその改行を除いた位置から、そのバイト数分だけを本文として出力してください。本文より後ろのデータは出力しないでください。
+
+    改行（LF）も1バイトとして数え、取り出した範囲の文字・改行・スペースはそのまま残してください。
+  en: |-
+    The first line of input.txt gives the length of a message body in UTF-8 bytes.
+    Starting immediately after that line and its line feed, output exactly that many bytes as the body. Do not output the data following the body.
+
+    Count each line feed (LF) as one byte. Preserve all text, line feeds, and spaces within the extracted range.
+reference_solution: '{ IFS= read -r bytes; head -c "$bytes"; } < input.txt'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      15
+      青い空
+      helloworld
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |-
+    青い空
+    hello

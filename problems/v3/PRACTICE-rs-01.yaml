@@ -1,0 +1,44 @@
+schema_version: 3
+id: PRACTICE-rs-01
+category: PRACTICE
+title:
+  ja: rs 1
+  en: rs 1
+statement:
+  ja: |
+    練習：rs
+
+    input.txtは、1行目が見出し、2行目以降が時刻ごとの測定値になっている表です。
+    rsを使い、表の行と列を入れ替えてください。
+
+    元の第1列を出力の第1行、第2列を第2行…とし、各列の項目を上から下の順に並べてください。
+    見出しや時刻もそのまま移し、項目の間は半角スペース1個で区切ってください。
+    列幅を揃えるための空白は加えないでください。
+  en: |
+    Practice: rs
+
+    The table in input.txt has a header in its first row and measurements for each time in the following rows.
+    Use rs to transpose the table.
+
+    Output the original first column as the first output row, the second column as the second row, and so on.
+    Read the items in each original column from top to bottom.
+    Keep the headers and times as well, and separate items with one ASCII space.
+    Do not add padding to align the columns.
+reference_solution: rs -T -C' ' < input.txt | sed 's/ $//'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      time north south
+      06:00 12 8
+      12:00 18 15
+      18:00 10 9
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    time 06:00 12:00 18:00
+    north 12 18 10
+    south 8 15 9
