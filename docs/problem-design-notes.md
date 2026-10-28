@@ -80,6 +80,7 @@
 | [STANDARD-00000067](#note-standard-00000067) | ログを3行ずつに分割する |
 | [STANDARD-00000068](#note-standard-00000068) | ページ別の訪問者数 |
 | [STANDARD-00000069](#note-standard-00000069) | カテゴリ別の売上首位 |
+| [STANDARD-00000070](#note-standard-00000070) | バイト数で本文を取り出す |
 
 ### PRACTICE
 
@@ -117,6 +118,7 @@
 | [PRACTICE-printf-01](#note-practice-printf-01) | printf 1 |
 | [PRACTICE-realpath-01](#note-practice-realpath-01) | realpath 1 |
 | [PRACTICE-rev-01](#note-practice-rev-01) | rev 1 |
+| [PRACTICE-rs-01](#note-practice-rs-01) | rs 1 |
 | [PRACTICE-sed-01](#note-practice-sed-01) | sed 1 |
 | [PRACTICE-sed-02](#note-practice-sed-02) | sed 2 |
 | [PRACTICE-sed-03](#note-practice-sed-03) | sed 3 |
@@ -1725,3 +1727,41 @@ symlinkを展開しない挙動を確認する。全問題回帰と日英大小�
 [非Docker検査](../backend/tests/test_pr_problem.py)で独立期待値・公開DTO・policy・白JPEG、
 [実sandbox検査](../backend/tests/integration/test_problem_pr_solutions.py)で参照解・別解・8誤答・9境界条件と
 空白整形・ページ長の適用限界を確認する。全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+<a id="note-practice-rs-01"></a>
+
+## PRACTICE-rs-01：rs 1
+
+- 問題データ：[PRACTICE-rs-01.yaml](../problems/v3/PRACTICE-rs-01.yaml)
+- 狙い・発見：時刻ごとの測定表を地点ごとの行へ捉え直し、列内の対応と順序を保って転置する。
+- 解法の核：rsの-Tと-Cで転置と区切りを指定し、sedで各行末の区切りだけを除く。
+  別解はawkの配列に列番号・行番号で要素を保存し、列を外側のloopとして出力する。
+- 入力の意図：見出しを含む4行3列で、数値だけの正方形や、見出しを除く処理との差を出す。
+  期待値は手で読んだ3列と独立した配列計算で確認する。空・1要素・1行・1列・重複・長方形・
+  複数space・末尾LFなしは解法検査用。rs参照解がtab区切りには適合しない範囲も区別する。
+- 難易度・既存との差：初級。引用・redirect・pipeを前提とする。
+  STANDARD-00000011はtacとrsによる回転、本問は純粋な転置の基礎。
+  STANDARD-00000029やPRACTICE-pr-01の1列からの再配置と異なり、複数列の対応を交換する。
+  公開入力はspace区切りで、空欄・引用付きCSV・要素内spaceの汎用処理は扱わない。
+
+<a id="note-standard-00000070"></a>
+
+## STANDARD-00000070：バイト数で本文を取り出す
+
+- 問題データ：[STANDARD-00000070.yaml](../problems/v3/STANDARD-00000070.yaml)
+- 狙い・発見：長さを表す1行と本文のbyte列を区別し、同じstreamの読取り位置を引き継ぐ。
+- 解法の核：ブロックへ一度redirectし、readで先頭行を読んだ残りをhead -cで指定量だけ出力する。
+  別解は長さを別途読み、tailで先頭行を除いてheadへ渡す方法。
+- 入力の意図：日本語・LF・ASCIIを合わせた15 UTF-8 bytesで、行途中に本文の終端を置く。
+  期待値は手計算とUTF-8 byte配列から独立に求める。0 bytes、行途中、内部空行、space、
+  複数byte文字、重複行、末尾LFなし等は解法検査用。judgeの末尾LF差だけを正誤の核にしない。
+- 難易度・既存との差：初級〜中級。変数・引用・redirect・pipeが前提。
+  STANDARD-00000066は固定行数で両端を除く。本問は入力から得たbyte数で本文を切り出す。
+  PRACTICE-od-01のbyteの可視化とも異なり、取り出した本文をそのまま保持する。
+  長さは妥当で本文は全て存在する入力を扱い、不正長・不足・NUL・UTF-8途中の切断は範囲外。
+
+両問の独立期待値・公開DTO・policy・白JPEGは
+[非Docker検査](../backend/tests/test_rs_and_length_prefix_problem.py)、
+参照解・別解・誤答・境界条件は
+[実sandbox検査](../backend/tests/integration/test_problem_rs_and_length_prefix_solutions.py)で確認する。
+全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
