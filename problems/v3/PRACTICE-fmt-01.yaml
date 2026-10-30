@@ -1,0 +1,48 @@
+schema_version: 3
+id: PRACTICE-fmt-01
+category: PRACTICE
+title:
+  ja: fmt 1
+  en: fmt 1
+statement:
+  ja: |
+    練習：fmt
+
+    input.txtには、段落の途中で改行された文章が入っています。
+    fmtを使って、空行で区切られた各段落を1行にまとめてください。
+
+    段落内の改行と連続する半角スペースを整え、単語の間を半角スペース1個で区切ってください。
+    段落を区切る空行は残し、単語と段落の順序は変えないでください。
+  en: |
+    Practice: fmt
+
+    The file input.txt contains text with line breaks inside paragraphs.
+    Use fmt to combine each paragraph, separated by empty lines, into a single line.
+
+    Normalize line breaks and runs of spaces within each paragraph so that adjacent words are separated by one ASCII space.
+    Keep the empty lines separating paragraphs, and preserve word order and paragraph order.
+reference_solution: fmt -w 1000 input.txt | tr -s '[:blank:]' ' '
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      Small   tools
+      can turn a long list of steps into a clear report
+      without changing the order of the words
+
+      Keep   each paragraph
+      on one line
+
+      Small tools can
+      work together
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    Small tools can turn a long list of steps into a clear report without changing the order of the words
+
+    Keep each paragraph on one line
+
+    Small tools can work together

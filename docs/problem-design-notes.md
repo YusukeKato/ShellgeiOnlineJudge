@@ -100,6 +100,7 @@
 | [PRACTICE-cat-02](#note-practice-cat-02) | cat 2 |
 | [PRACTICE-cat-03](#note-practice-cat-03) | cat 3 |
 | [PRACTICE-cat-04](#note-practice-cat-04) | cat 4 |
+| [PRACTICE-csplit-01](#note-practice-csplit-01) | csplit 1 |
 | [PRACTICE-cut-01](#note-practice-cut-01) | cut 1 |
 | [PRACTICE-echo-01](#note-practice-echo-01) | echo 1 |
 | [PRACTICE-echo-02](#note-practice-echo-02) | echo 2 |
@@ -107,6 +108,7 @@
 | [PRACTICE-find-01](#note-practice-find-01) | find 1 |
 | [PRACTICE-find-02](#note-practice-find-02) | find 2 |
 | [PRACTICE-find-03](#note-practice-find-03) | find 3 |
+| [PRACTICE-fmt-01](#note-practice-fmt-01) | fmt 1 |
 | [PRACTICE-fold-01](#note-practice-fold-01) | fold 1 |
 | [PRACTICE-grep-01](#note-practice-grep-01) | grep 1 |
 | [PRACTICE-grep-02](#note-practice-grep-02) | grep 2 |
@@ -1764,4 +1766,44 @@ symlinkを展開しない挙動を確認する。全問題回帰と日英大小�
 [非Docker検査](../backend/tests/test_rs_and_length_prefix_problem.py)、
 参照解・別解・誤答・境界条件は
 [実sandbox検査](../backend/tests/integration/test_problem_rs_and_length_prefix_solutions.py)で確認する。
+全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+
+<a id="note-practice-csplit-01"></a>
+
+## PRACTICE-csplit-01：csplit 1
+
+- 問題データ：[PRACTICE-csplit-01.yaml](../problems/v3/PRACTICE-csplit-01.yaml)
+- 狙い・発見：見出しを境界に、長さが異なる複数行のまとまりをファイルへ分割する。
+- 解法の核：csplitの正規表現境界と反復、空ファイル・byte数表示の抑止を使い、
+  ファイル名順にwcとprintfで行数を示す。別解はawkで区間を数える方法と、見出しごとに出力先を切り替える方法。
+- 入力の意図：行内の「## 」、途中の空行、区間をまたぐ本文の重複、異なる区間長を含む。
+  見出しの位置1・4・9から区間長3・5・4を手で確認し、行位置の差でも独立に照合する。
+  空入力、見出しのみ、連続見出し、字下げされた記号、同じ見出し名、日本語などは解法検査用。
+- 難易度・既存との差：初級後半。行頭の正規表現、for、glob、redirectを前提とする。
+  STANDARD-00000067の固定3行のsplitと異なり、内容が分割位置を決める。
+  公開入力は先頭が見出しで最終LFがあり、前置き行・最終LF欠落・100区間以上の汎用処理は範囲外。
+  使用コマンドと生成ファイル自体は採点せず、最終標準出力を判定する。
+
+<a id="note-practice-fmt-01"></a>
+
+## PRACTICE-fmt-01：fmt 1
+
+- 問題データ：[PRACTICE-fmt-01.yaml](../problems/v3/PRACTICE-fmt-01.yaml)
+- 狙い・発見：表示上の途中改行と段落境界を区別し、段落ごとの単語列として文章を組み直す。
+- 解法の核：fmtで段落を再整形し、現在の入力が折り返されない幅を指定する。
+  trでスペース・タブを半角スペース1個へ揃え、改行を保持する。
+  別解はawkで空行までの単語を同じ行へ出し、空行と入力末尾で段落を閉じる方法。
+- 入力の意図：途中改行、連続スペース、離れた語句の重複と複数段落を含む。
+  期待値は手で確認した段落の単語列と独立した結合計算で照合する。
+  空入力、連続空行、段落の重複、文末のピリオド、日本語、単語間tab、末尾LFなし等は解法検査用。
+- 難易度・既存との差：初級後半。pipeと空行・空白の違いを前提とする。
+  PRACTICE-fold-01の各行の分割、PRACTICE-paste-01の空行を空項目として含む全体結合と異なる。
+  STANDARD-00000009は段落内部を保存して並べ替えるが、本問は段落順を保って内部を整形する。
+  字下げのない短い段落を対象とし、幅を超える文章・引用や箇条書きの一般的な再整形までは扱わない。
+
+両問の独立期待値・公開DTO・policy・白JPEGは
+[非Docker検査](../backend/tests/test_csplit_and_fmt_problem.py)、
+参照解・自然な別解・誤答・境界条件は
+[実sandbox検査](../backend/tests/integration/test_problem_csplit_and_fmt_solutions.py)で確認する。
 全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。

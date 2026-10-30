@@ -1,0 +1,49 @@
+schema_version: 3
+id: PRACTICE-csplit-01
+category: PRACTICE
+title:
+  ja: csplit 1
+  en: csplit 1
+statement:
+  ja: |
+    練習：csplit
+
+    input.txtには、複数の作業手順が続けて書かれています。
+    csplitを使い、行頭の「## 」で始まる見出しを区切りにして、見出しごとのファイルに分割してください。見出し行は新しいファイルの先頭に含めます。
+
+    ファイル名は入力順にsection00、section01、…とし、空のファイルは作りません。
+    各ファイルについて、ファイル名と行数を半角スペース1個で区切って1行ずつ出力してください。行数には見出し行と空行も含め、ファイル名の順に並べてください。
+  en: |
+    Practice: csplit
+
+    The file input.txt contains several sets of work instructions in sequence.
+    Use csplit to split it into one file per section, with each line beginning with "## " marking the start of a section. Include the heading as the first line of the new file.
+
+    Name the files section00, section01, and so on, in input order. Do not create empty files.
+    For each file, output its name and line count on one line, separated by a single space. Count heading lines and blank lines too, and output the files in filename order.
+reference_solution: csplit -s -z -f section input.txt '/^## /' '{*}' && for f in section[0-9][0-9]; do [ -f "$f" ] || continue; printf '%s %s\n' "$f" "$(wc -l < "$f")"; done
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      ## prepare
+      check tools
+      note ## build is text
+      ## build
+      compile sources
+
+      run tests
+      package files
+      ## release
+      check tools
+      publish notes
+      tag version
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    section00 3
+    section01 5
+    section02 4
