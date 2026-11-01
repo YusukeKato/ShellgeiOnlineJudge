@@ -1,0 +1,86 @@
+schema_version: 3
+id: STANDARD-00000071
+category: STANDARD
+title:
+  ja: 同じ内容のファイルをまとめる
+  en: Grouping Files with Identical Contents
+statement:
+  ja: |
+    input.txtには、調べるファイルの相対パスが1行に1つずつ書かれています。
+    一覧に載っているファイルのうち、内容が完全に同じものをまとめてください。2ファイル以上ある組だけを出力してください。
+    ファイル名や拡張子ではなく、スペースと改行を含む内容全体で比べます。
+
+    各組のファイル名を辞書順に並べ、「 | 」（半角スペース、縦棒、半角スペース）でつないで1行に出力してください。
+    組どうしは、各組の先頭のファイル名の辞書順に並べてください。パスとファイル名の中のスペースは、そのまま出力してください。
+
+    次のファイルが配置済みです。各行の「: 」より左がファイル名、右が内容の1行です。それぞれの内容の末尾には改行（LF）が1個あります。
+    data/red.txt: red sun
+    data/other green.txt: green leaf
+    data/blue.txt: blue sky
+    data/red upper.txt: RED SUN
+    data/third blue.txt: blue sky
+    data/green.txt: green leaf
+    data/copy blue.log: blue sky
+    data/unlisted.txt: blue sky
+  en: |
+    The file input.txt lists one relative path per line for the files to examine.
+    Group the listed files whose complete contents are identical. Output only groups containing at least two files.
+    Compare the entire contents, including spaces and line feeds, rather than filenames or extensions.
+
+    Sort the filenames within each group in lexicographic order and join them with " | " (a space, a vertical bar, and a space) on one line.
+    Sort the groups by their first filename. Preserve paths and spaces within filenames.
+
+    The following files are already available. In each entry below, the text before ": " is the filename and the text after it is the file's single line of content. Each file ends with exactly one line feed (LF).
+    data/red.txt: red sun
+    data/other green.txt: green leaf
+    data/blue.txt: blue sky
+    data/red upper.txt: RED SUN
+    data/third blue.txt: blue sky
+    data/green.txt: green leaf
+    data/copy blue.log: blue sky
+    data/unlisted.txt: blue sky
+reference_solution: xargs -r -d '\n' sha256sum -- < input.txt | sort | awk '$1!=h{if(n>1)print names;h=$1;n=0;names=""}{name=substr($0,67);names=names
+  (n++?" | ":"") name}END{if(n>1)print names}' | sort
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      data/red.txt
+      data/other green.txt
+      data/blue.txt
+      data/red upper.txt
+      data/third blue.txt
+      data/green.txt
+      data/copy blue.log
+  - path: data/red.txt
+    content: |
+      red sun
+  - path: data/other green.txt
+    content: |
+      green leaf
+  - path: data/blue.txt
+    content: |
+      blue sky
+  - path: data/red upper.txt
+    content: |
+      RED SUN
+  - path: data/third blue.txt
+    content: |
+      blue sky
+  - path: data/green.txt
+    content: |
+      green leaf
+  - path: data/copy blue.log
+    content: |
+      blue sky
+  - path: data/unlisted.txt
+    content: |
+      blue sky
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    data/blue.txt | data/copy blue.log | data/third blue.txt
+    data/green.txt | data/other green.txt
