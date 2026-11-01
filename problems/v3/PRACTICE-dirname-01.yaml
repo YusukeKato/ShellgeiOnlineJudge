@@ -1,0 +1,48 @@
+schema_version: 3
+id: PRACTICE-dirname-01
+category: PRACTICE
+title:
+  ja: dirname 1
+  en: dirname 1
+statement:
+  ja: |
+    input.txtの各行はファイルのパスです。
+    各パスから末尾のファイル名を取り除き、親ディレクトリのパスを入力順に1行ずつ出力してください。同じ結果が複数回出る場合も、そのまま出力してください。
+
+    「/」がないパスは「.」、ルートディレクトリ直下のファイルは「/」と出力してください。
+    「./docs」のような先頭の「./」は省略しないでください。
+    パスが表すファイルやディレクトリが実際に存在するかどうかを調べる必要はありません。
+  en: |
+    Each line of input.txt is a file path.
+    Remove the final file name from each path and print its parent directory path, one per line in input order. Preserve repeated results.
+
+    Print "." for a path without "/", and "/" for a file directly under the root directory.
+    Keep a leading "./", as in "./docs".
+    You do not need to check whether the files or directories named by these paths exist.
+reference_solution: while IFS= read -r p || [ -n "$p" ]; do dirname -- "$p"; done < input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      logs/api.log
+      logs/archive/old.log
+      draft notes/todo.txt
+      report.txt
+      /etc/soj/app.conf
+      /status.txt
+      logs/worker.log
+      ./docs/readme.md
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    logs
+    logs/archive
+    draft notes
+    .
+    /etc/soj
+    /
+    logs
+    ./docs

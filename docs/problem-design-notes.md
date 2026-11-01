@@ -81,6 +81,7 @@
 | [STANDARD-00000068](#note-standard-00000068) | ページ別の訪問者数 |
 | [STANDARD-00000069](#note-standard-00000069) | カテゴリ別の売上首位 |
 | [STANDARD-00000070](#note-standard-00000070) | バイト数で本文を取り出す |
+| [STANDARD-00000071](#note-standard-00000071) | 同じ内容のファイルをまとめる |
 
 ### PRACTICE
 
@@ -102,6 +103,7 @@
 | [PRACTICE-cat-04](#note-practice-cat-04) | cat 4 |
 | [PRACTICE-csplit-01](#note-practice-csplit-01) | csplit 1 |
 | [PRACTICE-cut-01](#note-practice-cut-01) | cut 1 |
+| [PRACTICE-dirname-01](#note-practice-dirname-01) | dirname 1 |
 | [PRACTICE-echo-01](#note-practice-echo-01) | echo 1 |
 | [PRACTICE-echo-02](#note-practice-echo-02) | echo 2 |
 | [PRACTICE-echo-03](#note-practice-echo-03) | echo 3 |
@@ -1806,4 +1808,43 @@ symlinkを展開しない挙動を確認する。全問題回帰と日英大小�
 [非Docker検査](../backend/tests/test_csplit_and_fmt_problem.py)、
 参照解・自然な別解・誤答・境界条件は
 [実sandbox検査](../backend/tests/integration/test_problem_csplit_and_fmt_solutions.py)で確認する。
+全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+
+<a id="note-standard-00000071"></a>
+
+## STANDARD-00000071：同じ内容のファイルをまとめる
+
+- 問題データ：[STANDARD-00000071.yaml](../problems/v3/STANDARD-00000071.yaml)
+- 狙い・発見：ファイル名の一覧を、ファイルの内容が同じかどうかで分類する。
+  内容から得たhashを分類のキーへ変換し、ファイル名・拡張子と内容の違いを捉える。
+- 解法の核：xargs -dで空白を含む各行を1引数としてsha256sumへ渡し、
+  hash順に揃えてawkで複数件の組を出し、最後に表示順を整える。別解はcmpで内容を直接比較する。
+- 入力の意図：拡張子違い・3件の一致・空白を含む名前・大文字小文字の違い・一覧外の一致ファイルを含む。
+  期待値はfixtureの文字列全体をキーとする独立計算で確認する。
+  空の一覧・単独・全て一致・全て異なる・空file・末尾LF差等は解法検査用とする。
+- 難易度・既存との差：中級。pipe・引用・ファイルと内容の区別を前提とする。
+  STANDARD-00000044は内容に特定文字列を含むfileの探索、本問は列挙したfile間の同一性による分類。
+  PRACTICE-sha256sum-01の文字列digest表示から、複数fileの分類・表示順の復元へ進む。
+  改番前の同番号との照合は[ID対応表](../problems/README.md#通常問題のid)と配備時点を併用する。
+
+<a id="note-practice-dirname-01"></a>
+
+## PRACTICE-dirname-01：dirname 1
+
+- 問題データ：[PRACTICE-dirname-01.yaml](../problems/v3/PRACTICE-dirname-01.yaml)
+- 狙い・発見：ファイルのpathを親directoryと末尾の名前へ分け、親側だけを取り出す。
+- 解法の核：IFS= read -rと引用符で1行を壊さずdirnameへ渡し、入力順と重複を保持する。
+  別解はawkで最後の/以降を除き、/なしとroot直下を場合分けする。
+- 入力の意図：空白、/なし、root直下、深いpath、同じ親の重複、先頭./を含む。
+  期待値は各行の親を手で対応付け、posixpath.dirnameでも独立に確認する。
+  空の入力・先頭ハイフン・backslash・末尾LFなし等は解法検査用とする。
+- 難易度・既存との差：初級。変数・引用と相対/絶対pathの基礎を前提とする。
+  PRACTICE-basename-01の名前側の抽出、PRACTICE-realpath-01の正規化と異なり、親側の抽出と.・/の意味を学ぶ。
+  公開入力は末尾にfile名のあるpathで、実在確認や任意のPOSIX path全体の正規化は扱わない。
+
+両問の独立期待値・公開DTO・policy・白JPEGは
+[非Docker検査](../backend/tests/test_dirname_and_duplicate_files_problem.py)、
+参照解・自然な別解・誤答・境界条件は
+[実sandbox検査](../backend/tests/integration/test_problem_dirname_and_duplicate_files_solutions.py)で確認する。
 全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
