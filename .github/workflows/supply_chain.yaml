@@ -37,7 +37,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --only-upgrade ca-certificates
           python ci/bootstrap_pip.py
-          python -m pip install poetry==2.5.1 certifi==2026.10.19
+          python -m pip install poetry==2.5.1 certifi==2026.10.23
           poetry check --lock
           poetry install --no-interaction
       - name: Install verified scanners
@@ -118,7 +118,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --only-upgrade ca-certificates
           python ci/bootstrap_pip.py
-          python -m pip install poetry==2.5.1 certifi==2026.10.19
+          python -m pip install poetry==2.5.1 certifi==2026.10.23
           poetry check --lock
           poetry install --no-interaction
       - name: Prepare user systemd and D-Bus for rootless cgroups
@@ -205,7 +205,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --only-upgrade ca-certificates
           python ci/bootstrap_pip.py
-          python -m pip install poetry==2.5.1 certifi==2026.10.19
+          python -m pip install poetry==2.5.1 certifi==2026.10.23
           poetry check --lock
           poetry install --no-interaction
       - name: Prepare user systemd and D-Bus for rootless cgroups
@@ -271,7 +271,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --only-upgrade ca-certificates
           python ci/bootstrap_pip.py
-          python -m pip install poetry==2.5.1 certifi==2026.10.19
+          python -m pip install poetry==2.5.1 certifi==2026.10.23
           poetry check --lock
           poetry install --no-interaction
       - name: Prepare user systemd and D-Bus for rootless cgroups

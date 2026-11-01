@@ -56,6 +56,10 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- certifiの追加CA削除とPlaywright driverのCA対策を含むDependabot更新を反映しています。
+  build・CI用certifiもrunnerのlockと同期し、TLS検証とCA拒否検査を維持します。
+  対象・互換性の評価は[2026-11-01の依存統合記録](./dependency-remediation-history.md#2026-11-01の依存統合)を参照してください。
+
 - Python・内蔵Expat、sandboxのBrotli、DBのOpenSSL、frontend/DBのmusl-utilsと
   共有依存OpenTelemetry APIを限定更新します。固定値は各Dockerfile・lockを正本とします。
   根拠・到達条件と検査範囲は

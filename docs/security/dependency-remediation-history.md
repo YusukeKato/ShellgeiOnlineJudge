@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-01: 依存統合](#2026-11-01の依存統合)
 - [2026-10-28: runtime修正更新](#2026-10-28のruntime修正更新)
 - [2026-10-25: Brotli・Zod・Undici更新](#2026-10-25のbrotlizodundici更新)
 - [2026-10-22: frontend curl/libcurl削除](#2026-10-22のfrontend-curllibcurl削除)
@@ -23,6 +24,27 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-01の依存統合
+
+基準commitは3a1b03c41438163264087f64f2550dad4990c929。既存PR保守の継続承認に基づき、
+Dependabot #197〜205を統合します。固定値はpyproject・packageと各lockを正本とします。
+
+- [certifiの公式差分](https://github.com/certifi/python-certifi/compare/2026.10.19...2026.10.23)で、
+  残存するemSign C1/C3 rootの削除を確認しました。runner用lockに加え、Poetryの導入に使う
+  backend/browser build・Python CIのcertifiも同期し、以前のCA対策へ後退させません。
+- [Playwright patch](https://github.com/microsoft/playwright-python/releases/tag/v1.64.1)は
+  driver内NodeのCA対策を含みます。browserは本番runtimeへ追加せず、従来のOS CA利用も維持します。
+- [FastAPIの変更](https://github.com/fastapi/fastapi/releases/tag/0.162.0)は省略されたboolean form値の扱いです。
+  SOJはJSON DTOを使い、Formを使う公開endpointはありません。HTTP status・DTO契約を既存testで確認します。
+- [pytestの変更](https://github.com/pytest-dev/pytest/releases/tag/9.2.0)に対し、parametrizeの追加引数、
+  marker、有効な設定fileの指定と終了codeに依存する検査を確認します。Ruffの既定ruleは変更しません。
+- React RouterのpatchとVite・ESLint関連patchは通常の依存更新です。lockの選択を維持し、
+  frontendのformat・lint・型・test・buildと、日英画面・提出・保存を回帰対象にします。
+
+Pythonの基本検査、CA・runtime境界とCompose E2E、対象headの全CI・署名・本番確認を分けて照合します。
+検証結果と配備commitの証跡は統合PRへ記録します。問題data、API、sandbox/TLSの制限、scan停止条件は維持します。
+今回更新していないhost kernelとglibc、開発依存minimatch等の監視結果を、解決済みとは扱いません。
 
 ### 2026-10-28のruntime修正更新
 
