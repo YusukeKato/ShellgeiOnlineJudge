@@ -6,7 +6,7 @@ RUN python /tmp/soj-bootstrap-pip.py --update-ensurepip \
     && rm /tmp/soj-bootstrap-pip.py
 
 FROM python-base AS dependencies
-RUN pip install --no-cache-dir poetry==2.5.1 certifi==2026.10.19 && python -m venv /opt/venv
+RUN pip install --no-cache-dir poetry==2.5.1 certifi==2026.10.23 && python -m venv /opt/venv
 ENV VIRTUAL_ENV=/opt/venv PATH="/opt/venv/bin:$PATH"
 WORKDIR /build
 COPY pyproject.toml poetry.lock ./

@@ -8,7 +8,7 @@ RUN python /tmp/soj-bootstrap-pip.py --update-ensurepip \
 FROM python-base AS build-tools
 
 # Poetryはbuild stageだけに置き、lock済み依存をruntime専用venvへ導入する。
-RUN pip install --no-cache-dir poetry==2.5.1 certifi==2026.10.19 \
+RUN pip install --no-cache-dir poetry==2.5.1 certifi==2026.10.23 \
     && python -m venv /opt/venv
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="/opt/venv/bin:${PATH}"

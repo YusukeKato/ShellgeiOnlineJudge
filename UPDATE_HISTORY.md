@@ -3,6 +3,12 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-01 依存更新
+
+Dependabotの9件を統合し、Python・frontendと検査用toolの依存を更新しました。
+certifiの追加CA削除とPlaywright driverのCA対策を反映し、build・CIの固定版も同期しています。
+API・判定・sandbox/TLS制限と問題dataは維持します。
+
 ## 2026-10-30 問題追加
 
 練習問題「csplit 1」と「fmt 1」を追加しました。
