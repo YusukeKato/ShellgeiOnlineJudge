@@ -133,6 +133,7 @@
 | [PRACTICE-sort-01](#note-practice-sort-01) | sort 1 |
 | [PRACTICE-sort-02](#note-practice-sort-02) | sort 2 |
 | [PRACTICE-sort-03](#note-practice-sort-03) | sort 3 |
+| [PRACTICE-sort-04](#note-practice-sort-04) | sort 4 |
 | [PRACTICE-tac-01](#note-practice-tac-01) | tac 1 |
 | [PRACTICE-tee-01](#note-practice-tee-01) | tee 1 |
 | [PRACTICE-uniq-01](#note-practice-uniq-01) | uniq 1 |
@@ -1870,4 +1871,24 @@ symlinkを展開しない挙動を確認する。全問題回帰と日英大小�
 [非Docker検査](../backend/tests/test_tee_problem.py)で独立期待値・公開DTO・policy・白JPEG、
 [実sandbox検査](../backend/tests/integration/test_problem_tee_solutions.py)で参照解・別解・5誤答・
 8境界入力、保存内容の一致とrequest間のfile分離を確認する。
+全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+
+<a id="note-practice-sort-04"></a>
+
+## PRACTICE-sort-04：sort 4
+
+- 問題データ：[PRACTICE-sort-04.yaml](../problems/v3/PRACTICE-sort-04.yaml)
+- 狙い・発見：見かけの桁数や辞書順ではなく、K・M・G付きサイズを小さい順に比較する。
+- 解法の核：sortの第2field指定とhuman-readable比較を組み合わせる。
+  別解はawkでbyte数の比較列を作り、数値sort後にその列だけを除く。
+- 入力の意図：byte・K・M・G、同一単位の桁数とfile名順を混ぜる。
+  手換算したbyte数と各値より小さい要素数による順位を、期待出力と独立に照合する。
+  単位ごとの非負整数は1024未満、byte数は相異なる入力に限定し、任意の非正規化表記や小数・同値の順序へ一般化しない。
+- 難易度・既存との差：初級後半。field指定とsortの基礎を前提とする。
+  sort 1〜3の辞書順・数値・重複除去、STANDARD-00000062のversion比較と異なり、単位を伴う比較方法を選ぶ。
+
+[非Docker検査](../backend/tests/test_sort_h_problem.py)で独立期待値・公開DTO・policy・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_problem_sort_h_solutions.py)で参照解・別解・4誤答・
+6境界入力（空・単一行・単位境界・同単位・0・末尾LFなし）の計18実行を確認する。
 全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
