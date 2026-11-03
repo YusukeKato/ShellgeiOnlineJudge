@@ -3,6 +3,12 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-03 frontend Expat更新
+
+frontendに収録するExpatをAlpineの修正版へ限定更新しました。
+実frontend imageのpackage下限検査を追加し、TLS・表示・API経路の既存検査と併せて確認します。
+Python内蔵版・sandbox・hostの更新とは区別し、問題dataと既存の隔離・判定は維持します。
+
 ## 2026-11-01 問題追加
 
 通常問題「同じ内容のファイルをまとめる」と練習問題「dirname 1」を追加しました。
