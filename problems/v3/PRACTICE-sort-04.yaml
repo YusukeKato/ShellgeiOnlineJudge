@@ -1,0 +1,52 @@
+schema_version: 3
+id: PRACTICE-sort-04
+category: PRACTICE
+title:
+  ja: sort 4
+  en: sort 4
+statement:
+  ja: |
+    練習：sort
+
+    input.txtの各行は「ファイル名 サイズ」です。
+    sortを使い、サイズの小さい順に行を並べ替えてください。
+
+    サイズのKは1024byte、Mは1024の2乗byte、Gは1024の3乗byteを表します。
+    接尾辞がない値の単位はbyteです。
+    ファイル名とサイズの表記は変更しないでください。
+  en: |
+    Practice: sort
+
+    Each line of input.txt is "filename size".
+    Use sort to output the lines in ascending order of file size.
+
+    K means 1024 bytes, M means 1024 squared bytes, and G means 1024 cubed bytes.
+    A value without a suffix is in bytes.
+    Keep each filename and size exactly as written.
+reference_solution: sort -k2,2h input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      backup.tar 1G
+      notes.txt 950K
+      image.raw 12M
+      tiny.dat 800
+      archive.zip 2M
+      logs.tar 100K
+      bundle.bin 1M
+      cache.bin 900
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    tiny.dat 800
+    cache.bin 900
+    logs.tar 100K
+    notes.txt 950K
+    bundle.bin 1M
+    archive.zip 2M
+    image.raw 12M
+    backup.tar 1G
