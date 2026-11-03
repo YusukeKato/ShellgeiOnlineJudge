@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-03: frontend Expat更新](#2026-11-03のfrontend-expat更新)
 - [2026-11-01: 依存統合](#2026-11-01の依存統合)
 - [2026-10-28: runtime修正更新](#2026-10-28のruntime修正更新)
 - [2026-10-25: Brotli・Zod・Undici更新](#2026-10-25のbrotlizodundici更新)
@@ -24,6 +25,26 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-03のfrontend Expat更新
+
+基準commitはa88d4838a43aafc8dd8465364c8e17bbbfec4986。利用者の承認に基づき、
+frontendのAlpine libexpatだけを限定更新します。固定versionはDockerfileを正本とします。
+
+- [上流の修正記録](https://github.com/libexpat/libexpat/blob/R_2_10_0/expat/Changes)は
+  CVE-2026-113351・115506・117610・118370を修正します。
+  [Alpine stable package](https://pkgs.alpinelinux.org/package/v3.24/main/x86_64/libexpat)でも修正版の提供を確認しました。
+- frontend nginxはTLS・静的file・HTTP proxyを担当します。公開入力から対象XML処理への到達と
+  SOJでの悪用成立は未確認であり、今回は収録されるlibraryの修正版への更新です。
+- 既存runtime package検査へExpatの下限を加え、上流nginx baseだけの単体検査ではなく、
+  APK更新後の実frontend imageを確認します。旧imageが下限を満たさず、新imageが満たすことを照合します。
+- frontend基本検査、Python基本検査、rootlessの実package・nginx/TLS/CA・Compose E2E、
+  対象headのsource/5image scanと全問題回帰・browser・配備CIを検証範囲とします。
+  DoS payload・大量入力・攻撃試験は行わず、vendor修正packageの実収録と正常動作で限定検証します。
+
+nginx base、他のpackage pin、API・DB schema、問題data、sandbox・TLS制限、scanの停止条件は維持します。
+Python内蔵Expat、Ubuntu sandboxのsystem Expat、host kernel/runtimeの残存評価は別対象です。
+停止対象0を全脆弱性0と表現しません。最終head・実検査と本番配備結果は対象PRへ記録します。
 
 ### 2026-11-01の依存統合
 

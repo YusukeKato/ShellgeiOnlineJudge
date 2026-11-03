@@ -378,12 +378,12 @@ def test_runtime_image_product_version(runtime_client: Any, service: str) -> Non
 def test_frontend_runtime_contains_fixed_nginx_and_x11_libraries(
     runtime_client: Any,
 ) -> None:
-    """実frontendのnginx・X11/XPM・Brotli・musl関連packageが修正版から後退しないことを確認する。"""
+    """実frontendのnginx・Expat・X11/XPM・Brotli・musl関連packageが修正版から後退しないことを確認する。"""
     output = runtime_client.containers.run(
         os.environ["SOJ_COMPOSE_FRONTEND_IMAGE"],
         [
             "-ec",
-            "nginx -v 2>&1; apk info --exists 'libx11>=1.8.14-r0' 'libxpm>=3.5.20-r0' 'brotli-libs>=1.2.1-r0' 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3'",
+            "nginx -v 2>&1; apk --no-network info --exists 'libexpat>=2.10.0-r0' 'libx11>=1.8.14-r0' 'libxpm>=3.5.20-r0' 'brotli-libs>=1.2.1-r0' 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3'",
         ],
         entrypoint="/bin/sh",
         network_mode="none",
