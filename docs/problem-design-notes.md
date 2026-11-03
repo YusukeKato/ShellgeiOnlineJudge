@@ -134,6 +134,7 @@
 | [PRACTICE-sort-02](#note-practice-sort-02) | sort 2 |
 | [PRACTICE-sort-03](#note-practice-sort-03) | sort 3 |
 | [PRACTICE-tac-01](#note-practice-tac-01) | tac 1 |
+| [PRACTICE-tee-01](#note-practice-tee-01) | tee 1 |
 | [PRACTICE-uniq-01](#note-practice-uniq-01) | uniq 1 |
 | [PRACTICE-uniq-02](#note-practice-uniq-02) | uniq 2 |
 | [PRACTICE-wc-01](#note-practice-wc-01) | wc 1 |
@@ -1847,4 +1848,26 @@ symlinkを展開しない挙動を確認する。全問題回帰と日英大小�
 [非Docker検査](../backend/tests/test_dirname_and_duplicate_files_problem.py)、
 参照解・自然な別解・誤答・境界条件は
 [実sandbox検査](../backend/tests/integration/test_problem_dirname_and_duplicate_files_solutions.py)で確認する。
+全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+
+<a id="note-practice-tee-01"></a>
+
+## PRACTICE-tee-01：tee 1
+
+- 問題データ：[PRACTICE-tee-01.yaml](../problems/v3/PRACTICE-tee-01.yaml)
+- 狙い・発見：抽出した同じstreamを表示と保存へ分け、内容の確認と保存結果の行数表示をつなげる。
+- 解法の核：grepでコメント行を除き、teeで表示しながら保存し、wcとprintfで件数を添える。
+  別解はsedで先に保存してからcatで表示する方法で、通常のredirectとの役割の差を比べる。
+- 入力の意図：行頭の#、字下げされた#、空行と離れた重複を含む。入力2・4・5・6・7・8行目を
+  手で対応付け、先頭1文字の判定とLF数による独立計算で本文と6行を照合する。
+  空入力、全てコメント、コメントなし、空行のみ、字下げ、日本語、最後の空行等は解法検査用。
+- 難易度・既存との差：初級後半。pipe・redirect・行頭一致と行数の基礎を前提とする。
+  PRACTICE-grep-01の抽出、PRACTICE-wc-01の元入力の行数、STANDARD-00000065の抽出後の連番と異なり、
+  途中の内容を複製するteeの働きを学ぶ。公開入力は末尾LF付きで、任意の末尾LF欠落は扱わない。
+  コマンド構文と生成file自体は採点せず、最終stdoutと実行policyを判定する。
+
+[非Docker検査](../backend/tests/test_tee_problem.py)で独立期待値・公開DTO・policy・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_problem_tee_solutions.py)で参照解・別解・5誤答・
+8境界入力、保存内容の一致とrequest間のfile分離を確認する。
 全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。

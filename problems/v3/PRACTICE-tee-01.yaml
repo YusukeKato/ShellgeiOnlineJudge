@@ -1,0 +1,51 @@
+schema_version: 3
+id: PRACTICE-tee-01
+category: PRACTICE
+title:
+  ja: tee 1
+  en: tee 1
+statement:
+  ja: |
+    練習：tee
+
+    input.txtでは、先頭の文字が#の行をコメント行とします。
+    コメント行を除いた内容をteeを使ってそのまま出力し、同じ内容をpreview.txtにも保存してください。
+
+    続けて、preview.txtの行数を「LINES 行数」の形式で1行に出力してください。
+    空行も1行として数え、残す行の順序と文字列は変えないでください。
+  en: |
+    Practice: tee
+
+    In input.txt, a line is a comment if its first character is #.
+    Use tee to print the non-comment content unchanged and also save the same content to preview.txt.
+
+    Then print the number of lines in preview.txt as "LINES n" on a new line.
+    Count blank lines as lines, and preserve the order and text of the retained lines.
+reference_solution: >-
+  grep -v '^#' input.txt | tee preview.txt; printf 'LINES %s\n' "$(wc -l < preview.txt)"
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      # deployment notes
+      start
+      # skipped
+      alpha beta
+
+      start
+        # keep
+      end
+      # end notes
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    start
+    alpha beta
+
+    start
+      # keep
+    end
+    LINES 6
