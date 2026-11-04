@@ -56,6 +56,11 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- frontendの開発検査用minimatchを修正版へ限定overrideしています。
+  既存callerでは告知の最適化条件を選択しておらず、本番nginxへも収録しませんが、
+  依存自体の修正版を使用します。固定値は[package](../../frontend/package.json)と[lock](../../frontend/yarn.lock)を正本とします。
+  [2026-11-04の記録](./dependency-remediation-history.md#2026-11-04のminimatch更新)に、互換性と未修正項目の区別を記載しています。
+
 - frontendのExpatをvendor修正版へ限定更新し、実frontend imageに収録されたpackageの下限を検査します。
   固定値は[frontend Dockerfile](../../frontend/Dockerfile)を正本とします。
   [2026-11-03の是正記録](./dependency-remediation-history.md#2026-11-03のfrontend-expat更新)に対象と検証範囲を記載しています。

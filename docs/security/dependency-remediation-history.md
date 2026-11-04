@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-04: minimatch更新](#2026-11-04のminimatch更新)
 - [2026-11-03: frontend Expat更新](#2026-11-03のfrontend-expat更新)
 - [2026-11-01: 依存統合](#2026-11-01の依存統合)
 - [2026-10-28: runtime修正更新](#2026-10-28のruntime修正更新)
@@ -25,6 +26,32 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-04のminimatch更新
+
+基準commitは7755c135df19d8e9b579f5a0a0e4dac1a64580a4。保守対応の承認に基づき、
+frontendの開発検査用minimatchだけを限定overrideします。固定値はpackageとlockを正本とします。
+
+- [CVE-2026-118764 / GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249)は、
+  最適化level2以上でglobstarと親directoryの展開が増え、前処理のCPU・memoryが過大になる指摘です。
+  上流修正は展開上限の適用と大規模集合の二重比較の抑止を含みます。
+- ESLint・config-array・typescript-estreeの現行callerはMinimatchのconstructor・match・pattern、
+  minimatch関数とdot/flipNegateを使い、該当最適化levelを選びません。
+  公開requestからこれら開発toolへの到達は確認しておらず、最終nginxにはdistだけをコピーします。
+- 親3packageは引き続き旧majorを要求するため、親を無関係に更新せずresolutionsを使います。
+  新majorはregex内部API等を変更しますが、確認したcallerは使いません。
+  Nodeの既定版も対応範囲内です。一般的な上流互換性を保証するものではありません。
+- 小さいpatternと展開上限で修正を回帰検査し、CJS/ESMの通常照合・dotfile・否定・partial探索、
+  更新前後のlint対象file集合とfrontend基本5検査を確認します。
+  rootless統合・全問題回帰・browser・5image/source scan・署名・本番配備は対象headのCIと照合します。
+  大量pattern、負荷試験、攻撃試験は行いません。
+
+ImageMagickの2CVE（119123・119124）はUbuntu nobleの修正package未確認で、
+119123はNeeds evaluation、119124のfresh pageは取得失敗です。7系への変更で解消したとは扱いません。
+NodeのHIGH修正は11月11日以降の公開予告段階で、現行22系に新しい修正版は未公開です。
+host kernel/runtimeの現状は未取得のため、アプリ配備によって更新済みとは扱いません。
+API・問題data、DB、sandboxとTLS/CA、scan停止条件は維持します。
+最終head・実検査・配備結果は対象PRに記録します。
 
 ### 2026-11-03のfrontend Expat更新
 

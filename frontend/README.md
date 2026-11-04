@@ -139,6 +139,12 @@ Vitest 5では、`setupTests.js`でjest-domの公開matcherを`expect.extend`へ
 一致・不一致時の動作は`matchers.test.ts`で確認します。
 jest-domの連携方法を更新するときも、型検査を省略せずこの契約を維持してください。
 
+minimatchは開発検査用の間接依存です。修正版への限定overrideを
+[`package.json`](./package.json)の`resolutions`で管理し、
+`minimatch.test.js`でCJS/ESMの照合・探索と小さい展開上限を検査します。
+親packageが修正版を通常依存に採用したらoverrideの撤去を評価してください。
+上限や照合仕様の変更時は、lintの対象fileが欠落しないことも確認します。
+
 runtime imageのbase digestとOS packageの固定値は[`Dockerfile`](./Dockerfile)を正本とします。
 本番imageでは使わないcurl/libcurlを削除しています。利用者の端末向けcurl例は引き続き表示します。
 固定packageが配布元から消えた場合は、同じAlpine branchで配布中の候補を確認し、
