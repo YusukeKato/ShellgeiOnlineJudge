@@ -12,6 +12,9 @@
     "react-dom": "^19.3.1",
     "react-router-dom": "7"
   },
+  "resolutions": {
+    "minimatch": "11.0.4"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@eslint-react/eslint-plugin": "^5.28.8",
