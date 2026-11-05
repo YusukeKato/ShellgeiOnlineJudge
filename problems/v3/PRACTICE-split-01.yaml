@@ -1,0 +1,53 @@
+schema_version: 3
+id: PRACTICE-split-01
+category: PRACTICE
+title:
+  ja: split 1
+  en: split 1
+statement:
+  ja: |
+    練習：split
+
+    input.txtの行を、splitを使ってpart_0、part_1、part_2へ順番に1行ずつ振り分けてください。
+    1行目はpart_0、2行目はpart_1、3行目はpart_2、4行目は再びpart_0へ入れ、以後も同じ順を繰り返します。
+
+    part_0、part_1、part_2の順に、[part_0]のような見出しを1行出力し、その直後に各ファイルの内容を出力してください。
+    空行も1行として数え、各ファイル内では元の行順・重複・行内のスペースを保ってください。
+  en: |
+    Practice: split
+
+    Use split to distribute the lines of input.txt one at a time to part_0, part_1, and part_2 in that order.
+    Put line 1 in part_0, line 2 in part_1, line 3 in part_2, and line 4 back in part_0. Continue repeating this order.
+
+    Output the files in the order part_0, part_1, part_2. Before each file's contents, output a heading such as [part_0] on its own line.
+    Count blank lines as lines. Within each file, preserve the original line order, duplicates, and spaces within lines.
+reference_solution: split -n r/3 -d -a 1 input.txt part_; for f in part_[0-2]; do printf '[%s]\n' "$f"; cat "$f"; done
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      build api
+      test ui
+
+      lint backend
+      build api
+      deploy docs
+      scan image
+      test api
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    [part_0]
+    build api
+    lint backend
+    scan image
+    [part_1]
+    test ui
+    build api
+    test api
+    [part_2]
+
+    deploy docs

@@ -120,6 +120,7 @@
 | [PRACTICE-paste-01](#note-practice-paste-01) | paste 1 |
 | [PRACTICE-pr-01](#note-practice-pr-01) | pr 1 |
 | [PRACTICE-printf-01](#note-practice-printf-01) | printf 1 |
+| [PRACTICE-printf-02](#note-practice-printf-02) | printf 2 |
 | [PRACTICE-realpath-01](#note-practice-realpath-01) | realpath 1 |
 | [PRACTICE-rev-01](#note-practice-rev-01) | rev 1 |
 | [PRACTICE-rs-01](#note-practice-rs-01) | rs 1 |
@@ -134,6 +135,7 @@
 | [PRACTICE-sort-02](#note-practice-sort-02) | sort 2 |
 | [PRACTICE-sort-03](#note-practice-sort-03) | sort 3 |
 | [PRACTICE-sort-04](#note-practice-sort-04) | sort 4 |
+| [PRACTICE-split-01](#note-practice-split-01) | split 1 |
 | [PRACTICE-tac-01](#note-practice-tac-01) | tac 1 |
 | [PRACTICE-tee-01](#note-practice-tee-01) | tee 1 |
 | [PRACTICE-uniq-01](#note-practice-uniq-01) | uniq 1 |
@@ -1891,4 +1893,40 @@ symlinkを展開しない挙動を確認する。全問題回帰と日英大小�
 [非Docker検査](../backend/tests/test_sort_h_problem.py)で独立期待値・公開DTO・policy・白JPEG、
 [実sandbox検査](../backend/tests/integration/test_problem_sort_h_solutions.py)で参照解・別解・4誤答・
 6境界入力（空・単一行・単位境界・同単位・0・末尾LFなし）の計18実行を確認する。
+全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+
+<a id="note-practice-split-01"></a>
+
+## PRACTICE-split-01：split 1
+
+- 問題データ：[PRACTICE-split-01.yaml](../problems/v3/PRACTICE-split-01.yaml)
+- 狙い・発見：連続する行の切り分けと、行を複数の出力先へ巡回配分する操作の違いを学ぶ。
+- 解法の核：split -n r/3で3fileへ配り、数字の接尾辞を付けて見出しと内容を順に表示する。
+  別解はawkの行番号の剰余を使った配分。生成file自体やcommand構文は採点しない。
+- 入力の意図：8行の1/4/7・2/5/8・3/6行目を独立対応し、空行でも番が進み、重複と行内spaceが残ることを検査する。
+  空・1/2/3/6行、空行だけ、日本語・backslash・space、重複は解法の境界検査用。
+- 難易度・既存との差：初級後半。fileと行・for/printf/catの基礎を前提とする。
+  STANDARD-00000067のsplit -lによる連続3行分割、PRACTICE-pr-01の縦組み配置と異なり、行ごとの出力先の巡回を扱う。
+  公開入力と検証対象は末尾LF付きtextであり、任意のCR/NULや末尾LF欠落には一般化しない。
+
+<a id="note-practice-printf-02"></a>
+
+## PRACTICE-printf-02：printf 2
+
+- 問題データ：[PRACTICE-printf-02.yaml](../problems/v3/PRACTICE-printf-02.yaml)
+- 狙い・発見：文字列そのものと、その文字列をBashの1引数として記述するための表記を区別する。
+- 解法の核：IFS= read -rで行を壊さず読み、固定formatのBash組み込みprintf %qへ引用した引数を渡す。
+  別解はmapfile -tで行を配列に読み、各要素を同じ形式へ変換する。
+- 入力の意図：space、glob記号、$、引用符、backslash、空行、行頭spaceを含め、手で決めた文字別の引用表記と独立照合する。
+  空入力・空行・端のspace・%・複数記号・日本語も検査する。出力表記を再評価して実行する検査は行わない。
+- 難易度・既存との差：初級後半。変数展開の二重引用符と行入力の基礎を前提とする。
+  PRACTICE-printf-01の%bによる復元、STANDARD-00000016のHTML文字変換と異なり、Bashの引数表記へ変換する。
+  一般に等価な引用方法を全て採点する課題ではなく、Bash組み込み%qの表記を出力形式とする。
+  制御文字やNUL・埋込みLF・末尾LFなしの一般化は検証対象外。公開出力の正誤を末尾spaceだけに依存させない。
+
+両問の独立期待値・公開DTO・policy・白JPEGは
+[非Docker検査](../backend/tests/test_split_and_printf_q_problem.py)、
+参照解・自然な別解・各4誤答・境界条件とsplitのrequest間file分離は
+[実sandbox検査](../backend/tests/integration/test_problem_split_and_printf_q_solutions.py)で確認する。
 全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
