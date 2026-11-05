@@ -1,0 +1,56 @@
+schema_version: 3
+id: PRACTICE-printf-02
+category: PRACTICE
+title:
+  ja: printf 2
+  en: printf 2
+statement:
+  ja: |
+    練習：printf
+
+    input.txtの各行を、Bashのコマンドに「1つの引数」として書ける表記に変換してください。
+    出力形式は、Bash組み込みprintfの%qで得られる表記とし、1行につき1行出力してください。
+
+    スペースや$、*などは、入力に書かれた文字そのものとして扱ってください。
+    空行は空文字列の引数として扱い、行の順序と各行のスペースを保ってください。
+
+    例えば、a bはa\ b、空文字列は''と表します。
+  en: |
+    Practice: printf
+
+    Convert each line of input.txt into a representation that can be written as one argument in a Bash command.
+    Use the output representation produced by the %q format of Bash's builtin printf, and output one line for each input line.
+
+    Treat spaces and characters such as $ and * as the literal characters written in the input.
+    Treat an empty line as an empty-string argument. Preserve line order and all spaces within each input line.
+
+    For example, a b is represented as a\ b, and an empty string as ''.
+reference_solution: while IFS= read -r value; do printf '%q\n' "$value"; done < input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      annual report.txt
+      plain.txt
+      draft[old].txt
+      price$usd.txt
+      O'Reilly.txt
+
+      notes\backup.txt
+      *.log
+        draft.txt
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    annual\ report.txt
+    plain.txt
+    draft\[old\].txt
+    price\$usd.txt
+    O\'Reilly.txt
+    ''
+    notes\\backup.txt
+    \*.log
+    \ \ draft.txt
