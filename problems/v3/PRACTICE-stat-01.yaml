@@ -1,0 +1,75 @@
+schema_version: 3
+id: PRACTICE-stat-01
+category: PRACTICE
+title:
+  ja: stat 1
+  en: stat 1
+statement:
+  ja: |
+    練習：stat
+
+    input.txtには、調べるファイルの相対パスが1行に1つずつ書かれています。
+    statを使い、各ファイルのパスとサイズを「パス バイト数」の形式で出力してください。
+    input.txtの順序を守り、同じパスが複数回登場するときも、その回数だけ出力してください。
+    パスに含まれるスペースはそのまま残してください。
+
+    次のファイルが配置済みです。下表の\nは改行（LF）1個を表し、それ以外の文字はそのままファイルに入っています。文字コードはUTF-8です。サイズには改行も含めます。
+
+    パス                     内容
+     data/message.txt        Hello SOJ!\n
+     data/short.txt          cat
+     data/japanese.txt       猫と犬\n
+     data/two lines.txt      ab\ncd\n
+     data/unlisted.txt       not listed\n
+  en: |
+    Practice: stat
+
+    The file input.txt lists one relative path per line for the files to examine.
+    Use stat to print each path and its file size in bytes, in the form "path bytes".
+    Follow the order in input.txt. If a path appears more than once, print it once for each occurrence.
+    Preserve spaces within paths.
+
+    The following files are already available. In the table, \n represents one line feed (LF); all other characters appear literally in the files. The files use UTF-8. Include line feeds in the size.
+
+    Path                     Contents
+     data/message.txt        Hello SOJ!\n
+     data/short.txt          cat
+     data/japanese.txt       猫と犬\n
+     data/two lines.txt      ab\ncd\n
+     data/unlisted.txt       not listed\n
+reference_solution: while IFS= read -r p || [ -n "$p" ]; do stat --format='%n %s' -- "$p"; done < input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      data/short.txt
+      data/japanese.txt
+      data/two lines.txt
+      data/message.txt
+      data/short.txt
+  - path: data/message.txt
+    content: |
+      Hello SOJ!
+  - path: data/short.txt
+    content: cat
+  - path: data/japanese.txt
+    content: |
+      猫と犬
+  - path: data/two lines.txt
+    content: |
+      ab
+      cd
+  - path: data/unlisted.txt
+    content: |
+      not listed
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    data/short.txt 3
+    data/japanese.txt 10
+    data/two lines.txt 6
+    data/message.txt 11
+    data/short.txt 3

@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-06: APT・OpenTelemetry・Undici更新](#2026-11-06のaptotelundici更新)
 - [2026-11-04: minimatch更新](#2026-11-04のminimatch更新)
 - [2026-11-03: frontend Expat更新](#2026-11-03のfrontend-expat更新)
 - [2026-11-01: 依存統合](#2026-11-01の依存統合)
@@ -26,6 +27,22 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-06のaptotelundici更新
+
+基準mainは3fe1d576cdd7f7ad71ca7301103aba85c227ff79。新問とは別に、利用者が3群の修正更新と検証後の本番反映を承認しました。
+固定値は共通APT bootstrapと各lockを正本とします。
+
+- [CVE-2026-109518](https://security-tracker.debian.org/tracker/CVE-2026-109518)はHTTP取得のredirect・retryとhard link再利用で未検証packageを導入させる指摘です。
+  公開APIはAPTを実行しませんが、buildの最初の取得も保護します。backendとbrowserのPython stage、Ubuntu問題data・最終stageを同じbootstrapで更新し、TLS/署名検証を維持します。
+  Ubuntu初期CA不在を固定baseで確認し、更新済みAlpine bundleを一時利用して削除します。問題data用の既存CA pinが配布元から消失していたため、vendorの後続版へ同期し、既存の不信頼CA拒否検査を維持します。[Ubuntu修正版](https://ubuntu.com/security/notices/USN-8996-1)も実packageで検査します。
+- [OpenTelemetry公式告知](https://github.com/open-telemetry/opentelemetry-python/security/advisories/GHSA-mf5v-w3w3-f6cg)のtraceparent ReDoSは改行を含む長いcarrierが条件です。
+  SOJで該当providerや独自carrierは確認しておらず、公開悪用の成立は未確認です。依存を修正版へ更新し、512/513境界・通常の抽出と再出力を検査します。
+  以前のtracestate検査は維持し、DoS用の長い入力や時間比較は行いません。
+- [Undici公式release](https://github.com/nodejs/undici/releases/tag/v8.12.4)の6修正を、jsdom経由の開発依存へ反映します。
+  親majorやNode同梱版は更新せず、本番nginxへUndiciを追加しません。MockAgentで実通信を禁止し、通常取得・SRI空白・別origin redirectの資格情報境界を検査します。
+- Python基本検査、frontend基本5検査、rootlessのAPT実収録とCA・runtime境界、全問題回帰とbrowser、source/5image scanを分けて確認します。
+  CI・署名・配備・本番確認の最終headと結果はPRへ残します。停止対象0を全脆弱性0と扱わず、host OS/runtimeを同時に更新したとは扱いません。
 
 ### 2026-11-04のminimatch更新
 

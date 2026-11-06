@@ -149,6 +149,9 @@ DBのPUBLIC CREATE/TEMP、public schemaのPUBLIC CREATE、管理対象表・sequ
 
 ## 本番runtime image
 
+APTは共通Python stageで初回取得から保護し、全派生stageへ修正版を継承します。
+取得手順は[APT bootstrap](../ci/prepare_apt.sh)、CA検査は[CI文書](../docs/CI.md#ca信頼ストアの検査)を参照してください。
+
 `backend/Dockerfile`は`backend`と`runner`の独立した最終targetを持ち、Composeが
 serviceごとに選択します。target未指定の場合は`backend`をbuildします。
 共有packageと各targetの専用packageをdirectory単位でCOPYします。

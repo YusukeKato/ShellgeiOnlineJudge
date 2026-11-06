@@ -56,6 +56,10 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- APTの初回取得を保護し、OpenTelemetry APIと開発検査用Undiciを限定更新します。
+  固定値は[APT bootstrap](../../ci/prepare_apt.sh)と各lock、到達条件と検証範囲は
+  [2026-11-06の是正記録](./dependency-remediation-history.md#2026-11-06のaptotelundici更新)を参照してください。
+
 - frontendの開発検査用minimatchを修正版へ限定overrideしています。
   既存callerでは告知の最適化条件を選択しておらず、本番nginxへも収録しませんが、
   依存自体の修正版を使用します。固定値は[package](../../frontend/package.json)と[lock](../../frontend/yarn.lock)を正本とします。
