@@ -1,9 +1,17 @@
+FROM golang:1.26.10-alpine@sha256:9ce231b28998b32e116927c61aa5c406183061d4f3f2d61b292c88e7f6bdf7ca AS apt-ca
+# 固定済みCAを初回APT用に使い、runtimeには追加しない。
+RUN apk add --no-cache --upgrade ca-certificates=20261020-r0 ca-certificates-bundle=20261020-r0
+
 # 公式Ubuntuの最小rootfsを使用し、ShellgeiBotImageの実行file・layerを継承しない。
 FROM ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS problem-data
 
+COPY --from=apt-ca /etc/ssl/certs/ca-certificates.crt /tmp/soj-apt-ca.pem
+COPY ci/prepare_apt.sh /tmp/soj-prepare-apt.sh
+
 # Gitは取得revisionの記録にだけ使用し、実行用imageへ持ち込まない。
-RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git ca-certificates=20260816ubuntu0.24.04.1 \
+RUN sh /tmp/soj-prepare-apt.sh ubuntu /tmp/soj-apt-ca.pem \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git ca-certificates=20260816ubuntu0.24.04.2 \
+    && rm -f /tmp/soj-apt-ca.pem /tmp/soj-prepare-apt.sh /etc/apt/apt.conf.d/99soj-apt-bootstrap \
     && rm -rf /var/lib/apt/lists/*
 
 # refを固定しないGit ADDはbuildごとにdefault branchのHEADを解決する。
@@ -13,9 +21,8 @@ RUN git -C /ShellGeiData rev-parse HEAD > /shellgeidata-revision \
     && rm -rf /ShellGeiData/.git
 
 # textimgだけを修正版Go・固定moduleでbuildし、Go環境は実行用imageへ持ち込まない。
-FROM golang:1.26.10-alpine@sha256:9ce231b28998b32e116927c61aa5c406183061d4f3f2d61b292c88e7f6bdf7ca AS textimg-build
-# Go verifierとOS storeの両方を更新し、module取得前に旧rootを除く。
-RUN apk add --no-cache --upgrade ca-certificates=20261020-r0 ca-certificates-bundle=20261020-r0
+FROM apt-ca AS textimg-build
+# 更新済みGo verifierとOS storeをapt-caから継承する。
 WORKDIR /build
 COPY deploy/sandbox/textimg/go.mod deploy/sandbox/textimg/go.sum ./
 ENV CGO_ENABLED=0 GOTOOLCHAIN=local
@@ -40,13 +47,17 @@ RUN mkdir -p /out/licenses/go \
 FROM ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3
 LABEL org.opencontainers.image.version="3.0.3"
 
+COPY --from=apt-ca /etc/ssl/certs/ca-certificates.crt /tmp/soj-apt-ca.pem
+COPY ci/prepare_apt.sh /tmp/soj-prepare-apt.sh
+
 # Ubuntuの署名済みrepositoryからsecurity更新を適用する。確定した生成物はIDで固定しscanする。
 # 推奨packageや開発環境を導入せず、全92問・runnerの固定操作とtextimgに必要なpackageを追加する。
-RUN apt-get update \
+RUN sh /tmp/soj-prepare-apt.sh ubuntu /tmp/soj-apt-ca.pem \
     && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --no-install-recommends \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
        bash coreutils gawk grep sed findutils bc rs tar locales imagemagick-6.q16 fonts-noto-cjk libbrotli1=1.1.0-2ubuntu0.1 \
     && localedef -i ja_JP -f UTF-8 ja_JP.UTF-8 \
+    && rm -f /tmp/soj-apt-ca.pem /tmp/soj-prepare-apt.sh /etc/apt/apt.conf.d/99soj-apt-bootstrap \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* \
     && find / -xdev -type f -perm /6000 -exec chmod a-s {} +
 

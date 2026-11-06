@@ -82,11 +82,20 @@ assert sys.version_info[:3] >= (3, 12, 16)
 assert pyexpat.version_info >= (2, 9, 0)
 # 二乗時間parseの修正版を要求し、通常header・任意空白・重複key拒否の互換性を確認する。
 from opentelemetry.trace import TraceState
-assert tuple(map(int, importlib.metadata.version("opentelemetry-api").split("."))) >= (1, 45, 1)
+assert tuple(map(int, importlib.metadata.version("opentelemetry-api").split("."))) >= (1, 45, 2)
 assert dict(TraceState.from_header(["a=b"]).items()) == {"a": "b"}
 assert dict(TraceState.from_header(["a=b,  c=d"]).items()) == {"a": "b", "c": "d"}
 assert len(TraceState.from_header(["a=b,a=c"])) == 0
 assert len(TraceState.from_header([" " * 1024])) == 0
+# traceparentの短い境界入力を確認し、長いDoS payloadは生成しない。
+from opentelemetry import trace
+from opentelemetry.context import Context
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+propagator = TraceContextTextMapPropagator()
+header = "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01"
+for length, valid in ((512, True), (513, False)):
+    context = propagator.extract({"traceparent": header + " " * (length-len(header))}, context=Context())
+    assert trace.get_current_span(context).get_span_context().is_valid is valid
 package = importlib.import_module('soj_backend' if service == 'backend' else 'soj_runner')
 shared = importlib.import_module('soj_shared')
 for base in (shared, package):
@@ -425,3 +434,77 @@ done
         security_opt=["no-new-privileges:true"],
         remove=True,
     )
+
+
+@pytest.mark.parametrize("service", ["backend", "runner", "sandbox"])
+def test_runtime_apt_is_fixed_and_has_no_bootstrap_ca_override(
+    runtime_client: Any, service: str
+) -> None:
+    """実収録APT/libaptの修正版を要求し、一時CAやbootstrap設定の残存を拒否する。"""
+    image = os.environ["SANDBOX_IMAGE_ID"] if service == "sandbox" else _image(service)
+    library = "libapt-pkg6.0t64" if service == "sandbox" else "libapt-pkg7.0"
+    minimum = "2.8.4ubuntu0.1" if service == "sandbox" else "3.0.4"
+    script = (
+        "set -eu; for package in apt "
+        + library
+        + "; do actual=$(dpkg-query -W -f='${Version}' \"$package\"); "
+        + 'dpkg --compare-versions "$actual" ge '
+        + minimum
+        + "; done; "
+        + "test ! -e /tmp/soj-apt-ca.pem; test ! -e /tmp/soj-prepare-apt.sh; "
+        + "test ! -e /etc/apt/apt.conf.d/99soj-apt-bootstrap"
+    )
+    runtime_client.containers.run(
+        image,
+        ["/bin/sh", "-ec", script],
+        network_mode="none",
+        read_only=True,
+        cap_drop=["ALL"],
+        security_opt=["no-new-privileges:true"],
+        remove=True,
+    )
+
+
+@pytest.mark.parametrize(
+    "distribution,ca_path,expected_message",
+    [
+        ("debian", "/tmp/nonexistent-soj-ca.pem", b""),
+        (
+            "unsupported",
+            "/etc/ssl/certs/ca-certificates.crt",
+            b"unsupported APT distribution",
+        ),
+    ],
+)
+def test_apt_bootstrap_rejects_missing_ca_and_unknown_distribution_before_acquisition(
+    runtime_client: Any, distribution: str, ca_path: str, expected_message: bytes
+) -> None:
+    """通信不可・read-onlyの一時image内で不正bootstrapが取得前に停止することを確認する。"""
+    payload = (ROOT / "ci/prepare_apt.sh").read_text(encoding="utf-8")
+    container = runtime_client.containers.create(
+        _image("backend"),
+        ["/bin/sleep", "30"],
+        network_mode="none",
+        read_only=True,
+        tmpfs={"/tmp": "rw,noexec,nosuid,nodev,size=1M,mode=1777"},
+        cap_drop=["ALL"],
+        security_opt=["no-new-privileges:true"],
+        mem_limit="512m",
+        nano_cpus=500000000,
+        pids_limit=50,
+    )
+    try:
+        container.start()
+        result = container.exec_run(
+            ["/bin/sh", "-c", payload, "soj-apt-probe", distribution, ca_path]
+        )
+        assert result.exit_code != 0
+        if expected_message:
+            assert expected_message in result.output
+        else:
+            assert result.output == b""
+    finally:
+        try:
+            container.stop(timeout=5)
+        finally:
+            container.remove(force=True, v=True)

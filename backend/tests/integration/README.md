@@ -347,3 +347,6 @@ SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_COMPOSE_E2E=1 \
 - 大量コンテナ生成など、極端な負荷条件を扱う耐性試験
 
 これらはホスト側watchdogを備え、スナップショットから復元できる使い捨てVMでのみ実行してください。
+
+APT更新時は実runtimeのpackage下限と一時設定の不在を検査します。OpenTelemetryのtraceparent検査は512/513文字の短い境界入力を使います。
+初回取得の保護とCAの扱いは[CI文書](../../../docs/CI.md#ca信頼ストアの検査)を参照してください。

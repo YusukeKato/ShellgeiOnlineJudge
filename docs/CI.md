@@ -348,6 +348,9 @@ virtualenv seed、Nodeの内蔵bundleを読み取ります。Playwright専用Nod
 [固定の公開証明書fixture](../backend/tests/fixtures/emudhra/README.md)で、漏えいCA経由の
 12 chainがissuer不信頼で拒否され、正常なSOJ chainが許可されることを同時に確認します。
 時刻を採取日に固定するため、将来の証明書期限切れを是正成功とは扱いません。
+APTの初回取得は[共通bootstrap](../ci/prepare_apt.sh)でHTTPS・TLS検証とretry/redirect抑止を適用し、修正済みAPT/libaptへ更新します。
+backend・browserの共通Python stageと、sandboxの問題data・最終stageの両方が対象です。
+Ubuntu初期baseにはCAがないため、更新済みGo/Alpine stageのbundleをbuild中だけ使い、後続取得後に設定と一緒に削除します。
 sandboxのruntimeにはCAを追加せず、既存のnetwork隔離検査を維持します。
 
 localでの実行には、Python開発依存・OpenSSL CLI・明示したrootless socket・build済みimageが必要です。
