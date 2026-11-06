@@ -136,6 +136,7 @@
 | [PRACTICE-sort-03](#note-practice-sort-03) | sort 3 |
 | [PRACTICE-sort-04](#note-practice-sort-04) | sort 4 |
 | [PRACTICE-split-01](#note-practice-split-01) | split 1 |
+| [PRACTICE-stat-01](#note-practice-stat-01) | stat 1 |
 | [PRACTICE-tac-01](#note-practice-tac-01) | tac 1 |
 | [PRACTICE-tee-01](#note-practice-tee-01) | tee 1 |
 | [PRACTICE-uniq-01](#note-practice-uniq-01) | uniq 1 |
@@ -1929,4 +1930,24 @@ symlinkを展開しない挙動を確認する。全問題回帰と日英大小�
 [非Docker検査](../backend/tests/test_split_and_printf_q_problem.py)、
 参照解・自然な別解・各4誤答・境界条件とsplitのrequest間file分離は
 [実sandbox検査](../backend/tests/integration/test_problem_split_and_printf_q_solutions.py)で確認する。
+全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+
+<a id="note-practice-stat-01"></a>
+
+## PRACTICE-stat-01：stat 1
+
+- 問題データ：[PRACTICE-stat-01.yaml](../problems/v3/PRACTICE-stat-01.yaml)
+- 狙い・発見：本文の文字数や行数と、file属性としてのbyteサイズを区別する。
+- 解法の核：IFS= read -rで一覧のpathを壊さず読み、statの%nと%sで名前・サイズを出力する。
+  別解はwc -cで内容を数えてprintfでpathを添え、metadata取得との違いを比べる。
+- 入力の意図：space入りpath、日本語、複数行、末尾LFなし、離れた重複と一覧外fileを含む。
+  手計算の3・10・6・11byteとUTF-8 encode長で期待値を独立照合する。空一覧・単独・順序変更等は解法検査用。
+- 難易度・既存との差：初級後半。file・相対path・readと変数引用の基礎を前提とする。
+  STANDARD-00000071の内容同一性による分類、PRACTICE-wc-03の文字数と異なり、参照先のmetadataを一覧順に取得する。
+  空fileは現fixture schemaで表現できないため含めず、symlink・directory・path内LF/NULへ一般化しない。
+  コマンド構文自体は採点しない。
+
+[非Docker検査](../backend/tests/test_stat_problem.py)で独立期待値・公開fixture説明・DTO・policy・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_problem_stat_solutions.py)で回答例・別解・4誤答・7境界の計20実行を確認する。
 全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
