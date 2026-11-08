@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-08: frontend・DB zlib更新](#2026-11-08のzlib更新)
 - [2026-11-06: APT・OpenTelemetry・Undici更新](#2026-11-06のaptotelundici更新)
 - [2026-11-04: minimatch更新](#2026-11-04のminimatch更新)
 - [2026-11-03: frontend Expat更新](#2026-11-03のfrontend-expat更新)
@@ -27,6 +28,25 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-08のzlib更新
+
+基準mainはdff7abcc14e1f8dbee3a5ee5e450c9357d462e79。新問のcommit f47e4e2とは分けて、
+利用者がfrontend・DBのzlib更新、実image検査と文書同期、検証後の本番反映を承認しました。
+固定値は[frontend](../../frontend/Dockerfile)と[DB](../../deploy/postgres/Dockerfile)のDockerfileを正本とします。
+
+- [zlib 1.4の上流記録](https://github.com/madler/zlib/releases/tag/v1.4)は、既存のCVE-2026-85091 backport以外にも、
+  dictionary・reset・sync等のmemory安全性修正を含みます。
+  [Alpineのpackage](https://pkgs.alpinelinux.org/package/v3.24/main/x86_64/zlib)を使い、独自のlibrary buildやscan例外は追加しません。
+- CVE-2026-4738のCNAはGDALのcontrib/infback9を対象とし、上流も一般的な環境でのCritical評価の解釈に注意を示しています。
+  package検出をnginx/PostgreSQL経由のSOJ公開RCE成立とは扱いません。該当するAPI状態への到達は未確認です。
+- 同じ旧pinの取得失敗で既存PRのruntime buildが停止し、新しいscanner DBではfrontend・DBの停止対象が各1件になりました。
+  修正は最終Alpine stageのpackage更新と実image下限検査に限定します。
+  host、backend/runnerのDebian版、sandboxのUbuntu版、Node/Goのbuild用copyを同時に是正したとは扱いません。
+- API・DB schema・PGDATA・entrypoint、TLS/CAとsandbox制限を維持し、
+  Python基本検査、最終frontend/DBの実package、通常のHTTP/TLS、DBの旧→新→旧互換性、
+  rootless API判定・保存、source/5image scan、全問題回帰とbrowserを対象headで照合します。
+  CI・署名・配備・本番確認の最終結果はPRへ残します。停止対象0を全脆弱性0と説明しません。
 
 ### 2026-11-06のaptotelundici更新
 

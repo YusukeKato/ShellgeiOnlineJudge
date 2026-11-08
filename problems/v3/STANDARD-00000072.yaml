@@ -1,0 +1,123 @@
+schema_version: 3
+id: STANDARD-00000072
+category: STANDARD
+title:
+  ja: 各メモの最初の見出し
+  en: First Heading from Each Note
+statement:
+  ja: |
+    input.txtには、調べるメモの相対パスが1行に1つずつ書かれています。
+    それぞれのメモから、最初の見出しを1行ずつ取り出してください。
+
+    この問題では、行の最初の2文字が「#と半角スペース」の行を見出しとします。
+    出力は「パス:見出し行全体」の形式とし、#も残してください。
+    input.txtの順序を守り、同じパスが複数回登場するときも、その回数だけ出力してください。
+    パス内のスペースもそのまま残してください。
+
+    次の通常ファイルが配置済みです。[パス]の下がそのファイルの内容です。
+    ファイル間の空行は区切りで、内容には含めません。各ファイルの最終行にも改行があります。
+
+    [notes/beta.txt]
+    draft for # overview
+      # indented
+    # Beta overview
+    beta text
+    # Beta details
+
+    [notes/alpha memo.txt]
+    # Alpha memo
+    introduction
+    # Alpha appendix
+
+    [notes/gamma.txt]
+    status: draft
+    ## Internal section
+    # Gamma start
+    # Gamma end
+
+    [notes/delta.txt]
+    # Beta overview
+    # Another section
+
+    [notes/unlisted.txt]
+    # Not requested
+  en: |
+    The file input.txt lists one relative path per line for the notes to examine.
+    Extract the first heading from each listed note.
+
+    For this problem, a heading is a line whose first two characters are # followed by an ASCII space.
+    Output each result as "path:complete heading line", including the #.
+    Follow the order in input.txt. If a path occurs more than once, output a result for every occurrence.
+    Preserve spaces within paths.
+
+    The following regular files already exist. The content below each [path] belongs to that file.
+    Blank lines between files are separators, not part of their contents. Every file has a line feed after its final line.
+
+    [notes/beta.txt]
+    draft for # overview
+      # indented
+    # Beta overview
+    beta text
+    # Beta details
+
+    [notes/alpha memo.txt]
+    # Alpha memo
+    introduction
+    # Alpha appendix
+
+    [notes/gamma.txt]
+    status: draft
+    ## Internal section
+    # Gamma start
+    # Gamma end
+
+    [notes/delta.txt]
+    # Beta overview
+    # Another section
+
+    [notes/unlisted.txt]
+    # Not requested
+reference_solution: xargs -r -d '\n' grep -H -m1 -- '^# ' < input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      notes/beta.txt
+      notes/alpha memo.txt
+      notes/gamma.txt
+      notes/beta.txt
+  - path: notes/beta.txt
+    content: |
+      draft for # overview
+        # indented
+      # Beta overview
+      beta text
+      # Beta details
+  - path: notes/alpha memo.txt
+    content: |
+      # Alpha memo
+      introduction
+      # Alpha appendix
+  - path: notes/gamma.txt
+    content: |
+      status: draft
+      ## Internal section
+      # Gamma start
+      # Gamma end
+  - path: notes/delta.txt
+    content: |
+      # Beta overview
+      # Another section
+  - path: notes/unlisted.txt
+    content: |
+      # Not requested
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    notes/beta.txt:# Beta overview
+    notes/alpha memo.txt:# Alpha memo
+    notes/gamma.txt:# Gamma start
+    notes/beta.txt:# Beta overview

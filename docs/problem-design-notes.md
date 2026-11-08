@@ -82,6 +82,7 @@
 | [STANDARD-00000069](#note-standard-00000069) | カテゴリ別の売上首位 |
 | [STANDARD-00000070](#note-standard-00000070) | バイト数で本文を取り出す |
 | [STANDARD-00000071](#note-standard-00000071) | 同じ内容のファイルをまとめる |
+| [STANDARD-00000072](#note-standard-00000072) | 各メモの最初の見出し |
 
 ### PRACTICE
 
@@ -1950,4 +1951,25 @@ symlinkを展開しない挙動を確認する。全問題回帰と日英大小�
 
 [非Docker検査](../backend/tests/test_stat_problem.py)で独立期待値・公開fixture説明・DTO・policy・白JPEG、
 [実sandbox検査](../backend/tests/integration/test_problem_stat_solutions.py)で回答例・別解・4誤答・7境界の計20実行を確認する。
+全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+<a id="note-standard-00000072"></a>
+
+## STANDARD-00000072：各メモの最初の見出し
+
+- 問題データ：[STANDARD-00000072.yaml](../problems/v3/STANDARD-00000072.yaml)
+- 狙い・発見：path一覧と参照先の本文を区別し、全体の先頭ではなくfileごとの最初の一致を取り出す。
+- 解法の核：xargs -dで空白入りpathを1引数へ変換し、grep -H -m1で出所付きの最初の見出しを抽出する。
+  別解はfileごとにawkを呼び、最初の一致時に出力して終了する方法。
+- 入力の意図：行内・字下げされた#、##、file内の複数見出し、space入りpath、入力順と同じfileの再登場、
+  一覧外のfileを含む。見出し位置3・1・3とpath一覧を手で対応させ、行位置の最小値でも独立照合する。
+  空一覧・単独・重複・順序変更・末尾LFなしの一覧・異なるfileの同じ見出しは解法検査用。
+- 難易度・既存との差：初級後半〜中級。行頭一致・file引数・引用を前提とする。
+  STANDARD-00000044の存在判定とfile名列挙、PRACTICE-grep-01の全一致行抽出から、fileごとの打切りへ進む。
+  STANDARD-00000071の内容同一性による分類と異なり、順序・重複を保持して本文を抽出する。
+  見出しのないfile、LF/NULや端のspaceを含む任意のpath、Markdown全構文の解析は対象外。
+  コマンド構文自体は採点しない。
+
+[非Docker検査](../backend/tests/test_first_heading_problem.py)で独立期待値・日英の全fixture説明・DTO・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_problem_first_heading_solutions.py)で回答例・別解・7誤答・7境界の計23実行を確認する。
 全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。

@@ -13,9 +13,9 @@ RUN tar -xzf /tmp/gosu.tar.gz \
 FROM postgres:15-alpine@sha256:a46e076249ce434e41203b8c1dadfaa025b9726331d72390df038385d6dc29cd
 LABEL org.opencontainers.image.version="3.0.3"
 
-# PostgreSQL・entrypoint・PGDATAは継承し、検出のあるOpenSSL・libuuidだけを固定versionへ更新する。
-# zlibのCVE-2026-85091修正版も限定更新し、既存のOpenSSL/libuuid固定値を維持する。
-RUN apk add --no-cache --upgrade ca-certificates-bundle=20261020-r0 libcrypto3=3.5.9-r0 libssl3=3.5.9-r0 musl-utils=1.2.6-r3 libuuid=2.42.3-r1 zlib=1.3.2-r1
+# PostgreSQL・entrypoint・PGDATAは継承し、CAと必要なruntime libraryを固定versionへ更新する。
+# zlibの追加memory安全性修正を含むvendor版へ限定更新し、既存のOpenSSL/libuuid固定値を維持する。
+RUN apk add --no-cache --upgrade ca-certificates-bundle=20261020-r0 libcrypto3=3.5.9-r0 libssl3=3.5.9-r0 musl-utils=1.2.6-r3 libuuid=2.42.3-r1 zlib=1.4-r0
 COPY --from=gosu-build /out/gosu /usr/local/bin/gosu
 COPY --from=gosu-build /build/gosu-1.19/LICENSE /usr/local/share/licenses/gosu/LICENSE
 RUN gosu nobody true
