@@ -56,6 +56,10 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- Pydantic・SQLAlchemyと開発toolの依存更新を統合します。対象versionはlockを正本とし、
+  JSON/Pythonの入力検証、DB保存・migration・復旧、実imageの責務分離とfrontendを検査します。
+  [2026-11-08の依存統合記録](./dependency-remediation-history.md#2026-11-08の依存統合)を参照してください。
+
 - frontendとDBのAlpine zlibを、追加のmemory安全性修正を含むvendor版へ限定更新します。
   固定値は各Dockerfileを正本とし、実imageのpackage下限と通常のHTTP/TLS・DB互換性を検査します。
   CVE-2026-4738のpackage検出をSOJでの公開RCE成立とは扱いません。

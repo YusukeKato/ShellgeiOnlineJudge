@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-08: 依存更新10件の統合](#2026-11-08の依存統合)
 - [2026-11-08: frontend・DB zlib更新](#2026-11-08のzlib更新)
 - [2026-11-06: APT・OpenTelemetry・Undici更新](#2026-11-06のaptotelundici更新)
 - [2026-11-04: minimatch更新](#2026-11-04のminimatch更新)
@@ -28,6 +29,47 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-08の依存統合
+
+基準mainは1f805be5b5f1480df9d3c66df84342e18ffa067b。PR #215〜224のheadと差分を照合し、
+未取り込みの10更新をまとめて検証します。全件の旧runtime CIは、更新済みmainを含まない
+旧zlib pinの取得で停止しており、依存更新自体の不具合とは確認されていません。
+versionとhashは[Python lock](../../poetry.lock)・[frontend package](../../frontend/package.json)・
+[frontend lock](../../frontend/yarn.lock)を正本とします。
+
+- [Pydantic release](https://github.com/pydantic/pydantic/releases/tag/v2.14.2)はJSONのextra/alias解釈と型検証を修正します。
+  [qpmf-fgh3-ff25](https://github.com/pydantic/pydantic/security/advisories/GHSA-qpmf-fgh3-ff25)は
+  extra許可modelの追加key検証、
+  [3r8g-cqwr-jr29](https://github.com/pydantic/pydantic/security/advisories/GHSA-3r8g-cqwr-jr29)は
+  extra許可のaliased TypedDict/dataclassが条件です。
+  SOJの直接modelはextraを拒否し、上記の設定は確認していません。
+  内部responseのmodel_validate_jsonも含め、正当なpayloadと未知field・型・文字列制約の拒否を検査します。
+  package更新を公開悪用の成立確認とは扱いません。
+- [SQLAlchemy 2.1.7](https://github.com/sqlalchemy/sqlalchemy/releases/tag/rel_2_1_7)の
+  relationship・savepoint・DDL等の修正と、
+  [2.1.8](https://github.com/sqlalchemy/sqlalchemy/releases/tag/rel_2_1_8)の配布provenance変更を確認します。
+  #216のtitleにdeps-devとありますが、SOJではbackend runtime依存です。
+  通常の同期Session・parameter化SQL・保存・retention・権限とmigration、DB障害後の復帰を対象にします。
+  schemaや権限modelを更新するものではありません。
+- [mypy patch](https://mypy.readthedocs.io/en/stable/changelog.html#mypy-2-4-1)とast-serialize、
+  types-requests・types-docker・types-PyYAMLは開発検査用です。
+  types-dockerのrequests依存追加でdev groupにも入る既存HTTP依存は、versionを無関係に更新しません。
+  本番imageにmypyやstubを収録しません。
+- [ESLint](https://github.com/eslint/eslint/releases/tag/v10.14.0)・
+  [globals](https://github.com/sindresorhus/globals/releases/tag/v17.14.0)の更新では、
+  minimatch修正版overrideと既存lint規則を維持し、lint対象file集合も照合します。
+  他の親packageにも旧major依存が残るため、overrideを同時に撤去しません。
+- [Vitest](https://github.com/vitest-dev/vitest/releases/tag/v5.1.0)とmocker/spyを揃え、
+  既存jsdom・mock・fake timer検査を実行します。新しいbrowser modeやcoverage optionは導入しません。
+  [plugin-react](https://github.com/vitejs/vite-plugin-react/releases/tag/plugin-react%406.2.1)の
+  refreshInclude/refreshExclude修正とpeer許容範囲の変更も確認します。
+  SOJのreact()既定設定を維持し、format・lint・typecheck・test・buildと実ブラウザを確認します。
+- API・問題data・DB schema、sandbox・TLS/CA・scan停止条件は維持します。
+  Python 3.12〜3.14、実runtime境界、rootless DB/API・全144問回帰・browser、
+  source/5image scan・署名・本番確認の対象headと結果は統合PRへ残します。
+  未取り込みPRや別version更新を、古い変更の反映だけを理由に閉じません。
+  host OS/runtimeの更新、停止対象外の全検出の解消、実機iOS/Androidの確認は対象外です。
 
 ### 2026-11-08のzlib更新
 

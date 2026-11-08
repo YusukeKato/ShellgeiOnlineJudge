@@ -3,6 +3,12 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-08 依存更新10件の統合
+
+Pydantic・SQLAlchemy、型検査・stub、frontend開発toolのDependabot更新を統合しました。
+入力validationとDB保存・migration・復旧、frontendのbuild・表示を検証し、
+API・問題data・sandbox・TLS/CAの制約と既存の修正版overrideを維持します。
+
 ## 2026-11-08 frontend・DBのzlib更新
 
 frontendとPostgreSQL imageのzlibを、追加のmemory安全性修正を含むAlpine版へ限定更新しました。
