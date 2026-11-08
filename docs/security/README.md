@@ -56,6 +56,11 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- frontendとDBのAlpine zlibを、追加のmemory安全性修正を含むvendor版へ限定更新します。
+  固定値は各Dockerfileを正本とし、実imageのpackage下限と通常のHTTP/TLS・DB互換性を検査します。
+  CVE-2026-4738のpackage検出をSOJでの公開RCE成立とは扱いません。
+  [2026-11-08の是正記録](./dependency-remediation-history.md#2026-11-08のzlib更新)を参照してください。
+
 - APTの初回取得を保護し、OpenTelemetry APIと開発検査用Undiciを限定更新します。
   固定値は[APT bootstrap](../../ci/prepare_apt.sh)と各lock、到達条件と検証範囲は
   [2026-11-06の是正記録](./dependency-remediation-history.md#2026-11-06のaptotelundici更新)を参照してください。

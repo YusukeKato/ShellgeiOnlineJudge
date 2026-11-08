@@ -35,8 +35,8 @@ sandboxの指定・更新方針は[本番運用](../../../docs/PRODUCTION.md#san
 export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
 docker build --file deploy/sandbox/Dockerfile --tag soj-sandbox:local .
 export SANDBOX_IMAGE_ID="$(docker image inspect soj-sandbox:local --format '{{.Id}}')"
-docker pull \
-  postgres:15-alpine@sha256:fe0737ba566a2c5b2a28f34433c0a423261900ec17b9bf7ad115e1aae7e57f1b
+PYTHONPATH=backend poetry run python -c \
+  'import subprocess; from tests.postgres_support import upstream_postgres_image; subprocess.run(["docker", "pull", upstream_postgres_image()], check=True)'
 docker pull "$(sed -n 's/^FROM \(nginx:[^ ]*\).*$/\1/p' frontend/Dockerfile)"
 docker build --file deploy/postgres/Dockerfile --tag soj-db:local .
 ```
@@ -189,7 +189,7 @@ SOJ_RUN_DOCKER_TESTS=1 SOJ_RUN_RUNTIME_IMAGE_TESTS=1 \
 ```
 
 backend・runner・frontend・DB・sandboxの本番5種類について、OCI versionラベルが製品versionの正本と一致することを確認します。
-frontendでは、実際のnginx binaryとExpat・X11/XPM・Brotli packageが公開修正版以降であること、不要なcurl/wcurl・libcurl packageと共有libraryが存在しないことも確認します。
+frontendでは、実際のnginx binaryとExpat・X11/XPM・Brotli・zlib packageが公開修正版以降であること、不要なcurl/wcurl・libcurl packageと共有libraryが存在しないことも確認します。
 nginx単体testのbaseは`frontend/Dockerfile`から読み取り、本番baseの更新に追従します。
 ホスト監視CLIのtestは、別ownerを除外し、runner停止・削除後のsandbox残存を読み取りだけで検出することを確認します。
 

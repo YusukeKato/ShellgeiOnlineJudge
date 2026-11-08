@@ -3,6 +3,11 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-08 frontend・DBのzlib更新
+
+frontendとPostgreSQL imageのzlibを、追加のmemory安全性修正を含むAlpine版へ限定更新しました。
+実imageのpackage下限検査と、既存DB・HTTP/TLSの検証手順を同期し、sandbox・CA・APIとDBの制約は維持します。
+
 ## 2026-11-08 問題追加
 
 通常問題「各メモの最初の見出し」を追加しました。fileごとに最初の一致を取り出し、出所を付けて入力順に並べます。

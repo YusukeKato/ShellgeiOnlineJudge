@@ -504,8 +504,8 @@ CA更新時は[host側の更新](./PRODUCTION_HOST.md#外部tls接続のca更新
 ### PostgreSQL派生image
 
 DBは[`deploy/postgres/Dockerfile`](../deploy/postgres/Dockerfile)から`soj-db:local`をbuildします。
-公式entrypoint・PostgreSQLのmajor version・`PGDATA`を継承し、OpenSSL・libuuidを固定versionで更新、
-gosuを修正版Goで再buildします。compiler・source・build cacheは実行imageへ含めません。
+公式entrypoint・PostgreSQLのmajor version・`PGDATA`を継承し、CAと必要なruntime libraryを固定versionで更新、
+gosuを修正版Goで再buildします。packageと固定値の正本は上記Dockerfileです。compiler・source・build cacheは実行imageへ含めません。
 取得はAlpineの署名、gosu archiveのchecksumと`go.sum`、`-mod=readonly`で検証します。
 固定packageが配布元から消えた場合はbuildを停止し、別versionへ自動fallbackしません。
 
