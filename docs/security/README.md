@@ -56,6 +56,11 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- backend・runnerとCI用browserのDebian zlibをvendor修正版へ限定更新します。
+  共通Python baseで更新し、実package下限と通常のgzip・CRC処理、API・DB・画面を検査します。
+  package検出を公開入力からのmemory破壊成立とは扱いません。
+  [2026-11-09の是正記録](./dependency-remediation-history.md#2026-11-09のdebian-zlib更新)を参照してください。
+
 - Pydantic・SQLAlchemyと開発toolの依存更新を統合します。対象versionはlockを正本とし、
   JSON/Pythonの入力検証、DB保存・migration・復旧、実imageの責務分離とfrontendを検査します。
   [2026-11-08の依存統合記録](./dependency-remediation-history.md#2026-11-08の依存統合)を参照してください。

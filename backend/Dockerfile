@@ -1,8 +1,9 @@
 FROM python:3.12.16-slim-trixie@sha256:962f801b08c870ac2a51b72bf02dae38c9a4162319e5e882ec244e198188d54e AS python-base
 
-# 初回APTからTLS検証とretry/redirect抑止を適用し、全派生stageへ修正版を継承する。
+# 初回APTからTLS検証とretry/redirect抑止を適用し、APT・zlib修正版を全派生stageへ継承する。
 COPY ci/prepare_apt.sh /tmp/soj-prepare-apt.sh
 RUN sh /tmp/soj-prepare-apt.sh debian /etc/ssl/certs/ca-certificates.crt \
+    && apt-get install -y --no-install-recommends --only-upgrade zlib1g=1:1.3.dfsg+really1.3.1-1+deb13u1 \
     && rm -f /tmp/soj-prepare-apt.sh /etc/apt/apt.conf.d/99soj-apt-bootstrap \
     && rm -rf /var/lib/apt/lists/*
 

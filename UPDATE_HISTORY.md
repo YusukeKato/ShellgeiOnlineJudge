@@ -3,6 +3,17 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-09 Debian zlibの限定更新
+
+backend・runnerとCI用browserに、Debianのzlib修正版を適用しました。
+共通Python baseで更新し、実package下限・通常のgzip/CRC処理と既存API・DB・画面の検査を同期します。
+TLS/CA・sandbox・scanの停止条件は維持し、host packageは変更しません。
+
+## 2026-11-09 問題追加
+
+練習問題「cmp 1」を追加しました。2つのfileをbyte単位で比較し、異なる位置を取得します。
+UTF-8とLFを含む独立期待値・回答例・別解・誤答・境界条件と、追加fixtureの説明・画像・manifest・設計記録を同期しました。
+
 ## 2026-11-08 依存更新10件の統合
 
 Pydantic・SQLAlchemy、型検査・stub、frontend開発toolのDependabot更新を統合しました。

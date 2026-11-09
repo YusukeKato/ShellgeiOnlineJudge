@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import subprocess
 from pathlib import Path
 
 from soj_tools.problem_review import browser_plan
@@ -309,7 +310,21 @@ def check_problem(page: Page, problem_id: str) -> int:
 
 
 def main() -> None:
-    """外部通信・mockなしでtext、実行失敗、画像の表示を検証し、保存IDだけを出力する。"""
+    """実imageのzlib修正下限と、外部通信・mockなしの画面・提出・保存を検証する。"""
+    # 同じPython baseの別copyも、upstream文字列ではなく実収録Debian revisionを検査する。
+    installed_zlib = subprocess.check_output(
+        ["dpkg-query", "-W", "-f=${Version}", "zlib1g"], text=True
+    ).strip()
+    subprocess.run(
+        [
+            "dpkg",
+            "--compare-versions",
+            installed_zlib,
+            "ge",
+            "1:1.3.dfsg+really1.3.1-1+deb13u1",
+        ],
+        check=True,
+    )
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         # 一時自己署名証明書のみ例外扱い。ホスト側HTTP testはCA検証も実施する。
