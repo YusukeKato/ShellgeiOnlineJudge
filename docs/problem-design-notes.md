@@ -102,6 +102,7 @@
 | [PRACTICE-cat-02](#note-practice-cat-02) | cat 2 |
 | [PRACTICE-cat-03](#note-practice-cat-03) | cat 3 |
 | [PRACTICE-cat-04](#note-practice-cat-04) | cat 4 |
+| [PRACTICE-cmp-01](#note-practice-cmp-01) | cmp 1 |
 | [PRACTICE-csplit-01](#note-practice-csplit-01) | csplit 1 |
 | [PRACTICE-cut-01](#note-practice-cut-01) | cut 1 |
 | [PRACTICE-dirname-01](#note-practice-dirname-01) | dirname 1 |
@@ -1972,4 +1973,25 @@ symlinkを展開しない挙動を確認する。全問題回帰と日英大小�
 
 [非Docker検査](../backend/tests/test_first_heading_problem.py)で独立期待値・日英の全fixture説明・DTO・白JPEG、
 [実sandbox検査](../backend/tests/integration/test_problem_first_heading_solutions.py)で回答例・別解・7誤答・7境界の計23実行を確認する。
+全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+<a id="note-practice-cmp-01"></a>
+
+## PRACTICE-cmp-01：cmp 1
+
+- 問題データ：[PRACTICE-cmp-01.yaml](../problems/v3/PRACTICE-cmp-01.yaml)
+- 狙い・発見：2つのtextをbyte列として比較し、文字の位置とUTF-8 byte位置の違いを捉える。
+- 解法の核：cmp -lで全相違位置を列挙し、awkで位置列だけを取得する。
+  別解はodで1byteを1行の数値へ変え、pasteで対応付けて異なる行番号を出す。
+  cmpの相違ありは終了1だが、回答例のpipelineは最後のawkが0で終わる。
+- 入力の意図：離れた3箇所の相違、日本語・LF・大小文字を含む。1行目9byte・2行目8byteと
+  相違する値を手で対応させ、UTF-8 bytesの独立比較で8・14・23を照合する。
+  同一・空・1byte・先頭末尾・末尾LFなし・LF自体・UTF-8内の差は解法検査用。
+- 難易度・既存との差：初級後半。pipeとfield抽出を前提とする。
+  STANDARD-00000071の内容同一性によるfile群の分類（別解cmp -s）から、固定2fileの相違byte位置へ進む。
+  PRACTICE-od-01の単一fileのbyte表示とも異なり、対応する2列を比較する。
+  長さが異なるfileやdirectory・symlinkの比較へ一般化せず、command構文自体は採点しない。
+
+[非Docker検査](../backend/tests/test_cmp_problem.py)で独立期待値・追加fixture全文・公開DTO・policy・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_problem_cmp_solutions.py)で回答例・別解・4誤答と8境界の計22実行を確認する。
 全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。

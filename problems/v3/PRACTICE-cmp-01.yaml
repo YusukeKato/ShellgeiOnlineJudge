@@ -1,0 +1,51 @@
+schema_version: 3
+id: PRACTICE-cmp-01
+category: PRACTICE
+title:
+  ja: cmp 1
+  en: cmp 1
+statement:
+  ja: |
+    練習：cmp
+
+    input.txtとupdated.txtを1 byteずつ比較し、値が異なるbyteの位置を、先頭を1として小さい順に1行ずつ出力してください。
+
+    文字コードはUTF-8、改行コードはLFです。改行も1 byteとして数え、両ファイルの末尾にもLFがあります。
+
+    updated.txtはすでに配置されており、内容は次のとおりです。
+    alpha=17
+    色=Red
+    beta=94
+  en: |
+    Practice: cmp
+
+    Compare input.txt and updated.txt byte by byte. Output the 1-based positions of all differing bytes in ascending order, one per line.
+
+    The files are UTF-8 and use LF line endings. Count each LF as one byte. Both files also end with an LF.
+
+    The file updated.txt already exists and contains:
+    alpha=17
+    色=Red
+    beta=94
+reference_solution: cmp -l input.txt updated.txt | awk '{print $1}'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      alpha=12
+      色=red
+      beta=34
+  - path: updated.txt
+    content: |
+      alpha=17
+      色=Red
+      beta=94
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    8
+    14
+    23
