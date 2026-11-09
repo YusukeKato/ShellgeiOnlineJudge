@@ -465,6 +465,71 @@ def test_runtime_apt_is_fixed_and_has_no_bootstrap_ca_override(
     )
 
 
+@pytest.mark.parametrize("service", ["backend", "runner"])
+def test_runtime_debian_zlib_is_fixed_and_preserves_compression(
+    runtime_client: Any, service: str
+) -> None:
+    """実Debian packageの修正下限と、通常のnative gzip書き込み・CRC結合を通信なしで確認する。"""
+    script = """
+import ctypes
+import gzip
+import subprocess
+import zlib
+from pathlib import Path
+
+minimum = "1:1.3.dfsg+really1.3.1-1+deb13u1"
+actual = subprocess.check_output(
+    ["dpkg-query", "-W", "-f=${Version}", "zlib1g"], text=True
+).strip()
+subprocess.run(["dpkg", "--compare-versions", actual, "ge", minimum], check=True)
+# upstreamのversion文字列ではbackportを識別できないため、Debian revisionを比較する。
+for version, accepted in (
+    ("1:1.3.dfsg+really1.3.1-1+b1", False),
+    (minimum, True),
+    ("1:1.3.dfsg+really1.3.1-1+deb13u2", True),
+):
+    assert (subprocess.run(
+        ["dpkg", "--compare-versions", version, "ge", minimum]
+    ).returncode == 0) is accepted
+
+native = ctypes.CDLL("libz.so.1")
+native.gzopen.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+native.gzopen.restype = ctypes.c_void_p
+native.gzwrite.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_uint]
+native.gzwrite.restype = ctypes.c_int
+native.gzclose.argtypes = [ctypes.c_void_p]
+native.gzclose.restype = ctypes.c_int
+native.crc32_combine64.argtypes = [ctypes.c_ulong, ctypes.c_ulong, ctypes.c_longlong]
+native.crc32_combine64.restype = ctypes.c_ulong
+payload = "alpha=12\\n色=red\\nbeta=34\\n".encode()
+path = Path("/tmp/soj-zlib-roundtrip.gz")
+handle = native.gzopen(bytes(path), b"wb")
+assert handle
+try:
+    assert native.gzwrite(handle, payload, len(payload)) == len(payload)
+finally:
+    assert native.gzclose(handle) == 0
+assert gzip.decompress(path.read_bytes()) == payload
+for position in (0, 8, len(payload)):
+    first, second = payload[:position], payload[position:]
+    assert native.crc32_combine64(
+        zlib.crc32(first), zlib.crc32(second), len(second)
+    ) == zlib.crc32(payload)
+path.unlink()
+print(actual)
+"""
+    runtime_client.containers.run(
+        _image(service),
+        ["python", "-c", script],
+        network_mode="none",
+        mem_limit="512m",
+        nano_cpus=500000000,
+        pids_limit=50,
+        remove=True,
+        **_restrictions(service),
+    )
+
+
 @pytest.mark.parametrize(
     "distribution,ca_path,expected_message",
     [

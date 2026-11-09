@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-09: Debian zlib更新](#2026-11-09のdebian-zlib更新)
 - [2026-11-08: 依存更新10件の統合](#2026-11-08の依存統合)
 - [2026-11-08: frontend・DB zlib更新](#2026-11-08のzlib更新)
 - [2026-11-06: APT・OpenTelemetry・Undici更新](#2026-11-06のaptotelundici更新)
@@ -29,6 +30,32 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-09のDebian zlib更新
+
+基準mainはd09ac649fd7affff2eb357ee312182f6a56569d4です。cmp追加PR #227の
+head bd9b6dd2ddf85cd3a0ec962bd37707d6dd806884は、backend・runnerのzlib1gについて
+CVE-2026-76844とCVE-2026-85091が各2件、計4件の停止対象となりました。
+[Debian DSA-6613-1](https://security-tracker.debian.org/tracker/DSA-6613-1)の
+trixie-security修正版へ限定更新します。CVE-2026-27171も同じvendor修正の対象です。
+固定versionは[backend Dockerfile](../../backend/Dockerfile)と
+[browser Dockerfile](../../backend/tests/integration/browser/Dockerfile)を正本とします。
+
+backend・runnerの共通Python baseと、その別copyであるCI用browser baseへ反映します。
+初回APTのHTTPS・CA検証・retry/redirect抑止、既存APT・PCRE2修正版とsandbox制限を維持し、
+Alpine frontend・DBのzlib、Ubuntu sandbox、host packageはこの限定変更に含めません。
+中間build stageは修正版を継承しますが、本番5imageのscanと中間stageの個別scanは区別します。
+
+76844・85091はnative gz* writerの書き込み失敗など、27171は不正なCRC結合長が条件です。
+SOJの公開入力からこの条件に達することや、公開経由の悪用成立は確認していません。
+runnerの入力archiveは非圧縮tarで、sourceで直接のgz*/CRC結合呼び出しも確認していません。
+Debianのaffected判定とupstreamの一部条件の違いは残し、検出だけでRCE成立や誤検出と断定しません。
+
+実backend・runnerのdpkg revision下限、旧revision拒否・修正版と後続revision受理、
+通常のnative gzip書き込みとUTF-8復号、正当な長さのCRC結合を通信なしで検査します。
+browserも実収録package下限を検査し、API・DB・HTTP/TLS・画面・全問題回帰と
+新しいscanner DBの結果を対象headで確認します。memory破壊・DoSのPoCは実行しません。
+検査・CI・本番の対象commitと結果はPR #227と作業証跡へ残し、全体監査やhost是正とは扱いません。
 
 ### 2026-11-08の依存統合
 

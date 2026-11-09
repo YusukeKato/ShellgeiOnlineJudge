@@ -171,6 +171,13 @@ networkを使わず実imageのOS・Python・Node CAを公開証明書fixtureと�
 
 ## 本番runtime imageの検証
 
+Debianのbackend・runnerは実収録zlib packageのvendor修正下限に加え、
+通信なしで通常のnative gzip書き込み・CRC結合を検査します。
+CI用browserの別Python baseも起動時に実package下限を確認します。
+upstreamのversion文字列だけではDebian backportを区別できません。
+固定versionと限定更新の範囲は[是正記録](../../../docs/security/dependency-remediation-history.md#2026-11-09のdebian-zlib更新)を参照してください。
+
+
 `test_runtime_images.py`は追加の明示flagと、本番5種類のbuild済みimageを必要とします。
 [共通準備](#共通準備と基本dockerテスト)でsandbox・派生DBを用意し、rootless環境を確認したうえで、
 リポジトリrootからbackend・runner・frontendをbuildします。
