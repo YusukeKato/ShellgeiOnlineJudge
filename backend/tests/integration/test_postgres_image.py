@@ -64,7 +64,7 @@ def test_existing_database_survives_image_upgrade_and_rollback() -> None:
         assert "name=rootless" in client.info()["SecurityOptions"]
         old = client.images.get(upstream_postgres_image())
         new = client.images.get(database_image())
-        # DBのABIと既存volumeを変えず、OpenSSL・musl-utils・zlibの旧copyを拒否する。
+        # DBのABIと既存volumeを変えず、OpenSSL・musl-utils・zlib・XSLT・Kerberosの旧copyを拒否する。
         client.containers.run(
             new,
             [
@@ -76,6 +76,8 @@ def test_existing_database_survives_image_upgrade_and_rollback() -> None:
                 "musl>=1.2.6-r3",
                 "musl-utils>=1.2.6-r3",
                 "zlib>=1.4-r0",
+                "libxslt>=1.1.43-r4",
+                "krb5-libs>=1.22.3-r0",
             ],
             entrypoint="/sbin/apk",
             network_mode="none",
