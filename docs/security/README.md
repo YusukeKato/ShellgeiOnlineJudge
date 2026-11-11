@@ -56,6 +56,11 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- frontend・DBのlibxsltとDBのkrb5-libs、開発/build用Vite・minimatchを限定更新します。
+  固定値は各Dockerfile・frontend package/lockを正本とし、実imageの修正下限・DB互換性・通常の開発検査を確認します。
+  package検出と公開経路の悪用成立を区別し、Vite dev serverを本番nginxと混同しません。
+  [2026-11-11の是正記録](./dependency-remediation-history.md#2026-11-11のxsltkerberosviteminimatch更新)を参照してください。
+
 - backend・runnerとCI用browserのDebian zlibをvendor修正版へ限定更新します。
   共通Python baseで更新し、実package下限と通常のgzip・CRC処理、API・DB・画面を検査します。
   package検出を公開入力からのmemory破壊成立とは扱いません。

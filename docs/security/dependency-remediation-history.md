@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-11: XSLT・Kerberos・Vite・minimatch更新](#2026-11-11のxsltkerberosviteminimatch更新)
 - [2026-11-09: Debian zlib更新](#2026-11-09のdebian-zlib更新)
 - [2026-11-08: 依存更新10件の統合](#2026-11-08の依存統合)
 - [2026-11-08: frontend・DB zlib更新](#2026-11-08のzlib更新)
@@ -30,6 +31,40 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-11のXSLTKerberosViteminimatch更新
+
+基準mainは49fdface53be93741752742a5172e01838b5ca92です。配備済みSBOMを
+2026-11-11の新しいscanner DBで再照合し、frontendのlibxsltに3件、DBのlibxslt・krb5-libsに12件、
+計15照合（12種類のCVE）の停止対象を確認しました。source scanへ未収録のVite・minimatch告知も公式情報から確認し、
+利用者が4種類の限定更新と、テスト・CI成功後の本番反映を承認しました。
+固定versionは[frontend](../../frontend/Dockerfile)・[DB](../../deploy/postgres/Dockerfile)と
+[package](../../frontend/package.json)・[lock](../../frontend/yarn.lock)を正本とします。
+
+- [Alpine security DB](https://secdb.alpinelinux.org/v3.24/main.json)のvendor修正版を使います。
+  libxsltのCVE-2026-125350・87636・9947は、CNAではChromiumのXML処理が条件です。
+  KEV掲載のChromium悪用をnginx/PostgreSQLの悪用実証とは扱いません。
+  nginxにXSLT処理設定は見つからず、DBの通常保存はText/StringのORM経路ですが、実module/extension設定は未測定です。
+  krb5の各指摘はGSS acceptor/NegoEx、KDC、kadmind、GSS-RPCなど個別の前提があります。
+  DBは内部networkのみで、これらの有効化・公開入力からの到達は確認していません。
+- [ViteのCritical告知](https://github.com/vitejs/vite/security/advisories/GHSA-p4f5-76q4-ffq7)は
+  --host/server.hostによって明示的に外部公開したdev serverが条件です。
+  通常のstart scriptと設定はその公開を指定せず、本番の最終imageはnginxで静的配信します。
+  修正版の公開manifestに合わせRolldownと全native bindingをlockへ同期し、別の未修正copyを残しません。
+- minimatchの[二乗時間compile](https://github.com/isaacs/minimatch/security/advisories/GHSA-cf2h-pxjq-68xw)、
+  [escape不備](https://github.com/isaacs/minimatch/security/advisories/GHSA-c859-jr93-m5j4)、
+  [cache memory消費](https://github.com/isaacs/minimatch/security/advisories/GHSA-hqmv-qgp3-jx75)を対象にします。
+  既知のESLint patternは定数で、本番nginxに開発toolchainを収録しません。
+  global resolutionを維持し、CJS/ESMの小さいescape入力、通常のglob・ignoreとlint対象集合を確認します。
+  修正版は展開上限超過をRangeErrorで拒否します。波括弧をliteralとしてescapeする場合はmagicalBracesを明示します。
+  大量pattern・memory枯渇・攻撃PoCは実行せず、固定依存と最新scanを強い代替検査にします。
+
+既存CA・TLS・base digest・PostgreSQL major/entrypoint/PGDATA・DB schemaとsandbox制限は維持します。
+変更対象以外のhost、Ubuntu sandboxやpsycopg2 wheel内のnative copyを同時に是正したとは扱いません。
+実imageのpackage下限、旧版の拒否、frontend基本検査、DBの更新・切り戻しと保存/role/migration、
+rootless HTTP/TLS・browser・全問題回帰、source/5image scanを対象headで確認します。
+公開悪用の可否、本番実設定、全体監査や停止対象外の指摘の解消は未確認として残します。
+CI・署名・配備・本番通常確認の結果はPRと作業証跡に記録します。
 
 ### 2026-11-09のDebian zlib更新
 

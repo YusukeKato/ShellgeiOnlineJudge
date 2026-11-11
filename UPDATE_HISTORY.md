@@ -3,6 +3,12 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-11 XSLT・Kerberos・開発依存の限定更新
+
+frontend・DBのlibxslt、DBのkrb5-libs、開発/build用Vite・minimatchを修正版へ限定更新しました。
+実package下限、DB互換性、通常のglob・escape・build検査と関連文書を同期します。
+API・DB schema・TLS/CA・sandbox制限は維持し、host packageは変更しません。
+
 ## 2026-11-09 Debian zlibの限定更新
 
 backend・runnerとCI用browserに、Debianのzlib修正版を適用しました。
