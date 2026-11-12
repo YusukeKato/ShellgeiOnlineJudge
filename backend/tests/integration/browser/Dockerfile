@@ -12,12 +12,18 @@ COPY ci/bootstrap_pip.py /tmp/soj-bootstrap-pip.py
 RUN python /tmp/soj-bootstrap-pip.py --update-ensurepip \
     && rm /tmp/soj-bootstrap-pip.py
 
+# Playwright同梱Nodeと同じmajorの公式修正版を、digest固定で取得する。
+FROM node:24.22.3@sha256:1f442b36c20ffab5e7bb8eb833faef0eb61c2716bcb7b9a68b1edf19551dab2e AS node-runtime
+
 FROM python-base AS dependencies
 RUN pip install --no-cache-dir poetry==2.5.1 certifi==2026.10.23 && python -m venv /opt/venv
 ENV VIRTUAL_ENV=/opt/venv PATH="/opt/venv/bin:$PATH"
 WORKDIR /build
 COPY pyproject.toml poetry.lock ./
 RUN poetry install --only e2e --no-root --no-interaction --no-ansi
+# final stageへvenvをコピーする前に旧private binaryを置換し、旧copyをruntime layerへ残さない。
+COPY --from=node-runtime /usr/local/bin/node /opt/venv/lib/python3.12/site-packages/playwright/driver/node
+RUN test "$(/opt/venv/lib/python3.12/site-packages/playwright/driver/node --version)" = v24.22.3
 
 FROM python-base
 ENV PATH="/opt/venv/bin:$PATH" PLAYWRIGHT_BROWSERS_PATH=/ms-playwright HOME=/tmp NODE_OPTIONS=--use-openssl-ca

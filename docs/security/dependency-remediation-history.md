@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-12: Node更新](#2026-11-12のnode更新)
 - [2026-11-11: XSLT・Kerberos・Vite・minimatch更新](#2026-11-11のxsltkerberosviteminimatch更新)
 - [2026-11-09: Debian zlib更新](#2026-11-09のdebian-zlib更新)
 - [2026-11-08: 依存更新10件の統合](#2026-11-08の依存統合)
@@ -31,6 +32,27 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-12のNode更新
+
+基準mainはb0a155bc7d5b0149d0211165eab939083407d072です。
+[Nodeの11月security release](https://nodejs.org/en/blog/vulnerability/november-2026-security-releases)を照合し、
+frontendのbuilder・React CI・開発下限と、Playwright private Nodeを限定更新します。
+固定version/digestは各Dockerfileとworkflow・packageを正本とし、Playwright libraryとbrowserの版は維持します。
+
+- Nodeはbuild・開発・browser検査用で、最終5runtimeのSBOMにはありません。
+  公開nginx/Pythonへの悪用成立は未確認です。https.AgentのTLS session分離、proxy認証情報のerror出力、
+  zlib streamの終了境界は第三者callerを含む条件が未確定のため、影響を未立証として扱います。
+- browserは同じmajor24の公式binaryを、venv転送前に既存driver/nodeへ置換します。
+  final imageには旧binaryを残さず、CLIと実行時driverの既存解決先を維持します。
+  NODE_OPTIONSによるOS CA利用を維持し、実際の解決先・versionと12拒否chain/正常controlを検査します。
+- ホストへoptional e2e groupを導入する手順は型検査用で、旧wheel同梱Nodeの実行に使いません。
+  GitHub Actions自身のJavaScript runtimeはrunner提供で、setup-nodeの指定版と別です。
+  この変更でprovider runtimeや本番host kernel・Dockerの更新まで完了したとは扱いません。
+- 検証は修正下限と旧版拒否、通常のfrontend基本検査、Playwright CLI/画面、
+  rootless CA・API/DB・全問題回帰と対象head/main CIです。攻撃・負荷試験は行いません。
+  5runtime/source scanだけをNode是正の根拠にせず、直接binary検査も残します。
+  最終head・実検査・署名・配備結果は対象PRに記録します。
 
 ### 2026-11-11のXSLTKerberosViteminimatch更新
 

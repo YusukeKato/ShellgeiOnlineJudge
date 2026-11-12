@@ -109,6 +109,7 @@
 | [PRACTICE-echo-01](#note-practice-echo-01) | echo 1 |
 | [PRACTICE-echo-02](#note-practice-echo-02) | echo 2 |
 | [PRACTICE-echo-03](#note-practice-echo-03) | echo 3 |
+| [PRACTICE-factor-01](#note-practice-factor-01) | factor 1 |
 | [PRACTICE-find-01](#note-practice-find-01) | find 1 |
 | [PRACTICE-find-02](#note-practice-find-02) | find 2 |
 | [PRACTICE-find-03](#note-practice-find-03) | find 3 |
@@ -118,6 +119,7 @@
 | [PRACTICE-grep-02](#note-practice-grep-02) | grep 2 |
 | [PRACTICE-grep-03](#note-practice-grep-03) | grep 3 |
 | [PRACTICE-grep-04](#note-practice-grep-04) | grep 4 |
+| [PRACTICE-join-01](#note-practice-join-01) | join 1 |
 | [PRACTICE-od-01](#note-practice-od-01) | od 1 |
 | [PRACTICE-paste-01](#note-practice-paste-01) | paste 1 |
 | [PRACTICE-pr-01](#note-practice-pr-01) | pr 1 |
@@ -1994,4 +1996,42 @@ symlinkを展開しない挙動を確認する。全問題回帰と日英大小�
 
 [非Docker検査](../backend/tests/test_cmp_problem.py)で独立期待値・追加fixture全文・公開DTO・policy・白JPEG、
 [実sandbox検査](../backend/tests/integration/test_problem_cmp_solutions.py)で回答例・別解・4誤答と8境界の計22実行を確認する。
+全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+
+<a id="note-practice-join-01"></a>
+
+## PRACTICE-join-01：join 1
+
+- 問題データ：[PRACTICE-join-01.yaml](../problems/v3/PRACTICE-join-01.yaml)
+- 狙い・発見：2つの表を行位置ではなく共通キーで対応付け、参照先がない行も残す。
+- 解法の核：sortで両表を整列し、joinの-a1・-e・-oで左の行を保持しつつ名前と数量を出す。
+  別解はawkの辞書参照と数値sort。空catalogもFILENAMEで区別する。
+- 入力の意図：未登録D40、右側だけのE50、C20の数量12と2、表ごとの異なる順序を含む。
+  公開5行を手で対応付け、Pythonの辞書参照・数値キーでも独立照合する。
+- 難易度・既存との差：初級後半〜中級入口。field・sortとprocess substitutionを前提とする。
+  STANDARD-00000024の不足数計算、58の直積列挙から、一意な商品一覧の参照だけへ絞った基礎。
+  PRACTICE-paste-01の行位置による連結とは異なる。使用command自体は採点しない。
+  空左右・未一致・完全重複・順序変更・末尾LFなし・桁違い数量は解法検査用で、
+  空fixtureを公開schemaへ追加せず、名前内spaceや商品一覧の重複キーへ一般化しない。
+
+<a id="note-practice-factor-01"></a>
+
+## PRACTICE-factor-01：factor 1
+
+- 問題データ：[PRACTICE-factor-01.yaml](../problems/v3/PRACTICE-factor-01.yaml)
+- 狙い・発見：整数を素数の列へ変換し、重複する素因数と1の表現を読む。
+- 解法の核：factorへ標準入力を接続する。別解はawkの試し割り。
+- 入力の意図：合成数84・64・100、素数13、1、離れた84の重複を含む。
+  手計算の積と、素数候補のべきに対する可除性から期待値を独立照合する。
+- 難易度・既存との差：初級。redirectionを前提とし、素因数分解の意味は問題文で説明する。
+  STANDARD-00000015の素数判定、20の全体集計、34の5乗復元へ進む前に、
+  factor単独の出力を理解する練習。構文やfactor使用は採点しない。
+  空入力・1・素数・べき・平方・重複・空白・末尾LFなしは解法検査用。
+  巨大整数の性能、負数・0・非数字、1行に複数整数の別解へ一般化しない。
+
+両問の独立期待値・公開DTO・policy・白JPEGは
+[非Docker検査](../backend/tests/test_join_and_factor_problems.py)、
+参照解・自然な別解・各5誤答・各8境界は
+[実sandbox検査](../backend/tests/integration/test_problem_join_and_factor_solutions.py)で確認する。
 全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。

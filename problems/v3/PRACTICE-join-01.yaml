@@ -1,0 +1,62 @@
+schema_version: 3
+id: PRACTICE-join-01
+category: PRACTICE
+title:
+  ja: join 1
+  en: join 1
+statement:
+  ja: |
+    練習：join
+
+    input.txtの各行は「商品コード 数量」です。商品コードをcatalog.txtで調べ、各行に商品名を付けて「商品コード 商品名 数量」の形式で出力してください。
+
+    商品一覧にないコードの商品名はUNKNOWNとしてください。input.txtの各行をそのまま1件として扱い、同じ商品コードの行もまとめずに残してください。
+
+    商品コードの辞書順に並べ、同じコードの行は数量の小さい順に並べてください。項目の間は半角スペース1個で区切ります。
+
+    catalog.txtはすでに配置されており、各行は「商品コード 商品名」です。内容は次のとおりです。
+    B10 Book
+    E50 Envelope
+    C20 Cable
+    A05 Apple
+  en: |
+    Practice: join
+
+    Each line of input.txt is "product_code quantity". Look up each product code in catalog.txt and add its product name. Output "product_code product_name quantity" for each input line.
+
+    Use UNKNOWN as the product name when a code is absent from the catalog. Keep each input line as a separate record, including repeated product codes; do not combine them.
+
+    Sort lexicographically by product code, then numerically by quantity in ascending order for the same code. Separate fields with one ASCII space.
+
+    The file catalog.txt already exists. Each line is "product_code product_name", and its contents are:
+    B10 Book
+    E50 Envelope
+    C20 Cable
+    A05 Apple
+reference_solution: join -a1 -e UNKNOWN -o '1.1 2.2 1.2' <(sort -k1,1 -k2,2n input.txt) <(sort -k1,1 catalog.txt)
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      C20 12
+      A05 3
+      B10 8
+      D40 1
+      C20 2
+  - path: catalog.txt
+    content: |
+      B10 Book
+      E50 Envelope
+      C20 Cable
+      A05 Apple
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    A05 Apple 3
+    B10 Book 8
+    C20 Cable 2
+    C20 Cable 12
+    D40 UNKNOWN 1

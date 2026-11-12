@@ -83,3 +83,53 @@ def test_ca_checker_rejects_empty_or_incomplete_output() -> None:
     ]:
         with pytest.raises(ValueError):
             parse_stores(output)
+
+
+def test_playwright_runtime_guard_rejects_old_binary_and_redirected_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """同梱旧版・別pathへのoverride・CA option欠落を拒否し、修正版の通常解決だけ許可する。"""
+    from ci.check_ca_trust import PYTHON_STORES
+    import importlib.util
+    import subprocess
+    import types
+
+    start = PYTHON_STORES.index("if importlib.util.find_spec('playwright'):")
+    guard = PYTHON_STORES[start : PYTHON_STORES.index("for wheel in", start)]
+    private = "/opt/venv/lib/python3.12/site-packages/playwright/driver/node"
+    driver = types.ModuleType("playwright._impl._driver")
+    driver.compute_driver_executable = lambda: (private, "cli.js")  # type: ignore[attr-defined]
+    monkeypatch.setitem(
+        sys.modules,
+        "playwright",
+        SimpleNamespace(
+            __file__="/opt/venv/lib/python3.12/site-packages/playwright/__init__.py"
+        ),
+    )
+    monkeypatch.setitem(sys.modules, "playwright._impl._driver", driver)
+    monkeypatch.setattr(importlib.util, "find_spec", lambda name: object())
+    monkeypatch.setenv("NODE_OPTIONS", "--use-openssl-ca")
+    run = Mock(return_value="v24.22.3\n")
+    monkeypatch.setattr(subprocess, "check_output", run)
+
+    def inspect() -> None:
+        """同じ実image用guardを、外部processを起動しないtest doubleで通す。"""
+        exec(
+            guard,
+            {"importlib": __import__("importlib"), "pathlib": __import__("pathlib")},
+        )
+
+    inspect()
+    assert run.call_args.args[0] == [private, "--version"]
+    for version in ("v24.22.1\n", "v22.23.5\n"):
+        run.return_value = version
+        with pytest.raises(RuntimeError, match="security floor"):
+            inspect()
+    run.return_value = "v24.22.3\n"
+    driver.compute_driver_executable = lambda: ("/tmp/old-node", "cli.js")  # type: ignore[attr-defined]
+    with pytest.raises(RuntimeError, match="inspected private Node"):
+        inspect()
+    driver.compute_driver_executable = lambda: (private, "cli.js")  # type: ignore[attr-defined]
+    monkeypatch.delenv("NODE_OPTIONS")
+    with pytest.raises(RuntimeError, match="inspected OS CA"):
+        inspect()

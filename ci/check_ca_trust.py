@@ -29,9 +29,19 @@ for module in ['certifi', 'pip._vendor.certifi']:
         print(pathlib.Path(package.where()).read_text())
 import ensurepip
 if importlib.util.find_spec('playwright'):
-    import os
+    import os, subprocess
+    from playwright._impl._driver import compute_driver_executable
+    import playwright
+    private_node = pathlib.Path(playwright.__file__).parent / 'driver' / 'node'
+    resolved_node, _ = compute_driver_executable()
+    if pathlib.Path(resolved_node).resolve() != private_node.resolve():
+        raise RuntimeError('Playwright must use the inspected private Node')
     if os.environ.get('NODE_OPTIONS') != '--use-openssl-ca':
         raise RuntimeError('Playwright private Node must exclusively use the inspected OS CA')
+    version = subprocess.check_output([str(private_node), '--version'], text=True, timeout=10).strip()
+    parts = tuple(int(v) for v in version.removeprefix('v').split('.'))
+    if len(parts) != 3 or parts[0] != 24 or parts < (24, 22, 3):
+        raise RuntimeError('Playwright private Node is below the supported security floor')
 for wheel in (pathlib.Path(ensurepip.__file__).parent / '_bundled').glob('pip-*.whl'):
     with zipfile.ZipFile(wheel) as archive:
         print('SOJ_CA_STORE ensurepip/' + wheel.name)

@@ -1,5 +1,5 @@
 # --- Build Stage ---
-FROM node:22.23.4@sha256:2bd396628eceb5c999a6e43731fab69d5fb98b94ba9d9d90b5f64575c5178765 AS builder
+FROM node:22.23.5@sha256:e13726ca604184d7a91fcacab1fc09eefd642dc28e79ac34e85540dd93b78cfb AS builder
 
 WORKDIR /app/frontend
 

@@ -3,6 +3,13 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-12 問題追加とNode.js更新
+
+練習問題「join 1」「factor 1」を追加しました。キーによる表の結合と、整数ごとの素因数分解を扱います。
+独立期待値・参照解・別解・誤答・境界条件と、画像・manifest・設計記録を同期しました。
+frontendのbuild/CI用NodeとPlaywright private Nodeを修正版へ更新し、実version・CA・通常動作を検査します。
+公開API・DB schema・sandbox制限とTLS検証は維持します。
+
 ## 2026-11-11 XSLT・Kerberos・開発依存の限定更新
 
 frontend・DBのlibxslt、DBのkrb5-libs、開発/build用Vite・minimatchを修正版へ限定更新しました。

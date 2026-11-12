@@ -56,6 +56,10 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- build/CI用NodeとPlaywrightのprivate Nodeを、公式修正版へ限定更新します。
+  public nginx/Pythonの実行経路と分けて評価し、実binary・通常build/画面・OS CAを確認します。
+  [2026-11-12の是正記録](./dependency-remediation-history.md#2026-11-12のnode更新)を参照してください。
+
 - frontend・DBのlibxsltとDBのkrb5-libs、開発/build用Vite・minimatchを限定更新します。
   固定値は各Dockerfile・frontend package/lockを正本とし、実imageの修正下限・DB互換性・通常の開発検査を確認します。
   package検出と公開経路の悪用成立を区別し、Vite dev serverを本番nginxと混同しません。
