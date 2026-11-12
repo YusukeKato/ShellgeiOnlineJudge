@@ -29,7 +29,7 @@ Compose・rootlessの手順はLinuxのshellで実行します。
 | --- | --- |
 | 共通 | Git |
 | ホストでPythonを検査 | Python 3.12・3.13・3.14のいずれか、Poetry |
-| ホストでfrontendを検査 | Node.js 22系（22.23.4以上）、Yarn 1.22.22 |
+| ホストでfrontendを検査 | Node.js 22系（22.23.5以上）、Yarn 1.22.22 |
 | Compose起動・Docker統合検査 | Linux（systemd・cgroup v2）、Docker Engine・Compose plugin・rootless Docker、OpenSSL |
 
 Composeでbuildするだけなら、ホストへのPython開発環境・Poetry・Node.js・Yarnの導入は不要です。
@@ -104,6 +104,8 @@ poetry run pytest --version
 依存は共有・backend・runner・開発のgroupに分けています。
 全体のmypy検査がbrowser scriptも読むため、上記では任意の`e2e` groupを明示して導入します。
 PlaywrightのPython packageだけを追加し、ブラウザ本体はホストへinstallしません。
+このgroupは型検査用です。lockされたwheelの同梱Nodeをホストで実行せず、
+実browser検査には修正版Nodeへ置換した専用imageを使用します（[統合検査](../backend/tests/integration/README.md#composeとブラウザのe2e)）。
 本番imageの収録対象は[backend文書](../backend/README.md#本番runtime-image)を参照してください。
 
 ### Pythonの静的検査と単体テスト
@@ -133,7 +135,7 @@ LFの検証用checkoutを使うか、変換・検査・復元を直列化し、�
 
 ### frontendをホストで検査する場合
 
-Node.js 22系（22.23.4以上）とYarn 1.22.22が利用できる環境で実行します。
+Node.js 22系（22.23.5以上）とYarn 1.22.22が利用できる環境で実行します。
 Corepackが利用できる環境では、CIと同じ方法でYarnを固定できます。
 Corepackが見つからない場合は、利用中のNode.js環境の導入方法を確認してから進め、version確認を省略しないでください。
 

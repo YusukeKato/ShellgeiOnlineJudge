@@ -1,0 +1,50 @@
+schema_version: 3
+id: PRACTICE-factor-01
+category: PRACTICE
+title:
+  ja: factor 1
+  en: factor 1
+statement:
+  ja: |
+    練習：factor
+
+    input.txtの各整数を素因数分解してください。素因数分解とは、その整数を素数の掛け算で表すことです。
+
+    「元の整数: 素因数...」の形式で、素因数を小さい順に並べて出力してください。同じ素因数を複数回使う場合は、その回数だけ出力します。
+
+    例えば、12は「12: 2 2 3」です。1には素因数がないため「1:」だけを出力してください。
+
+    入力の順序と重複を保ち、1つの整数につき1行で出力してください。コロンの前には空白を入れず、素因数の前と素因数同士の間は半角スペース1個で区切ります。
+  en: |
+    Practice: factor
+
+    Find the prime factorization of each integer in input.txt. A prime factorization expresses an integer as a product of primes.
+
+    Output "original_number: prime_factors...", listing the prime factors in ascending order. Repeat a prime as many times as it occurs in the product.
+
+    For example, output "12: 2 2 3" for 12. The number 1 has no prime factors, so output only "1:" for it.
+
+    Preserve input order and duplicate records, and output one line per integer. Put no space before the colon, and use one ASCII space before and between prime factors.
+reference_solution: factor < input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      84
+      13
+      1
+      64
+      84
+      100
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    84: 2 2 3 7
+    13: 13
+    1:
+    64: 2 2 2 2 2 2
+    84: 2 2 3 7
+    100: 2 2 5 5

@@ -214,7 +214,10 @@ frontend/nginxとbrowserを含む検証は、次のCompose E2Eで行います。
 frontend/nginx、backend、runner、PostgreSQLを起動します。DB起動後に同じbackend imageの
 一時`migrate` serviceでschemaと専用app roleを準備し、通常用credentialだけをbackendへ渡します。上記と同じ隔離環境でのみ
 実行してください。Docker Compose v2以降、`openssl`、DB・browserを含むbuild済みの5つのtest imageが必要です。
-ホストのbrowserやNode.jsは使用しません。
+ホストのbrowserやNode.jsは使用しません。browser imageはdigest固定の公式Nodeを使い、
+同じmajorの修正版でPlaywrightのprivate binaryをvenv転送前に置換します。
+CLIと実行時driverが同じbinaryを使うこと・修正下限・OS CA利用を
+[CA検査](../../../ci/check_ca_trust.py)と通常の画面E2Eで確認します。
 
 `test_production_deploy.py`は下記のCompose E2Eと同じimage・有効化変数を使い、
 専用DBで自動配備scriptのDB保持、migration、HTTPS実行・保存確認、失敗時の受付停止を検査します。
