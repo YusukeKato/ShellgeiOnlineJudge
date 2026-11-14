@@ -1,4 +1,4 @@
-FROM golang:1.26.10-alpine@sha256:9ce231b28998b32e116927c61aa5c406183061d4f3f2d61b292c88e7f6bdf7ca AS apt-ca
+FROM golang:1.26.11-alpine3.24@sha256:ae52b5bc6ed045a9ed26ab03dc19327a802a9cc9aa8b27ed57f5c6b60579b0bb AS apt-ca
 # 固定済みCAを初回APT用に使い、runtimeには追加しない。
 RUN apk add --no-cache --upgrade ca-certificates=20261020-r0 ca-certificates-bundle=20261020-r0
 
@@ -55,7 +55,9 @@ COPY ci/prepare_apt.sh /tmp/soj-prepare-apt.sh
 RUN sh /tmp/soj-prepare-apt.sh ubuntu /tmp/soj-apt-ca.pem \
     && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --no-install-recommends \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-       bash coreutils gawk grep sed findutils bc rs tar locales imagemagick-6.q16 fonts-noto-cjk libbrotli1=1.1.0-2ubuntu0.1 \
+       bash coreutils gawk grep sed findutils bc rs tar \
+       libc6=2.39-0ubuntu8.12 libc-bin=2.39-0ubuntu8.12 locales=2.39-0ubuntu8.12 \
+       imagemagick-6.q16 fonts-noto-cjk libbrotli1=1.1.0-2ubuntu0.1 \
     && localedef -i ja_JP -f UTF-8 ja_JP.UTF-8 \
     && rm -f /tmp/soj-apt-ca.pem /tmp/soj-prepare-apt.sh /etc/apt/apt.conf.d/99soj-apt-bootstrap \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* \

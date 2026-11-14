@@ -1,4 +1,4 @@
-FROM golang:1.26.10-alpine@sha256:9ce231b28998b32e116927c61aa5c406183061d4f3f2d61b292c88e7f6bdf7ca AS gosu-build
+FROM golang:1.26.11-alpine3.24@sha256:ae52b5bc6ed045a9ed26ab03dc19327a802a9cc9aa8b27ed57f5c6b60579b0bb AS gosu-build
 # Go verifierとOS storeの両方を更新し、module取得前に旧rootを除く。
 RUN apk add --no-cache --upgrade ca-certificates=20261020-r0 ca-certificates-bundle=20261020-r0
 
@@ -10,7 +10,7 @@ RUN tar -xzf /tmp/gosu.tar.gz \
     && cd gosu-1.19 \
     && CGO_ENABLED=0 GOTOOLCHAIN=local go build -mod=readonly -trimpath -o /out/gosu .
 
-FROM postgres:15-alpine@sha256:a46e076249ce434e41203b8c1dadfaa025b9726331d72390df038385d6dc29cd
+FROM postgres:15.20-alpine3.24@sha256:5cb339462bde5e6b617acedf6c2a3008f3aadc44a3c0507dd22226ee1279aee8
 LABEL org.opencontainers.image.version="3.0.3"
 
 # PostgreSQL・entrypoint・PGDATAは継承し、CAと必要なruntime libraryを固定versionへ更新する。

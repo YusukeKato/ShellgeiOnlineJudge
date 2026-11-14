@@ -7,6 +7,11 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[2]
+# 更新先Dockerfileから導出せず、実際の旧15.19とのvolume互換性を継続して検査する。
+POSTGRES_UPGRADE_BASELINE = (
+    "postgres:15-alpine@sha256:"
+    "a46e076249ce434e41203b8c1dadfaa025b9726331d72390df038385d6dc29cd"
+)
 
 
 def database_image() -> str:
@@ -20,12 +25,5 @@ def database_image() -> str:
 
 
 def upstream_postgres_image() -> str:
-    """既存volumeの互換性test用に、DB Dockerfileから固定PostgreSQL baseを読み取る。"""
-    references = [
-        line.split()[1]
-        for line in (ROOT / "deploy/postgres/Dockerfile").read_text().splitlines()
-        if line.startswith("FROM postgres:")
-    ]
-    if len(references) != 1 or "@sha256:" not in references[0]:
-        raise ValueError("one pinned PostgreSQL base is required")
-    return references[0]
+    """既存volumeの互換性test用に、更新前の固定PostgreSQL 15.19を返す。pullは行わない。"""
+    return POSTGRES_UPGRADE_BASELINE

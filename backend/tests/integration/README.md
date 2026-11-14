@@ -43,7 +43,8 @@ docker build --file deploy/postgres/Dockerfile --tag soj-db:local .
 
 DBの実行にはbuild済みの派生imageを使用します。`SOJ_DB_IMAGE`で上書きでき、省略時は
 本番Composeのimage名を使用します。公式PostgreSQLのpullは既存volume互換性testの移行元用です。
-`test_postgres_image.py`は専用volumeで旧image→派生image→旧imageの読み書き、
+移行元は`tests/postgres_support.py`で更新先とは独立した旧15.19へ固定します。
+`test_postgres_image.py`は専用volumeで旧15.19→修正版の派生image→旧15.19の実version遷移と読み書き、
 非rootのPID 1、正常停止とdata保持を確認します。本番volumeには接続しません。
 
 リポジトリのルートから、rootless socketを指定して実行します。
@@ -66,7 +67,7 @@ DDL・migration表更新・採番変更・role昇格の拒否、権限の後付�
 - cgroup v2によるCPU・メモリ・PID制限が実際に反映されていること
 - 独自Ubuntu imageの必要コマンド、sudo・Go等の不在、setuid/setgidの除去、loopbackのみのnetwork、
   ImageMagickの許可形式・寸法制限、textimgの日本語・ANSI色・画像出力、
-  ShellGeiDataの追加directoryとrevision記録（`test_sandbox_tools.py`）
+  glibc各packageの実修正下限と日本語locale、ShellGeiDataの追加directoryとrevision記録（`test_sandbox_tools.py`）
 - 基本的なDocker隔離設定
 - sandbox imageの`VOLUME`宣言がなく、実containerに予期しないmountがないこと
 - 動的sandboxのlogging driverが`none`であること
