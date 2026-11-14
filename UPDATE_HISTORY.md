@@ -3,6 +3,11 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-14 chmod練習問題の追加
+
+練習問題「chmod 1」を追加しました。所有者・グループ・その他の権限を順に変更し、
+追加・削除・置換の違いと、8進数での表示を扱います。
+
 ## 2026-11-14 PostgreSQL・Go・sandbox glibcの更新
 
 PostgreSQLを同じmajorの修正版へ更新し、gosu・textimgのGo build版とUbuntu sandboxのglibcを更新します。
