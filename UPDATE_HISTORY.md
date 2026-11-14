@@ -3,6 +3,12 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-14 PostgreSQL・Go・sandbox glibcの更新
+
+PostgreSQLを同じmajorの修正版へ更新し、gosu・textimgのGo build版とUbuntu sandboxのglibcを更新します。
+旧DBからの更新・復帰、実binary inventoryとpackage下限、日本語locale・画像と既存問題の検査を同期します。
+API・DB schema・TLS/CA・sandbox制限を維持し、host packageやkernelの更新・再起動は含みません。
+
 ## 2026-11-12 問題追加とNode.js更新
 
 練習問題「join 1」「factor 1」を追加しました。キーによる表の結合と、整数ごとの素因数分解を扱います。

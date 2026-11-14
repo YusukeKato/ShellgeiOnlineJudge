@@ -512,3 +512,10 @@ gosuを修正版Goで再buildします。packageと固定値の正本は上記Do
 既存のDB資格情報・`db_data` volumeを維持し、[DB更新互換性test](../backend/tests/integration/README.md)を通して反映します。
 元の公式imageへ戻して検出済み脆弱性を再導入しないでください。現在の互換性testはPostgreSQL 15内の更新が対象で、
 将来のmajor更新・拡張module・schemaの互換性は別途確認が必要です。
+
+PostgreSQL 15.20への更新は同一major内なのでdump/restoreを必須としませんが、
+[公式release note](https://www.postgresql.org/docs/15/release-15-20.html)にあるC拡張の再buildと、
+対象indexのREINDEX条件を確認します。repositoryのmigrationは通常のB-tree indexだけを宣言していますが、
+本番に追加された拡張・indexまで不在と断定しません。実catalogと運用履歴から対象を判断し、
+無条件のREINDEXや`composite_type_mismatch`の無効化は行いません。
+互換性testの旧imageは検査用の固定baselineであり、本番の復帰先は更新前の承認済みimage記録から選びます。

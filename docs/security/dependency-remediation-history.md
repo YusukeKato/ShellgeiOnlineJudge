@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-14: PostgreSQL・Go・glibc更新](#2026-11-14のpostgresqlgoglibc更新)
 - [2026-11-12: Node更新](#2026-11-12のnode更新)
 - [2026-11-11: XSLT・Kerberos・Vite・minimatch更新](#2026-11-11のxsltkerberosviteminimatch更新)
 - [2026-11-09: Debian zlib更新](#2026-11-09のdebian-zlib更新)
@@ -32,6 +33,30 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-14のPostgreSQLGoglibc更新
+
+基準mainは3098949265dbf9f57a21e91a2fad2370166774e2です。
+[PostgreSQL 15.20](https://www.postgresql.org/docs/15/release-15-20.html)、
+[Go 1.26.11](https://go.dev/doc/devel/release#go1.26.11)、
+[Ubuntu USN-9065-1](https://ubuntu.com/security/notices/USN-9065-1)を照合し、利用者が保守対応を承認しました。
+固定version/digestは[DB](../../deploy/postgres/Dockerfile)・[sandbox](../../deploy/sandbox/Dockerfile)を正本とします。
+
+- 配備済みDBは15.19です。15.20を同じmajor・PGDATA・entrypointで使用し、既存のCA・Alpine library修正版を維持します。
+  公開commandはORMの値として保存され、sandboxにDB接続を渡しません。新告知すべての公開悪用成立は未確認です。
+  testの移行元を更新先から導出すると同版比較になるため、旧15.19を独立固定し、旧→修正版→旧の読み書きを検査します。
+  C拡張の再buildと条件付きREINDEXの判断は[本番運用](../PRODUCTION.md#postgresql派生image)を参照します。
+- gosuとtextimgのsource/module lockを維持してGo builderを更新します。CGO無効でも一部の純Go object/compiler条件は残り得るため、
+  build toolchainを修正版へ揃えます。Go compilerはruntimeへ追加せず、最終image由来のstdlib inventoryをpath付きで検査します。
+  severity未設定や旧binaryの残存、inventory欠落も、修正下限検査の成功で置き換えません。
+- Ubuntu sandboxのlibc6・libc-bin・localesを同じ修正版へ揃え、APTの取得層を更新してから日本語localeを生成します。
+  一部CVEはPower8やsetuid等の条件があり、sandbox内の任意code実行はサービスの意図した動作です。
+  これらの検出だけでhost侵入を実証したとは扱いません。未修正の別CVEやDebian側glibcを同時に解消したとは扱いません。
+
+検証は旧image/旧inventoryの拒否、実package・Go version、DBの更新/復帰・role/migration・保存、通常の日本語/ANSI画像、
+rootlessのCA・API・全問題回帰とsource/5image scan、対象head/mainのCI・署名・配備確認です。攻撃・負荷試験は行いません。
+TLS/CA・sandbox制限・API/問題manifest・DB schemaは維持し、host packageの更新・再起動は対象外です。
+各検査の実行結果と残存範囲はPRと作業証跡に記録します。
 
 ### 2026-11-12のNode更新
 

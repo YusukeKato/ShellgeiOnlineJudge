@@ -13,6 +13,86 @@ from ci.install_tools import extract_binary
 from ci.supply_chain import blocking_findings, write_record
 
 
+@pytest.mark.parametrize(
+    "name,version,path,old_copy,error",
+    [
+        ("db", "go1.26.11", "/usr/local/bin/gosu", False, None),
+        ("sandbox", "go1.26.12", "/usr/local/bin/textimg", False, None),
+        ("db", "go1.26.10", "/usr/local/bin/gosu", False, "security floor"),
+        ("db", "go1.27.0", "/usr/local/bin/gosu", False, "security floor"),
+        ("db", "devel go1.26", "/usr/local/bin/gosu", False, "security floor"),
+        ("db", "go1.26.11", "/tmp/gosu", False, "missing Go binary"),
+        ("db", "go1.26.11", "/usr/local/bin/gosu", True, "security floor"),
+    ],
+)
+def test_go_floor_checks_actual_binary_location_and_every_copy(
+    name: str, version: str, path: str, old_copy: bool, error: str | None
+) -> None:
+    # 正しい最終binaryだけを許可し、旧版・別branch初期版・不正version・残存旧copyを拒否する。
+    packages = [
+        {
+            "name": "stdlib",
+            "type": "go-module",
+            "version": version,
+            "locations": [{"path": path}],
+        }
+    ]
+    if old_copy:
+        packages.append(
+            {
+                "name": "stdlib",
+                "type": "go-module",
+                "version": "go1.26.10",
+                "locations": [{"path": "/opt/old-copy"}],
+            }
+        )
+    if error is None:
+        supply_chain.require_go_runtime_floor({"artifacts": packages}, name)
+    else:
+        with pytest.raises(ValueError, match=error):
+            supply_chain.require_go_runtime_floor({"artifacts": packages}, name)
+
+
+def test_go_floor_rejects_missing_inventory_without_affecting_python_roles() -> None:
+    # Goが必要な実imageの欠落を拒否し、Goを収録しないPython/frontend/lock検査は維持する。
+    for name in ("db", "sandbox"):
+        with pytest.raises(ValueError, match="missing Go binary"):
+            supply_chain.require_go_runtime_floor({"artifacts": []}, name)
+    for name in ("backend", "runner", "frontend", "dependencies"):
+        supply_chain.require_go_runtime_floor({"artifacts": []}, name)
+
+
+def test_scan_rejects_old_go_even_before_vulnerability_matching(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # 有効なSBOMでも実Go版が古ければ、severity未設定やDB未反映を待たずGrypeの前で停止する。
+    commands = []
+
+    def create_inventory(command: list[str]) -> int:
+        """外部toolを実行せず、旧gosuを示すSyft形式の最小inventoryを保存する。"""
+        commands.append(command)
+        (tmp_path / "db.syft.json").write_text(
+            json.dumps(
+                {
+                    "artifacts": [
+                        {
+                            "name": "stdlib",
+                            "type": "go-module",
+                            "version": "go1.26.10",
+                            "locations": [{"path": "/usr/local/bin/gosu"}],
+                        }
+                    ]
+                }
+            )
+        )
+        return 0
+
+    monkeypatch.setattr(supply_chain, "run", create_inventory)
+    with pytest.raises(ValueError, match="security floor"):
+        supply_chain.scan(tmp_path, "docker:old-db", tmp_path, "db")
+    assert len(commands) == 1 and Path(commands[0][0]).name == "syft"
+
+
 @pytest.mark.parametrize("blocked_product", ["frontend", "db", "sandbox"])
 def test_runtime_scan_records_and_archives_the_built_runtime_images(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, blocked_product: str

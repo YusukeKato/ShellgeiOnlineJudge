@@ -92,7 +92,7 @@ def test_existing_database_survives_image_upgrade_and_rollback() -> None:
         owner = "soj-db-upgrade-" + uuid.uuid4().hex
         volume = client.volumes.create(name=owner, labels={"soj.test.owner": owner})
         cleanup.callback(volume.remove)
-        previous_version = None
+        old_version = None
         for index, image in enumerate((old.id, new.id, old.id)):
             assert image is not None
             with ExitStack() as containers:
@@ -116,11 +116,17 @@ def test_existing_database_survives_image_upgrade_and_rollback() -> None:
                 containers.callback(container.remove, force=True, v=True)
                 container.start()
                 wait_ready(container)
-                version = sql(container, "SHOW server_version_num")
-                assert 150000 <= int(version) < 160000
-                if previous_version is not None:
-                    assert version == previous_version
-                previous_version = version
+                version = int(sql(container, "SHOW server_version_num"))
+                assert 150000 <= version < 160000
+                # 15.20同士の比較に後退せず、旧15.19→修正版→旧15.19の実遷移を確認する。
+                if index == 0:
+                    assert version == 150019
+                    old_version = version
+                elif index == 1:
+                    assert old_version is not None
+                    assert 150020 <= version < 160000 and version > old_version
+                else:
+                    assert version == old_version
                 status = container.exec_run(["cat", "/proc/1/status"])
                 assert status.exit_code == 0
                 # streamを使わないexecの結果はbyte列として受け取る。

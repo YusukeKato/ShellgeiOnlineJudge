@@ -24,6 +24,11 @@ pytestmark = [
 @pytest.mark.parametrize(
     "command",
     [
+        # scannerの修正状態とは別に、同じglibc sourceの実packageをすべて修正下限で検査する。
+        "set -e; for package in libc6 libc-bin locales; do "
+        "version=$(dpkg-query -W -f='${Version}' \"$package\"); "
+        'dpkg --compare-versions "$version" ge 2.39-0ubuntu8.12; done; '
+        "locale -a | grep -Fxi ja_JP.utf8",
         # KEV対象Brotliでも、scanner metadataに左右されず実sandboxの修正版を要求する。
         "dpkg --compare-versions \"$(dpkg-query -W -f='${Version}' libbrotli1)\" ge '1.1.0-2ubuntu0.1'",
         # 全問題のコマンドとrunnerの固定準備・取得コマンドが存在する。

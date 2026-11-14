@@ -79,6 +79,10 @@ lock fileのscanには開発・任意groupも含めます。
 ローカルvenvやcacheはinventoryへ混入させず、
 Pythonとfrontendの両方が収録されていることを確認します。
 
+DBのgosuとsandboxのtextimgは、最終imageのSyft inventoryで実binaryのGo標準library版を検査します。
+期待するbinary pathの欠落、残存する旧copy、修正下限未満や未対応branchは、Grypeの照合前に失敗します。
+検査条件の正本は[`require_go_runtime_floor`](../ci/supply_chain.py)です。builderのtagやseverity未設定を修正済みの根拠にしません。
+
 脆弱性reportには低severityや未修正のものも含む全件を残します。例外適用前の停止対象は
 `High` / `Critical`かつGrypeのfix stateが`fixed`の検出です。未修正の脆弱性が安全であることを
 意味せず、運用上の評価は別途必要です。包括的なignore、既存検出の自動baseline化、
@@ -185,7 +189,7 @@ browser検査用imageは本番imageではないため、browser jobで個別にb
 sandboxも`deploy/sandbox/Dockerfile`からbuildし、同じimmutable IDでscan・archive・
 統合testを行います。runnerへそのIDを`SANDBOX_IMAGE_ID`で渡します。
 失敗した候補にはprovenanceを登録しません。
-DB更新互換test用にはDockerfileの正本から公式PostgreSQLのbaseも取得します。
+DB更新互換test用には`tests/postgres_support.py`で更新先とは独立して固定した、旧PostgreSQLのbaseも取得します。
 この旧baseは移行元のfixtureであり、本番DBのscan対象はbuild済みの派生imageです。
 
 sandboxの展開には大きな一時領域が必要です。小さなtmpfsを使う環境では、容量のある

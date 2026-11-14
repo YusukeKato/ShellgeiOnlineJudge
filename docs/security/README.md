@@ -56,6 +56,11 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- PostgreSQLの同一major内更新、gosu・textimgのGo build版、Ubuntu sandboxのglibcを修正版へ固定します。
+  DBの旧版との実version遷移・volume互換性、最終binaryのGo inventoryとglibc実packageの下限を検査します。
+  公開悪用の成立とpackage該当を分け、host kernel・Docker更新を完了したとは扱いません。
+  [2026-11-14の是正記録](./dependency-remediation-history.md#2026-11-14のpostgresqlgoglibc更新)を参照してください。
+
 - build/CI用NodeとPlaywrightのprivate Nodeを、公式修正版へ限定更新します。
   public nginx/Pythonの実行経路と分けて評価し、実binary・通常build/画面・OS CAを確認します。
   [2026-11-12の是正記録](./dependency-remediation-history.md#2026-11-12のnode更新)を参照してください。

@@ -241,6 +241,39 @@ def run(command: list[str], *, expected: tuple[int, ...] = (0,)) -> int:
     return result.returncode
 
 
+def require_go_runtime_floor(inventory: dict[str, Any], name: str) -> None:
+    """実binary由来のGo inventoryを要求し、旧copy・欠落・未対応branchならValueErrorを返す。
+
+    DBのgosuとsandboxのtextimgだけを対象とする。builderのtagやscanのseverityを
+    修正済みの証拠にせず、最終image内の全Go標準library copyを検査する。
+    """
+    expected_path = {
+        "db": "/usr/local/bin/gosu",
+        "sandbox": "/usr/local/bin/textimg",
+    }.get(name)
+    if expected_path is None:
+        return
+    packages = [
+        package
+        for package in inventory["artifacts"]
+        if package["name"] == "stdlib" and package["type"] == "go-module"
+    ]
+    if not any(
+        location.get("path") == expected_path
+        for package in packages
+        for location in package.get("locations", [])
+    ):
+        raise ValueError(f"{name}: missing Go binary inventory for {expected_path}")
+    for package in packages:
+        match = re.fullmatch(r"go(\d+)\.(\d+)\.(\d+)", package["version"])
+        version = tuple(map(int, match.groups())) if match else ()
+        # 別branchの初期版を単純な大小比較で許可せず、検証済み1.26系だけを認める。
+        if len(version) != 3 or version[:2] != (1, 26) or version[2] < 11:
+            raise ValueError(
+                f"{name}: Go runtime is below the supported security floor"
+            )
+
+
 def scan(tools: Path, source: str, reports: Path, name: str) -> bool:
     """全検出を保存し、誤検出例外・期限付きリスク受容後も残る停止対象でFalseを返す。"""
     sbom = reports / f"{name}.syft.json"
@@ -263,6 +296,7 @@ def scan(tools: Path, source: str, reports: Path, name: str) -> bool:
         package["name"] for package in inventory["artifacts"]
     }:
         raise RuntimeError("both Python and frontend lock inventories are required")
+    require_go_runtime_floor(inventory, name)
     report = reports / f"{name}.grype.json"
     run([str(tools / "grype"), f"sbom:{sbom}", "-o", "json", "--file", str(report)])
     result = json.loads(report.read_text())
