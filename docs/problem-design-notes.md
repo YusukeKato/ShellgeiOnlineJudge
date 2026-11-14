@@ -102,6 +102,7 @@
 | [PRACTICE-cat-02](#note-practice-cat-02) | cat 2 |
 | [PRACTICE-cat-03](#note-practice-cat-03) | cat 3 |
 | [PRACTICE-cat-04](#note-practice-cat-04) | cat 4 |
+| [PRACTICE-chmod-01](#note-practice-chmod-01) | chmod 1 |
 | [PRACTICE-cmp-01](#note-practice-cmp-01) | cmp 1 |
 | [PRACTICE-csplit-01](#note-practice-csplit-01) | csplit 1 |
 | [PRACTICE-cut-01](#note-practice-cut-01) | cut 1 |
@@ -2034,4 +2035,26 @@ symlinkを展開しない挙動を確認する。全問題回帰と日英大小�
 [非Docker検査](../backend/tests/test_join_and_factor_problems.py)、
 参照解・自然な別解・各5誤答・各8境界は
 [実sandbox検査](../backend/tests/integration/test_problem_join_and_factor_solutions.py)で確認する。
+全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+<a id="note-practice-chmod-01"></a>
+
+## PRACTICE-chmod-01：chmod 1
+
+- 問題データ：[PRACTICE-chmod-01.yaml](../problems/v3/PRACTICE-chmod-01.yaml)
+- 狙い・発見：所有者・グループ・その他の権限を別の集合と捉え、追加・削除・置換を区別する。
+- 解法の核：chmodで初期644と各変更を適用し、statの%03aで各時点の権限を表示する。
+  別解はxargsで1行ずつshの位置引数へ渡す。同じrequest内では同じfileを更新し、requestをまたいで状態を共有しない。
+- 入力の意図：u+x・g+w・o-r・g=rx・a-xで、他区分の保持と=による書込権限の消去を確認する。
+  手計算644→744→764→760→750→640と、rwx集合の独立した更新モデルで期待値を照合する。
+  target.txtの内容を日英で示し、fixtureの初期modeへ依存せず644へ設定する。
+- 難易度・既存との差：初級後半。file・while・引用の基礎を前提とし、権限記号と8進数は問題文で説明する。
+  PRACTICE-stat-01のbyteサイズの読取りと異なり、1つのfileのmetadataを順に更新する。
+  STANDARD-00000005の数量累積とも異なる、区分別の集合への操作を扱う。
+  空操作・単独・同じ操作の反復・順序・全消去と再追加・末尾LFなし・複数区分・その他のみは解法検査用。
+  special bits・ACL・symlink・directory・再帰・不正modeには一般化せず、command使用や最終file状態自体は採点しない。
+
+[非Docker検査](../backend/tests/test_chmod_problem.py)で独立期待値・日英の追加fixture説明・公開DTO・policy・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_problem_chmod_solutions.py)で回答例・別解・4誤答・8境界と、
+request間の本文・権限分離を確認する。
 全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。

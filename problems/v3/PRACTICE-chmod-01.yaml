@@ -1,0 +1,50 @@
+schema_version: 3
+id: PRACTICE-chmod-01
+category: PRACTICE
+title:
+  ja: chmod 1
+  en: chmod 1
+statement:
+  ja: |
+    練習：chmod
+
+    通常ファイルtarget.txtが配置されています。内容はsampleと改行（LF）です。
+    まずtarget.txtの権限を644に設定し、input.txtの変更を上から順に適用してください。変更を1つ適用するたびに、その時点の権限を3桁の8進数で1行ずつ出力してください。
+
+    uは所有者、gはファイルのグループ、oはその他、aは全員を表します。rは読み取り、wは書き込み、xは実行の権限です。+は追加、-は削除、=は指定された権限だけへの置き換えです。指定されていない区分の権限はそのまま残します。
+
+    8進数は所有者・グループ・その他の順です。それぞれの桁はr=4、w=2、x=1の和で表します。たとえば644は、所有者が読み書きでき、グループとその他は読み取りだけできる状態です。
+  en: |
+    Practice: chmod
+
+    A regular file named target.txt is already available. Its contents are sample followed by one line feed (LF).
+    First set its permissions to 644, then apply the changes in input.txt in order. After each change, print the current permissions as three octal digits, one result per line.
+
+    u means the owner, g the file's group, o other users, and a all three classes. r, w and x mean read, write and execute permissions. + adds permissions, - removes them, and = replaces the selected classes' permissions with exactly those specified. Leave unselected classes unchanged.
+
+    The octal digits describe owner, group and others, in that order. Each digit is the sum of r=4, w=2 and x=1. For example, 644 grants read/write to the owner and read-only access to group and others.
+reference_solution: >-
+  chmod 644 target.txt && while IFS= read -r mode || [ -n "$mode" ]; do chmod "$mode" target.txt && stat -c %03a target.txt; done < input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      u+x
+      g+w
+      o-r
+      g=rx
+      a-x
+  - path: target.txt
+    content: |
+      sample
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    744
+    764
+    760
+    750
+    640
