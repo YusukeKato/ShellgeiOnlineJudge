@@ -3,6 +3,12 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-15 依存更新PRの統合
+
+FastAPI・Pydantic/coreと、Ruff・Playwright・frontendのbuild/検査依存、rootless Docker setup Actionを更新しました。
+jsdomのmajor更新と共通のTypeScript ESLint依存を含むため、統合したlockで単体・型・実ブラウザの互換性を検査します。
+公開API・DB schema・問題データ・TLS/CAとsandbox制限は維持します。
+
 ## 2026-11-14 chmod練習問題の追加
 
 練習問題「chmod 1」を追加しました。所有者・グループ・その他の権限を順に変更し、
