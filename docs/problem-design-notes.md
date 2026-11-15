@@ -121,6 +121,7 @@
 | [PRACTICE-grep-03](#note-practice-grep-03) | grep 3 |
 | [PRACTICE-grep-04](#note-practice-grep-04) | grep 4 |
 | [PRACTICE-join-01](#note-practice-join-01) | join 1 |
+| [PRACTICE-ln-01](#note-practice-ln-01) | ln 1 |
 | [PRACTICE-od-01](#note-practice-od-01) | od 1 |
 | [PRACTICE-paste-01](#note-practice-paste-01) | paste 1 |
 | [PRACTICE-pr-01](#note-practice-pr-01) | pr 1 |
@@ -2057,4 +2058,25 @@ symlinkを展開しない挙動を確認する。全問題回帰と日英大小�
 [非Docker検査](../backend/tests/test_chmod_problem.py)で独立期待値・日英の追加fixture説明・公開DTO・policy・白JPEG、
 [実sandbox検査](../backend/tests/integration/test_problem_chmod_solutions.py)で回答例・別解・4誤答・8境界と、
 request間の本文・権限分離を確認する。
+全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+<a id="note-practice-ln-01"></a>
+
+## PRACTICE-ln-01：ln 1
+
+- 問題データ：[PRACTICE-ln-01.yaml](../problems/v3/PRACTICE-ln-01.yaml)
+- 狙い・発見：file名と実体を区別し、異なる名前が同じ内容を共有するhard linkを体験する。
+- 解法の核：lnの既定hard linkを作成し、別名へ追記して元名から本文とstatの%hを読む。
+  自然な別解はcp -l。通常copyでは本文が共有されず、symlinkでは元fileのlink数が増えない。
+- 入力の意図：短い本文を残した追記と名前の数を観察し、上書き・copy・symlinkの違いを区別する。
+  内容と名前集合を分けたモデルと手計算で、17 UTF-8 bytesの想定出力を独立照合する。
+  空・単行・既存blue・空行・空白・日本語・末尾LFなしは解法検査用。
+- 難易度・既存との差：初級。通常file、追記、&&を前提とし、hard linkとlink数は日英で説明する。
+  PRACTICE-stat-01のサイズ読取り、tee-01の出力分岐、cmp-01の内容比較とは異なり、
+  同じ実体を指す関係を新しく作る。filesystemをまたぐlinkやdirectory・symlinkの一般論へは広げない。
+  command使用と最終file状態自体は採点せず、request間では本文・別名・link数を共有しない。
+
+[非Docker検査](../backend/tests/test_ln_problem.py)で独立期待値・公開DTO・policy・白JPEG、
+[実sandbox検査](../backend/tests/integration/test_problem_ln_solutions.py)で回答例・別解・3誤答・7境界、
+inode共有とrequest間の分離を確認する。
 全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。

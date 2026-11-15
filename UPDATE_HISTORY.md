@@ -3,6 +3,11 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-15 ln練習問題の追加
+
+練習問題「ln 1」を追加しました。ハードリンクを通した追記とリンク数を観察し、
+file名と実体の違いを扱います。
+
 ## 2026-11-15 依存更新PRの統合
 
 FastAPI・Pydantic/coreと、Ruff・Playwright・frontendのbuild/検査依存、rootless Docker setup Actionを更新しました。
