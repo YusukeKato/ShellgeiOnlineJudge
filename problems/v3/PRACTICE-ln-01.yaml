@@ -1,0 +1,44 @@
+schema_version: 3
+id: PRACTICE-ln-01
+category: PRACTICE
+title:
+  ja: ln 1
+  en: ln 1
+statement:
+  ja: |
+    練習：ln
+
+    lnを使い、input.txtのハードリンクをshared.txtという名前で作成してください。shared.txtは最初は存在しません。
+    次に、shared.txtの末尾にblueと改行（LF）を追記し、input.txtの内容をすべて出力してください。
+    最後に、input.txtのリンク数を1行で出力してください。
+
+    ハードリンクは、異なるファイル名から同じファイルの実体を参照する仕組みです。
+    どちらの名前を通して追記しても、もう一方の名前から同じ内容を読めます。
+    リンク数は、その実体を参照しているファイル名の数です。この問題では、最初はinput.txtの1つです。
+  en: |
+    Practice: ln
+
+    Use ln to create a hard link to input.txt named shared.txt. The name shared.txt does not exist initially.
+    Then append blue followed by one line feed (LF) to shared.txt, and print the complete contents of input.txt.
+    Finally, print the link count of input.txt on a separate line.
+
+    Hard links let different file names refer to the same underlying file.
+    Appending through either name changes the contents visible through the other name as well.
+    The link count is the number of file names referring to that file. Initially, input.txt is its only name in this problem.
+reference_solution: ln input.txt shared.txt && printf 'blue\n' >> shared.txt && cat input.txt && stat -c %h input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      red
+      green
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    red
+    green
+    blue
+    2
