@@ -145,6 +145,7 @@
 | [PRACTICE-stat-01](#note-practice-stat-01) | stat 1 |
 | [PRACTICE-tac-01](#note-practice-tac-01) | tac 1 |
 | [PRACTICE-tee-01](#note-practice-tee-01) | tee 1 |
+| [PRACTICE-unexpand-01](#note-practice-unexpand-01) | unexpand 1 |
 | [PRACTICE-uniq-01](#note-practice-uniq-01) | uniq 1 |
 | [PRACTICE-uniq-02](#note-practice-uniq-02) | uniq 2 |
 | [PRACTICE-wc-01](#note-practice-wc-01) | wc 1 |
@@ -2080,3 +2081,12 @@ request間の本文・権限分離を確認する。
 [実sandbox検査](../backend/tests/integration/test_problem_ln_solutions.py)で回答例・別解・3誤答・7境界、
 inode共有とrequest間の分離を確認する。
 全問題回帰と日英大小画面は[作成ガイド](problem-authoring.md#作成・検証の進め方)に従う。
+
+<a id="note-practice-unexpand-01"></a>
+
+## PRACTICE-unexpand-01：unexpand 1
+
+- [問題データ](../problems/v3/PRACTICE-unexpand-01.yaml)。行頭のスペースだけを幅4のタブ位置に合わせて変換し、本文の字間と改行を保つ初級後半の練習。
+- 回答例は `unexpand --first-only -t 4` で字下げを変換し、`cat -T` でタブを `^I` と表示する。`-t` だけでは本文中の空白も変換される。別解はawkで行頭のスペース数を数える。
+- 行頭を4・8・6・2・0スペースにした。幅8、端数の消失、先頭1組だけの置換、本文を含む一括置換を区別できる。STANDARD-00000059で扱うタブの表示幅を踏まえ、ここではスペースからタブを作る。
+- [問題データ検査](../backend/tests/test_unexpand_problem.py)では4で割った商と余りから想定出力を求める。[sandbox検査](../backend/tests/integration/test_problem_unexpand_solutions.py)では回答例・別解・4つの誤答・8つの境界例を確認する。対象はLF終端のASCIIテキストと空入力。採点対象は最終出力と実行結果。

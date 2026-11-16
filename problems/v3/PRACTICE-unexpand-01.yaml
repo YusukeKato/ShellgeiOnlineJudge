@@ -1,0 +1,46 @@
+schema_version: 3
+id: PRACTICE-unexpand-01
+category: PRACTICE
+title:
+  ja: unexpand 1
+  en: unexpand 1
+statement:
+  ja: |
+    練習：unexpand
+
+    input.txtの各行について、行頭のインデントにある半角スペースを、表示上の幅を保ったままタブへ置き換えてください。
+    タブ位置は行頭から4文字分ごととします。行頭のスペース4個につきタブ1個へ置き換え、4個に満たない残りのスペースはそのまま残してください。
+    本文中のスペースと改行は変更しないでください。
+
+    最後に、変換したタブ1個を2文字の^Iで表して出力してください。
+    たとえば、行頭のスペース6個は、タブ1個とスペース2個になるため、出力では^Iの後にスペース2個が続きます。
+  en: |
+    Practice: unexpand
+
+    For each line in input.txt, replace spaces in the leading indentation with tabs while preserving the displayed width.
+    Use tab stops every four character positions from the start of the line. Replace each group of four leading spaces with one tab, leaving any remaining spaces unchanged.
+    Preserve spaces within the text and all line feeds.
+
+    Finally, display each converted tab as the two characters ^I.
+    For example, six leading spaces become one tab and two spaces, so the output begins with ^I followed by two spaces.
+reference_solution: unexpand --first-only -t 4 input.txt | cat -T
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |2
+          alpha    beta
+              gamma delta
+            epsilon   zeta
+        eta theta
+      plain   text
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    ^Ialpha    beta
+    ^I^Igamma delta
+    ^I  epsilon   zeta
+      eta theta
+    plain   text
