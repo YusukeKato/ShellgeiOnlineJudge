@@ -56,6 +56,8 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- backend・runnerの共通依存に関する[FastAPIの是正記録](./dependency-remediation-history.md#2026-11-18のfastapi更新)。
+
 - PostgreSQLの同一major内更新、gosu・textimgのGo build版、Ubuntu sandboxのglibcを修正版へ固定します。
   DBの旧版との実version遷移・volume互換性、最終binaryのGo inventoryとglibc実packageの下限を検査します。
   公開悪用の成立とpackage該当を分け、host kernel・Docker更新を完了したとは扱いません。
