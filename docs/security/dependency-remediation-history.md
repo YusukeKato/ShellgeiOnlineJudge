@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-18: FastAPI更新](#2026-11-18のfastapi更新)
 - [2026-11-14: PostgreSQL・Go・glibc更新](#2026-11-14のpostgresqlgoglibc更新)
 - [2026-11-12: Node更新](#2026-11-12のnode更新)
 - [2026-11-11: XSLT・Kerberos・Vite・minimatch更新](#2026-11-11のxsltkerberosviteminimatch更新)
@@ -33,6 +34,15 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-18のFastAPI更新
+
+基準main `e7649ee` のbackendとrunnerはFastAPI 0.162.5を使用していました。
+[公式advisory](https://github.com/fastapi/fastapi/security/advisories/GHSA-f56c-v883-vx8r)によると、
+一部のリクエストパラメーターの処理でCPU負荷が過大になる可能性があります。
+SOJのJSON本文と単一の `If-None-Match` ヘッダーを使う経路では、該当するパラメーターモデルや
+Form/Fileの利用は見つかりませんでした。共通依存の下限を修正版0.163.2に上げ、
+backend・runnerの両イメージに適用します。
 
 ### 2026-11-14のPostgreSQLGoglibc更新
 
