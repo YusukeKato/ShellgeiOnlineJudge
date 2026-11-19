@@ -387,12 +387,12 @@ def test_runtime_image_product_version(runtime_client: Any, service: str) -> Non
 def test_frontend_runtime_contains_fixed_nginx_and_x11_libraries(
     runtime_client: Any,
 ) -> None:
-    """実frontendのnginx・Expat・XSLT・X11/XPM・Brotli・zlib・musl関連packageが修正版から後退しないことを確認する。"""
+    """実frontendのnginx・OpenSSL・Expat・XSLT・X11/XPM・Brotli・zlib・musl関連packageが修正版から後退しないことを確認する。"""
     output = runtime_client.containers.run(
         os.environ["SOJ_COMPOSE_FRONTEND_IMAGE"],
         [
             "-ec",
-            "nginx -v 2>&1; apk --no-network info --exists 'libexpat>=2.10.0-r0' 'libxslt>=1.1.43-r4' 'libx11>=1.8.14-r0' 'libxpm>=3.5.20-r0' 'brotli-libs>=1.2.1-r0' 'zlib>=1.4-r0' 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3'",
+            "nginx -v 2>&1; apk --no-network info --exists 'libcrypto3>=3.5.9-r1' 'libssl3>=3.5.9-r1' 'libexpat>=2.10.0-r0' 'libxslt>=1.1.43-r4' 'libx11>=1.8.14-r0' 'libxpm>=3.5.20-r0' 'brotli-libs>=1.2.1-r0' 'zlib>=1.4-r0' 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3'",
         ],
         entrypoint="/bin/sh",
         network_mode="none",
@@ -403,7 +403,7 @@ def test_frontend_runtime_contains_fixed_nginx_and_x11_libraries(
     )
     version = re.search(rb"nginx/(\d+)\.(\d+)\.(\d+)", output)
     assert version is not None, output
-    assert tuple(int(part) for part in version.groups()) >= (1, 31, 7), output
+    assert tuple(int(part) for part in version.groups()) >= (1, 31, 9), output
 
 
 def test_frontend_runtime_has_no_curl_client_or_library(runtime_client: Any) -> None:

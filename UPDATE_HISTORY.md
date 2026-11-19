@@ -3,6 +3,11 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-19 nginxとOpenSSLのセキュリティ更新
+
+frontendのnginxと、frontend・DBのOpenSSLライブラリを更新しました。
+[対象のイメージと修正内容](./docs/security/dependency-remediation-history.md#2026-11-19のnginxopenssl更新)
+
 ## 2026-11-18 FastAPIのセキュリティ更新
 
 公開APIと内部runnerが使うFastAPIを0.163.2に更新しました。

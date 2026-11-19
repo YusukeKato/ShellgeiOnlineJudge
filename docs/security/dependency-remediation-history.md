@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-19: nginx・OpenSSL更新](#2026-11-19のnginxopenssl更新)
 - [2026-11-18: FastAPI更新](#2026-11-18のfastapi更新)
 - [2026-11-14: PostgreSQL・Go・glibc更新](#2026-11-14のpostgresqlgoglibc更新)
 - [2026-11-12: Node更新](#2026-11-12のnode更新)
@@ -34,6 +35,17 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-19のnginxOpenSSL更新
+
+基準main `61f5485` のfrontendはnginx 1.31.7-r1を収録し、TLS 1.3を有効にしていました。
+リクエスト本文の読み取りでワーカーが停止するCVE-2026-118899に対応するため、
+frontendの公式イメージを1.31.9-alpineに更新し、digestを固定しました。
+外側プロキシの製品と稼働版は別途ホストで確認します。[nginx公式勧告](https://nginx.org/en/security_advisories.html)
+
+frontendとDBのlibcrypto3・libssl3には、CMS・QUIC・AES-GCM-SIVに関する5件の修正を含む
+Alpine 3.24の3.5.9-r1を適用しました。実イメージの検査で両パッケージの下限を確認します。
+[Alpineの修正情報](https://secdb.alpinelinux.org/v3.24/main.json)
 
 ### 2026-11-18のFastAPI更新
 
