@@ -1,0 +1,33 @@
+schema_version: 3
+id: STANDARD-00000073
+category: STANDARD
+title:
+  ja: 16進ダンプから警告を取り出す
+  en: Read Warnings from a Hex Dump
+statement:
+  ja: |
+    input.txt はプリンターのログを記録した16進ダンプです。2桁の大文字の16進数が1バイトを表します。ダンプのスペースと改行はバイトの区切りで、元のログの改行は 0A です。
+    元のログを復元し、WARN と半角スペースで始まる各行から、先頭の WARN と直後のスペース1個を取り除いて出力してください。警告の順序と本文中のスペースはそのままにしてください。
+  en: |
+    Each pair of uppercase hexadecimal digits in input.txt represents one byte of a printer log. Spaces and line breaks separate bytes in the dump. A log line ends with the byte 0A.
+    Reconstruct the log. For each line starting with WARN followed by one ASCII space, print the rest of the line. Keep the warnings in their original order and preserve spaces in their messages.
+reference_solution: tr -d ' \n' < input.txt | basenc --base16 -d | sed -n 's/^WARN //p'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      4F 4B 20 72 65 61 64 79
+      0A 57 41 52 4E 20 6C 6F
+      77 20 69 6E 6B 0A 4F 4B
+      20 57 41 52 4E 20 63 6C
+      65 61 72 65 64 0A 57 41
+      52 4E 20 74 72 61 79 20
+      20 6F 70 65 6E 0A
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    low ink
+    tray  open

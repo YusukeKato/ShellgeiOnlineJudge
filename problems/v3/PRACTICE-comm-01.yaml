@@ -1,0 +1,68 @@
+schema_version: 3
+id: PRACTICE-comm-01
+category: PRACTICE
+title:
+  ja: comm 1
+  en: comm 1
+statement:
+  ja: |
+    練習：comm
+
+    input.txtとsecond.txtは、別々の勉強会の参加者名簿です。
+    両方の名簿にある名前だけを、名前の辞書順に1行ずつ出力してください。
+
+    名前は1行全体で比較します。名簿内で同じ名前が何度出ても、出力は1回だけにしてください。
+    名前の中のスペースはそのまま残してください。
+
+    second.txtはすでに配置されており、内容は次のとおりです。
+    Ren Ito
+    Bo
+    Ann
+    Ann Lee
+    Mio Sato
+    Mio Sato
+  en: |
+    Practice: comm
+
+    input.txt and second.txt list attendees of two separate study sessions.
+    Output only the names present in both lists, in lexicographical order, one name per line.
+
+    Compare entire lines as names. Output each shared name only once, even if it occurs repeatedly within either list.
+    Preserve spaces within names.
+
+    The file second.txt already exists and contains:
+    Ren Ito
+    Bo
+    Ann
+    Ann Lee
+    Mio Sato
+    Mio Sato
+reference_solution: comm -12 <(sort -u input.txt) <(sort -u second.txt)
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      Mio Sato
+      Anna
+      Ren Ito
+      Ann
+      Mio Sato
+      Jo
+      Kai
+  - path: second.txt
+    content: |
+      Ren Ito
+      Bo
+      Ann
+      Ann Lee
+      Mio Sato
+      Mio Sato
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    Ann
+    Mio Sato
+    Ren Ito

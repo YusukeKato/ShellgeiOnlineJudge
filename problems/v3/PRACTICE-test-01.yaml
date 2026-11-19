@@ -1,0 +1,57 @@
+schema_version: 3
+id: PRACTICE-test-01
+category: PRACTICE
+title:
+  ja: test 1
+  en: test 1
+statement:
+  ja: |
+    練習：test
+
+    まず、data/empty.txt を0バイトの空ファイルとして作成してください。
+
+    input.txt には、調べるファイルの相対パスが1行に1つずつ書かれています。各パスについて、ファイルがなければ MISSING、存在してサイズが0バイトなら EMPTY、1バイト以上なら DATA と判定してください。
+    「パス 判定」の形式で、input.txt の順序どおりに1行ずつ出力してください。同じパスが繰り返し出る場合も、その回数だけ出力し、パス内のスペースを保持してください。
+
+    次の2つの通常ファイルが配置されています。
+    - data/note.txt は ready の後に改行（LF）が1個あります。
+    - data/blank note.txt は半角スペース1個と改行（LF）1個だけを含みます。
+    開始時には data/empty.txt と data/missing.txt は存在しません。data/missing.txt は作成しないでください。空白や改行もファイルの内容に含まれます。
+  en: |
+    Practice: test
+
+    First create data/empty.txt as an empty file of zero bytes.
+
+    input.txt contains one relative file path per line. Classify each path as MISSING if the file does not exist, EMPTY if it exists and has a size of zero bytes, or DATA if it contains at least one byte.
+    Print one line per input entry in the form "path classification", preserving input order. Print repeated paths once for each occurrence and preserve spaces within paths.
+
+    Two regular files are available:
+    - data/note.txt contains ready followed by one line feed (LF).
+    - data/blank note.txt contains just one ASCII space followed by one line feed (LF).
+    Initially, neither data/empty.txt nor data/missing.txt exists. Do not create data/missing.txt. Spaces and line feeds count as file contents.
+reference_solution: ': > data/empty.txt; while IFS= read -r f || [ -n "$f" ]; do if test ! -e "$f"; then s=MISSING; elif test -s "$f"; then s=DATA; else s=EMPTY; fi; printf ''%s %s\n'' "$f" "$s"; done < input.txt'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      data/note.txt
+      data/missing.txt
+      data/empty.txt
+      data/blank note.txt
+      data/note.txt
+  - path: data/note.txt
+    content: |
+      ready
+  - path: data/blank note.txt
+    content: " \n"
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    data/note.txt DATA
+    data/missing.txt MISSING
+    data/empty.txt EMPTY
+    data/blank note.txt DATA
+    data/note.txt DATA
