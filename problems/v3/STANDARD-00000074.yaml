@@ -1,0 +1,34 @@
+schema_version: 3
+id: STANDARD-00000074
+category: STANDARD
+title:
+  ja: 番組台本の索引
+  en: Index a Program Script
+statement:
+  ja: |
+    input.txt はUTF-8で書かれた番組台本です。行頭の「@@ 」はコーナーの始まりを示し、その後ろがコーナー名です。本文の途中にある「@@ 」は見出しに含めません。
+
+    各見出しについて、最初の @ がファイルの先頭から何バイト目にあるかを求め、「位置 コーナー名」の形式で登場順に出力してください。先頭は0バイト目、改行（LF）は1バイトです。同じ名前のコーナーも、登場するたびに出力します。
+  en: |
+    input.txt is a UTF-8 program script. A line starting with two @ signs and one space introduces a segment. The rest of that line is its name. Ignore this marker when it appears inside a line. For each heading, print the byte offset of its first @, one space, and the segment name. Count from zero and count each line feed (LF) as one byte. Keep the original order, including repeated names.
+reference_solution: grep -b '^@@ ' input.txt | sed 's/:@@ / /'
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      @@ 天気
+      晴れ
+      memo: @@ demo
+
+      @@ News desk
+      @@ 天気
+      くもり
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    0 天気
+    32 News desk
+    45 天気

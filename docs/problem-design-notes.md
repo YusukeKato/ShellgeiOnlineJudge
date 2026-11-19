@@ -83,6 +83,8 @@
 | [STANDARD-00000070](#note-standard-00000070) | バイト数で本文を取り出す |
 | [STANDARD-00000071](#note-standard-00000071) | 同じ内容のファイルをまとめる |
 | [STANDARD-00000072](#note-standard-00000072) | 各メモの最初の見出し |
+| [STANDARD-00000073](#note-standard-00000073) | 16進ダンプから警告を取り出す |
+| [STANDARD-00000074](#note-standard-00000074) | 番組台本の索引 |
 
 ### PRACTICE
 
@@ -104,6 +106,7 @@
 | [PRACTICE-cat-04](#note-practice-cat-04) | cat 4 |
 | [PRACTICE-chmod-01](#note-practice-chmod-01) | chmod 1 |
 | [PRACTICE-cmp-01](#note-practice-cmp-01) | cmp 1 |
+| [PRACTICE-comm-01](#note-practice-comm-01) | comm 1 |
 | [PRACTICE-csplit-01](#note-practice-csplit-01) | csplit 1 |
 | [PRACTICE-cut-01](#note-practice-cut-01) | cut 1 |
 | [PRACTICE-dirname-01](#note-practice-dirname-01) | dirname 1 |
@@ -145,6 +148,7 @@
 | [PRACTICE-stat-01](#note-practice-stat-01) | stat 1 |
 | [PRACTICE-tac-01](#note-practice-tac-01) | tac 1 |
 | [PRACTICE-tee-01](#note-practice-tee-01) | tee 1 |
+| [PRACTICE-test-01](#note-practice-test-01) | test 1 |
 | [PRACTICE-unexpand-01](#note-practice-unexpand-01) | unexpand 1 |
 | [PRACTICE-uniq-01](#note-practice-uniq-01) | uniq 1 |
 | [PRACTICE-uniq-02](#note-practice-uniq-02) | uniq 2 |
@@ -2090,3 +2094,39 @@ inode共有とrequest間の分離を確認する。
 - 回答例は `unexpand --first-only -t 4` で字下げを変換し、`cat -T` でタブを `^I` と表示する。`-t` だけでは本文中の空白も変換される。別解はawkで行頭のスペース数を数える。
 - 行頭を4・8・6・2・0スペースにした。幅8、端数の消失、先頭1組だけの置換、本文を含む一括置換を区別できる。STANDARD-00000059で扱うタブの表示幅を踏まえ、ここではスペースからタブを作る。
 - [問題データ検査](../backend/tests/test_unexpand_problem.py)では4で割った商と余りから想定出力を求める。[sandbox検査](../backend/tests/integration/test_problem_unexpand_solutions.py)では回答例・別解・4つの誤答・8つの境界例を確認する。対象はLF終端のASCIIテキストと空入力。採点対象は最終出力と実行結果。
+
+<a id="note-practice-comm-01"></a>
+
+## PRACTICE-comm-01：comm 1
+
+[問題データ](../problems/v3/PRACTICE-comm-01.yaml)
+
+未整列の2つの名簿を集合として扱う初級後半の練習。sort -u で各名簿を整えてから comm -12 で共通行を取り出す。別解は片方の名簿をawkの集合に登録する。
+同名の重複、空白を含む名前、Ann と Anna を含め、名前全体の一致を学ぶ。通常64の変更点の抽出と異なり、両方にある名前を一度ずつ出力する。
+
+<a id="note-standard-00000073"></a>
+
+## STANDARD-00000073：16進ダンプから警告を取り出す
+
+[問題データ](../problems/v3/STANDARD-00000073.yaml)
+
+16進ダンプの折り返しと元のログの改行を区別する通常問題。tr と basenc でバイト列を復元してから sed で行頭の警告を抽出する。別解はawkで各バイトを文字に戻す。
+行をまたぐ接頭辞、本文中の WARN、連続スペースを含む。od の表示練習から進み、復元したテキストを行単位で扱う中級の入口。
+
+<a id="note-practice-test-01"></a>
+
+## PRACTICE-test-01：test 1
+
+[問題データ](../problems/v3/PRACTICE-test-01.yaml)
+
+空ファイルを作り、test -e と -s の終了状態で欠落・空・データありに分ける初級後半の練習。別解ではstatの成否とサイズを使う。
+空白だけのファイルは2バイト。パス内のスペースと入力順・重複を保つ。stat 1 のサイズ表示に、存在しないパスの判定が加わる。
+
+<a id="note-standard-00000074"></a>
+
+## STANDARD-00000074：番組台本の索引
+
+[問題データ](../problems/v3/STANDARD-00000074.yaml)
+
+行頭の見出しに、UTF-8ファイルを読み戻すためのバイト位置を付ける初級後半の通常問題。grep -b で開始位置を得て sed で整形する。別解はバイト単位で行長とLFを積算する。
+空行、日本語、同名見出し、本文中の @@ を含む。通常70のバイト切り出し、通常72の最初の見出し抽出と区別し、全見出しを登場順に索引にする。
