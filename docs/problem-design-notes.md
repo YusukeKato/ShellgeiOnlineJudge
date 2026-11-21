@@ -85,6 +85,7 @@
 | [STANDARD-00000072](#note-standard-00000072) | 各メモの最初の見出し |
 | [STANDARD-00000073](#note-standard-00000073) | 16進ダンプから警告を取り出す |
 | [STANDARD-00000074](#note-standard-00000074) | 番組台本の索引 |
+| [STANDARD-00000075](#note-standard-00000075) | 印刷するページを順に並べる |
 
 ### PRACTICE
 
@@ -104,6 +105,7 @@
 | [PRACTICE-cat-02](#note-practice-cat-02) | cat 2 |
 | [PRACTICE-cat-03](#note-practice-cat-03) | cat 3 |
 | [PRACTICE-cat-04](#note-practice-cat-04) | cat 4 |
+| [PRACTICE-cat-05](#note-practice-cat-05) | cat 5 |
 | [PRACTICE-chmod-01](#note-practice-chmod-01) | chmod 1 |
 | [PRACTICE-cmp-01](#note-practice-cmp-01) | cmp 1 |
 | [PRACTICE-comm-01](#note-practice-comm-01) | comm 1 |
@@ -2130,3 +2132,19 @@ inode共有とrequest間の分離を確認する。
 
 行頭の見出しに、UTF-8ファイルを読み戻すためのバイト位置を付ける初級後半の通常問題。grep -b で開始位置を得て sed で整形する。別解はバイト単位で行長とLFを積算する。
 空行、日本語、同名見出し、本文中の @@ を含む。通常70のバイト切り出し、通常72の最初の見出し抽出と区別し、全見出しを登場順に索引にする。
+
+<a id="note-practice-cat-05"></a>
+
+## PRACTICE-cat-05：cat 5
+
+[問題データ](../problems/v3/PRACTICE-cat-05.yaml)
+
+会場の進行メモを読みやすくする入門問題。cat 4のファイル連結に続き、cat -s で連続した空行だけを1行にまとめる。awkでも直前の行が空だったかを覚えて判定できる。uniqでは繰り返した「Sound check」まで消える。先頭・末尾の連続空行と、空白を含む行を境界例にする。
+
+<a id="note-standard-00000075"></a>
+
+## STANDARD-00000075：印刷するページを順に並べる
+
+[問題データ](../problems/v3/STANDARD-00000075.yaml)
+
+初級の通常問題。trで範囲の区切りを空白に変え、xargsで2引数ずつseqに渡す。通常18の単一の数列生成から進み、各範囲を入力順に展開する。awkなら両端を含むループで解ける。1ページだけの範囲、桁数の変化、前後する範囲と重複を含み、全体をソートしたり重複を取り除いたりすると印刷順が変わる。

@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-21: libxml2更新](#2026-11-21のlibxml2更新)
 - [2026-11-19: nginx・OpenSSL更新](#2026-11-19のnginxopenssl更新)
 - [2026-11-18: FastAPI更新](#2026-11-18のfastapi更新)
 - [2026-11-14: PostgreSQL・Go・glibc更新](#2026-11-14のpostgresqlgoglibc更新)
@@ -35,6 +36,12 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-21のlibxml2更新
+
+[直前の配備に対応するCIのSBOM](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/44913209128)で、commit 14ec8b7のfrontendとDBはともにlibxml2 2.13.9-r3を収録していた。ベースイメージの2.13.9-r2からビルド時に更新されていたため、両Dockerfileで修正版を明示した。
+CVE-2026-86144はXInclude処理でパーサーの制限が引き継がれない場合に関係する。各最終イメージ内のapkデータベースで修正版の下限を検査する。
+[Alpine 3.24のセキュリティ情報](https://secdb.alpinelinux.org/v3.24/main.json)
 
 ### 2026-11-19のnginxOpenSSL更新
 

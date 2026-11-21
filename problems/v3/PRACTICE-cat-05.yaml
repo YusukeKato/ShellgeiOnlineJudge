@@ -1,0 +1,38 @@
+schema_version: 3
+id: PRACTICE-cat-05
+category: PRACTICE
+title:
+  ja: cat 5
+  en: cat 5
+statement:
+  ja: |
+    練習：cat
+    input.txt は会場の進行メモです。空行が2行以上続く箇所を、それぞれ空行1行にまとめてください。空行とは、改行の前に文字がない行です。それ以外の行は、同じ内容が続いても、順序と内容をそのまま保ってください。
+  en: |
+    Practice: cat
+    input.txt contains notes for an event. Replace each run of two or more empty lines with one empty line. An empty line contains no characters before its line feed. Keep all other lines in their original order, including repeated lines.
+reference_solution: cat -s input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      Doors open
+
+
+
+      Sound check
+      Sound check
+
+      Show starts
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    Doors open
+
+    Sound check
+    Sound check
+
+    Show starts
