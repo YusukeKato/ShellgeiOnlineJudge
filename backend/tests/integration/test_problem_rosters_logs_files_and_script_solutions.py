@@ -1,4 +1,4 @@
-"""承認された4問の回答例・別解と典型的な誤答を実sandboxで判定する。"""
+"""テキスト問題の回答例・別解と典型的な誤答を実sandboxで判定する。"""
 
 import asyncio
 import os
@@ -25,6 +25,20 @@ pytestmark = [
 @pytest.mark.parametrize(
     ("problem_id", "alternative", "mistake", "setup", "expected"),
     [
+        (
+            "PRACTICE-cat-05",
+            "awk 'length($0) || !empty {print} {empty = (length($0) == 0)}' input.txt",
+            "uniq input.txt",
+            r"printf '\n\nA\n \n\n\nB\n\n\n' > input.txt",
+            "\nA\n \n\nB\n\n",
+        ),
+        (
+            "STANDARD-00000075",
+            "awk -F- '{for (p=$1; p<=$2; p++) print p}' input.txt",
+            "tr '-' ' ' < input.txt | xargs -n 2 seq | sort -nu",
+            r"printf '5-5\n4-6\n' > input.txt",
+            "5\n4\n5\n6\n",
+        ),
         (
             "PRACTICE-comm-01",
             "awk 'FILENAME==ARGV[1]{seen[$0]=1;next} $0 in seen' second.txt input.txt | sort -u",

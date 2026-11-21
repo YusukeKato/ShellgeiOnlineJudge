@@ -1,0 +1,35 @@
+schema_version: 3
+id: STANDARD-00000075
+category: STANDARD
+title:
+  ja: 印刷するページを順に並べる
+  en: List Pages in Printing Order
+statement:
+  ja: |
+    input.txt には、印刷したいページの範囲が1行ずつ書かれています。たとえば 9-11 は9、10、11ページを、4-4 は4ページだけを印刷する指定です。上の行から順に指定を読み、印刷するページ番号を1行に1つずつ出力してください。同じページがもう一度指定されたら、その位置でもう一度出力してください。
+  en: |
+    Each line of input.txt gives a range of pages to print. For example, 9-11 means pages 9, 10, and 11, and 4-4 means page 4 only. Read the ranges from top to bottom and output one page number per line in printing order. If a later range includes a page again, print it again at that point.
+reference_solution: tr '-' ' ' < input.txt | xargs -n 2 seq
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      9-11
+      4-4
+      10-12
+      2-3
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    9
+    10
+    11
+    4
+    10
+    11
+    12
+    2
+    3

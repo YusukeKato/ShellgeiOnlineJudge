@@ -1,4 +1,4 @@
-"""4問の公開入力から、シェルの回答例とは独立に想定出力を求める。"""
+"""公開入力から、シェルの回答例とは独立に想定出力を求める。"""
 
 from pathlib import Path
 
@@ -43,3 +43,21 @@ def test_public_problem_outputs() -> None:
             name = raw[offset + 3 :].split(b"\n", 1)[0].decode()
             headings.append(f"{offset} {name}\n")
     assert script.expected_output == "".join(headings)
+
+
+def test_event_notes_and_print_ranges() -> None:
+    """公開の進行メモは空行だけを畳み、印刷範囲は順序と重複を保って両端まで展開する。"""
+    repo = build_problem_repository(
+        PROBLEMS / "v3", PROBLEMS / "image", PROBLEMS / "v3/manifest.json"
+    )
+    notes = repo.require("PRACTICE-cat-05")
+    lines = notes.input_text.splitlines()
+    assert notes.expected_output == "".join(
+        line + "\n" for i, line in enumerate(lines) if line or i == 0 or lines[i - 1]
+    )
+    pages = repo.require("STANDARD-00000075")
+    expanded: list[int] = []
+    for interval in pages.input_text.splitlines():
+        first, last = map(int, interval.split("-"))
+        expanded.extend(range(first, last + 1))
+    assert pages.expected_output == "".join(f"{page}\n" for page in expanded)
