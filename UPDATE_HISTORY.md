@@ -3,6 +3,11 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-21 依存更新PR 9件の統合
+
+提出結果のDB保存に使うSQLAlchemyを2.1.9へ更新しました。
+開発・検査用のPlaywright、Ruff、PyYAML型定義、jsdom、ESLint関連3件、Prettierも更新しました。
+
 ## 2026-11-19 nginxとOpenSSLのセキュリティ更新
 
 frontendのnginxと、frontend・DBのOpenSSLライブラリを更新しました。
