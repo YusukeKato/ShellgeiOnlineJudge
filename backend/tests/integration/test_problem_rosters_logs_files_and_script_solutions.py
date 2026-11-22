@@ -26,6 +26,13 @@ pytestmark = [
     ("problem_id", "alternative", "mistake", "setup", "expected"),
     [
         (
+            "PRACTICE-wc-04",
+            "expand -t 8 input.txt | awk '{if (length > w) w=length} END {print w+0}'",
+            "awk 'length > w {w=length} END {print w+0}' input.txt",
+            ": > input.txt",
+            "0\n",
+        ),
+        (
             "PRACTICE-cat-05",
             "awk 'length($0) || !empty {print} {empty = (length($0) == 0)}' input.txt",
             "uniq input.txt",
