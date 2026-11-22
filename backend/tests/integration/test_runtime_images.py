@@ -466,6 +466,30 @@ def test_runtime_apt_is_fixed_and_has_no_bootstrap_ca_override(
 
 
 @pytest.mark.parametrize("service", ["backend", "runner"])
+def test_runtime_debian_glibc_packages_are_fixed(
+    runtime_client: Any, service: str
+) -> None:
+    """両最終イメージでlibc本体と付属ツールのインストール状態・Debian修正revisionを検査する。"""
+    runtime_client.containers.run(
+        _image(service),
+        [
+            "/bin/sh",
+            "-ec",
+            """for pkg in libc6 libc-bin; do
+                test "$(dpkg-query -W -f='${db:Status-Status}' "$pkg")" = installed
+                version=$(dpkg-query -W -f='${Version}' "$pkg")
+                dpkg --compare-versions "$version" ge '2.41-12+deb13u5'
+            done""",
+        ],
+        network_mode="none",
+        read_only=True,
+        cap_drop=["ALL"],
+        security_opt=["no-new-privileges:true"],
+        remove=True,
+    )
+
+
+@pytest.mark.parametrize("service", ["backend", "runner"])
 def test_runtime_debian_zlib_is_fixed_and_preserves_compression(
     runtime_client: Any, service: str
 ) -> None:

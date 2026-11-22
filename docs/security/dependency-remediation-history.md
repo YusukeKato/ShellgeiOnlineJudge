@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-22: Debian glibc更新](#2026-11-22のdebian-glibc更新)
 - [2026-11-21: libxml2更新](#2026-11-21のlibxml2更新)
 - [2026-11-19: nginx・OpenSSL更新](#2026-11-19のnginxopenssl更新)
 - [2026-11-18: FastAPI更新](#2026-11-18のfastapi更新)
@@ -36,6 +37,13 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-22のDebian glibc更新
+
+配備commit abd92b9のbackend・runnerはlibc6とlibc-binの2.41-12+deb13u4を収録していた。
+Debian trixieの2.41-12+deb13u5には、DNSレコードの表示（CVE-2026-5435）と通貨額の書式化（CVE-2026-19499）を含む修正がある。
+両サービスの共通runtimeで2パッケージを固定し、最終イメージごとにインストール状態とDebian revisionを検査する。
+[Debianの変更履歴](https://metadata.ftp-master.debian.org/changelogs/main/g/glibc/glibc_2.41-12+deb13u5_changelog)
 
 ### 2026-11-21のlibxml2更新
 
