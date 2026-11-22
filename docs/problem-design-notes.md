@@ -157,6 +157,7 @@
 | [PRACTICE-wc-01](#note-practice-wc-01) | wc 1 |
 | [PRACTICE-wc-02](#note-practice-wc-02) | wc 2 |
 | [PRACTICE-wc-03](#note-practice-wc-03) | wc 3 |
+| [PRACTICE-wc-04](#note-practice-wc-04) | wc 4 |
 
 ### IMAGE
 
@@ -1005,6 +1006,16 @@
 - 狙い・入力・既存との差：日本語を含む入力でbyte数と文字数を区別する。
 - 解法の核：wcの基礎操作。具体的なオプションと参照解答は問題データを参照。
 - 難易度：入門。
+
+<a id="note-practice-wc-04"></a>
+
+## PRACTICE-wc-04：wc 4
+
+[問題データ](../problems/v3/PRACTICE-wc-04.yaml)
+
+駅の案内板に必要な横幅を求める入門問題。wc 3の文字数から、タブを含む行の表示幅へ進む。
+wc -L は各行の表示幅の最大値を返す。別解は expand でタブを展開し、awk で最長行を求める。
+公開例の各行は12・18・16・17桁。8桁の直後のタブは次の16桁まで進む。空ファイルの幅は0とする。
 
 <a id="note-image-00000001"></a>
 

@@ -1,0 +1,31 @@
+schema_version: 3
+id: PRACTICE-wc-04
+category: PRACTICE
+title:
+  ja: wc 4
+  en: wc 4
+statement:
+  ja: |
+    練習：wc
+
+    input.txt には、駅の案内板に表示する文字列が1行ずつ入っています。どの行も折り返さずに表示するには、横幅が最低何桁必要ですか。答えを整数1つで出力してください。
+
+    入力に使うのは半角英数字、半角スペース、タブ、改行だけです。各行の幅は0から数え、タブが現れたら、現在の幅を超える次の8の倍数まで進みます。たとえば A の直後にタブがあると幅は8になり、続けて B を表示すると幅は9になります。改行は幅に含めません。空のファイルの答えは 0 です。
+  en: |
+    Practice: wc
+
+    input.txt contains one line of text per row of a station display. What is the minimum width, in columns, that lets every line fit without wrapping? Print one integer.
+
+    The input contains only ASCII letters, digits, spaces, tabs, and line feeds. Each line starts at width zero. A tab advances to the next multiple of eight, even if the current width is already a multiple of eight. A line feed adds no width. For an empty file, print 0.
+reference_solution: wc -L < input.txt
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: "GATE\tOPEN\nPlatform\tA2\nInformation desk\nA\tB\tC\n"
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    18
