@@ -3,6 +3,11 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-22 backend・runnerのglibc更新
+
+backend・runnerの共通ランタイムでglibcをDebianの修正版に更新しました。
+[対象パッケージと検査](./docs/security/dependency-remediation-history.md#2026-11-22のdebian-glibc更新)
+
 ## 2026-11-21 問題2問とlibxml2の更新
 
 練習問題「cat 5」と通常問題「印刷するページを順に並べる」を追加しました。

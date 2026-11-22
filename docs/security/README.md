@@ -56,6 +56,8 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- [backend・runnerのDebian glibc更新](./dependency-remediation-history.md#2026-11-22のdebian-glibc更新)
+
 - [frontend・DBのlibxml2更新](./dependency-remediation-history.md#2026-11-21のlibxml2更新)
 
 - [frontend nginxとfrontend・DBのOpenSSL更新](./dependency-remediation-history.md#2026-11-19のnginxopenssl更新)
