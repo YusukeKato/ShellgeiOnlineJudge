@@ -3,6 +3,11 @@
 この文書は、過去のリリースとメンテナンスの履歴です。
 現在の設定や運用手順は、[README.md](./README.md)から目的別の文書を参照してください。
 
+## 2026-11-24 frontendのnginx更新
+
+frontendのnginxをTLS 1.3早期データに関する不具合の修正版へ更新しました。
+[対象と検査](./docs/security/dependency-remediation-history.md#2026-11-24のnginx更新)
+
 ## 2026-11-22 練習問題「wc 4」を追加
 
 タブを含む駅の案内から、表示に必要な横幅を求める問題を追加しました。

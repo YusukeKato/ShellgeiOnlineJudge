@@ -403,7 +403,7 @@ def test_frontend_runtime_contains_fixed_nginx_and_x11_libraries(
     )
     version = re.search(rb"nginx/(\d+)\.(\d+)\.(\d+)", output)
     assert version is not None, output
-    assert tuple(int(part) for part in version.groups()) >= (1, 31, 9), output
+    assert tuple(int(part) for part in version.groups()) >= (1, 31, 10), output
 
 
 def test_frontend_runtime_has_no_curl_client_or_library(runtime_client: Any) -> None:
