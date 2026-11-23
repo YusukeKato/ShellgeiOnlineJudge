@@ -29,7 +29,7 @@ RUN yarn typecheck
 RUN yarn build
 
 # --- Serve Stage ---
-FROM nginx:1.31.9-alpine@sha256:90b6bd2aec278b16b98221d64deb1d6d35d164567f507ab0716e6053878315aa
+FROM nginx:1.31.10-alpine@sha256:aceb952b920393b7d0bc7b978927fc283370bea89fb082c6fef0ce18c60f96a9
 LABEL org.opencontainers.image.version="3.0.3"
 
 # nginx・X11/XPM・Brotli・zlib等のvendor修正版を維持し、CAの不信頼化も適用する。

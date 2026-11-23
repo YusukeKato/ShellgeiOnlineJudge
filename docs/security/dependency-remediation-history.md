@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-24: frontendのnginx更新](#2026-11-24のnginx更新)
 - [2026-11-22: Debian glibc更新](#2026-11-22のdebian-glibc更新)
 - [2026-11-21: libxml2更新](#2026-11-21のlibxml2更新)
 - [2026-11-19: nginx・OpenSSL更新](#2026-11-19のnginxopenssl更新)
@@ -37,6 +38,14 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-24のnginx更新
+
+配備コミット `ad0d3c9` のfrontendはnginx 1.31.9-r1を使用していた。
+CVE-2026-132779はTLS 1.3の早期データが有効な場合にワーカーがCPUを消費し続ける問題で、
+SOJのfrontend設定では早期データは既定の無効のまま。公式Alpineイメージを1.31.10へ更新し、
+最終イメージのnginxバイナリが修正版以降であることを検査する。
+[nginx公式勧告](https://nginx.org/en/security_advisories.html)
 
 ### 2026-11-22のDebian glibc更新
 
