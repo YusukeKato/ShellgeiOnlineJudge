@@ -56,6 +56,7 @@ git diff e52b19b780fef0af5a5676c4613707e6127eae7e
 
 ## Current security status
 
+- [本番4イメージのzstd更新とUbuntu版の追跡](./dependency-remediation-history.md#2026-11-25のzstd更新)
 - [frontendのnginx更新](./dependency-remediation-history.md#2026-11-24のnginx更新)
 
 - [backend・runnerのDebian glibc更新](./dependency-remediation-history.md#2026-11-22のdebian-glibc更新)

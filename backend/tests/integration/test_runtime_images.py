@@ -387,12 +387,12 @@ def test_runtime_image_product_version(runtime_client: Any, service: str) -> Non
 def test_frontend_runtime_contains_fixed_nginx_and_x11_libraries(
     runtime_client: Any,
 ) -> None:
-    """実frontendのnginx・OpenSSL・Expat・libxml2・XSLT・X11/XPM・Brotli・zlib・musl関連packageが修正版から後退しないことを確認する。"""
+    """実frontendのnginx・OpenSSL・Expat・libxml2・XSLT・X11/XPM・Brotli・zlib・zstd・musl関連packageが修正版から後退しないことを確認する。"""
     output = runtime_client.containers.run(
         os.environ["SOJ_COMPOSE_FRONTEND_IMAGE"],
         [
             "-ec",
-            "nginx -v 2>&1; apk --no-network info --exists 'libcrypto3>=3.5.9-r1' 'libssl3>=3.5.9-r1' 'libexpat>=2.10.0-r0' 'libxml2>=2.13.9-r3' 'libxslt>=1.1.43-r4' 'libx11>=1.8.14-r0' 'libxpm>=3.5.20-r0' 'brotli-libs>=1.2.1-r0' 'zlib>=1.4-r0' 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3'",
+            "nginx -v 2>&1; apk --no-network info --exists 'libcrypto3>=3.5.9-r1' 'libssl3>=3.5.9-r1' 'libexpat>=2.10.0-r0' 'libxml2>=2.13.9-r3' 'libxslt>=1.1.43-r4' 'libx11>=1.8.14-r0' 'libxpm>=3.5.20-r0' 'brotli-libs>=1.2.1-r0' 'zlib>=1.4-r0' 'zstd-libs>=1.6.0-r1' 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3'",
         ],
         entrypoint="/bin/sh",
         network_mode="none",
@@ -466,20 +466,25 @@ def test_runtime_apt_is_fixed_and_has_no_bootstrap_ca_override(
 
 
 @pytest.mark.parametrize("service", ["backend", "runner"])
-def test_runtime_debian_glibc_packages_are_fixed(
+def test_runtime_debian_glibc_and_zstd_packages_are_fixed(
     runtime_client: Any, service: str
 ) -> None:
-    """両最終イメージでlibc本体と付属ツールのインストール状態・Debian修正revisionを検査する。"""
+    """両最終イメージでglibcとzstdのインストール状態・Debian修正revisionを検査する。"""
     runtime_client.containers.run(
         _image(service),
         [
             "/bin/sh",
             "-ec",
-            """for pkg in libc6 libc-bin; do
+            """while read -r pkg minimum; do
                 test "$(dpkg-query -W -f='${db:Status-Status}' "$pkg")" = installed
                 version=$(dpkg-query -W -f='${Version}' "$pkg")
-                dpkg --compare-versions "$version" ge '2.41-12+deb13u5'
-            done""",
+                dpkg --compare-versions "$version" ge "$minimum"
+            done <<'PACKAGES'
+libc6 2.41-12+deb13u5
+libc-bin 2.41-12+deb13u5
+libzstd1 1.5.7+dfsg-1+deb13u1
+PACKAGES
+""",
         ],
         network_mode="none",
         read_only=True,

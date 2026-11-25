@@ -31,10 +31,10 @@ RUN poetry install --only main,runner --no-root --no-interaction --no-ansi
 FROM python-base AS runtime-common
 LABEL org.opencontainers.image.version="3.0.3"
 
-# backend・runner共通の最終イメージにDebianの修正済みPCRE2とglibcを収録する。
+# backend・runner共通の最終イメージにDebianの修正済みPCRE2・glibc・zstdを収録する。
 RUN apt-get update \
     && apt-get install -y --no-install-recommends --only-upgrade \
-        libpcre2-8-0=10.46-1~deb13u3 libc6=2.41-12+deb13u5 libc-bin=2.41-12+deb13u5 \
+        libpcre2-8-0=10.46-1~deb13u3 libc6=2.41-12+deb13u5 libc-bin=2.41-12+deb13u5 libzstd1=1.5.7+dfsg-1+deb13u1 \
     && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/opt/venv/bin:${PATH}" \
