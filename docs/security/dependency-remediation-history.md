@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-25: zstd更新](#2026-11-25のzstd更新)
 - [2026-11-24: frontendのnginx更新](#2026-11-24のnginx更新)
 - [2026-11-22: Debian glibc更新](#2026-11-22のdebian-glibc更新)
 - [2026-11-21: libxml2更新](#2026-11-21のlibxml2更新)
@@ -38,6 +39,14 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-25のzstd更新
+
+[配備commit 214a37fのSBOM](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/45292658210)では、backend・runnerはlibzstd1 1.5.7+dfsg-1、frontend・DBはzstd-libs 1.5.7-r2を収録していた。
+CVE-2026-124851は圧縮データのストリーム展開で内部バッファの内容が出力に混入する問題。
+Debianの2イメージは1.5.7+dfsg-1+deb13u1、Alpineの2イメージは1.6.0-r1を指定し、最終イメージのパッケージを検査する。
+Ubuntu 24.04の提出用イメージは別管理で、調査時点のlibzstd1は1.5.5+dfsg2-2build1.1。Ubuntuの評価と修正版を追跡する。
+[Debian勧告](https://lists.debian.org/debian-security-announce/2026/msg00579.html)・[上流の修正](https://github.com/meta/zstd/releases/tag/v1.6.0)
 
 ### 2026-11-24のnginx更新
 
