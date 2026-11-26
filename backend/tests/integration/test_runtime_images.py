@@ -392,7 +392,7 @@ def test_frontend_runtime_contains_fixed_nginx_and_x11_libraries(
         os.environ["SOJ_COMPOSE_FRONTEND_IMAGE"],
         [
             "-ec",
-            "nginx -v 2>&1; apk --no-network info --exists 'libcrypto3>=3.5.9-r1' 'libssl3>=3.5.9-r1' 'libexpat>=2.10.0-r0' 'libxml2>=2.13.9-r3' 'libxslt>=1.1.43-r4' 'libx11>=1.8.14-r0' 'libxpm>=3.5.20-r0' 'brotli-libs>=1.2.1-r0' 'zlib>=1.4-r0' 'zstd-libs>=1.6.0-r1' 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3'",
+            "nginx -v 2>&1; apk --no-network info --exists 'libcrypto3>=3.5.9-r1' 'libssl3>=3.5.9-r1' 'libexpat>=2.11.0-r0' 'libxml2>=2.13.9-r5' 'libxslt>=1.1.43-r4' 'libx11>=1.8.14-r0' 'libxpm>=3.5.20-r0' 'brotli-libs>=1.2.1-r0' 'zlib>=1.4-r0' 'zstd-libs>=1.6.0-r1' 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3'",
         ],
         entrypoint="/bin/sh",
         network_mode="none",
