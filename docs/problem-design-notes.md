@@ -151,6 +151,7 @@
 | [PRACTICE-tac-01](#note-practice-tac-01) | tac 1 |
 | [PRACTICE-tee-01](#note-practice-tee-01) | tee 1 |
 | [PRACTICE-test-01](#note-practice-test-01) | test 1 |
+| [PRACTICE-umask-01](#note-practice-umask-01) | umask 1 |
 | [PRACTICE-unexpand-01](#note-practice-unexpand-01) | unexpand 1 |
 | [PRACTICE-uniq-01](#note-practice-uniq-01) | uniq 1 |
 | [PRACTICE-uniq-02](#note-practice-uniq-02) | uniq 2 |
@@ -2159,3 +2160,13 @@ inode共有とrequest間の分離を確認する。
 [問題データ](../problems/v3/STANDARD-00000075.yaml)
 
 初級の通常問題。trで範囲の区切りを空白に変え、xargsで2引数ずつseqに渡す。通常18の単一の数列生成から進み、各範囲を入力順に展開する。awkなら両端を含むループで解ける。1ページだけの範囲、桁数の変化、前後する範囲と重複を含み、全体をソートしたり重複を取り除いたりすると印刷順が変わる。
+
+<a id="note-practice-umask-01"></a>
+
+## PRACTICE-umask-01：umask 1
+
+[問題データ](../problems/v3/PRACTICE-umask-01.yaml)
+
+初級の練習。同じマスクでも、通常ファイルとディレクトリでは作成時に要求する権限が異なる。chmod 1 で扱う作成後の変更から、作成時に除かれる権限へ進む。
+回答例は umask を設定して両方を作り、stat で権限を読む。別解は、基本の権限とマスクのビット反転との論理積を8進表示する。
+公開入力の 027 は所有者の権限を保ち、グループの書き込みとその他の全権限を除く。手計算でファイルは rw-r-----、ディレクトリは rwxr-x--- となる。777 は両方が 000 になり、先頭のゼロも検査できる。

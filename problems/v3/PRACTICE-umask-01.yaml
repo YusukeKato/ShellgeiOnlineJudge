@@ -1,0 +1,32 @@
+schema_version: 3
+id: PRACTICE-umask-01
+category: PRACTICE
+title:
+  ja: umask 1
+  en: umask 1
+statement:
+  ja: |
+    練習：umask
+
+    input.txt には8進数3桁の umask が書かれています。この値は、ファイルやディレクトリの作成時に取り除く権限を表します。通常ファイル memo.txt の基本の権限を 666、ディレクトリ archive の基本の権限を 777 とします。この順に、名前と作成時の権限をスペースで区切って1行ずつ出力してください。権限は8進数3桁で表示します。
+  en: |
+    Practice: umask
+
+    input.txt contains a three-digit octal umask, which specifies the permissions to remove when creating a file or directory. The regular file memo.txt starts with mode 666, and the directory archive starts with mode 777. For each, in that order, print its name, a space, and its resulting three-digit octal mode on one line.
+reference_solution: >-
+  read -r mask < input.txt && umask "$mask" &&
+  touch memo.txt && mkdir archive &&
+  stat -c '%n %03a' memo.txt archive
+execution:
+  stdin: ''
+  fixtures:
+  - path: input.txt
+    content: |
+      027
+  exit_code: zero
+  stderr: must_be_empty
+judge:
+  type: text
+  expected_output: |
+    memo.txt 640
+    archive 750

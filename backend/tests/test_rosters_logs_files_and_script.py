@@ -61,3 +61,14 @@ def test_event_notes_and_print_ranges() -> None:
         first, last = map(int, interval.split("-"))
         expanded.extend(range(first, last + 1))
     assert pages.expected_output == "".join(f"{page}\n" for page in expanded)
+
+
+def test_umask_public_example() -> None:
+    """027では所有者を保ち、グループ書込みとその他の全権限だけを除く。"""
+    repo = build_problem_repository(
+        PROBLEMS / "v3", PROBLEMS / "image", PROBLEMS / "v3/manifest.json"
+    )
+    record = repo.require("PRACTICE-umask-01")
+    assert record.input_text == "027\n"
+    # 手計算した rw-r----- と rwxr-x--- を、公開する8進表記と照合する。
+    assert record.expected_output == "memo.txt 640\narchive 750\n"

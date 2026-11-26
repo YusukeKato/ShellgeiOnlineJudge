@@ -26,6 +26,15 @@ pytestmark = [
     ("problem_id", "alternative", "mistake", "setup", "expected"),
     [
         (
+            "PRACTICE-umask-01",
+            "read -r mask < input.txt && printf 'memo.txt %03o\\narchive %03o\\n' "
+            '"$((0666 & ~8#$mask))" "$((0777 & ~8#$mask))"',
+            "read -r mask < input.txt && printf 'memo.txt %03o\\narchive %03o\\n' "
+            '"$((0666 - 8#$mask))" "$((0777 - 8#$mask))"',
+            "echo 777 > input.txt",
+            "memo.txt 000\narchive 000\n",
+        ),
+        (
             "PRACTICE-wc-04",
             "expand -t 8 input.txt | awk '{if (length > w) w=length} END {print w+0}'",
             "awk 'length > w {w=length} END {print w+0}' input.txt",
@@ -81,7 +90,7 @@ pytestmark = [
 def test_public_and_boundary(
     problem_id: str, alternative: str, mistake: str, setup: str, expected: str
 ) -> None:
-    """公開例を両解法で採点し、重複・警告位置・欠落・行番号の誤解と追加境界を確認する。"""
+    """公開例を両解法で採点し、重複・警告位置・欠落・行番号・権限の誤解と追加境界を確認する。"""
     repo = build_problem_repository(
         PROBLEMS / "v3", PROBLEMS / "image", PROBLEMS / "v3/manifest.json"
     )
