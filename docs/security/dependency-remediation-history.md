@@ -9,6 +9,7 @@
 
 ## 記録の目次
 
+- [2026-11-26: Expat更新](#2026-11-26のexpat更新)
 - [2026-11-25: zstd更新](#2026-11-25のzstd更新)
 - [2026-11-24: frontendのnginx更新](#2026-11-24のnginx更新)
 - [2026-11-22: Debian glibc更新](#2026-11-22のdebian-glibc更新)
@@ -39,6 +40,15 @@
 - [依存・imageの是正記録](#soj-022依存imageの是正記録)
 
 ## SOJ-022の現在の停止対象
+
+### 2026-11-26のExpat更新
+
+[配備commit f339e54のSBOM](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/45636894542)では、frontendはlibexpat 2.10.0-r0、提出用Ubuntuはlibexpat1 2.6.1-2ubuntu0.6を使用していた。
+CVE-2026-124317・128241・134703の修正版として、frontendは2.11.0-r0、提出用Ubuntuはバックポート版2.6.1-2ubuntu0.7を指定し、両方の最終イメージで実収録版の下限を検査する。
+backend・runnerのPython内蔵Expatは別管理で、今回のOSパッケージ更新の対象外。
+
+[初回CI](https://github.com/YusukeKato/ShellgeiOnlineJudge/actions/runs/45842018350)ではDBのlibxml2 2.13.9-r3を取得できずビルドが停止した。frontendとDBはAlpine 3.24で配布中の2.13.9-r5へ揃え、両方の実収録版を検査する。DBは既存データを使う更新・切り戻しテストの対象に含める。
+[Alpineの修正情報](https://secdb.alpinelinux.org/v3.24/main.json)・[Ubuntuの修正勧告](https://ubuntu.com/security/notices/USN-9196-1)
 
 ### 2026-11-25のzstd更新
 

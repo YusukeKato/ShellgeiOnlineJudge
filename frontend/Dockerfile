@@ -35,7 +35,7 @@ LABEL org.opencontainers.image.version="3.0.3"
 # nginx・X11/XPM・Brotli・zlib等のvendor修正版を維持し、CAの不信頼化も適用する。
 # SOJでは使わないcurlを削除し、CVE-2026-92392対象のlibcurlも残さない。
 # 通常の依存解決で削除し、将来ほかのpackageがlibcurlを要求したらbuildを停止する。
-RUN apk add --no-cache --upgrade ca-certificates=20261020-r0 ca-certificates-bundle=20261020-r0 libcrypto3=3.5.9-r1 libssl3=3.5.9-r1 libuuid=2.42.3-r1 libexpat=2.10.0-r0 libxml2=2.13.9-r3 libxslt=1.1.43-r4 pcre2=10.49-r0 zlib=1.4-r0 zstd-libs=1.6.0-r1 tiff=4.7.2-r0 libx11=1.8.14-r0 libxpm=3.5.20-r0 brotli-libs=1.2.1-r0 musl-utils=1.2.6-r3 \
+RUN apk add --no-cache --upgrade ca-certificates=20261020-r0 ca-certificates-bundle=20261020-r0 libcrypto3=3.5.9-r1 libssl3=3.5.9-r1 libuuid=2.42.3-r1 libexpat=2.11.0-r0 libxml2=2.13.9-r5 libxslt=1.1.43-r4 pcre2=10.49-r0 zlib=1.4-r0 zstd-libs=1.6.0-r1 tiff=4.7.2-r0 libx11=1.8.14-r0 libxpm=3.5.20-r0 brotli-libs=1.2.1-r0 musl-utils=1.2.6-r3 \
     && apk --no-network del curl \
     && ! apk --no-network info --exists libcurl
 

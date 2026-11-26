@@ -57,7 +57,7 @@ RUN sh /tmp/soj-prepare-apt.sh ubuntu /tmp/soj-apt-ca.pem \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
        bash coreutils gawk grep sed findutils bc rs tar \
        libc6=2.39-0ubuntu8.12 libc-bin=2.39-0ubuntu8.12 locales=2.39-0ubuntu8.12 \
-       imagemagick-6.q16 fonts-noto-cjk libbrotli1=1.1.0-2ubuntu0.1 \
+       imagemagick-6.q16 fonts-noto-cjk libexpat1=2.6.1-2ubuntu0.7 libbrotli1=1.1.0-2ubuntu0.1 \
     && localedef -i ja_JP -f UTF-8 ja_JP.UTF-8 \
     && rm -f /tmp/soj-apt-ca.pem /tmp/soj-prepare-apt.sh /etc/apt/apt.conf.d/99soj-apt-bootstrap \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* \
