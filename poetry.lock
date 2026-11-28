@@ -1518,14 +1518,14 @@ full = ["httpx (>=0.27.0,<0.29.0)", "httpx2 (>=2.0.0)", "itsdangerous", "jinja2"
 
 [[package]]
 name = "types-docker"
-version = "7.2.0.20261102"
+version = "7.2.0.20261122"
 description = "Typing stubs for docker"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "types_docker-7.2.0.20261102-py3-none-any.whl", hash = "sha256:a5fda816dfc909be4a65892c87983ca007e461cb6fb46aba6481547304de0ebe"},
-    {file = "types_docker-7.2.0.20261102.tar.gz", hash = "sha256:af141295dfc2760f2452fed89988ecfd86e2a66411206eb7c190aadc41d10e12"},
+    {file = "types_docker-7.2.0.20261122-py3-none-any.whl", hash = "sha256:5f2b9c12c67570118b3083610e27db067fc88a9f484244f72ba5bd4e45d8184f"},
+    {file = "types_docker-7.2.0.20261122.tar.gz", hash = "sha256:69a7f1910c3cffb4ddf7fb3165bad6141058b03ec2679c73b56cd961e7772db7"},
 ]
 
 [package.dependencies]
